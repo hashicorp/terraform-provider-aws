@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_odb_cloud_vm_cluster
 
-Terraform to manage cloud vm cluster resource in AWS for Oracle Database@AWS.
+Terraform to manage cloud vm cluster resource in AWS for Oracle Database@AWS. If underlying odb network and cloud exadata infrastructure is shared, ARN must be used while creating VM cluster.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -18,13 +18,13 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 
 ```terraform
 resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
-  display_name                    = "my-exa-infra"
-  cloud_exadata_infrastructure_id = "exa_gjrmtxl4qk"
+  display_name                    = "my_vm_cluster"
+  cloud_exadata_infrastructure_id = "<aws_odb_cloud_exadata_infrastructure_id>"
   cpu_core_count                  = 6
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["public-ssh-key"]
-  odb_network_id                  = "odbnet_3l9st3litg"
+  odb_network_id                  = "<aws_odb_network_id>"
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
@@ -41,13 +41,13 @@ resource "aws_odb_cloud_vm_cluster" "with_minimum_parameter" {
 
 
 resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
-  display_name                    = "my-vmc"
-  cloud_exadata_infrastructure_id = "exa_gjrmtxl4qk"
+  display_name                    = "my_vm_cluster"
+  cloud_exadata_infrastructure_id = "<aws_odb_cloud_exadata_infrastructure_id>"
   cpu_core_count                  = 6
   gi_version                      = "23.0.0.0"
   hostname_prefix                 = "apollo12"
   ssh_public_keys                 = ["my-ssh-key"]
-  odb_network_id                  = "odbnet_3l9st3litg"
+  odb_network_id                  = "<aws_odb_network_id>"
   is_local_backup_enabled         = true
   is_sparse_diskgroup_enabled     = true
   license_model                   = "LICENSE_INCLUDED"
@@ -73,19 +73,21 @@ resource "aws_odb_cloud_vm_cluster" "with_all_parameters" {
 
 The following arguments are required:
 
-* `cloud_exadata_infrastructure_id` - (Required) The unique identifier of the Exadata infrastructure for this VM cluster. Changing this will create a new resource.
 * `cpu_core_count` - (Required) The number of CPU cores to enable on the VM cluster. Changing this will create a new resource.
 * `db_servers` - (Required) The list of database servers for the VM cluster. Changing this will create a new resource.
 * `display_name` - (Required) A user-friendly name for the VM cluster. Changing this will create a new resource.
 * `gi_version` - (Required) A valid software version of Oracle Grid Infrastructure (GI). To get the list of valid values, use the ListGiVersions operation and specify the shape of the Exadata infrastructure. Example: 19.0.0.0 Changing this will create a new resource.
 * `hostname_prefix` - (Required) The host name prefix for the VM cluster. Constraints: - Can't be "localhost" or "hostname". - Can't contain "-version". - The maximum length of the combined hostname and domain is 63 characters. - The hostname must be unique within the subnet. Changing this will create a new resource.
-* `odb_network_id` - (Required) The unique identifier of the ODB network for the VM cluster. Changing this will create a new resource.
 * `ssh_public_keys` - (Required) The public key portion of one or more key pairs used for SSH access to the VM cluster. Changing this will create a new resource.
 * `data_collection_options` - (Required) The set of preferences for the various diagnostic collection options for the VM cluster.
 * `data_storage_size_in_tbs` - (Required) The size of the data disk group, in terabytes (TBs), to allocate for the VM cluster. Changing this will create a new resource.
 
 The following arguments are optional:
 
+* `odb_network_id` - (Optional) The unique identifier of the ODB network for the VM cluster. Changing this will create a new resource. Either the combination of cloud_exadata_infrastructure_id and odb_network_id or cloud_exadata_infrastructure_arn and odb_network_arn must be used.
+* `cloud_exadata_infrastructure_id` - (Optional) The unique identifier of the Exadata infrastructure for this VM cluster. Changing this will create a new resource. Either the combination of cloud_exadata_infrastructure_id and odb_network_id or cloud_exadata_infrastructure_arn and odb_network_arn must be used.
+* `odb_network_arn` - (Optional) The ARN of the ODB network for the VM cluster. Changing this will create a new resource. Either the combination of cloud_exadata_infrastructure_id and odb_network_id or cloud_exadata_infrastructure_arn and odb_network_arn must be used.
+* `cloud_exadata_infrastructure_arn` - (Optional) The ARN of the Exadata infrastructure for this VM cluster. Changing this will create a new resource. Either the combination of cloud_exadata_infrastructure_id and odb_network_id or cloud_exadata_infrastructure_arn and odb_network_arn must be used.
 * `cluster_name` - (Optional) The name of the Grid Infrastructure (GI) cluster. Changing this will create a new resource.
 * `db_node_storage_size_in_gbs` - (Optional) The amount of local node storage, in gigabytes (GBs), to allocate for the VM cluster. Changing this will create a new resource.
 * `is_local_backup_enabled` - (Optional) Specifies whether to enable database backups to local Exadata storage for the VM cluster. Changing this will create a new resource.
@@ -101,6 +103,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of vm cluster.
 * `arn` - The Amazon Resource Name (ARN) for the cloud vm cluster.
 * `disk_redundancy` - The type of redundancy for the VM cluster: NORMAL (2-way) or HIGH (3-way).
 * `AttrDomain` - The domain name associated with the VM cluster.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -182,7 +183,7 @@ func (r *associationResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	out, err := findAssociationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -243,7 +244,7 @@ func (r *associationResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusAssociation(ctx, conn, id),
@@ -261,7 +262,7 @@ func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, i
 }
 
 func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusAssociation(ctx, conn, id),
@@ -276,10 +277,10 @@ func waitAssociationDeleted(ctx context.Context, conn *route53profiles.Client, i
 	return nil, err
 }
 
-func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findAssociationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -299,7 +300,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 	out, err := conn.GetProfileAssociation(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -309,7 +310,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 	}
 
 	if out == nil || out.ProfileAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileAssociation, nil

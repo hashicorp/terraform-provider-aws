@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -147,6 +147,8 @@ func newIdentityInterceptor(identitySpec *inttypes.Identity) interceptorInvocati
 
 func newResourceIdentity(v inttypes.Identity) *schema.ResourceIdentity {
 	return &schema.ResourceIdentity{
+		Version:           v.Version(),
+		IdentityUpgraders: v.SDKv2IdentityUpgraders(),
 		SchemaFunc: func() map[string]*schema.Schema {
 			return identity.NewIdentitySchema(v)
 		},
@@ -247,6 +249,19 @@ func singletonIdentityResourceImporter(identity inttypes.Identity) *schema.Resou
 				return []*schema.ResourceData{rd}, nil
 			},
 		}
+	}
+}
+
+func customInherentRegionResourceImporter(identity inttypes.Identity) *schema.ResourceImporter {
+	// Not supported for Global resources. This is validated in validateResourceSchemas().
+	return &schema.ResourceImporter{
+		StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+			if err := importer.RegionalInherentRegion(ctx, rd, identity); err != nil {
+				return nil, err
+			}
+
+			return []*schema.ResourceData{rd}, nil
+		},
 	}
 }
 

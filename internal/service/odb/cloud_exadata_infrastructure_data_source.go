@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -244,7 +244,7 @@ func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id
 	out, err := conn.GetCloudExadataInfrastructure(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -254,7 +254,7 @@ func FindExaDataInfraForDataSourceByID(ctx context.Context, conn *odb.Client, id
 	}
 
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudExadataInfrastructure, nil

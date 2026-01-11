@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding `go-vcr` Support
 
 You are working on the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws), specifically focused on enabling support for `go-vcr`.
@@ -10,6 +13,8 @@ Follow the steps below to enable support for a single service.
 
 ```console
 % make testacc PKG=polly VCR_MODE=REPLAY_ONLY VCR_PATH=/tmp/polly-vcr-testdata/
+
+Enables `go-vcr` for the `<service-name>` service.
 
 <-- full results here -->
 ```

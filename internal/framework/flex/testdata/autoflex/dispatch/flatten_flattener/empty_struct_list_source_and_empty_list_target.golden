@@ -1,0 +1,60 @@
+[
+  {
+    "@level": "info",
+    "@message": "Flattening",
+    "@module": "provider.autoflex",
+    "autoflex.source.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderStructSlice",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject"
+  },
+  {
+    "@level": "trace",
+    "@message": "Source is not XML wrapper struct",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderStructSlice",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject",
+    "source_type": "flex.awsExpanderStructSlice"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderStructSlice",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject"
+  },
+  {
+    "@level": "trace",
+    "@message": "Matched fields",
+    "@module": "provider.autoflex",
+    "autoflex.source.fieldname": "Field1",
+    "autoflex.source.path": "",
+    "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpanderStructSlice",
+    "autoflex.target.fieldname": "Field1",
+    "autoflex.target.path": "",
+    "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfExpanderListNestedObject"
+  },
+  {
+    "@level": "info",
+    "@message": "Converting",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]"
+  },
+  {
+    "@level": "trace",
+    "@message": "Flattening nested object collection",
+    "@module": "provider.autoflex",
+    "autoflex.source.path": "Field1",
+    "autoflex.source.size": 0,
+    "autoflex.source.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsExpander",
+    "autoflex.target.path": "Field1",
+    "autoflex.target.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfFlexer]",
+    "source_type": "[]flex.awsExpander",
+    "target_type": "ListNestedObjectTypeOf[flex.tfFlexer]"
+  }
+]

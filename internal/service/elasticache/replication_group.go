@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -241,6 +243,62 @@ func resourceReplicationGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
+			"node_group_configuration": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Set: func(v any) int {
+					var buf bytes.Buffer
+					m := v.(map[string]any)
+					if v, ok := m["node_group_id"]; ok {
+						fmt.Fprintf(&buf, "%s-", v.(string))
+					}
+					return create.StringHashcode(buf.String())
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_group_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\d{1,4}$`), "must be 1-4 digits"),
+						},
+						"primary_availability_zone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"primary_outpost_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"replica_availability_zones": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_outpost_arns": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replica_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 5),
+						},
+						"slots": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\d,-]+$`), "must contain only digits, commas, and hyphens"),
+						},
+					},
+				},
+				ConflictsWith: []string{"preferred_cache_cluster_azs"},
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -418,6 +476,29 @@ func resourceReplicationGroup() *schema.Resource {
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
 			customizeDiffEngineForceNewOnDowngrade(),
+			customdiff.ForceNewIf("node_group_configuration", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+				// Only force new if user explicitly configured node_group_configuration and made meaningful changes
+				old, new := d.GetChange("node_group_configuration")
+				oldSet, newSet := old.(*schema.Set), new.(*schema.Set)
+
+				// If both old and new are empty/computed-only, no force new
+				if oldSet.Len() == 0 && newSet.Len() == 0 {
+					return false
+				}
+
+				// If old was empty but new has explicit config, force new
+				if oldSet.Len() == 0 && newSet.Len() > 0 {
+					return true
+				}
+
+				// If new is empty but old had explicit config, force new
+				if oldSet.Len() > 0 && newSet.Len() == 0 {
+					return true
+				}
+
+				// Both have configs - check for meaningful changes
+				return hasSignificantNodeGroupConfigChanges(oldSet, newSet)
+			}),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
@@ -550,6 +631,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("preferred_cache_cluster_azs"); ok && len(v.([]any)) > 0 {
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := d.GetOk("node_group_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.(*schema.Set).List())
 	}
 
 	rawConfig := d.GetRawConfig()
@@ -710,6 +795,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("num_node_groups", len(rgp.NodeGroups))
 	if len(rgp.NodeGroups) > 0 {
 		d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
+		if err := d.Set("node_group_configuration", flattenNodeGroupConfigurations(rgp.NodeGroups)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_group_configuration: %s", err)
+		}
 	}
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
@@ -1416,7 +1504,7 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 	}
 
 	if len(clusters) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return clusters, nil
@@ -1509,4 +1597,151 @@ func replicationGroupValidateAutomaticFailoverNumCacheClusters(_ context.Context
 func suppressDiffIfBelongsToGlobalReplicationGroup(k, old, new string, d *schema.ResourceData) bool {
 	_, has_global_replication_group := d.GetOk("global_replication_group_id")
 	return has_global_replication_group && !d.IsNewResource()
+}
+
+func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
+	var apiObjects []awstypes.NodeGroupConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.NodeGroupConfiguration{}
+
+		if v, ok := tfMap["node_group_id"].(string); ok && v != "" {
+			apiObject.NodeGroupId = aws.String(v)
+		}
+		if v, ok := tfMap["primary_availability_zone"].(string); ok && v != "" {
+			apiObject.PrimaryAvailabilityZone = aws.String(v)
+		}
+		if v, ok := tfMap["primary_outpost_arn"].(string); ok && v != "" {
+			apiObject.PrimaryOutpostArn = aws.String(v)
+		}
+		if v, ok := tfMap["replica_availability_zones"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaAvailabilityZones = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_outpost_arns"].([]any); ok && len(v) > 0 {
+			apiObject.ReplicaOutpostArns = flex.ExpandStringValueList(v)
+		}
+		if v, ok := tfMap["replica_count"].(int); ok {
+			apiObject.ReplicaCount = aws.Int32(int32(v))
+		}
+		if v, ok := tfMap["slots"].(string); ok && v != "" {
+			apiObject.Slots = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenNodeGroupConfigurations(apiObjects []awstypes.NodeGroup) []any {
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+
+		if v := apiObject.NodeGroupId; v != nil {
+			tfMap["node_group_id"] = aws.ToString(v)
+		}
+		if len(apiObject.NodeGroupMembers) > 1 {
+			tfMap["replica_count"] = len(apiObject.NodeGroupMembers) - 1
+		}
+		if v := apiObject.Slots; v != nil {
+			tfMap["slots"] = aws.ToString(v)
+		}
+
+		// Extract availability zones and outpost ARNs from node group members
+		// Since CurrentRole is not reliably set by AWS API, use member position
+		// First member is typically the primary, rest are replicas
+		var primaryAZ string
+		var primaryOutpostArn string
+		var replicaAZs []string
+		var replicaOutpostArns []string
+
+		for j, member := range apiObject.NodeGroupMembers {
+			if j == 0 {
+				// First member is primary
+				if member.PreferredAvailabilityZone != nil {
+					primaryAZ = aws.ToString(member.PreferredAvailabilityZone)
+				}
+				if member.PreferredOutpostArn != nil {
+					primaryOutpostArn = aws.ToString(member.PreferredOutpostArn)
+				}
+			} else {
+				// Remaining members are replicas
+				if member.PreferredAvailabilityZone != nil {
+					replicaAZs = append(replicaAZs, aws.ToString(member.PreferredAvailabilityZone))
+				}
+				if member.PreferredOutpostArn != nil {
+					replicaOutpostArns = append(replicaOutpostArns, aws.ToString(member.PreferredOutpostArn))
+				}
+			}
+		}
+
+		// Always set computed fields to ensure consistent state during import
+		tfMap["primary_availability_zone"] = primaryAZ
+		tfMap["primary_outpost_arn"] = primaryOutpostArn
+		tfMap["replica_availability_zones"] = replicaAZs
+		tfMap["replica_outpost_arns"] = replicaOutpostArns
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+// hasSignificantNodeGroupConfigChanges determines if node group configuration changes require ForceNew
+func hasSignificantNodeGroupConfigChanges(oldSet, newSet *schema.Set) bool {
+	// Convert sets to maps for easier comparison
+	oldConfigs := make(map[string]map[string]any)
+	newConfigs := make(map[string]map[string]any)
+
+	for _, item := range oldSet.List() {
+		config := item.(map[string]any)
+		nodeGroupID := config["node_group_id"].(string)
+		oldConfigs[nodeGroupID] = config
+	}
+
+	for _, item := range newSet.List() {
+		config := item.(map[string]any)
+		nodeGroupID := config["node_group_id"].(string)
+		newConfigs[nodeGroupID] = config
+	}
+
+	// Check if node groups were added or removed
+	if len(oldConfigs) != len(newConfigs) {
+		return true
+	}
+
+	// Check each node group for significant changes
+	for nodeGroupID, oldConfig := range oldConfigs {
+		newConfig, exists := newConfigs[nodeGroupID]
+		if !exists {
+			return true // Node group removed
+		}
+
+		// Check for changes in fields that require ForceNew
+		significantFields := []string{"node_group_id", "replica_count", "slots"}
+		for _, field := range significantFields {
+			if oldConfig[field] != newConfig[field] {
+				return true
+			}
+		}
+
+		// Check AZ changes only if they were explicitly set in old config
+		if oldPrimaryAZ, ok := oldConfig["primary_availability_zone"].(string); ok && oldPrimaryAZ != "" {
+			if newPrimaryAZ, ok := newConfig["primary_availability_zone"].(string); ok && oldPrimaryAZ != newPrimaryAZ {
+				return true
+			}
+		}
+
+		if oldReplicaAZs, ok := oldConfig["replica_availability_zones"].([]any); ok && len(oldReplicaAZs) > 0 {
+			newReplicaAZs, _ := newConfig["replica_availability_zones"].([]any)
+			if !slices.Equal(oldReplicaAZs, newReplicaAZs) {
+				return true
+			}
+		}
+	}
+
+	return false
 }

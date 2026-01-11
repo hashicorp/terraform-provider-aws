@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2_test
@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresourceexplorer2 "github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,7 +40,7 @@ func testAccView_basic(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/`+rName+`/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", "0"),
@@ -120,7 +121,7 @@ func testAccView_disappears(t *testing.T) {
 				Config: testAccViewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfresourceexplorer2.ResourceView, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfresourceexplorer2.ResourceView, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -272,7 +273,7 @@ func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfresourceexplorer2.FindViewByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

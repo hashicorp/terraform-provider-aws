@@ -18,9 +18,9 @@ You can find out more about Oracle Database@AWS from [User Guide](https://docs.a
 
 ```terraform
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
-  cloud_exadata_infrastructure_id       = "<exadata_infra_id>" # refer your exadata infra id
-  odb_network_id                        = "<odb_net_id>"       # refer_your_odb_net_id
-  display_name                          = "Ofake-avmc-my_avmc"
+  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure_id>"
+  odb_network_id                        = "<aws_odb_network_id>"
+  display_name                          = "my_autonomous_vm_cluster"
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
   total_container_databases             = 1
@@ -40,9 +40,9 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
 resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_all_params" {
   description                           = "my first avmc"
   time_zone                             = "UTC"
-  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure.test.id>"
-  odb_network_id                        = "<aws_odb_network.test.id>"
-  display_name                          = "Ofake_my avmc"
+  cloud_exadata_infrastructure_id       = "<aws_odb_cloud_exadata_infrastructure_id>"
+  odb_network_id                        = "<aws_odb_network_id>"
+  display_name                          = "my_autonomous_vm_cluster"
   autonomous_data_storage_size_in_tbs   = 5
   memory_per_oracle_compute_unit_in_gbs = 2
   total_container_databases             = 1
@@ -105,6 +105,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - Unique identifier of autonomous vm cluster.
 * `arn` - The Amazon Resource Name (ARN) for the Exadata infrastructure.
 * `autonomous_data_storage_percentage` - The progress of the current operation on the Autonomous VM cluster, as a percentage.
 * `available_autonomous_data_storage_size_in_tbs` - The available data storage space for Autonomous Databases in the Autonomous VM cluster, in TB.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -70,6 +70,30 @@ func dataSourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"target_ips": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrPort: {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrProtocol: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
@@ -134,6 +158,9 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("rule_type", rule.RuleType)
 	shareStatus := rule.ShareStatus
 	d.Set("share_status", shareStatus)
+	if err := d.Set("target_ips", flattenRuleTargetIPs(rule.TargetIps)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_ips: %s", err)
+	}
 	// https://github.com/hashicorp/terraform-provider-aws/issues/10211
 	if shareStatus != awstypes.ShareStatusSharedWithMe {
 		tags, err := listTags(ctx, conn, arn)

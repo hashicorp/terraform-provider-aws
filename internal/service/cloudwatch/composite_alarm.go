@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -152,7 +154,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 		}
 
 		if err != nil {
@@ -160,7 +162,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -169,8 +171,8 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 
 	alarm, err := findCompositeAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Composite Alarm %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -212,7 +214,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return append(diags, resourceCompositeAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceCompositeAlarmRead(ctx, d, meta))
 }
 
 func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -248,7 +250,7 @@ func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.CompositeAlarms))

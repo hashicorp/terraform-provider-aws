@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -652,7 +653,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	taskDefinition, tags, err := findTaskDefinitionByFamilyOrARN(ctx, conn, familyOrARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Task Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -748,7 +749,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -759,7 +760,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	}
 
 	if output == nil || output.TaskDefinition == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TaskDefinition, output.Tags, nil
@@ -785,7 +786,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 	}
 
 	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}

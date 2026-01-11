@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -147,7 +148,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string), d.Get("method_path").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -323,7 +324,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

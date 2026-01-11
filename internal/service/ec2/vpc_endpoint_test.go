@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -6,10 +6,12 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,8 +43,9 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, ""),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
@@ -297,7 +300,7 @@ func TestAccVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_gatewayBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -572,7 +575,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 				Config: testAccVPCEndpointConfig_interfaceSubnetModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 				),
@@ -1024,7 +1027,8 @@ func TestAccVPCEndpoint_resourceConfiguration(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
@@ -1043,6 +1047,110 @@ func TestAccVPCEndpoint_resourceConfiguration(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_resourceConfigurationPrivateDNSOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	resourceConfigurationName := "aws_vpclattice_resource_configuration.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNS(rName, "SPECIFIED_DOMAINS_ONLY", []string{"example1.com", "example2.com"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "SPECIFIED_DOMAINS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example1.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNS(rName, "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", []string{"example1.com", "example2.com"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example1.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNSWithoutPrivateDNSSpecifiedDomains(rName, "ALL_DOMAINS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "ALL_DOMAINS"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_resourceConfigurationPrivateDNSWithoutPrivateDNSSpecifiedDomains(rName, "VERIFIED_DOMAINS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "VERIFIED_DOMAINS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Resource"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_arn", resourceConfigurationName, names.AttrARN),
+				),
 			},
 		},
 	})
@@ -1068,7 +1176,8 @@ func TestAccVPCEndpoint_serviceNetwork(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
@@ -1092,6 +1201,268 @@ func TestAccVPCEndpoint_serviceNetwork(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_serviceNetworkPrivateDNSOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	serviceNetworkName := "aws_vpclattice_service_network.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptions(rName, "SPECIFIED_DOMAINS_ONLY", []string{"example1.com", "example2.com"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "SPECIFIED_DOMAINS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example1.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_arn", serviceNetworkName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptions(rName, "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS", []string{"example1.com", "example2.com"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example1.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "example2.com"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_arn", serviceNetworkName, names.AttrARN),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptionsWithoutPrivateDNSSpecifiedDomains(rName, "ALL_DOMAINS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "ALL_DOMAINS"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_arn", serviceNetworkName, names.AttrARN),
+				),
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Config: testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptionsWithoutPrivateDNSSpecifiedDomains(rName, "VERIFIED_DOMAINS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", "VERIFIED_DOMAINS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.0", "*"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "ServiceNetwork"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_network_arn", serviceNetworkName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_crossRegionInterfaceAlternateRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_crossRegionInterfacePrivateDNS(rName, acctest.AlternateRegion(), "com.amazonaws."+acctest.AlternateRegion()+".s3"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_crossRegionInterfaceGlobalService(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_crossRegionInterfacePrivateDNS(rName, endpoints.UsEast1RegionID, "com.amazonaws.route53"), // Global service
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "dns_entry.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.dns_record_ip_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_gatewayIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_gatewayIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "cidr_blocks.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(awstypes.IpAddressTypeDualstack)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "requester_managed", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "service_network_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", string(awstypes.VpcEndpointTypeGateway)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", string(awstypes.VpcEndpointTypeInterface)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_only_for_inbound_resolver_endpoint", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, fmt.Sprintf("com.amazonaws.%s.s3", acctest.Region())),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", string(awstypes.VpcEndpointTypeInterface)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -1103,7 +1474,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1850,10 +2221,7 @@ resource "aws_vpc_endpoint" "test" {
 func testAccVPCEndpointConfig_gatewayLoadBalancer(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
+data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.10.10.0/25"
@@ -1888,7 +2256,7 @@ resource "aws_lb" "test" {
 
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required        = false
-  allowed_principals         = [data.aws_iam_session_context.current.issuer_arn]
+  allowed_principals         = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
   gateway_load_balancer_arns = [aws_lb.test.arn]
 
   tags = {
@@ -2101,6 +2469,183 @@ resource "aws_vpc_endpoint" "test" {
 `, rName))
 }
 
+func testAccVPCEndpointConfig_resourceConfigurationPrivateDNS(rName, privateDNSPreference string, privateDNSSpecifiedDomains []string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["80"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_vpc" "endpoint" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "endpoint" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.endpoint.id
+  cidr_block        = "10.1.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+  subnet_ids                 = [aws_subnet.endpoint.id]
+  vpc_endpoint_type          = "Resource"
+  vpc_id                     = aws_vpc.endpoint.id
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_preference        = %[2]q
+    private_dns_specified_domains = ["%[3]s"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, privateDNSPreference, strings.Join(privateDNSSpecifiedDomains, `", "`)))
+}
+
+func testAccVPCEndpointConfig_resourceConfigurationPrivateDNSWithoutPrivateDNSSpecifiedDomains(rName, privateDNSPreference string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_resource_gateway" "test" {
+  name       = %[1]q
+  vpc_id     = aws_vpc.test.id
+  subnet_ids = [aws_subnet.test.id]
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  port_ranges = ["80"]
+  protocol    = "TCP"
+
+  resource_configuration_definition {
+    dns_resource {
+      domain_name     = "example.com"
+      ip_address_type = "IPV4"
+    }
+  }
+}
+
+resource "aws_vpc" "endpoint" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "endpoint" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.endpoint.id
+  cidr_block        = "10.1.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.test.arn
+  subnet_ids                 = [aws_subnet.endpoint.id]
+  vpc_endpoint_type          = "Resource"
+  vpc_id                     = aws_vpc.endpoint.id
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_preference = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, privateDNSPreference))
+}
+
 func testAccVPCEndpointConfig_serviceNetwork(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -2140,4 +2685,200 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptions(rName, privateDNSPreference string, privateDNSSpecifiedDomains []string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_network_arn = aws_vpclattice_service_network.test.arn
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "ServiceNetwork"
+  vpc_id              = aws_vpc.test.id
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_preference        = %[2]q
+    private_dns_specified_domains = ["%[3]s"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, privateDNSPreference, strings.Join(privateDNSSpecifiedDomains, `", "`)))
+}
+
+func testAccVPCEndpointConfig_serviceNetworkPrivateDNSOptionsWithoutPrivateDNSSpecifiedDomains(rName, privateDNSPreference string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_network_arn = aws_vpclattice_service_network.test.arn
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "ServiceNetwork"
+  vpc_id              = aws_vpc.test.id
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_preference = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, privateDNSPreference))
+}
+
+func testAccVPCEndpointConfig_crossRegionInterfacePrivateDNS(rName string, serviceRegion string, serviceName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = %[3]q
+  private_dns_enabled = true
+  vpc_endpoint_type   = "Interface"
+  ip_address_type     = "ipv4"
+  service_region      = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+
+}
+`, rName, serviceRegion, serviceName)
+}
+
+func testAccVPCEndpointConfig_gatewayIPv6(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.0.0.0/16"
+  enable_dns_support               = true
+  enable_dns_hostnames             = true
+  assign_generated_ipv6_cidr_block = true
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id          = aws_vpc.test.id
+  ip_address_type = "dualstack"
+  service_name    = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  dns_options {
+    dns_record_ip_type = "dualstack"
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCEndpointConfig_interfaceWithPrivateDNSOnlyForInboundResolverEndpoint(rName string, privateDNSOnlyForInboundResolverEndpoint bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "gateway" {
+  vpc_id       = aws_vpc.test.id
+  service_name = "com.amazonaws.${data.aws_region.current.region}.s3"
+
+  tags = {
+    Name = "%[1]s-gateway"
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.s3"
+  vpc_endpoint_type = "Interface"
+
+  private_dns_enabled = true
+
+  dns_options {
+    private_dns_only_for_inbound_resolver_endpoint = %[2]t
+  }
+  tags = {
+    Name = "%[1]s-interface"
+  }
+  depends_on = [aws_vpc_endpoint.gateway]
+}
+`, rName, privateDNSOnlyForInboundResolverEndpoint)
 }

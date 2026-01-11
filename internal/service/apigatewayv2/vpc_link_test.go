@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,7 +76,7 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceVPCLink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

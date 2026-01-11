@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notificationscontacts
@@ -194,7 +194,7 @@ func findEmailContactByARN(ctx context.Context, conn *notificationscontacts.Clie
 	}
 
 	if output == nil || output.EmailContact == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmailContact, nil

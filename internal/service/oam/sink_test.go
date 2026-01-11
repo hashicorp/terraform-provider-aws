@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -86,7 +86,7 @@ func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfoam.ResourceSink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfoam.ResourceSink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

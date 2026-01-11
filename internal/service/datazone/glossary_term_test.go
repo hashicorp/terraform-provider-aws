@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -179,7 +179,7 @@ func TestAccDataZoneGlossaryTerm_disappears(t *testing.T) {
 				Config: testAccGlossaryTermConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlossaryTermExists(ctx, resourceName, &glossaryterm),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceGlossaryTerm, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceGlossaryTerm, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

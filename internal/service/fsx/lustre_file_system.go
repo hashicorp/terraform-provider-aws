@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -596,7 +597,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 
 	filesystem, err := findLustreFileSystemByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for Lustre File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -813,7 +814,7 @@ func findLustreFileSystemByID(ctx context.Context, conn *fsx.Client, id string) 
 	}
 
 	if output.LustreConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -856,7 +857,7 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -876,11 +877,11 @@ func findFileSystems(ctx context.Context, conn *fsx.Client, input *fsx.DescribeF
 	return output, nil
 }
 
-func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileSystemByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -893,7 +894,7 @@ func statusFileSystem(ctx context.Context, conn *fsx.Client, id string) retry.St
 }
 
 func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleCreating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
@@ -908,7 +909,7 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
 		return output, err
@@ -918,7 +919,7 @@ func waitFileSystemCreated(ctx context.Context, conn *fsx.Client, id string, tim
 }
 
 func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, startTime time.Time, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleUpdating),
 		Target:  enum.Slice(awstypes.FileSystemLifecycleAvailable),
 		Refresh: statusFileSystem(ctx, conn, id),
@@ -942,12 +943,12 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 
 			if details := output.FailureDetails; details != nil {
 				if message := aws.ToString(details.Message); administrativeActionsError != nil {
-					tfresource.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
+					retry.SetLastError(err, fmt.Errorf("%s: %w", message, administrativeActionsError))
 				} else {
-					tfresource.SetLastError(err, errors.New(message))
+					retry.SetLastError(err, errors.New(message))
 				}
 			} else {
-				tfresource.SetLastError(err, administrativeActionsError)
+				retry.SetLastError(err, administrativeActionsError)
 			}
 		}
 
@@ -958,7 +959,7 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 }
 
 func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
 		Target:       []string{},
 		Refresh:      statusFileSystem(ctx, conn, id),
@@ -971,7 +972,7 @@ func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, tim
 
 	if output, ok := outputRaw.(*awstypes.FileSystem); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileSystemLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(details.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(details.Message)))
 		}
 
 		return output, err
@@ -997,11 +998,11 @@ func findFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, f
 	return awstypes.AdministrativeAction{Status: awstypes.StatusCompleted}, nil
 }
 
-func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) retry.StateRefreshFunc {
+func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFileSystemAdministrativeAction(ctx, conn, fsID, actionType)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1014,7 +1015,7 @@ func statusFileSystemAdministrativeAction(ctx context.Context, conn *fsx.Client,
 }
 
 func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.Client, fsID string, actionType awstypes.AdministrativeActionType, timeout time.Duration) (*awstypes.AdministrativeAction, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusInProgress, awstypes.StatusPending),
 		Target:  enum.Slice(awstypes.StatusCompleted, awstypes.StatusUpdatedOptimizing),
 		Refresh: statusFileSystemAdministrativeAction(ctx, conn, fsID, actionType),
@@ -1026,7 +1027,7 @@ func waitFileSystemAdministrativeActionCompleted(ctx context.Context, conn *fsx.
 
 	if output, ok := outputRaw.(*awstypes.AdministrativeAction); ok {
 		if status, details := output.Status, output.FailureDetails; status == awstypes.StatusFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb
@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -38,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,9 +82,20 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
 			"cloud_exadata_infrastructure_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The unique identifier of the Exadata infrastructure for this VM cluster. Changing this will create a new resource.",
+			},
+			"cloud_exadata_infrastructure_arn": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The unique identifier of the Exadata infrastructure for this VM cluster. Changing this will create a new resource.",
 			},
@@ -270,9 +282,20 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 				Description: "The HTTPS link to the VM cluster resource in OCI.",
 			},
 			"odb_network_id": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: "The unique identifier of the ODB network for the VM cluster. This member is required. Changing this will create a new resource.",
+			},
+			"odb_network_arn": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "The unique identifier of the ODB network for the VM cluster. This member is required. Changing this will create a new resource.",
 			},
@@ -442,6 +465,51 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
+func (r *resourceCloudVmCluster) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data cloudVmClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	//Neither is present
+	if !data.isNetworkARNAndExadataInfraARNPresent() && !data.isNetworkIdAndExadataInfraIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. neither is present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	//Both are present
+	if data.isNetworkARNAndExadataInfraARNPresent() && data.isNetworkIdAndExadataInfraIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. both are present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// both exadata infra id and ARN present
+	if data.isExadataInfraARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. exadata infrastructure id and ARN present")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// both odb network infra and ARN present
+	if data.isNetworkARNAndIdPresent() {
+		err := errors.New("either odb_network_id & cloud_exadata_infrastructure_id combination or odb_network_arn & cloud_exadata_infrastructure_arn combination must present. odb network id and ARN ")
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ODB, create.ErrActionCreating, ResNameCloudVmCluster, data.DisplayName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
 func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ODBClient(ctx)
 	var plan cloudVmClusterResourceModel
@@ -449,12 +517,21 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
+	odbNetwork := plan.OdbNetworkId
+	if odbNetwork.IsNull() || odbNetwork.IsUnknown() {
+		odbNetwork = plan.OdbNetworkArn
+	}
+	cloudExadataInfra := plan.CloudExadataInfrastructureId
+	if cloudExadataInfra.IsNull() || cloudExadataInfra.IsUnknown() {
+		cloudExadataInfra = plan.CloudExadataInfrastructureArn
+	}
 	input := odb.CreateCloudVmClusterInput{
 		Tags: getTagsIn(ctx),
 		//Underlying API treats Hostname as hostname prefix.
 		Hostname: plan.HostnamePrefix.ValueStringPointer(),
 	}
+	input.OdbNetworkId = odbNetwork.ValueStringPointer()
+	input.CloudExadataInfrastructureId = cloudExadataInfra.ValueStringPointer()
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -485,8 +562,7 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		)
 		return
 	}
-	hostnamePrefix := strings.Split(*input.Hostname, "-")[0]
-	plan.HostnamePrefix = flex.StringValueToFramework(ctx, hostnamePrefix)
+	plan.HostnamePrefix = flex.StringToFramework(ctx, input.Hostname)
 	plan.HostnamePrefixComputed = flex.StringToFramework(ctx, createdVmCluster.Hostname)
 	//scan listener port not returned by API directly
 	plan.ScanListenerPortTcp = flex.Int32ToFramework(ctx, createdVmCluster.ListenerPort)
@@ -500,6 +576,10 @@ func (r *resourceCloudVmCluster) Create(ctx context.Context, req resource.Create
 		return
 	}
 	plan.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
+	plan.OdbNetworkId = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkId)
+	plan.OdbNetworkArn = flex.StringToFramework(ctx, createdVmCluster.OdbNetworkArn)
+	plan.CloudExadataInfrastructureId = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureId)
+	plan.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, createdVmCluster.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdVmCluster, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -514,9 +594,8 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	out, err := findCloudVmClusterForResourceByID(ctx, conn, state.CloudVmClusterId.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -528,8 +607,8 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		)
 		return
 	}
-	hostnamePrefix := strings.Split(*out.Hostname, "-")[0]
-	state.HostnamePrefix = types.StringValue(hostnamePrefix)
+	hostnamePrefix := computeHostnamePrefix(out.Hostname)
+	state.HostnamePrefix = flex.StringToFramework(ctx, hostnamePrefix)
 	state.HostnamePrefixComputed = types.StringValue(*out.Hostname)
 	//scan listener port not returned by API directly
 	state.ScanListenerPortTcp = flex.Int32ToFramework(ctx, out.ListenerPort)
@@ -543,6 +622,10 @@ func (r *resourceCloudVmCluster) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	state.GiVersion = flex.StringToFramework(ctx, giVersionMajor)
+	state.OdbNetworkId = flex.StringToFramework(ctx, out.OdbNetworkId)
+	state.OdbNetworkArn = flex.StringToFramework(ctx, out.OdbNetworkArn)
+	state.CloudExadataInfrastructureId = flex.StringToFramework(ctx, out.CloudExadataInfrastructureId)
+	state.CloudExadataInfrastructureArn = flex.StringToFramework(ctx, out.CloudExadataInfrastructureArn)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -584,8 +667,18 @@ func (r *resourceCloudVmCluster) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
+// computes hostname prefix from hostname prefix computed value.
+func computeHostnamePrefix(hostnamePrefixComputed *string) *string {
+	suffixIndex := strings.LastIndex(*hostnamePrefixComputed, "-")
+	if suffixIndex != -1 {
+		actualHostnamePrefix := (*hostnamePrefixComputed)[:suffixIndex]
+		return &actualHostnamePrefix
+	} else {
+		return hostnamePrefixComputed
+	}
+}
 func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(odbtypes.ResourceStatusProvisioning),
 		Target:                    enum.Slice(odbtypes.ResourceStatusAvailable, odbtypes.ResourceStatusFailed),
 		Refresh:                   statusCloudVmCluster(ctx, conn, id),
@@ -603,7 +696,7 @@ func waitCloudVmClusterCreated(ctx context.Context, conn *odb.Client, id string,
 }
 
 func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string, timeout time.Duration) (*odbtypes.CloudVmCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(odbtypes.ResourceStatusTerminating),
 		Target:  []string{},
 		Refresh: statusCloudVmCluster(ctx, conn, id),
@@ -618,10 +711,10 @@ func waitCloudVmClusterDeleted(ctx context.Context, conn *odb.Client, id string,
 	return nil, err
 }
 
-func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) retry.StateRefreshFunc {
+func statusCloudVmCluster(ctx context.Context, conn *odb.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCloudVmClusterForResourceByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -640,7 +733,7 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	out, err := conn.GetCloudVmCluster(ctx, &input)
 	if err != nil {
 		if errs.IsA[*odbtypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -649,7 +742,7 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 
 	if out == nil || out.CloudVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out.CloudVmCluster, nil
 }
@@ -666,52 +759,54 @@ func getMajorGiVersion(giVersionComputed *string) (*string, error) {
 
 type cloudVmClusterResourceModel struct {
 	framework.WithRegionModel
-	CloudVmClusterArn            types.String                                                                `tfsdk:"arn"`
-	CloudExadataInfrastructureId types.String                                                                `tfsdk:"cloud_exadata_infrastructure_id"`
-	CloudVmClusterId             types.String                                                                `tfsdk:"id"`
-	ClusterName                  types.String                                                                `tfsdk:"cluster_name"`
-	CpuCoreCount                 types.Int32                                                                 `tfsdk:"cpu_core_count"`
-	DataCollectionOptions        fwtypes.ListNestedObjectValueOf[cloudVMCDataCollectionOptionsResourceModel] `tfsdk:"data_collection_options"`
-	DataStorageSizeInTBs         types.Float64                                                               `tfsdk:"data_storage_size_in_tbs"`
-	DbNodeStorageSizeInGBs       types.Int32                                                                 `tfsdk:"db_node_storage_size_in_gbs"`
-	DbServers                    fwtypes.SetValueOf[types.String]                                            `tfsdk:"db_servers"`
-	DiskRedundancy               fwtypes.StringEnum[odbtypes.DiskRedundancy]                                 `tfsdk:"disk_redundancy"`
-	DisplayName                  types.String                                                                `tfsdk:"display_name"`
-	Domain                       types.String                                                                `tfsdk:"domain"`
-	GiVersion                    types.String                                                                `tfsdk:"gi_version" autoflex:",noflatten"`
-	GiVersionComputed            types.String                                                                `tfsdk:"gi_version_computed" autoflex:",noflatten"`
-	HostnamePrefixComputed       types.String                                                                `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
-	HostnamePrefix               types.String                                                                `tfsdk:"hostname_prefix" autoflex:"-"`
-	IormConfigCache              fwtypes.ListNestedObjectValueOf[cloudVMCExadataIormConfigResourceModel]     `tfsdk:"iorm_config_cache"`
-	IsLocalBackupEnabled         types.Bool                                                                  `tfsdk:"is_local_backup_enabled"`
-	IsSparseDiskGroupEnabled     types.Bool                                                                  `tfsdk:"is_sparse_diskgroup_enabled"`
-	LastUpdateHistoryEntryId     types.String                                                                `tfsdk:"last_update_history_entry_id"`
-	LicenseModel                 fwtypes.StringEnum[odbtypes.LicenseModel]                                   `tfsdk:"license_model"`
-	ListenerPort                 types.Int32                                                                 `tfsdk:"listener_port"`
-	MemorySizeInGbs              types.Int32                                                                 `tfsdk:"memory_size_in_gbs"`
-	NodeCount                    types.Int32                                                                 `tfsdk:"node_count"`
-	Ocid                         types.String                                                                `tfsdk:"ocid"`
-	OciResourceAnchorName        types.String                                                                `tfsdk:"oci_resource_anchor_name"`
-	OciUrl                       types.String                                                                `tfsdk:"oci_url"`
-	OdbNetworkId                 types.String                                                                `tfsdk:"odb_network_id"`
-	PercentProgress              types.Float32                                                               `tfsdk:"percent_progress"`
-	ScanDnsName                  types.String                                                                `tfsdk:"scan_dns_name"`
-	ScanDnsRecordId              types.String                                                                `tfsdk:"scan_dns_record_id"`
-	ScanIpIds                    fwtypes.ListValueOf[types.String]                                           `tfsdk:"scan_ip_ids"`
-	Shape                        types.String                                                                `tfsdk:"shape"`
-	SshPublicKeys                fwtypes.SetValueOf[types.String]                                            `tfsdk:"ssh_public_keys"`
-	Status                       fwtypes.StringEnum[odbtypes.ResourceStatus]                                 `tfsdk:"status"`
-	StatusReason                 types.String                                                                `tfsdk:"status_reason"`
-	StorageSizeInGBs             types.Int32                                                                 `tfsdk:"storage_size_in_gbs"`
-	SystemVersion                types.String                                                                `tfsdk:"system_version"`
-	Timeouts                     timeouts.Value                                                              `tfsdk:"timeouts"`
-	Timezone                     types.String                                                                `tfsdk:"timezone"`
-	VipIds                       fwtypes.ListValueOf[types.String]                                           `tfsdk:"vip_ids"`
-	CreatedAt                    timetypes.RFC3339                                                           `tfsdk:"created_at"`
-	ComputeModel                 fwtypes.StringEnum[odbtypes.ComputeModel]                                   `tfsdk:"compute_model"`
-	ScanListenerPortTcp          types.Int32                                                                 `tfsdk:"scan_listener_port_tcp" autoflex:",noflatten"`
-	Tags                         tftags.Map                                                                  `tfsdk:"tags"`
-	TagsAll                      tftags.Map                                                                  `tfsdk:"tags_all"`
+	CloudVmClusterArn             types.String                                                                `tfsdk:"arn"`
+	CloudExadataInfrastructureId  types.String                                                                `tfsdk:"cloud_exadata_infrastructure_id" autoflex:"-"`
+	CloudExadataInfrastructureArn types.String                                                                `tfsdk:"cloud_exadata_infrastructure_arn" autoflex:"-"`
+	CloudVmClusterId              types.String                                                                `tfsdk:"id"`
+	ClusterName                   types.String                                                                `tfsdk:"cluster_name"`
+	CpuCoreCount                  types.Int32                                                                 `tfsdk:"cpu_core_count"`
+	DataCollectionOptions         fwtypes.ListNestedObjectValueOf[cloudVMCDataCollectionOptionsResourceModel] `tfsdk:"data_collection_options"`
+	DataStorageSizeInTBs          types.Float64                                                               `tfsdk:"data_storage_size_in_tbs"`
+	DbNodeStorageSizeInGBs        types.Int32                                                                 `tfsdk:"db_node_storage_size_in_gbs"`
+	DbServers                     fwtypes.SetValueOf[types.String]                                            `tfsdk:"db_servers"`
+	DiskRedundancy                fwtypes.StringEnum[odbtypes.DiskRedundancy]                                 `tfsdk:"disk_redundancy"`
+	DisplayName                   types.String                                                                `tfsdk:"display_name"`
+	Domain                        types.String                                                                `tfsdk:"domain"`
+	GiVersion                     types.String                                                                `tfsdk:"gi_version" autoflex:",noflatten"`
+	GiVersionComputed             types.String                                                                `tfsdk:"gi_version_computed" autoflex:",noflatten"`
+	HostnamePrefixComputed        types.String                                                                `tfsdk:"hostname_prefix_computed" autoflex:",noflatten"`
+	HostnamePrefix                types.String                                                                `tfsdk:"hostname_prefix" autoflex:"-"`
+	IormConfigCache               fwtypes.ListNestedObjectValueOf[cloudVMCExadataIormConfigResourceModel]     `tfsdk:"iorm_config_cache"`
+	IsLocalBackupEnabled          types.Bool                                                                  `tfsdk:"is_local_backup_enabled"`
+	IsSparseDiskGroupEnabled      types.Bool                                                                  `tfsdk:"is_sparse_diskgroup_enabled"`
+	LastUpdateHistoryEntryId      types.String                                                                `tfsdk:"last_update_history_entry_id"`
+	LicenseModel                  fwtypes.StringEnum[odbtypes.LicenseModel]                                   `tfsdk:"license_model"`
+	ListenerPort                  types.Int32                                                                 `tfsdk:"listener_port"`
+	MemorySizeInGbs               types.Int32                                                                 `tfsdk:"memory_size_in_gbs"`
+	NodeCount                     types.Int32                                                                 `tfsdk:"node_count"`
+	Ocid                          types.String                                                                `tfsdk:"ocid"`
+	OciResourceAnchorName         types.String                                                                `tfsdk:"oci_resource_anchor_name"`
+	OciUrl                        types.String                                                                `tfsdk:"oci_url"`
+	OdbNetworkId                  types.String                                                                `tfsdk:"odb_network_id" autoflex:"-"`
+	OdbNetworkArn                 types.String                                                                `tfsdk:"odb_network_arn" autoflex:"-"`
+	PercentProgress               types.Float32                                                               `tfsdk:"percent_progress"`
+	ScanDnsName                   types.String                                                                `tfsdk:"scan_dns_name"`
+	ScanDnsRecordId               types.String                                                                `tfsdk:"scan_dns_record_id"`
+	ScanIpIds                     fwtypes.ListValueOf[types.String]                                           `tfsdk:"scan_ip_ids"`
+	Shape                         types.String                                                                `tfsdk:"shape"`
+	SshPublicKeys                 fwtypes.SetValueOf[types.String]                                            `tfsdk:"ssh_public_keys"`
+	Status                        fwtypes.StringEnum[odbtypes.ResourceStatus]                                 `tfsdk:"status"`
+	StatusReason                  types.String                                                                `tfsdk:"status_reason"`
+	StorageSizeInGBs              types.Int32                                                                 `tfsdk:"storage_size_in_gbs"`
+	SystemVersion                 types.String                                                                `tfsdk:"system_version"`
+	Timeouts                      timeouts.Value                                                              `tfsdk:"timeouts"`
+	Timezone                      types.String                                                                `tfsdk:"timezone"`
+	VipIds                        fwtypes.ListValueOf[types.String]                                           `tfsdk:"vip_ids"`
+	CreatedAt                     timetypes.RFC3339                                                           `tfsdk:"created_at"`
+	ComputeModel                  fwtypes.StringEnum[odbtypes.ComputeModel]                                   `tfsdk:"compute_model"`
+	ScanListenerPortTcp           types.Int32                                                                 `tfsdk:"scan_listener_port_tcp" autoflex:",noflatten"`
+	Tags                          tftags.Map                                                                  `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                                  `tfsdk:"tags_all"`
 }
 
 type cloudVMCDataCollectionOptionsResourceModel struct {
@@ -731,4 +826,20 @@ type cloudVMCDbIormConfigResourceModel struct {
 	DbName          types.String `tfsdk:"db_name"`
 	FlashCacheLimit types.String `tfsdk:"flash_cache_limit"`
 	Share           types.Int32  `tfsdk:"share"`
+}
+
+func (r cloudVmClusterResourceModel) isNetworkIdAndExadataInfraIdPresent() bool {
+	return !r.OdbNetworkId.IsNull() && !r.CloudExadataInfrastructureId.IsNull()
+}
+
+func (r cloudVmClusterResourceModel) isNetworkARNAndExadataInfraARNPresent() bool {
+	return !r.OdbNetworkArn.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
+}
+
+func (r cloudVmClusterResourceModel) isNetworkARNAndIdPresent() bool {
+	return !r.OdbNetworkId.IsNull() && !r.OdbNetworkArn.IsNull()
+}
+
+func (r cloudVmClusterResourceModel) isExadataInfraARNAndIdPresent() bool {
+	return !r.CloudExadataInfrastructureId.IsNull() && !r.CloudExadataInfrastructureArn.IsNull()
 }

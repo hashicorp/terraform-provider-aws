@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -13,7 +13,7 @@ terraform {
   required_providers {
     github = {
       source  = "integrations/github"
-      version = "6.6.0"
+      version = "6.9.1"
     }
   }
 

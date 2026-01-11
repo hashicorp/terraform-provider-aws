@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -30,8 +30,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -117,6 +117,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestMatchResourceAttr(resourceName, "upgrade_rollout_order", regexache.MustCompile(`^(first|second|last)$`)),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -140,7 +141,7 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -772,6 +773,13 @@ func TestAccRDSCluster_allocatedStorage_io1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 				),
 			},
+			{
+				Config: testAccClusterConfig_allocatedStorage(rName, "io1", 200, 1000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
+				),
+			},
 		},
 	})
 }
@@ -866,10 +874,17 @@ func TestAccRDSCluster_iops(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_iops(rName),
+				Config: testAccClusterConfig_iops(rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_iops(rName, 2000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2000"),
 				),
 			},
 		},
@@ -3992,7 +4007,7 @@ func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestChe
 
 			_, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -4032,7 +4047,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -4048,10 +4063,10 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 }
 
 func testAccCheckClusterExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -4590,7 +4605,7 @@ resource "aws_rds_cluster" "test" {
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, storageType, allocatedStorage, iops))
 }
 
-func testAccClusterConfig_iops(rName string) string {
+func testAccClusterConfig_iops(rName string, iops int) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_clusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -4612,12 +4627,12 @@ resource "aws_rds_cluster" "test" {
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage         = 100
-  iops                      = 1000
+  iops                      = %[4]d
   master_password           = "mustbeeightcharaters"
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, iops))
 }
 
 func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) string {

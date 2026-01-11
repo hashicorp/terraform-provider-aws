@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1988,7 +1988,7 @@ func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2121,7 +2121,7 @@ func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcognitoidp.FindUserPoolByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2
@@ -25,13 +25,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -208,7 +209,7 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 
 	outputGA, err := findApplicationByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -347,7 +348,7 @@ func startApplication(ctx context.Context, conn *m2.Client, id string, timeout t
 func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
 	app, err := findApplicationByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return nil, nil
 	}
 
@@ -381,7 +382,7 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -392,7 +393,7 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil || output.ApplicationId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -407,7 +408,7 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 	output, err := conn.GetApplicationVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -418,17 +419,17 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 	}
 
 	if output == nil || output.ApplicationVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+func statusApplication(ctx context.Context, conn *m2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -440,11 +441,11 @@ func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.St
 	}
 }
 
-func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) retry.StateRefreshFunc {
+func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findApplicationVersionByTwoPartKey(ctx, conn, id, version)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -457,7 +458,7 @@ func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, v
 }
 
 func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLifecycleCreating),
 		Target:  enum.Slice(awstypes.ApplicationLifecycleCreated, awstypes.ApplicationLifecycleAvailable),
 		Refresh: statusApplication(ctx, conn, id),
@@ -467,7 +468,7 @@ func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -476,7 +477,7 @@ func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, version int32, timeout time.Duration) (*m2.GetApplicationVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationVersionLifecycleCreating),
 		Target:  enum.Slice(awstypes.ApplicationVersionLifecycleAvailable),
 		Refresh: statusApplicationVersion(ctx, conn, id, version),
@@ -486,7 +487,7 @@ func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, ver
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationVersionOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -495,7 +496,7 @@ func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, ver
 }
 
 func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLifecycleDeleting, awstypes.ApplicationLifecycleDeletingFromEnvironment),
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, id),
@@ -505,7 +506,7 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -514,7 +515,7 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationLifecycleDeletingFromEnvironment),
 		Target:  enum.Slice(awstypes.ApplicationLifecycleAvailable),
 		Refresh: statusApplication(ctx, conn, id),
@@ -524,7 +525,7 @@ func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -533,7 +534,7 @@ func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client,
 }
 
 func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ApplicationLifecycleStopping),
 		Target:                    enum.Slice(awstypes.ApplicationLifecycleStopped),
 		Refresh:                   statusApplication(ctx, conn, id),
@@ -544,7 +545,7 @@ func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -553,7 +554,7 @@ func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ApplicationLifecycleStarting),
 		Target:                    enum.Slice(awstypes.ApplicationLifecycleRunning),
 		Refresh:                   statusApplication(ctx, conn, id),
@@ -564,7 +565,7 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

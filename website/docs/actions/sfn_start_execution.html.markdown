@@ -233,5 +233,6 @@ This action supports the following arguments:
 
 * `input` - (Optional) JSON input data for the execution. Must be valid JSON. Defaults to `{}` if not specified. The input size limit is 256 KB.
 * `name` - (Optional) Name of the execution. Must be unique within the account/region/state machine for 90 days. If not provided, Step Functions automatically generates a UUID. Names must not contain whitespace, brackets, wildcards, or special characters.
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `state_machine_arn` - (Required) ARN of the state machine to execute. Can be an unqualified ARN, version-qualified ARN (e.g., `arn:aws:states:region:account:stateMachine:name:version`), or alias-qualified ARN (e.g., `arn:aws:states:region:account:stateMachine:name:alias`).
 * `trace_header` - (Optional) AWS X-Ray trace header for distributed tracing. Used to correlate execution traces across services.

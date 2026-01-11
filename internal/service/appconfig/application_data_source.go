@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig
@@ -68,7 +68,7 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	conn := d.Meta().AppConfigClient(ctx)
 
 	var data dataSourceApplicationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -93,14 +93,14 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data), smerr.ID, data.Name.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.ARN = flex.StringValueToFramework(ctx, d.Meta().RegionalARN(ctx, "appconfig", "application/"+data.ID.ValueString()))
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
 }
 
 func (d *dataSourceApplication) ConfigValidators(_ context.Context) []datasource.ConfigValidator {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -121,7 +122,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	out, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -147,7 +148,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	policy, err := findResourcePolicyByName(ctx, conn, state.PolicyName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 	if err != nil {
@@ -188,7 +189,7 @@ func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name strin
 		return nil, err
 	}
 	if policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return policy, nil
@@ -212,7 +213,7 @@ func findResourcePolicies(ctx context.Context, conn *xray.Client, input *xray.Li
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

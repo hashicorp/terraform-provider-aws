@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfrontkeyvaluestore_test
@@ -24,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -94,7 +94,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -379,7 +379,7 @@ func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfcloudfrontkeyvaluestore.FindKeyValueStoreByARN(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 

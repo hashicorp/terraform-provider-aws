@@ -56,6 +56,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `ami_tags` - (Optional)  Tags that are applied to the AMI that Image Builder creates during the Build phase prior to image distribution. Maximum of 50 tags.
 * `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
 * `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.

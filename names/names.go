@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Package names provides constants for AWS service names that are used as keys
@@ -102,6 +102,7 @@ const (
 	KafkaConnectEndpointID                 = "kafkaconnect"
 	KendraEndpointID                       = "kendra"
 	KinesisVideoEndpointID                 = "kinesisvideo"
+	LakeFormationEndpointID                = "lakeformation"
 	LambdaEndpointID                       = "lambda"
 	LexModelBuildingServiceEndpointID      = "models.lex"
 	LexV2ModelsEndpointID                  = "models-v2-lex"

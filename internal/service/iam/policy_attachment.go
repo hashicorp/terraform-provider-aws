@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -105,7 +106,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	policyARN := d.Get("policy_arn").(string)
 	groups, roles, users, err := findEntitiesForPolicyByARN(ctx, conn, policyARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -285,7 +286,7 @@ func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.Client, arn strin
 	}
 
 	if len(groups) == 0 && len(roles) == 0 && len(users) == 0 {
-		return nil, nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	groupName := tfslices.ApplyToAll(groups, func(v awstypes.PolicyGroup) string { return aws.ToString(v.GroupName) })
@@ -305,7 +306,7 @@ func findEntitiesForPolicy(ctx context.Context, conn *iam.Client, input *iam.Lis
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, nil, nil, &retry.NotFoundError{
+			return nil, nil, nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

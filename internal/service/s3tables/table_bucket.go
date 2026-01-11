@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -23,24 +23,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table_bucket", name="Table Bucket")
+// @ArnIdentity
+// @ArnFormat("bucket/{name}")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableBucketOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableBucketImportStateIdFunc")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(preIdentityVersion="6.19.0")
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketResource{}, nil
 }
 
 type tableBucketResource struct {
 	framework.ResourceWithModel[tableBucketResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *tableBucketResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -82,16 +93,16 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringMustContainLowerCaseLettersNumbersHypens,
-					stringMustStartWithLetterOrNumber,
-					stringMustEndWithLetterOrNumber,
-					validators.PrefixNoneOf(
+					tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersHyphens,
+					tfstringvalidator.StartsWithLetterOrNumber,
+					tfstringvalidator.EndsWithLetterOrNumber,
+					tfstringvalidator.PrefixNoneOf(
 						"xn--",
 						"sthree-",
 						"sthree-configurator",
 						"amzn-s3-demo-",
 					),
-					validators.SuffixNoneOf(
+					tfstringvalidator.SuffixNoneOf(
 						"-s3alias",
 						"--ol-s3",
 						".mrap",
@@ -105,6 +116,8 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -124,6 +137,9 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
 	outputCTB, err := conn.CreateTableBucket(ctx, &input)
 
@@ -181,7 +197,7 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 
@@ -198,7 +214,7 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 	awsEncryptionConfig, err := findTableBucketEncryptionConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) encryption", name), err.Error())
 
@@ -232,7 +248,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	name, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.ARN)
 	outputGTB, err := findTableBucketByARN(ctx, conn, tableBucketARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -253,7 +269,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 
@@ -270,7 +286,7 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 	awsEncryptionConfig, err := findTableBucketEncryptionConfigurationByARN(ctx, conn, tableBucketARN)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) encryption", name), err.Error())
 
@@ -367,7 +383,7 @@ func (r *tableBucketResource) Update(ctx context.Context, request resource.Updat
 		outputGTBMC, err := findTableBucketMaintenanceConfigurationByARN(ctx, conn, tableBucketARN)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 		case err != nil:
 			response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) maintenance configuration", name), err.Error())
 
@@ -432,7 +448,7 @@ func (r *tableBucketResource) Delete(ctx context.Context, request resource.Delet
 }
 
 func (r *tableBucketResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), request, response)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	// Set force_destroy to false on import to prevent accidental deletion
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)
@@ -450,7 +466,7 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, input *s3tables
 	output, err := conn.GetTableBucket(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -460,7 +476,7 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, input *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -478,7 +494,7 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	output, err := conn.GetTableBucketEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -488,7 +504,7 @@ func findTableBucketEncryptionConfiguration(ctx context.Context, conn *s3tables.
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -506,7 +522,7 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	output, err := conn.GetTableBucketMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -516,7 +532,7 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -531,6 +547,8 @@ type tableBucketResourceModel struct {
 	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
 	Name                     types.String                                                    `tfsdk:"name"`
 	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
+	Tags                     tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                      `tfsdk:"tags_all"`
 }
 type encryptionConfigurationModel struct {
 	KMSKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`

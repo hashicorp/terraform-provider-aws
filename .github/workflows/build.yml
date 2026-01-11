@@ -1,18 +1,18 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 # This workflow builds the product for all supported platforms and uploads the resulting
 # binaries as Actions artifacts. The workflow also uploads a build metadata file
 # (metadata.json) -- and a Terraform Registry manifest file (terraform-registry-manifest.json).
+#
+# Reference: https://github.com/hashicorp/terraform-provider-crt-example/blob/main/.github/workflows/README.md
 
 name: build
 
 # We default to running this workflow on every push to every branch.
 # This provides fast feedback when build issues occur, so they can be
 # fixed prior to being merged to the main branch.
-#
-# If you want to opt out of this, and only run the build on certain branches
-# please refer to the documentation on branch filtering here:
-#
-#   https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
-#
+
 on: [workflow_dispatch, push]
 
 env:
@@ -28,8 +28,8 @@ jobs:
     outputs:
       go-version: ${{ steps.get-go-version.outputs.go-version }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: 'go.mod'
       - name: Detect Go version
@@ -52,7 +52,6 @@ jobs:
       product-prerelease-version: ${{ steps.set-product-version.outputs.prerelease-product-version }}
       product-minor-version: ${{ steps.set-product-version.outputs.minor-product-version }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Set variables
         id: set-product-version
         uses: hashicorp/actions-set-product-version@v2
@@ -67,7 +66,7 @@ jobs:
       filepath: ${{ steps.generate-metadata-file.outputs.filepath }}
     steps:
       - name: "Checkout directory"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Generate metadata file
         id: generate-metadata-file
         uses: hashicorp/actions-generate-metadata@v1
@@ -75,17 +74,22 @@ jobs:
           version: ${{ needs.set-product-version.outputs.product-version }}
           product: ${{ env.PKG_NAME }}
           repositoryOwner: "hashicorp"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: metadata.json
           path: ${{ steps.generate-metadata-file.outputs.filepath }}
 
+  # Uploads an Actions artifact named terraform-registry-manifest.json.zip.
+  #
+  # The artifact contains a single file with a filename that Terraform Registry expects
+  # (example: terraform-provider-aws_2.3.6-alpha.1_manifest.json). The file contents
+  # are identical to the terraform-registry-manifest.json file in the source repository.
   upload-terraform-registry-manifest-artifact:
     needs: set-product-version
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout directory"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           path: ${{ env.PKG_NAME }}
       - name: "Copy manifest from checkout directory to a file with the desired name"
@@ -99,7 +103,7 @@ jobs:
 
           cp "$source" "$destination"
           echo "filename=$destination" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: terraform-registry-manifest.json
           path: ${{ steps.terraform-registry-manifest.outputs.filename }}
@@ -115,7 +119,7 @@ jobs:
     needs:
       - get-go-version
       - set-product-version
-    runs-on: custom-ubuntu-22.04-medium
+    runs-on: custom-ubuntu-22.04-large
     strategy:
       fail-fast: true
       matrix:
@@ -137,7 +141,7 @@ jobs:
 
     name: Go ${{ needs.get-go-version.outputs.go-version }} ${{ matrix.goos }} ${{ matrix.goarch }} build
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: hashicorp/actions-go-build@v1
         env:
           CGO_ENABLED: 0
@@ -145,7 +149,6 @@ jobs:
           PRERELEASE_VERSION: ${{ needs.set-product-version.outputs.product-prerelease-version}}
           METADATA_VERSION: ${{ env.METADATA }}
         with:
-          # Protocol v6 providers should omit the `_x5` suffix.
           bin_name: "${{ env.PKG_NAME }}_v${{ needs.set-product-version.outputs.product-version }}_x5"
           product_name: ${{ env.PKG_NAME }}
           product_version: ${{ needs.set-product-version.outputs.product-version }}

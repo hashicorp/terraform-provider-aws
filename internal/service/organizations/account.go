@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -17,7 +17,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -115,6 +116,11 @@ func resourceAccount() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
 			names.AttrStatus: {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "status is deprecated. Use state instead.",
+			},
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -223,7 +229,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	account, err := findAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AWS Organizations Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -246,6 +252,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrName, account.Name)
 	d.Set("parent_id", parentAccountID)
 	d.Set(names.AttrStatus, account.Status)
+	d.Set(names.AttrState, account.State)
 
 	return diags
 }
@@ -369,7 +376,7 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 	output, err := conn.DescribeAccount(ctx, input)
 
 	if errs.IsA[*awstypes.AccountNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -380,12 +387,12 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 	}
 
 	if output == nil || output.Account == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	if status := output.Account.Status; status == awstypes.AccountStatusSuspended {
-		return nil, &retry.NotFoundError{
-			Message:     string(status),
+	if state := output.Account.State; state == awstypes.AccountStateClosed {
+		return nil, &sdkretry.NotFoundError{
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -444,7 +451,7 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client
 	output, err := conn.DescribeCreateAccountStatus(ctx, input)
 
 	if errs.IsA[*awstypes.CreateAccountStatusNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -455,17 +462,17 @@ func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client
 	}
 
 	if output == nil || output.CreateAccountStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CreateAccountStatus, nil
 }
 
-func statusCreateAccountState(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
+func statusCreateAccountState(ctx context.Context, conn *organizations.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCreateAccountStatusByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -478,7 +485,7 @@ func statusCreateAccountState(ctx context.Context, conn *organizations.Client, i
 }
 
 func waitAccountCreated(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.CreateAccountStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.CreateAccountStateInProgress),
 		Target:       enum.Slice(awstypes.CreateAccountStateSucceeded),
 		Refresh:      statusCreateAccountState(ctx, conn, id),
@@ -490,7 +497,7 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 
 	if output, ok := outputRaw.(*awstypes.CreateAccountStatus); ok {
 		if state := output.State; state == awstypes.CreateAccountStateFailed {
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		}
 
 		return output, err
@@ -499,11 +506,11 @@ func waitAccountCreated(ctx context.Context, conn *organizations.Client, id stri
 	return nil, err
 }
 
-func statusAccountStatus(ctx context.Context, conn *organizations.Client, id string) retry.StateRefreshFunc {
+func statusAccountState(ctx context.Context, conn *organizations.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -511,15 +518,15 @@ func statusAccountStatus(ctx context.Context, conn *organizations.Client, id str
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, string(output.State), nil
 	}
 }
 
 func waitAccountDeleted(ctx context.Context, conn *organizations.Client, id string, timeout time.Duration) (*awstypes.Account, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(awstypes.AccountStatusPendingClosure, awstypes.AccountStatusActive),
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:      enum.Slice(awstypes.AccountStatePendingClosure, awstypes.AccountStateActive),
 		Target:       []string{},
-		Refresh:      statusAccountStatus(ctx, conn, id),
+		Refresh:      statusAccountState(ctx, conn, id),
 		PollInterval: 10 * time.Second,
 		Timeout:      timeout,
 	}

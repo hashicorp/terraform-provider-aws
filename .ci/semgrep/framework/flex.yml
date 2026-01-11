@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: flex-type-from-framework
     languages: [go]
@@ -35,6 +38,7 @@ rules:
         - "/internal/service/ssoadmin/application.go"
         - "/internal/service/ssoadmin/trusted_token_issuer.go"
         - "/internal/service/verifiedpermissions/schema.go"
+        - "/internal/service/bedrockagentcore/gateway_target.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
       - metavariable-comparison:
@@ -79,6 +83,7 @@ rules:
         - "/internal/service/ssoadmin/trusted_token_issuer.go"
         - "/internal/service/verifiedpermissions/identity_source.go"
         - "/internal/service/verifiedpermissions/schema.go"
+        - "/internal/service/bedrockagentcore/gateway_target.go"
     patterns:
       - pattern: func $FUNC(ctx context.Context, ...)
       - metavariable-comparison:

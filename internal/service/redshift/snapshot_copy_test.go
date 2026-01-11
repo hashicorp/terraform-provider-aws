@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -83,7 +83,7 @@ func TestAccRedshiftSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotCopy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +115,7 @@ func TestAccRedshiftSnapshotCopy_disappears_Cluster(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,7 +180,7 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			_, err := tfredshift.FindSnapshotCopyByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
+			if errs.IsA[*sdkretry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {

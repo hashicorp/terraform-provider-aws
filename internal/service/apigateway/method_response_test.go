@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,7 +81,7 @@ func TestAccAPIGatewayMethodResponse_disappears(t *testing.T) {
 				Config: testAccMethodResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodResponse(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceMethodResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,7 +121,7 @@ func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -89,6 +89,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_version` - (Optional) Version of the build input to be built. For GitHub, this can be a commit SHA, branch name, or tag name.
 * `timeout` - (Optional) Timeout in seconds for the build operation. Defaults to 1800 seconds (30 minutes).
 * `environment_variables_override` - (Optional) Environment variables to override for this build. See [Environment Variables Override](#environment-variables-override) below.

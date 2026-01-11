@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -364,7 +364,7 @@ func TestAccCodeBuildWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceWebhook(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -393,7 +393,7 @@ func TestAccCodeBuildWebhook_Disappears_project(t *testing.T) {
 				Config: testAccWebhookConfig_gitHub(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), projectResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceProject(), projectResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -617,7 +617,7 @@ func testAccCheckWebhookDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindWebhookByProjectName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -662,7 +662,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_gitHub(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -699,7 +699,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_buildType(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   build_type   = %[1]q
   project_name = aws_codebuild_project.test.name
@@ -708,7 +708,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_branchFilter(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   branch_filter = %[1]q
   project_name  = aws_codebuild_project.test.name
@@ -717,7 +717,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_filterGroup(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 
@@ -777,7 +777,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_manualCreation(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name    = aws_codebuild_project.test.name
   manual_creation = true
@@ -786,7 +786,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(rName, requiresCommentApproval string, approverRoles []string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   pull_request_build_policy {
@@ -798,7 +798,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_gitHubWithPullRequestBuildPolicyNoApproverRoles(rName, requiresCommentApproval string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
   pull_request_build_policy {

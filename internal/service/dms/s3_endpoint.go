@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -376,14 +377,14 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err == nil && endpoint.S3Settings == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

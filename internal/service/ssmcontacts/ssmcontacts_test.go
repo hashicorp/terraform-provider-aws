@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -22,6 +22,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateDisplayName":  testAccContact_updateDisplayName,
 			"tags":               testAccSSMContactsContact_tagsSerial,
 			"updateType":         testAccContact_updateType,
+			"identity":           testAccSSMContactsContact_IdentitySerial,
 		},
 		"ContactDataSource": {
 			acctest.CtBasic: testAccContactDataSource_basic,

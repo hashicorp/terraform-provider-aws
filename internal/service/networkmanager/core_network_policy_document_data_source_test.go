@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -237,7 +237,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     conditions {
-      type     = "account-id"
+      type     = "account"
       operator = "contains"
       value    = "one"
     }
@@ -283,7 +283,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
 
     conditions {
-      type     = "account-id"
+      type     = "account"
       operator = "contains"
       value    = "one"
     }
@@ -447,7 +447,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
           "value": "connect"
         },
         {
-          "type": "account-id",
+          "type": "account",
           "operator": "contains",
           "value": "one"
         },
@@ -488,7 +488,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
           "value": "vpc"
         },
         {
-          "type": "account-id",
+          "type": "account",
           "operator": "contains",
           "value": "one"
         },

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -18,15 +18,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -52,17 +52,7 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		"archive_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"archive_policy": sdkv2.JSONDocumentWithEmptySchemaOptional(),
 		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -76,17 +66,7 @@ var (
 			Optional: true,
 			Default:  false,
 		},
-		"delivery_policy": {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		"delivery_policy": sdkv2.JSONDocumentSchemaOptional(),
 		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
@@ -170,18 +150,7 @@ var (
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		names.AttrPolicy: {
-			Type:                  schema.TypeString,
-			Optional:              true,
-			Computed:              true,
-			ValidateFunc:          validation.StringIsJSON,
-			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-			DiffSuppressOnRefresh: true,
-			StateFunc: func(v any) string {
-				json, _ := structure.NormalizeJsonString(v)
-				return json
-			},
-		},
+		names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 		"signature_version": {
 			Type:         schema.TypeInt,
 			Optional:     true,
@@ -306,12 +275,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(output.TopicArn))
 
-	// Retry for eventual consistency; if ABAC is in use, this takes some time
-	// usually about 10s, presumably for tags really to be there, and we get a
-	// permissions error.
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *types.AuthorizationErrorException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
-		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
-	}, "no identity-based policy allows")
+	err = putTopicAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -340,7 +304,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -453,7 +417,25 @@ func putTopicAttributes(ctx context.Context, conn *sns.Client, arn string, attri
 			continue
 		}
 
-		err := putTopicAttribute(ctx, conn, arn, name, value)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return nil, putTopicAttribute(ctx, conn, arn, name, value)
+			},
+			func(err error) (bool, error) {
+				// Retry for eventual consistency; if ABAC is in use, this takes some time
+				// usually about 10s, presumably for tags really to be there, and we get a
+				// permissions error.
+				if errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "no identity-based policy allows") {
+					return true, err
+				}
+
+				if errs.IsAErrorMessageContains[*types.AuthorizationErrorException](err, "is not authorized to perform") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return err
@@ -467,14 +449,14 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	const (
 		timeout = 2 * time.Minute
 	)
-	input := &sns.SetTopicAttributesInput{
+	input := sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),
 		TopicArn:       aws.String(arn),
 	}
 
 	_, err := tfresource.RetryWhenIsA[any, *types.InvalidParameterException](ctx, timeout, func(ctx context.Context) (any, error) {
-		return conn.SetTopicAttributes(ctx, input)
+		return conn.SetTopicAttributes(ctx, &input)
 	})
 
 	if err != nil {
@@ -526,7 +508,7 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	output, err := conn.GetTopicAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -537,7 +519,7 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package scheduler
@@ -19,13 +19,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -490,7 +491,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 		in.Target = expandTarget(ctx, v[0].(map[string]any))
 	}
 
-	out, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.CreateScheduleOutput, error) {
+	out, err := retryWhenIAMNotPropagated(ctx, func(ctx context.Context) (*scheduler.CreateScheduleOutput, error) {
 		return conn.CreateSchedule(ctx, in)
 	})
 
@@ -532,7 +533,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -622,7 +623,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	log.Printf("[DEBUG] Updating EventBridge Scheduler Schedule (%s): %#v", d.Id(), in)
 
-	_, err := retryWhenIAMNotPropagated(ctx, func() (*scheduler.UpdateScheduleOutput, error) {
+	_, err := retryWhenIAMNotPropagated(ctx, func(ctx context.Context) (*scheduler.UpdateScheduleOutput, error) {
 		return conn.UpdateSchedule(ctx, in)
 	})
 
@@ -671,7 +672,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	out, err := conn.GetSchedule(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -682,7 +683,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	}
 
 	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

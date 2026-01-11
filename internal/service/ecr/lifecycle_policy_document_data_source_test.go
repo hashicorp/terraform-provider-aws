@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -34,7 +34,7 @@ const testAccLifecyclePolicyDocumentDataSourceConfig_basic = `
 data "aws_ecr_lifecycle_policy_document" "test" {
   rule {
     priority    = 1
-    description = "This is a test."
+    description = "This is a test"
 
     selection {
       tag_status      = "tagged"
@@ -58,13 +58,47 @@ data "aws_ecr_lifecycle_policy_document" "test" {
 
   rule {
     priority    = 3
-    description = "This is tag pattern list test."
+    description = "This is tag pattern list test"
 
     selection {
       tag_status       = "tagged"
       tag_pattern_list = ["*test*1*2*3", "test*1*2*3*"]
       count_type       = "imageCountMoreThan"
       count_number     = 100
+    }
+  }
+
+  rule {
+    priority    = 4
+    description = "Archive images not pulled for more than 30 days"
+
+    selection {
+      tag_status   = "any"
+      count_type   = "sinceImagePulled"
+      count_unit   = "days"
+      count_number = 30
+    }
+
+    action {
+      type                 = "transition"
+      target_storage_class = "archive"
+    }
+  }
+
+  rule {
+    priority    = 5
+    description = "Delete images archived for more than 365 days"
+
+    selection {
+      tag_status    = "any"
+      storage_class = "archive"
+      count_type    = "sinceImageTransitioned"
+      count_unit    = "days"
+      count_number  = 365
+    }
+
+    action {
+      type = "expire"
     }
   }
 }
