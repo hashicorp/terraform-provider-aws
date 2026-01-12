@@ -99,25 +99,6 @@ func resourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				if v := diff.Get("restore_source_name"); v != "" {
-					return nil
-				}
-
-				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
-					diff.Get("restore_source_table_arn") != "" {
-					return nil
-				}
-
-				var errs []error
-				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				if err := validateProvisionedThroughputField(diff, "write_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				return errors.Join(errs...)
-			},
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta any) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
@@ -592,6 +573,8 @@ func resourceTable() *schema.Resource {
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
 			validateGlobalSecondaryIndexes,
 			validateStreamSpecification,
+			validateProvisionedThroughputField(cty.GetAttrPath("read_capacity")),
+			validateProvisionedThroughputField(cty.GetAttrPath("write_capacity")),
 		},
 	}
 }
@@ -3284,25 +3267,6 @@ func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.
 	return nil
 }
 
-func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) error {
-	oldBillingMode, newBillingMode := diff.GetChange("billing_mode")
-	v := diff.Get(key).(int)
-	if oldBillingMode, newBillingMode := awstypes.BillingMode(oldBillingMode.(string)), awstypes.BillingMode(newBillingMode.(string)); newBillingMode == awstypes.BillingModeProvisioned {
-		if v < provisionedThroughputMinValue {
-			// Assuming the field is ignored, likely due to autoscaling
-			if oldBillingMode == awstypes.BillingModePayPerRequest {
-				return nil
-			}
-			return fmt.Errorf("%s must be at least 1 when billing_mode is %q", key, newBillingMode)
-		}
-	} else if newBillingMode == awstypes.BillingModePayPerRequest && oldBillingMode != awstypes.BillingModeProvisioned {
-		if v != 0 {
-			return fmt.Errorf("%s can not be set when billing_mode is %q", key, awstypes.BillingModePayPerRequest)
-		}
-	}
-	return nil
-}
-
 func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	configRaw := d.GetRawConfig()
 	if !configRaw.IsKnown() || configRaw.IsNull() {
@@ -3446,6 +3410,52 @@ func validateStreamSpecification(ctx context.Context, req schema.ValidateResourc
 				cty.GetAttrPath("stream_enabled"),
 				"false",
 			))
+		}
+	}
+}
+
+func validateProvisionedThroughputField(path cty.Path) schema.ValidateRawResourceConfigFunc {
+	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+		v, err := path.Apply(req.RawConfig)
+		if err != nil {
+			resp.Diagnostics = sdkdiag.AppendFromErr(resp.Diagnostics, err)
+			return
+		}
+
+		if !v.IsKnown() || v.IsNull() {
+			return
+		}
+
+		billingMode := req.RawConfig.GetAttr("billing_mode")
+		if !billingMode.IsKnown() || billingMode.IsNull() {
+			return
+		}
+
+		bm := awstypes.BillingMode(billingMode.AsString())
+		value, _ := v.AsBigFloat().Int64()
+
+		switch bm {
+		case awstypes.BillingModeProvisioned:
+			if value < provisionedThroughputMinValue {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewInvalidValueAttributeCombinationError(
+					path,
+					fmt.Sprintf("Attribute %q must be at least %d when %q is %q.",
+						errs.PathString(path),
+						provisionedThroughputMinValue,
+						cty.GetAttrPath("billing_mode"),
+						string(awstypes.BillingModeProvisioned),
+					),
+				))
+			}
+
+		case awstypes.BillingModePayPerRequest:
+			if value != 0 {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenError(
+					path,
+					cty.GetAttrPath("billing_mode"),
+					string(awstypes.BillingModePayPerRequest),
+				))
+			}
 		}
 	}
 }
