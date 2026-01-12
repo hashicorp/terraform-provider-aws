@@ -1541,7 +1541,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectoryWithSecret(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "self_managed_active_directory.0.auth_secret_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "self_managed_active_directory.0.auth_secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -1602,7 +1602,7 @@ resource "aws_secretsmanager_secret" "test" {
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
+  secret_id = aws_secretsmanager_secret.test.id
   secret_string = jsonencode({
     CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME = "Admin"
     CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD = aws_directory_service_directory.test.password
@@ -1644,7 +1644,7 @@ resource "aws_fsx_windows_file_system" "test" {
   tags = {
     Name = %[1]q
   }
-  
+
   depends_on = [aws_secretsmanager_secret_policy.test]
 }
 `, rName))
