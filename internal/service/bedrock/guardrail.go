@@ -398,12 +398,26 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 											listplanmodifier.UseStateForUnknown(),
 										},
 									},
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
 									names.AttrName: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
 											stringvalidator.RegexMatches(topicsConfigNameRegex, ""),
 										},
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailTopicAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
 									},
 									names.AttrType: schema.StringAttribute{
 										Required:   true,
@@ -889,10 +903,14 @@ type guardrailTopicPolicyConfigModel struct {
 }
 
 type guardrailTopicConfigModel struct {
-	Definition types.String                                    `tfsdk:"definition"`
-	Examples   fwtypes.ListOfString                            `tfsdk:"examples"`
-	Name       types.String                                    `tfsdk:"name"`
-	Type       fwtypes.StringEnum[awstypes.GuardrailTopicType] `tfsdk:"type"`
+	Definition    types.String                                      `tfsdk:"definition"`
+	Examples      fwtypes.ListOfString                              `tfsdk:"examples"`
+	InputAction   fwtypes.StringEnum[awstypes.GuardrailTopicAction] `tfsdk:"input_action"`
+	InputEnabled  types.Bool                                        `tfsdk:"input_enabled"`
+	Name          types.String                                      `tfsdk:"name"`
+	OutputAction  fwtypes.StringEnum[awstypes.GuardrailTopicAction] `tfsdk:"output_action"`
+	OutputEnabled types.Bool                                        `tfsdk:"output_enabled"`
+	Type          fwtypes.StringEnum[awstypes.GuardrailTopicType]   `tfsdk:"type"`
 }
 
 type guardrailTopicsTierConfigModel struct {
