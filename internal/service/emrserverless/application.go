@@ -26,9 +26,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+var prometheusRemoteWriteURLPattern = `^https://aps-workspaces\.(` + inttypes.CanonicalRegionPatternNoAnchors + `)\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`
 
 // @SDKResource("aws_emrserverless_application", name="Application")
 // @Tags(identifierAttribute="arn")
@@ -316,7 +319,7 @@ func resourceApplication() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 10280),
 											validation.StringMatch(
-												regexache.MustCompile(`^https://aps-workspaces\.([a-z]{2,4}-[a-z-]{1,20}-[1-9])\.amazonaws(\.[0-9A-Za-z]{2,4})+/workspaces/[-_.0-9A-Za-z]{1,100}/api/v1/remote_write$`),
+												regexache.MustCompile(prometheusRemoteWriteURLPattern),
 												"remote_write_url must be a valid Amazon Managed Service for Prometheus remote write URL",
 											),
 										),

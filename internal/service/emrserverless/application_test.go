@@ -18,6 +18,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
+
+	validURLs := []string{
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", // ESC URL
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write",
+	}
+
+	for _, url := range validURLs {
+		if !regex.MatchString(url) {
+			t.Errorf("Expected %q to be valid", url)
+		}
+	}
+
+	invalidURLs := []string{
+		"https://aps-workspaces.invalid-region.amazonaws.com/workspaces/test/api/v1/remote_write",
+		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   // http not https
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      // empty workspace
+		"https://aps-workspaces.us--east-1.amazonaws.com/workspaces/test/api/v1/remote_write", // double dash
+		"https://aps-workspaces.us-east-.amazonaws.com/workspaces/test/api/v1/remote_write",   // trailing dash
+	}
+
+	for _, url := range invalidURLs {
+		if regex.MatchString(url) {
+			t.Errorf("Expected %q to be invalid", url)
+		}
+	}
+}
+
 func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
