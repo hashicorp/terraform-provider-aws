@@ -79,7 +79,7 @@ variable "resource_count" {
 }
 ```
 
-#### Compilation Checks
+### Compilation Checks
 
 Once code changes are made, do some basic verification to ensure the provider and tests still compile.
 
@@ -94,3 +94,32 @@ To verify tests compile:
 ```sh
 go test -c ./internal/service/<service>
 ```
+
+### Register List Resource to the provider
+
+To register the new list resource:
+
+```sh
+go generate internal/service/<service>/generate.go
+```
+
+## Troubleshooting
+
+### Prerequisites Issues
+
+- **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
+- **Branch Naming**: Use the convention `f-list-resource-<service>_<resource>` (e.g., `f-list-resource-batch_job_defintion`)
+
+### Common Implementation Issues
+
+- **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types. Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
+- **Variable Name Errors**: Generated code contains compilation errors:
+  - Change `r.Meta()` to `l.Meta()`
+  - Change `awsClient` to `l.Meta()`
+- **Resource Identifier**: Use the same identifier as the target resource (often name, not ARN)
+
+### Test Configuration Issues
+
+- **Minimal Generated Config**: Generated test configurations are basic and need substantial updates with all required resource dependencies
+- **PreCheck Functions**: Remove custom precheck functions unless they exist - use standard `acctest.PreCheck(ctx, t)`
+- **Complex Dependencies**: Some services (like AppFlow) require extensive setup (S3 buckets, policies, test fixtures)
