@@ -38,15 +38,3 @@ func validStreamSpec(d *schema.ResourceDiff) error {
 	}
 	return nil
 }
-
-// checkIfNonKeyAttributesChanged returns true if non_key_attributes between old map and new map are different
-func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
-	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].(*schema.Set)
-	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].(*schema.Set)
-
-	if oldNkaExists && newNkaExists {
-		return !oldNonKeyAttributes.Equal(newNonKeyAttributes)
-	}
-
-	return oldNkaExists != newNkaExists
-}

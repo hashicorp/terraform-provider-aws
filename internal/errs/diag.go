@@ -75,6 +75,19 @@ func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {
 	return d
 }
 
+// NewAttributeConflictsWithError returns an error diagnostic indicating that the attribute at the given path cannot be
+// specified when the attribute at otherPath is specified.
+func NewAttributeConflictsWithError(path, otherPath cty.Path) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Attribute %q cannot be specified when %q is specified.",
+			PathString(path),
+			PathString(otherPath),
+		),
+	)
+}
+
 // NewAttributeConflictsWhenError returns an error diagnostic indicating that the attribute at the given path cannot be
 // specified when the attribute at otherPath has the given value.
 func NewAttributeConflictsWhenError(path, otherPath cty.Path, otherValue string) diag.Diagnostic {
@@ -103,7 +116,24 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 	)
 }
 
-// NewAtLeastOneOfChildrenError returns an error diagnostic indicating that at least on of the named children of
+// NewExactlyOneOfChildrenError returns an error diagnostic indicating that exactly one of the named children of
+// parentPath is required.
+func NewExactlyOneOfChildrenError(parentPath cty.Path, count int, paths ...cty.Path) diag.Diagnostic {
+	if count == 0 {
+		return NewAttributeErrorDiagnostic(
+			parentPath,
+			"Invalid Attribute Combination",
+			fmt.Sprintf("No attribute specified when one (and only one) of [%s] is required", strings.Join(tfslices.ApplyToAll(paths, PathString), ", ")),
+		)
+	}
+	return NewAttributeErrorDiagnostic(
+		parentPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("%d attributes specified when one (and only one) of [%s] is required", count, strings.Join(tfslices.ApplyToAll(paths, PathString), ", ")),
+	)
+}
+
+// NewAtLeastOneOfChildrenError returns an error diagnostic indicating that at least one of the named children of
 // parentPath is required.
 func NewAtLeastOneOfChildrenError(parentPath cty.Path, paths ...cty.Path) diag.Diagnostic {
 	return NewAttributeErrorDiagnostic(
