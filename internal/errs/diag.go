@@ -116,6 +116,19 @@ func NewAttributeRequiredWhenError(neededPath, otherPath cty.Path, value string)
 	)
 }
 
+// NewAttributeAlsoRequiresError returns an error diagnostic indicating that the attribute at neededPath is required when the
+// attribute at path is specified.
+func NewAttributeAlsoRequiresError(path, neededPath cty.Path) diag.Diagnostic {
+	return NewAttributeErrorDiagnostic(
+		path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Attribute %q must be specified when %q is specified.",
+			PathString(neededPath),
+			PathString(path),
+		),
+	)
+}
+
 // NewExactlyOneOfChildrenError returns an error diagnostic indicating that exactly one of the named children of
 // parentPath is required.
 func NewExactlyOneOfChildrenError(parentPath cty.Path, count int, paths ...cty.Path) diag.Diagnostic {
@@ -207,6 +220,6 @@ func errorToWarning(d diag.Diagnostic) diag.Diagnostic {
 }
 
 func willBeError(d diag.Diagnostic) diag.Diagnostic {
-	d.Detail += "\n\nThis will be an error in a future release."
+	d.Detail += "\n\nThis will be an error in a future release of the provider."
 	return errorToWarning(d)
 }

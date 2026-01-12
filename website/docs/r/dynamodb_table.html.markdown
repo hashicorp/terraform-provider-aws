@@ -337,7 +337,9 @@ The following arguments are optional:
 * `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. Must be supplied for cross-region restores. See below.
 * `stream_enabled` - (Optional) Whether Streams are enabled.
-* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream.
+  Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+  Only valid when `stream_enabled` is true.
 * `table_class` - (Optional) Storage class of the table.
   Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
   Default value is `STANDARD`.

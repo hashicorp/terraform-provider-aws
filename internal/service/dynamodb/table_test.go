@@ -3639,7 +3639,11 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_streamSpecification("anything", true, ""),
-				ExpectError: regexache.MustCompile(`stream_view_type is required when stream_enabled = true`),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
+			},
+			{
+				Config:      testAccTableConfig_streamSpecification("anything", true, "null"),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
 			},
 		},
 	})
