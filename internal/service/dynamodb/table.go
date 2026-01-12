@@ -3226,26 +3226,9 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 		}
 	}
 
-	var hasConfiguredGsi bool
-	config := d.GetRawConfig()
-	if config.IsKnown() {
-		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
-	}
-
 	// Check if all indexed attributes have an attribute definition
 	var attributes []any
-	if hasConfiguredGsi {
-		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
-		for _, v := range vals {
-			attr := map[string]any{}
-			for k, v := range v.AsValueMap() {
-				attr[k] = v.AsString()
-			}
-			attributes = append(attributes, attr)
-		}
-	} else {
-		attributes = d.Get("attribute").(*schema.Set).List()
-	}
+	attributes = d.Get("attribute").(*schema.Set).List()
 
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
