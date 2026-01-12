@@ -188,6 +188,46 @@ func TestAccBillingView_tags(t *testing.T) {
 	})
 }
 
+func TestAccBillingView_dataFilterExpressionTags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var view awstypes.BillingViewElement
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_billing_view.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_dataFilterExpressionTags(rName, "Environment", []string{"production", "staging"}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(ctx, resourceName, &view),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.key", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "production"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.1", "staging"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func testAccCheckViewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BillingClient(ctx)
@@ -311,4 +351,28 @@ resource "aws_billing_view" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccViewConfig_dataFilterExpressionTags(rName, tagKey string, tagValues []string) string {
+	tagValuesStr := ""
+	for i, v := range tagValues {
+		if i > 0 {
+			tagValuesStr += ", "
+		}
+		tagValuesStr += fmt.Sprintf("%q", v)
+	}
+	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
+resource "aws_billing_view" "test" {
+  name         = %[1]q
+  description  = "Test with data_filter_expression tags"
+  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
+
+  data_filter_expression {
+    tags {
+      key    = %[2]q
+      values = [%[3]s]
+    }
+  }
+}
+`, rName, tagKey, tagValuesStr))
 }
