@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	ouEntityPathRegexp = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}/(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})+`)
+	ouEntityPathRegexp      = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})+`)
+	accountEntityPathRegexp = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})*/\d{12}`)
 )
 
 func TestAccOrganizationsEntityPathDataSource_ou(t *testing.T) {
@@ -45,6 +46,28 @@ func TestAccOrganizationsEntityPathDataSource_ou(t *testing.T) {
 	})
 }
 
+func TestAccOrganizationsEntityPathDataSource_account(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_organizations_entity_path.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEntityPathDataSourceConfig_account,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New("entity_path"), knownvalue.StringRegexp(accountEntityPathRegexp)),
+				},
+			},
+		},
+	})
+}
+
 func testAccEntityPathDataSourceConfig_ou(rName string) string {
 	return acctest.ConfigCompose(testAccOrganizationalUnitDataSourceConfig_basic(rName), `
 data "aws_organizations_entity_path" "test1" {
@@ -56,3 +79,11 @@ data "aws_organizations_entity_path" "test2" {
 }
 `)
 }
+
+const testAccEntityPathDataSourceConfig_account = `
+data "aws_caller_identity" "current" {}
+
+data "aws_organizations_entity_path" "test" {
+  entity_id = data.aws_caller_identity.current.account_id
+}
+`
