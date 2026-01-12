@@ -111,8 +111,9 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
-		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep:ci.domain-names
-		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
+		"aws.partner/mongodb.com/stitch.trigger/something",                   // nosemgrep:ci.domain-names
+		"arn:aws:events:us-east-1:123456789012:event-bus/default",            // lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {
 		_, errors := validBusNameOrARN(v, names.AttrName)
@@ -129,6 +130,64 @@ func TestValidBusNameOrARN(t *testing.T) {
 		_, errors := validBusNameOrARN(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid CW event bus name", v)
+		}
+	}
+}
+
+func TestEventBusARNPattern(t *testing.T) {
+	t.Parallel()
+
+	validARNs := []string{
+		"arn:aws:events:us-east-1:123456789012:event-bus/default",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:events:us-gov-west-1:123456789012:event-bus/my-bus",  //lintignore:AWSAT003,AWSAT005
+		"arn:aws:events:eu-west-1:123456789012:event-bus/custom_bus-123",     //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range validARNs {
+		if !EventBusARNPattern.MatchString(arn) {
+			t.Errorf("Expected %q to match EventBusARNPattern", arn)
+		}
+	}
+
+	invalidARNs := []string{
+		"arn:aws:events:invalid-region:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
+		"arn:aws:events:us-east-1:123456789012:event-bus/",             // empty bus name //lintignore:AWSAT003,AWSAT005
+		"not-an-arn",
+		"arn:aws:s3:::bucket", // wrong service //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range invalidARNs {
+		if EventBusARNPattern.MatchString(arn) {
+			t.Errorf("Expected %q to NOT match EventBusARNPattern", arn)
+		}
+	}
+}
+
+func TestPartnerEventBusPattern(t *testing.T) {
+	t.Parallel()
+
+	validPatterns := []string{
+		"aws.partner/mongodb.com/stitch.trigger/something",
+		"arn:aws:events:us-east-1:123456789012:event-bus/aws.partner/genesys.com/cloud/test",                 //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/aws.partner/example.com/service/instance", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, pattern := range validPatterns {
+		if !PartnerEventBusPattern.MatchString(pattern) {
+			t.Errorf("Expected %q to match PartnerEventBusPattern", pattern)
+		}
+	}
+
+	invalidPatterns := []string{
+		"aws.partner", // too short
+		"not.partner/something/else",
+		"arn:aws:events:invalid-region:123456789012:event-bus/aws.partner/test/service", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, pattern := range invalidPatterns {
+		if PartnerEventBusPattern.MatchString(pattern) {
+			t.Errorf("Expected %q to NOT match PartnerEventBusPattern", pattern)
 		}
 	}
 }

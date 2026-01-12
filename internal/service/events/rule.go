@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -356,8 +357,8 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 }
 
 var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2,4}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2,4}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
 const ruleResourceIDSeparator = "/"
