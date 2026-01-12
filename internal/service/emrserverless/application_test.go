@@ -24,10 +24,10 @@ func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
 	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
 
 	validURLs := []string{
-		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",         //lintignore:AWSAT003
-		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
-		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",       //lintignore:AWSAT003
-		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", //lintignore:AWSAT003
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write", //lintignore:AWSAT003
 	}
 
 	for _, url := range validURLs {
