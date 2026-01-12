@@ -78,3 +78,19 @@ variable "resource_count" {
   nullable    = false
 }
 ```
+
+#### Compilation Checks
+
+Once code changes are made, do some basic verification to ensure the provider and tests still compile.
+
+To verify the provider compiles:
+
+```sh
+make build
+```
+
+To verify tests compile:
+
+```sh
+go test -c ./internal/service/<service>
+```
