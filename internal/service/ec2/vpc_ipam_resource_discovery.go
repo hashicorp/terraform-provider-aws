@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -145,14 +146,8 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 			AddOrganizationalUnitExclusions: expandAddIPAMOrganizationalUnitExclusions(v.(*schema.Set).List()),
 			IpamResourceDiscoveryId:         aws.String(d.Id()),
 		}
-		_, err := conn.ModifyIpamResourceDiscovery(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying IPAM Resource Discovery (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitIPAMResourceDiscoveryUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) update: %s", d.Id(), err)
+		if err := updateIPAMResourceDiscovery(ctx, conn, &input, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -233,14 +228,8 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 			}
 		}
 
-		_, err := conn.ModifyIpamResourceDiscovery(ctx, &input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying IPAM Resource Discovery (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitIPAMResourceDiscoveryUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) update: %s", d.Id(), err)
+		if err := updateIPAMResourceDiscovery(ctx, conn, &input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -270,6 +259,36 @@ func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	}
 
 	return diags
+}
+
+func updateIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, input *ec2.ModifyIpamResourceDiscoveryInput, timeout time.Duration) error {
+	id := aws.ToString(input.IpamResourceDiscoveryId)
+
+	// https://docs.aws.amazon.com/vpc/latest/ipam/exclude-ous.html#exclude-ous-create-delete:
+	// "It takes time for IPAM to discover recently created organizational units".
+	err := tfresource.Retry(ctx, ec2PropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.ModifyIpamResourceDiscovery(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "One or more of the organizations entity paths is invalid") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(20*time.Second))
+
+	if err != nil {
+		return fmt.Errorf("modifying IPAM Resource Discovery (%s): %w", id, err)
+	}
+
+	if _, err := waitIPAMResourceDiscoveryUpdated(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for IPAM Resource Discovery (%s) update: %w", id, err)
+	}
+
+	return nil
 }
 
 func flattenIPAMOrganizationalUnitExclusions(apiObjects []awstypes.IpamOrganizationalUnitExclusion) []any {

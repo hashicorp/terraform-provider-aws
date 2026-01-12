@@ -226,7 +226,7 @@ func testAccIPAMResourceDiscovery_organizationalUnitExclusions(t *testing.T) {
 			{
 				Config: testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions1(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
+					testAccCheckIPAMResourceDiscoveryExistsWithProvider(ctx, resourceName, &rd, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -238,22 +238,35 @@ func testAccIPAMResourceDiscovery_organizationalUnitExclusions(t *testing.T) {
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions2(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMResourceDiscoveryExistsWithProvider(ctx, resourceName, &rd, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("organizational_unit_exclusion"), knownvalue.SetSizeExact(1)),
+				},
 			},
 		},
 	})
 }
 
 func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *awstypes.IpamResourceDiscovery) resource.TestCheckFunc {
+	return testAccCheckIPAMResourceDiscoveryExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
+}
+
+func testAccCheckIPAMResourceDiscoveryExistsWithProvider(ctx context.Context, n string, v *awstypes.IpamResourceDiscovery, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMResourceDiscoveryByID(ctx, conn, rs.Primary.ID)
 
@@ -369,7 +382,7 @@ resource "aws_vpc_ipam_resource_discovery" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions1(rName1, rName2 string) string {
+func testAccIPAMResourceDiscoveryConfig_baseOrganizationalUnitExclusions(rName1, rName2 string) string {
 	return acctest.ConfigCompose(testAccIPAMOrganizationAdminAccountConfig_basic, fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
@@ -378,13 +391,25 @@ resource "aws_organizations_organizational_unit" "test1" {
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
+data "aws_organizations_entity_path" "test1" {
+  entity_id = aws_organizations_organizational_unit.test1.id
+}
+
 resource "aws_organizations_organizational_unit" "test2" {
   name      = %[2]q
   parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
-data "aws_region" "current" {}
+data "aws_organizations_entity_path" "test2" {
+  entity_id = aws_organizations_organizational_unit.test2.id
+}
 
+data "aws_region" "current" {}
+`, rName1, rName2))
+}
+
+func testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions1(rName1, rName2 string) string {
+	return acctest.ConfigCompose(testAccIPAMResourceDiscoveryConfig_baseOrganizationalUnitExclusions(rName1, rName2), `
 resource "aws_vpc_ipam_resource_discovery" "test" {
   provider = "awsalternate"
 
@@ -393,8 +418,24 @@ resource "aws_vpc_ipam_resource_discovery" "test" {
   }
 
   organizational_unit_exclusion {
-    organizations_entity_path = aws_organizations_organizational_unit.test1.path
+    organizations_entity_path = "${data.aws_organizations_entity_path.test1.entity_path}*"
   }
 }
-`, rName1, rName2))
+`)
+}
+
+func testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions2(rName1, rName2 string) string {
+	return acctest.ConfigCompose(testAccIPAMResourceDiscoveryConfig_baseOrganizationalUnitExclusions(rName1, rName2), `
+resource "aws_vpc_ipam_resource_discovery" "test" {
+  provider = "awsalternate"
+
+  operating_regions {
+    region_name = data.aws_region.current.region
+  }
+
+  organizational_unit_exclusion {
+    organizations_entity_path = data.aws_organizations_entity_path.test2.entity_path
+  }
+}
+`)
 }
