@@ -2799,13 +2799,14 @@ resource "aws_security_group" "source" {
 }
 
 resource "aws_mq_broker" "source" {
-  broker_name             = "%[1]s-source"
-  engine_type             = "ActiveMQ"
-  engine_version          = "5.18"
-  host_instance_type      = "mq.t2.micro"
-  security_groups         = [aws_security_group.source.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  broker_name                = "%[1]s-source"
+  engine_type                = "ActiveMQ"
+  engine_version             = "5.18"
+  auto_minor_version_upgrade = true
+  host_instance_type         = "mq.t3.micro"
+  security_groups            = [aws_security_group.source.id]
+  authentication_strategy    = "simple"
+  storage_type               = "efs"
 
   logs {
     general = true
@@ -2930,11 +2931,12 @@ resource "aws_iam_role_policy" "source" {
 }
 
 resource "aws_mq_broker" "source" {
-  broker_name             = "%[1]s-source"
-  engine_type             = "RabbitMQ"
-  engine_version          = "3.13"
-  host_instance_type      = "mq.t3.micro"
-  authentication_strategy = "simple"
+  broker_name                = "%[1]s-source"
+  engine_type                = "RabbitMQ"
+  engine_version             = "3.13"
+  auto_minor_version_upgrade = true
+  host_instance_type         = "mq.t3.micro"
+  authentication_strategy    = "simple"
 
   logs {
     general = true
