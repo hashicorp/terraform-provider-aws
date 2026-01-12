@@ -70,9 +70,6 @@ func resourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validStreamSpec(diff)
-			},
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validateTableAttributes(ctx, diff, meta)
 			},
@@ -594,6 +591,7 @@ func resourceTable() *schema.Resource {
 
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
 			validateGlobalSecondaryIndexes,
+			validateStreamSpecification,
 		},
 	}
 }
@@ -3412,6 +3410,43 @@ func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath 
 				strconv.Itoa(rangeCount),
 			),
 		))
+	}
+}
+
+func validateStreamSpecification(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	streamEnabled := req.RawConfig.GetAttr("stream_enabled")
+	if !streamEnabled.IsKnown() {
+		return
+	}
+
+	streamViewType := req.RawConfig.GetAttr("stream_view_type")
+	if !streamViewType.IsKnown() {
+		return
+	}
+
+	if streamEnabled.IsNull() {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeAlsoRequiresError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+			))
+		}
+	} else if streamEnabled.True() {
+		if streamViewType.IsNull() || streamViewType.AsString() == "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeRequiredWhenError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"true",
+			))
+		}
+	} else {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenWillBeError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"false",
+			))
+		}
 	}
 }
 

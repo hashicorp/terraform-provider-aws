@@ -4,11 +4,9 @@
 package dynamodb
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
@@ -22,19 +20,4 @@ func validGlobalTableName(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%s must only include alphanumeric, underscore, period, or hyphen characters: %q", k, value))
 	}
 	return
-}
-
-func validStreamSpec(d *schema.ResourceDiff) error {
-	enabled := d.Get("stream_enabled").(bool)
-	if enabled {
-		if v, ok := d.GetOk("stream_view_type"); ok {
-			value := v.(string)
-			if len(value) == 0 {
-				return errors.New("stream_view_type must be non-empty when stream_enabled = true")
-			}
-			return nil
-		}
-		return errors.New("stream_view_type is required when stream_enabled = true")
-	}
-	return nil
 }
