@@ -3208,8 +3208,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 	}
 
 	// Check if all indexed attributes have an attribute definition
-	var attributes []any
-	attributes = d.Get("attribute").(*schema.Set).List()
+	attributes := d.Get("attribute").(*schema.Set).List()
 
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
