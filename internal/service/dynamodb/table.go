@@ -125,7 +125,7 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
-			validateWarmThroughputCustomDiff,
+			suppressTableWarmThroughputDefaults,
 			validateTTLCustomDiff,
 			customDiffGlobalSecondaryIndex,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
@@ -3267,20 +3267,6 @@ func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.
 	return nil
 }
 
-func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	configRaw := d.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
-	}
-
-	// Handle table-level warm throughput suppression
-	if err := suppressTableWarmThroughputDefaults(d, configRaw); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
 	gsisPath := cty.GetAttrPath("global_secondary_index")
 
@@ -3460,7 +3446,12 @@ func validateProvisionedThroughputField(path cty.Path) schema.ValidateRawResourc
 	}
 }
 
-func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+func suppressTableWarmThroughputDefaults(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
 	// If warm throughput is explicitly configured, don't suppress any diffs
 	if warmThroughput := configRaw.GetAttr("warm_throughput"); warmThroughput.IsKnown() && !warmThroughput.IsNull() && warmThroughput.LengthInt() > 0 {
 		return nil
