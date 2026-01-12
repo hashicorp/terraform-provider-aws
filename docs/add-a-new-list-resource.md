@@ -23,7 +23,7 @@ Use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral re
 SDKv2 target resource will have the tag `@SDKResource()` in the resource file. For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
 
 ```console
-skaff list -n <resource name>
+skaff list -c -n <resource name>
 ```
 
 ### Framework resources
@@ -31,7 +31,7 @@ skaff list -n <resource name>
 Framework target resource will have the tag `@FrameworkResource()` in the resource file. For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
 
 ```console
-skaff list -p -n <resource name>
+skaff list -c -p -n <resource name>
 ```
 
 `Skaff` will generate the following files:
@@ -40,11 +40,13 @@ skaff list -p -n <resource name>
 - `internal/service/<service>/<resource_name>_list_test.go` - List Resource acceptance tests
 - `website/docs/list-resources/<service>_<resource_name>.html.markdown` - List Resource documentation
 - `internal/service/<service>/testdata/<ResourceName>/list_basic/main.tf` - Basic List Resource acceptance test configuration
-- `internal/service/<service>/testdata/<ResourceName>/list_basic/main.tfquery.hcl` - Query for using list resource
+- `internal/service/<service>/testdata/<ResourceName>/list_basic/query.tfquery.hcl` - Query for using list resource
 
 ### Fill in the `List` handler
 
 Use the AWS API documentation to resolve the appropriate types the be able to list the resource. This is typically done using `Describe` or `List` API calls.
+
+For `@SdkResource()` resources, the primary identifier is set using `d.SetId()`. Sometimes additional identifiers are needed. These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute_name>", value)`.
 
 ### Implement acceptance tests
 
