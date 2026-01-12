@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -8201,9 +8202,8 @@ func TestAccDynamoDBTable_gsiWarmThroughput_switchBilling(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_nameKnownAfterApply_validation(t *testing.T) {
+func TestAccDynamoDBTable_validation_nameKnownAfterApply(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -8212,53 +8212,73 @@ func TestAccDynamoDBTable_nameKnownAfterApply_validation(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_nameKnownAfterApply_validation(rName),
+				Config: testAccTableConfig_validation_nameKnownAfterApply(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dynamodb", "table/{name}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%[1]s-%[1]s", rName)),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						names.AttrName: rName,
-						names.AttrType: "S",
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrName, func(value string) error {
+						prefix := fmt.Sprintf("%s-", rName)
+						if !strings.HasPrefix(value, prefix) {
+							return fmt.Errorf(`attribute "%s" ("%s") does not start with "%s"`, names.AttrName, value, prefix)
+						}
+
+						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(resourceName, "range_key"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "restore_date_time"),
-					resource.TestCheckNoResourceAttr(resourceName, "restore_source_name"),
-					resource.TestCheckNoResourceAttr(resourceName, "restore_to_latest_time"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStreamARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "stream_label", ""),
-					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
-							names.AttrEnabled: knownvalue.Bool(false),
-						}),
-					})),
-				},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_validation_nameUnknown(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_validation_nameUnknown(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_validation_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_validation_nameKnownAfterApply(rName),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:      testAccTableConfig_validation_nameUnknown(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
 			},
 		},
 	})
@@ -12413,22 +12433,12 @@ resource "aws_dynamodb_table" "test" {
 
 // testAccTableConfig_nameKnownAfterApply_validation simulates name = (known after apply) because the name of the "test"
 // resource depends on the id of "base" which is also known after apply
-func testAccTableConfig_nameKnownAfterApply_validation(rName string) string {
+func testAccTableConfig_validation_nameKnownAfterApply(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "base" {
-  name           = %[1]q
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "%[1]s-base"
-
-  attribute {
-    name = "%[1]s-base"
-    type = "S"
-  }
-}
+resource "null_resource" "test" {}
 
 resource "aws_dynamodb_table" "test" {
-  name           = "${aws_dynamodb_table.base.id}-%[1]s"
+  name           = "%[1]s-${null_resource.test.id}"
   read_capacity  = 1
   write_capacity = 1
   hash_key       = %[1]q
@@ -12436,6 +12446,29 @@ resource "aws_dynamodb_table" "test" {
   attribute {
     name = %[1]q
     type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_validation_nameUnknown(rName string) string {
+	return fmt.Sprintf(`
+resource "null_resource" "test" {}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-${null_resource.test.id}"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  attribute {
+    name = "unindexed"
+    type = "N"
   }
 }
 `, rName)
