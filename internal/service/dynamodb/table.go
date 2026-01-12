@@ -127,7 +127,7 @@ func resourceTable() *schema.Resource {
 			}),
 			suppressTableWarmThroughputDefaults,
 			customDiffGlobalSecondaryIndex,
-			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				rs := diff.GetRawState()
 				if rs.IsNull() {
 					return nil
@@ -3533,7 +3533,7 @@ func validateTTL(_ context.Context, ttl cty.Value, ttlPath cty.Path, diags *diag
 	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
 
-func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	if diff.Id() == "" {
 		return nil
 	}
