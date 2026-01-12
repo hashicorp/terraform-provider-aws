@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_wafv2_managed_rule_group` ([#45899](https://github.com/hashicorp/terraform-provider-aws/issues/45899))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
 BUG FIXES:
