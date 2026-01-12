@@ -184,7 +184,7 @@ func findVoiceConnectorByID(ctx context.Context, conn *chimesdkvoice.Client, id 
 	}
 
 	if resp == nil || resp.VoiceConnector == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

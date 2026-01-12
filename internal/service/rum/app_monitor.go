@@ -326,7 +326,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 	}
 
 	if output == nil || output.AppMonitor == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppMonitor, nil

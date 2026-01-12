@@ -41,7 +41,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
-			Factory:  ResourceScheduleGroup,
+			Factory:  resourceScheduleGroup,
 			TypeName: "aws_scheduler_schedule_group",
 			Name:     "Schedule Group",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

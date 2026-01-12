@@ -146,5 +146,5 @@ func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Client, admin
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }

@@ -182,7 +182,7 @@ func findRoutingControlByARN(ctx context.Context, conn *r53rcc.Client, arn strin
 	}
 
 	if output == nil || output.RoutingControl == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoutingControl, nil

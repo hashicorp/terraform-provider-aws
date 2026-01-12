@@ -249,7 +249,7 @@ pageLoop:
 	}
 
 	if destination == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	inputG := &iot.GetTopicRuleDestinationInput{
@@ -270,7 +270,7 @@ pageLoop:
 	}
 
 	if output == nil || output.TopicRuleDestination == nil {
-		return nil, tfresource.NewEmptyResultError(inputG)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TopicRuleDestination, nil

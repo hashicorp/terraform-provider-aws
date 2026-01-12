@@ -354,7 +354,7 @@ func findCoreNetwork(ctx context.Context, conn *networkmanager.Client, input *ne
 	}
 
 	if output == nil || output.CoreNetwork == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetwork, nil
@@ -385,7 +385,7 @@ func findCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, inp
 	}
 
 	if output == nil || output.CoreNetworkPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetworkPolicy, nil

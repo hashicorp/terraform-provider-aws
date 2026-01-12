@@ -375,7 +375,7 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	}
 
 	if output == nil || output.Analysis == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analysis, nil
@@ -405,7 +405,7 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil || output.Definition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Definition, nil
@@ -435,7 +435,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -280,9 +279,8 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	output, err := conn.GetDomainAssociation(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -291,14 +289,14 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	}
 
 	if output == nil || output.DomainAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainAssociation, nil
 }
 
-func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainAssociation(conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
 		if retry.NotFound(err) {
@@ -317,7 +315,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusCreating,
 			types.DomainStatusInProgress,
@@ -330,7 +328,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 			types.DomainStatusAvailable,
 			types.DomainStatusAwaitingAppCname,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 
@@ -351,7 +349,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
@@ -363,7 +361,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 			types.DomainStatusPendingDeployment,
 			types.DomainStatusAvailable,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 
@@ -384,7 +382,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			types.DomainStatusUpdating,
 			types.DomainStatusInProgress,
@@ -394,7 +392,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 		Target: enum.Slice(
 			types.DomainStatusAvailable,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 

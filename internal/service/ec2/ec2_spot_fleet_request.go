@@ -1198,7 +1198,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if len(output) == 0 {
-			return nil, tfresource.NewEmptyResultError(input)
+			return nil, tfresource.NewEmptyResultError()
 		}
 
 		return output, nil

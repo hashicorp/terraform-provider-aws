@@ -203,7 +203,7 @@ func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.Des
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

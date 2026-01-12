@@ -225,7 +225,7 @@ func findIntegrationResponse(ctx context.Context, conn *apigatewayv2.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

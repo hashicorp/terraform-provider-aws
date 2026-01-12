@@ -456,7 +456,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	}
 
 	if output == nil || output.Parameter == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Parameter, nil

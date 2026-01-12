@@ -332,7 +332,7 @@ func findRepositoryByThreePartKey(ctx context.Context, conn *codeartifact.Client
 	}
 
 	if output == nil || output.Repository == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Repository, nil

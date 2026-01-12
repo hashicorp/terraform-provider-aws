@@ -198,7 +198,7 @@ func findAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*aw
 	}
 
 	if output == nil || output.ApiCache == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ApiCache, nil

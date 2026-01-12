@@ -135,7 +135,7 @@ func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.Client) (
 	}
 
 	if output == nil || output.BlockPublicAccessConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BlockPublicAccessConfiguration, nil

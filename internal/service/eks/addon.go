@@ -435,7 +435,7 @@ func findAddon(ctx context.Context, conn *eks.Client, input *eks.DescribeAddonIn
 	}
 
 	if output == nil || output.Addon == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Addon, nil

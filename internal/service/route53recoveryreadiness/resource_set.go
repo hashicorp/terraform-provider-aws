@@ -274,7 +274,7 @@ func findResourceSetByName(ctx context.Context, conn *route53recoveryreadiness.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

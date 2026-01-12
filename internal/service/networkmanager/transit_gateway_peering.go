@@ -200,7 +200,7 @@ func findTransitGatewayPeering(ctx context.Context, conn *networkmanager.Client,
 	}
 
 	if output == nil || output.TransitGatewayPeering == nil || output.TransitGatewayPeering.Peering == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TransitGatewayPeering, nil

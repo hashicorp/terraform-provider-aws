@@ -1106,7 +1106,7 @@ func findLoadBalancerAttributesByARN(ctx context.Context, conn *elasticloadbalan
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil
@@ -1131,7 +1131,7 @@ func findCapacityReservationByARN(ctx context.Context, conn *elasticloadbalancin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

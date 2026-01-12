@@ -197,7 +197,7 @@ func findUserHierarchyStructure(ctx context.Context, conn *connect.Client, input
 	}
 
 	if output == nil || output.HierarchyStructure == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HierarchyStructure, nil

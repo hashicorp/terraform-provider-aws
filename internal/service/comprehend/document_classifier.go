@@ -615,7 +615,7 @@ func findDocumentClassifier(ctx context.Context, conn *comprehend.Client, in *co
 	}
 
 	if out == nil || out.DocumentClassifierProperties == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.DocumentClassifierProperties, nil

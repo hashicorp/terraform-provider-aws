@@ -81,7 +81,7 @@ func findOperationByID(ctx context.Context, conn *servicediscovery.Client, id st
 	}
 
 	if output == nil || output.Operation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Operation, nil

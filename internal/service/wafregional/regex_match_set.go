@@ -201,7 +201,7 @@ func findRegexMatchSetByID(ctx context.Context, conn *wafregional.Client, id str
 	}
 
 	if output == nil || output.RegexMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RegexMatchSet, nil

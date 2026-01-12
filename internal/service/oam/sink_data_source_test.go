@@ -15,9 +15,6 @@ import (
 )
 
 func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

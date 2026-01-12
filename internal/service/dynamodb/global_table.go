@@ -202,7 +202,7 @@ func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name stri
 	}
 
 	if output == nil || output.GlobalTableDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GlobalTableDescription, nil

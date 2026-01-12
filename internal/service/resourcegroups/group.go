@@ -313,7 +313,7 @@ func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name stri
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil
@@ -338,7 +338,7 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	}
 
 	if output == nil || output.GroupConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GroupConfiguration, nil

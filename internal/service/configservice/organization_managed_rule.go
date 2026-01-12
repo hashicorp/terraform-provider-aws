@@ -305,7 +305,7 @@ func findOrganizationManagedRuleByName(ctx context.Context, conn *configservice.
 	}
 
 	if output.OrganizationManagedRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

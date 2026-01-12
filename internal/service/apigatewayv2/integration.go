@@ -502,7 +502,7 @@ func findIntegration(ctx context.Context, conn *apigatewayv2.Client, input *apig
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

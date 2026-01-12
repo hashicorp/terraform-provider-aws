@@ -539,7 +539,7 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	}
 
 	if out == nil || out.EnvironmentArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

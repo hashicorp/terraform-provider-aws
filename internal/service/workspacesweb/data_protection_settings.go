@@ -365,7 +365,7 @@ func findDataProtectionSettingsByARN(ctx context.Context, conn *workspacesweb.Cl
 	}
 
 	if output == nil || output.DataProtectionSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataProtectionSettings, nil

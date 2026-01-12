@@ -393,7 +393,7 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil || output.ApplicationId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -419,7 +419,7 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 	}
 
 	if output == nil || output.ApplicationVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

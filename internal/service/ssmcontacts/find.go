@@ -32,7 +32,7 @@ func findContactByID(ctx context.Context, conn *ssmcontacts.Client, id string) (
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -56,7 +56,7 @@ func findContactChannelByID(ctx context.Context, conn *ssmcontacts.Client, id st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

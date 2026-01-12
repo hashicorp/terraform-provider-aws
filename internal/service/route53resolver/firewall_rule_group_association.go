@@ -206,7 +206,7 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	}
 
 	if output == nil || output.FirewallRuleGroupAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallRuleGroupAssociation, nil

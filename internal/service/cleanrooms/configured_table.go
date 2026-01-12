@@ -245,7 +245,7 @@ func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id st
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

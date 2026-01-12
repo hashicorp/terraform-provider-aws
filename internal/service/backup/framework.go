@@ -283,7 +283,7 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

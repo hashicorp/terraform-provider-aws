@@ -586,7 +586,7 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	}
 
 	if output == nil || output.GraphqlApi == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.GraphqlApi, nil
@@ -608,7 +608,7 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil

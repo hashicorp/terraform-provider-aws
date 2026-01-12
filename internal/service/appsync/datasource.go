@@ -517,7 +517,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.DataSource, nil

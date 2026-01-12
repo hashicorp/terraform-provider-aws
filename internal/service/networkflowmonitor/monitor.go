@@ -323,7 +323,7 @@ func findMonitor(ctx context.Context, conn *networkflowmonitor.Client, input *ne
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

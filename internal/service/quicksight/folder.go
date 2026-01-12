@@ -314,7 +314,7 @@ func findFolder(ctx context.Context, conn *quicksight.Client, input *quicksight.
 	}
 
 	if output == nil || output.Folder == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Folder, nil
@@ -344,7 +344,7 @@ func findFolderPermissions(ctx context.Context, conn *quicksight.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

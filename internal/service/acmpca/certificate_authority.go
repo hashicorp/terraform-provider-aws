@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,6 +42,8 @@ const (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acmpca/types;types.CertificateAuthority")
 // @Testing(generator="acctest.RandomDomainName()")
 // @Testing(importIgnore="permanent_deletion_time_in_days")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -576,14 +577,14 @@ func findCertificateAuthority(ctx context.Context, conn *acmpca.Client, input *a
 	}
 
 	if output == nil || output.CertificateAuthority == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CertificateAuthority, nil
 }
 
-func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateAuthority(conn *acmpca.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCertificateAuthorityByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -599,10 +600,10 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 }
 
 func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, arn string, timeout time.Duration) (*types.CertificateAuthority, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateAuthorityStatusCreating),
 		Target:  enum.Slice(types.CertificateAuthorityStatusActive, types.CertificateAuthorityStatusPendingCertificate),
-		Refresh: statusCertificateAuthority(ctx, conn, arn),
+		Refresh: statusCertificateAuthority(conn, arn),
 		Timeout: timeout,
 	}
 

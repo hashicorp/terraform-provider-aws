@@ -400,7 +400,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.DataLakes {

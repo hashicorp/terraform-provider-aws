@@ -781,7 +781,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	}
 
 	if output == nil || output.Metadata == nil || output.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

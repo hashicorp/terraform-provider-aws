@@ -450,7 +450,7 @@ func findPortalByARN(ctx context.Context, conn *workspacesweb.Client, arn string
 	}
 
 	if output == nil || output.Portal == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Portal, nil

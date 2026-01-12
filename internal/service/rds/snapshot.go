@@ -398,7 +398,7 @@ func findDBSnapshotAttributes(ctx context.Context, conn *rds.Client, input *rds.
 	}
 
 	if output == nil || output.DBSnapshotAttributesResult == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.DBSnapshotAttributesResult.DBSnapshotAttributes, tfslices.PredicateValue(filter)), nil

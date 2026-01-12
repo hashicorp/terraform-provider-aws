@@ -212,7 +212,7 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 	}
 
 	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -247,7 +247,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -277,7 +277,7 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

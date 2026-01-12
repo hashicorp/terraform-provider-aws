@@ -265,7 +265,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearch.Client, input *opens
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if errs := output.VpcEndpointErrors; len(errs) > 0 {

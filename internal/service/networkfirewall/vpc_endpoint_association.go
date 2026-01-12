@@ -272,7 +272,7 @@ func findVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Clien
 	}
 
 	if output == nil || output.VpcEndpointAssociation == nil || output.VpcEndpointAssociationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

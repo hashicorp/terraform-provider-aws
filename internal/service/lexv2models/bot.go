@@ -312,7 +312,7 @@ func findBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	}
 
 	if output == nil || output.BotId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

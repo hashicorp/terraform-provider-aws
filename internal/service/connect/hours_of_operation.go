@@ -285,7 +285,7 @@ func findHoursOfOperation(ctx context.Context, conn *connect.Client, input *conn
 	}
 
 	if output == nil || output.HoursOfOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HoursOfOperation, nil

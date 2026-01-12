@@ -275,7 +275,7 @@ func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn stri
 	}
 
 	if output == nil || output.Component == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Component, nil

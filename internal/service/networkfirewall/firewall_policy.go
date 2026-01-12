@@ -373,7 +373,7 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 	}
 
 	if output == nil || output.FirewallPolicyResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

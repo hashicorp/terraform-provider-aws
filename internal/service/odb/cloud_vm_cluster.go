@@ -742,7 +742,7 @@ func findCloudVmClusterForResourceByID(ctx context.Context, conn *odb.Client, id
 	}
 
 	if out == nil || out.CloudVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out.CloudVmCluster, nil
 }

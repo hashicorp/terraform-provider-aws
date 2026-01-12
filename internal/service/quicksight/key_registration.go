@@ -201,7 +201,7 @@ func findKeyRegistrationByID(ctx context.Context, conn *quicksight.Client, id st
 	}
 
 	if output == nil || len(output.KeyRegistration) == 0 {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KeyRegistration, nil

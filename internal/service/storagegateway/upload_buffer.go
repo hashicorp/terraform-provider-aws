@@ -215,7 +215,7 @@ func findLocalDisks(ctx context.Context, conn *storagegateway.Client, input *sto
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Disks, filter), nil
@@ -251,7 +251,7 @@ func findUploadBuffer(ctx context.Context, conn *storagegateway.Client, input *s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

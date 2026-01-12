@@ -98,7 +98,7 @@ func findNamedQueryByName(ctx context.Context, conn *athena.Client, queryIDs []s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	queries := tfslices.Filter(output.NamedQueries, func(v types.NamedQuery) bool {

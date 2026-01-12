@@ -261,7 +261,7 @@ func findMaintenanceWindowByID(ctx context.Context, conn *ssm.Client, id string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

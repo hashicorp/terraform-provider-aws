@@ -387,7 +387,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil

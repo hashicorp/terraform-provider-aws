@@ -191,7 +191,7 @@ func findProjectByName(ctx context.Context, conn *codecatalyst.Client, id string
 	}
 
 	if out == nil || out.Name == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

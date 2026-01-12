@@ -193,7 +193,7 @@ func findEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

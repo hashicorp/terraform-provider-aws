@@ -220,7 +220,7 @@ func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

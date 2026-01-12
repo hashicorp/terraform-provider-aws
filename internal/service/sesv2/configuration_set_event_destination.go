@@ -398,7 +398,7 @@ func findConfigurationSetEventDestinations(ctx context.Context, conn *sesv2.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.EventDestinations, tfslices.PredicateValue(filter)), nil

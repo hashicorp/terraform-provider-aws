@@ -420,7 +420,7 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	}
 
 	if out == nil || out.VolumeArn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

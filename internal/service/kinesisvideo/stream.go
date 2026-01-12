@@ -237,7 +237,7 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 	}
 
 	if output == nil || output.StreamInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StreamInfo, nil

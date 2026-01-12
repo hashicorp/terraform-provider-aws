@@ -298,7 +298,7 @@ func findPodIdentityAssociationByTwoPartKey(ctx context.Context, conn *eks.Clien
 	}
 
 	if output == nil || output.Association == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Association, nil

@@ -212,7 +212,7 @@ func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Clie
 	}
 
 	if output == nil || output.AutoScalingConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := string(output.AutoScalingConfiguration.Status); status == autoScalingConfigurationStatusInactive {

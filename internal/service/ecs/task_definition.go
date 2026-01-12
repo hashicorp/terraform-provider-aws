@@ -760,7 +760,7 @@ func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.Descri
 	}
 
 	if output == nil || output.TaskDefinition == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TaskDefinition, output.Tags, nil

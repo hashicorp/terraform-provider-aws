@@ -1130,7 +1130,7 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

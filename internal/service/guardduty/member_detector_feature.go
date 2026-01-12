@@ -271,7 +271,7 @@ func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *g
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MemberDataSourceConfigurations, output.UnprocessedAccounts, nil

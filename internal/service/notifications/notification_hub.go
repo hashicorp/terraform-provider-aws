@@ -174,7 +174,7 @@ func findNotificationHubByRegion(ctx context.Context, conn *notifications.Client
 	}
 
 	if output.StatusSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

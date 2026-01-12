@@ -418,7 +418,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil

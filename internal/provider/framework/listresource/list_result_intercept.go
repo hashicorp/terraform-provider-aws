@@ -351,7 +351,7 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 	var diags diag.Diagnostics
 	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
-		return nil
+		return diags
 	}
 
 	switch params.When {
@@ -395,8 +395,8 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 		// reset tags in context for next resource
 		tagsInContext.TagsOut = nil
 
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }

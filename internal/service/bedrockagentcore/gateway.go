@@ -500,7 +500,7 @@ func findGateway(ctx context.Context, conn *bedrockagentcorecontrol.Client, inpu
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

@@ -692,7 +692,7 @@ func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvi
 	}
 
 	if output == nil || output.Environment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environment, nil
