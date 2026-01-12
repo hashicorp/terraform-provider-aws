@@ -96,7 +96,6 @@ func (d *entityPathDataSource) Read(ctx context.Context, request datasource.Read
 }
 
 type entityPathDataSourceModel struct {
-	framework.WithRegionModel
 	EntityID   types.String `tfsdk:"entity_id"`
 	EntityPath types.String `tfsdk:"entity_path"`
 }
