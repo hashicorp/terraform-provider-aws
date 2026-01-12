@@ -4,9 +4,13 @@
 package lambda_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,7 +22,7 @@ func TestValidFunctionName(t *testing.T) {
 		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
-		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:ThumbNail",  //lintignore:AWSAT003,AWSAT005
 		"FunctionName",
 		"function-name",
 	}
@@ -40,6 +44,56 @@ func TestValidFunctionName(t *testing.T) {
 	for _, v := range invalidNames {
 		_, errors := tflambda.ValidFunctionName()(v, names.AttrName)
 		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Lambda function name", v)
+		}
+	}
+}
+
+func TestFunctionNameValidator(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"arn:aws:lambda:us-west-2:123456789012:function:ThumbNail",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:lambda:us-west-2:123456789012:function:ThumbNail",     //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:ThumbNail", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:ThumbNail",  //lintignore:AWSAT003,AWSAT005
+		"arn:aws:lambda:us-east-1:123456789012:function:MyFunction:$LATEST",   //lintignore:AWSAT003,AWSAT005
+		"arn:aws:lambda:us-east-1:123456789012:function:MyFunction:PROD",      //lintignore:AWSAT003,AWSAT005
+		"FunctionName",
+		"function-name",
+	}
+
+	ctx := context.Background()
+
+	for _, v := range validNames {
+		request := validator.StringRequest{
+			Path:           path.Root("test"),
+			PathExpression: path.MatchRoot("test"),
+			ConfigValue:    types.StringValue(v),
+		}
+		response := validator.StringResponse{}
+		tflambda.FunctionNameValidator.ValidateString(ctx, request, &response)
+
+		if response.Diagnostics.HasError() {
+			t.Fatalf("%q should be a valid Lambda function name but got errors: %v", v, response.Diagnostics)
+		}
+	}
+
+	invalidNames := []string{
+		"/FunctionNameWithSlash",
+		"function.name.with.dots",
+	}
+
+	for _, v := range invalidNames {
+		request := validator.StringRequest{
+			Path:           path.Root("test"),
+			PathExpression: path.MatchRoot("test"),
+			ConfigValue:    types.StringValue(v),
+		}
+		response := validator.StringResponse{}
+		tflambda.FunctionNameValidator.ValidateString(ctx, request, &response)
+
+		if !response.Diagnostics.HasError() {
 			t.Fatalf("%q should be an invalid Lambda function name", v)
 		}
 	}

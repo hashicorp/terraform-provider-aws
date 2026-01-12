@@ -9,10 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
-	functionNameRegex = regexache.MustCompile("(arn:(aws[a-zA-Z-]*)?:lambda:)?([a-z]{2,4}((-gov)|(-iso([a-z]?)))?-[a-z]+-\\d{1}:)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)")
+	functionNameRegex = regexache.MustCompile("^(arn:(aws[a-zA-Z-]*)?:lambda:)?(" + inttypes.CanonicalRegionPatternNoAnchors + ":)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:([a-zA-Z0-9-_]+|\\$LATEST))?$")
 )
 
 var functionNameValidator validator.String = stringvalidator.RegexMatches(functionNameRegex, "must be a valid function name")
