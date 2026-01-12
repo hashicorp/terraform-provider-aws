@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -222,6 +223,9 @@ func testAccIPAMResourceDiscovery_organizationalUnitExclusions(t *testing.T) {
 					acctest.PreCheckOrganizationMemberAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
 				},
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckSleep(t, 4*time.Minute),
+				),
 			},
 			{
 				Config: testAccIPAMResourceDiscoveryConfig_organizationalUnitExclusions1(rName1, rName2),
