@@ -47,7 +47,6 @@ func TestCanonicalRegionPatterns(t *testing.T) {
 	}
 
 	for patternName, pattern := range patterns {
-		patternName, pattern := patternName, pattern
 		t.Run(patternName, func(t *testing.T) {
 			t.Parallel()
 			regex := regexache.MustCompile("^" + pattern + "$")
