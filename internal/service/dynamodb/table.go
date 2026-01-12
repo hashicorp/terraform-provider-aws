@@ -126,7 +126,6 @@ func resourceTable() *schema.Resource {
 				return false
 			}),
 			suppressTableWarmThroughputDefaults,
-			validateTTLCustomDiff,
 			customDiffGlobalSecondaryIndex,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				rs := diff.GetRawState()
@@ -575,6 +574,7 @@ func resourceTable() *schema.Resource {
 			validateStreamSpecification,
 			validateProvisionedThroughputField(cty.GetAttrPath("read_capacity")),
 			validateProvisionedThroughputField(cty.GetAttrPath("write_capacity")),
+			validateTTLList,
 		},
 	}
 }
@@ -3484,29 +3484,20 @@ func suppressTableWarmThroughputDefaults(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	var diags diag.Diagnostics
-
-	configRaw := d.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
+func validateTTLList(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	ttl := req.RawConfig.GetAttr("ttl")
+	if !ttl.IsKnown() || ttl.IsNull() {
+		return
 	}
 
 	ttlPath := cty.GetAttrPath("ttl")
-	ttl := configRaw.GetAttr("ttl")
-	if ttl.IsKnown() && !ttl.IsNull() {
-		if ttl.LengthInt() == 1 {
-			idx := cty.NumberIntVal(0)
-			ttl := ttl.Index(idx)
-			ttlPath := ttlPath.Index(idx)
-			ttlPlantimeValidate(ttlPath, ttl, &diags)
-		}
+	for i, ttlElem := range tfcty.ValueElements(ttl) {
+		ttlElemPath := ttlPath.Index(i)
+		validateTTL(ctx, ttlElem, ttlElemPath, &resp.Diagnostics)
 	}
-
-	return sdkdiag.DiagnosticsError(diags)
 }
 
-func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+func validateTTL(_ context.Context, ttl cty.Value, ttlPath cty.Path, diags *diag.Diagnostics) {
 	attribute := ttl.GetAttr("attribute_name")
 	if !attribute.IsKnown() {
 		return
@@ -3530,8 +3521,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 		} else if attribute.AsString() == "" {
 			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
 				ttlPath.GetAttr("attribute_name"),
-				"Attribute %q cannot have an empty value",
+				"Attribute %q cannot have an empty value when %q is \"true\"",
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
+				errs.PathString(ttlPath.GetAttr(names.AttrEnabled)),
 			))
 		}
 	}
