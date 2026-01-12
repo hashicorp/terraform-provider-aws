@@ -369,10 +369,26 @@ func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findAccountByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Account, error) {
-	input := &organizations.DescribeAccountInput{
+	input := organizations.DescribeAccountInput{
 		AccountId: aws.String(id),
 	}
+	output, err := findAccount(ctx, conn, &input)
 
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.AccountStateClosed {
+		return nil, &sdkretry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findAccount(ctx context.Context, conn *organizations.Client, input *organizations.DescribeAccountInput) (*awstypes.Account, error) {
 	output, err := conn.DescribeAccount(ctx, input)
 
 	if errs.IsA[*awstypes.AccountNotFoundException](err) {
@@ -390,24 +406,17 @@ func findAccountByID(ctx context.Context, conn *organizations.Client, id string)
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	if state := output.Account.State; state == awstypes.AccountStateClosed {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
 	return output.Account, nil
 }
 
 func findParentAccountID(ctx context.Context, conn *organizations.Client, id string) (*string, error) {
-	input := &organizations.ListParentsInput{
+	input := organizations.ListParentsInput{
 		ChildId: aws.String(id),
 	}
 
 	// assume there is only a single parent
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	output, err := findParent(ctx, conn, input)
+	output, err := findParent(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -444,10 +453,14 @@ func findParents(ctx context.Context, conn *organizations.Client, input *organiz
 }
 
 func findCreateAccountStatusByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.CreateAccountStatus, error) {
-	input := &organizations.DescribeCreateAccountStatusInput{
+	input := organizations.DescribeCreateAccountStatusInput{
 		CreateAccountRequestId: aws.String(id),
 	}
 
+	return findCreateAccountStatus(ctx, conn, &input)
+}
+
+func findCreateAccountStatus(ctx context.Context, conn *organizations.Client, input *organizations.DescribeCreateAccountStatusInput) (*awstypes.CreateAccountStatus, error) {
 	output, err := conn.DescribeCreateAccountStatus(ctx, input)
 
 	if errs.IsA[*awstypes.CreateAccountStatusNotFoundException](err) {

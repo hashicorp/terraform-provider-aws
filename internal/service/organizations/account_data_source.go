@@ -72,6 +72,7 @@ func dataSourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading AWS Organizations Account (%s): %s", d.Id(), err)
 	}
+
 	d.SetId(aws.ToString(account.Id))
 
 	parentAccountID, err := findParentAccountID(ctx, conn, d.Id())
