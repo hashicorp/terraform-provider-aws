@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2026
+// Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
 package neptunegraph
@@ -18,7 +18,11 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_neptunegraph_graph", sweepGraphs)
+	awsv2.Register("aws_neptunegraph_private_graph_endpoint", sweepPrivateGraphEndpoints)
+
+	awsv2.Register("aws_neptunegraph_graph", sweepGraphs,
+		"aws_neptunegraph_private_graph_endpoint", // Graph depends on endpoints being deleted first
+	)
 }
 
 func sweepGraphs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -57,6 +61,40 @@ func sweepGraphs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newGraphResource, client,
 				framework.NewAttribute(names.AttrID, id)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepPrivateGraphEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.NeptuneGraphClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	graphPages := neptunegraph.NewListGraphsPaginator(conn, &neptunegraph.ListGraphsInput{})
+	for graphPages.HasMorePages() {
+		graphPage, err := graphPages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, graph := range graphPage.Graphs {
+			endpointPages := neptunegraph.NewListPrivateGraphEndpointsPaginator(conn, &neptunegraph.ListPrivateGraphEndpointsInput{
+				GraphIdentifier: graph.Id,
+			})
+			for endpointPages.HasMorePages() {
+				endpointPage, err := endpointPages.NextPage(ctx)
+				if err != nil {
+					continue
+				}
+
+				for _, v := range endpointPage.PrivateGraphEndpoints {
+					id := aws.ToString(graph.Id) + "_" + aws.ToString(v.VpcId)
+					sweepResources = append(sweepResources, framework.NewSweepResource(newResourcePrivateGraphEndpoint, client,
+						framework.NewAttribute(names.AttrID, id)),
+					)
+				}
+			}
 		}
 	}
 
