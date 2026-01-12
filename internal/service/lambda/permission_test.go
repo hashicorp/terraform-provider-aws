@@ -41,7 +41,7 @@ func TestFunctionRegexpPattern(t *testing.T) {
 	}
 
 	invalidFunctions := []string{
-		"arn:aws:lambda:invalid-region:123456789012:function:my-function",
+		"arn:aws:lambda:invalid-region:123456789012:function:my-function", //lintignore:AWSAT005
 		"",
 	}
 
