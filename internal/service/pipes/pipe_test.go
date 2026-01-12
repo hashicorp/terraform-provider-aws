@@ -24,6 +24,68 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestSecretsManagerARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfpipes.SecretsManagerARNPattern)
+
+	valid := []string{
+		"arn:aws-eusc:secretsmanager:eusc-de-east-1:123456789012:secret:my-secret-AbCdEf",  //lintignore:AWSAT003,AWSAT005
+		"arn:aws:secretsmanager:us-east-1:123456789012:secret:my-secret-AbCdEf",            //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:secretsmanager:us-gov-west-1:123456789012:secret:my-secret-AbCdEf", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range valid {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected Secrets Manager ARN %q to match SecretsManagerARNPattern (%s)", arn, tfpipes.SecretsManagerARNPattern)
+		}
+	}
+
+	notValid := []string{
+		"arn:aws:secretsmanager:invalid-region:123456789012:secret:my-secret-AbCdEf",
+		"not-an-arn-at-all",
+	}
+
+	for _, input := range notValid {
+		if regex.MatchString(input) {
+			t.Errorf("Expected %q to NOT match SecretsManagerARNPattern (%s)", input, tfpipes.SecretsManagerARNPattern)
+		}
+	}
+}
+
+func TestSMKOrARNPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfpipes.SMKOrARNPattern)
+
+	valid := []string{
+		"arn:aws-eusc:pipes:eusc-de-east-1:123456789012:pipe/my-pipe", //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:sqs:eusc-de-east-1:123456789012:my-queue",       //lintignore:AWSAT003,AWSAT005
+		"smk://broker.example.com:9092",
+		"smk://broker-123.example.com:9094",
+		"arn:aws:pipes:us-east-1:123456789012:pipe/my-pipe",      //lintignore:AWSAT003,AWSAT005
+		"arn:aws-us-gov:sqs:us-gov-west-1:123456789012:my-queue", //lintignore:AWSAT003,AWSAT005
+	}
+
+	for _, arn := range valid {
+		if !regex.MatchString(arn) {
+			t.Errorf("Expected ESC ARN %q to match SMKOrARNPattern (%s)", arn, tfpipes.SMKOrARNPattern)
+		}
+	}
+
+	// Test invalid patterns - focus on cases that should definitely fail
+	notValid := []string{
+		"smk://broker.:9092", // invalid hostname ending with dot
+		"random-string-not-matching-anything",
+	}
+
+	for _, input := range notValid {
+		if regex.MatchString(input) {
+			t.Errorf("Expected %q to NOT match SMKOrARNPattern (%s)", input, tfpipes.SMKOrARNPattern)
+		}
+	}
+}
+
 func TestAccPipesPipe_basicSQS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipe pipes.DescribePipeOutput
