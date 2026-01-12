@@ -174,7 +174,7 @@ func (d *{{ .DataSourceLowerCamel }}DataSource) Read(ctx context.Context, req da
 	// TIP: -- 2. Fetch the config
 	{{- end }}
 	var data {{ .DataSourceLowerCamel }}DataSourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,7 +191,7 @@ func (d *{{ .DataSourceLowerCamel }}DataSource) Read(ctx context.Context, req da
 	// TIP: -- 4. Set the ID, arguments, and attributes
 	// Using a field name prefix allows mapping fields such as `{{ .DataSource }}Id` to `ID`
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("{{ .DataSource }}")), smerr.ID, data.Name.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -208,7 +208,7 @@ func (d *{{ .DataSourceLowerCamel }}DataSource) Read(ctx context.Context, req da
 	{{ if .IncludeComments -}}
 	// TIP: -- 6. Set the state
 	{{- end }}
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.Name.String())
 }
 
 {{ if .IncludeComments }}
