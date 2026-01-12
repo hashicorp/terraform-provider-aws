@@ -2932,7 +2932,7 @@ resource "aws_iam_role_policy" "source" {
 resource "aws_mq_broker" "source" {
   broker_name             = "%[1]s-source"
   engine_type             = "RabbitMQ"
-  engine_version          = "3.12.13"
+  engine_version          = "3.13"
   host_instance_type      = "mq.t3.micro"
   authentication_strategy = "simple"
 
