@@ -73,6 +73,7 @@ ENHANCEMENTS:
 * resource/aws_fsx_openzfs_snapshot: Enforce tag policy compliance for the `fsx:snapshot` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_openzfs_volume: Enforce tag policy compliance for the `fsx:volume` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
 * resource/aws_fsx_windows_file_system: Enforce tag policy compliance for the `fsx:file-system` tag type ([#45671](https://github.com/hashicorp/terraform-provider-aws/issues/45671))
+* resource/aws_bedrock_guardrail: Add input_action, input_enabled, output_action, and output_enabled to topic_policy_config.topics_config ([#45915](https://github.com/hashicorp/terraform-provider-aws/issues/45915))
 * resource/aws_guardduty_filter: Add `finding_criteria.criterion.matches` and `finding_criteria.criterion.not_matches` arguments ([#45758](https://github.com/hashicorp/terraform-provider-aws/issues/45758))
 * resource/aws_iam_policy: Add `delay_after_policy_creation_in_ms` argument. This functionality requires the `iam:SetDefaultPolicyVersion` IAM permission ([#42054](https://github.com/hashicorp/terraform-provider-aws/issues/42054))
 * resource/aws_iam_saml_provider: Add `saml_provider_uuid` attribute ([#45707](https://github.com/hashicorp/terraform-provider-aws/issues/45707))
