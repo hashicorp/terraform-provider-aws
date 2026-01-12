@@ -499,8 +499,7 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := organizations.DescribeOrganizationInput{}
-
+	var input organizations.DescribeOrganizationInput
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
@@ -539,9 +538,8 @@ func findAccounts(ctx context.Context, conn *organizations.Client, input *organi
 }
 
 func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -587,9 +585,8 @@ func findRoots(ctx context.Context, conn *organizations.Client, input *organizat
 }
 
 func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+	var input organizations.ListRootsInput
+	output, err := findRoots(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

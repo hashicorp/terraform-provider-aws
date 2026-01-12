@@ -5,30 +5,23 @@ package oam_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfoam "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -69,10 +62,6 @@ func testAccObservabilityAccessManagerLink_basic(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -102,10 +91,6 @@ func testAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -161,10 +146,6 @@ func testAccObservabilityAccessManagerLink_update(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -216,10 +197,6 @@ func testAccObservabilityAccessManagerLink_tags(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -268,10 +245,6 @@ func testAccObservabilityAccessManagerLink_logGroupConfiguration(t *testing.T) {
 
 func testAccObservabilityAccessManagerLink_metricConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var link oam.GetLinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_link.test"
@@ -327,47 +300,39 @@ func testAccCheckLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &oam.GetLinkInput{
-				Identifier: aws.String(rs.Primary.ID),
+			_, err := tfoam.FindLinkByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetLink(ctx, input)
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameLink, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ObservabilityAccessManager Link %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLinkExists(ctx context.Context, name string, link *oam.GetLinkOutput) resource.TestCheckFunc {
+func testAccCheckLinkExists(ctx context.Context, n string, v *oam.GetLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-		resp, err := conn.GetLink(ctx, &oam.GetLinkInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfoam.FindLinkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameLink, rs.Primary.ID, err)
+			return err
 		}
 
-		*link = *resp
+		*v = *output
 
 		return nil
 	}
