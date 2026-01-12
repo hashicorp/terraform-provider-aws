@@ -27,8 +27,8 @@ func TestFunctionRegexpPattern(t *testing.T) {
 	regex := regexache.MustCompile(tflambda.FunctionRegexpPattern)
 
 	validFunctions := []string{
-		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:my-function", //lintignore:AWSAT003,AWSAT005
-		"arn:aws:lambda:us-east-1:123456789012:function:my-function",           //lintignore:AWSAT003,AWSAT005
+		"arn:aws-eusc:lambda:eusc-de-east-1:123456789012:function:my-function",          //lintignore:AWSAT003,AWSAT005
+		"arn:aws:lambda:us-east-1:123456789012:function:my-function",                    //lintignore:AWSAT003,AWSAT005
 		"arn:aws-us-gov:lambda:us-gov-west-1:123456789012:function:my-function:$LATEST", //lintignore:AWSAT003,AWSAT005
 		"my-function",
 		"my-function:1",
