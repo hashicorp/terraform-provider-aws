@@ -90,7 +90,7 @@ func (d *entityPathDataSource) Read(ctx context.Context, request datasource.Read
 	}
 
 	slices.Reverse(parts)
-	data.EntityPath = fwflex.StringValueToFramework(ctx, strings.Join(parts, "/"))
+	data.EntityPath = fwflex.StringValueToFramework(ctx, strings.Join(parts, "/")+"/") // Trailing slash.
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

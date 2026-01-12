@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	ouEntityPathRegexp      = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})+`)
-	accountEntityPathRegexp = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})*/\d{12}`)
+	ouEntityPathRegexp      = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})+/`)
+	accountEntityPathRegexp = regexache.MustCompile(`o-[a-z0-9]{10,32}/r-[0-9a-z]{4,32}(/ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})*/\d{12}/`)
 )
 
 func TestAccOrganizationsEntityPathDataSource_ou(t *testing.T) {
