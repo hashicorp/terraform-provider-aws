@@ -24,10 +24,10 @@ func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
 	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
 
 	validURLs := []string{
-		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",
-		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", // ESC URL
-		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",
-		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write",
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",         //lintignore:AWSAT003
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",       //lintignore:AWSAT003
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write",     //lintignore:AWSAT003
 	}
 
 	for _, url := range validURLs {
@@ -38,8 +38,8 @@ func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
 
 	invalidURLs := []string{
 		"https://aps-workspaces.invalid-region.amazonaws.com/workspaces/test/api/v1/remote_write",
-		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   // http not https
-		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      // empty workspace
+		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      //lintignore:AWSAT003
 		"https://aps-workspaces.us--east-1.amazonaws.com/workspaces/test/api/v1/remote_write", // double dash
 		"https://aps-workspaces.us-east-.amazonaws.com/workspaces/test/api/v1/remote_write",   // trailing dash
 	}

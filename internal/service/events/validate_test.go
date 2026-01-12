@@ -152,9 +152,9 @@ func TestEventBusARNPattern(t *testing.T) {
 
 	invalidARNs := []string{
 		"arn:aws:events:invalid-region:123456789012:event-bus/default", //lintignore:AWSAT003,AWSAT005
-		"arn:aws:events:us-east-1:123456789012:event-bus/",             // empty bus name //lintignore:AWSAT003,AWSAT005
+		"arn:aws:events:us-east-1:123456789012:event-bus/",             //lintignore:AWSAT003,AWSAT005
 		"not-an-arn",
-		"arn:aws:s3:::bucket", // wrong service //lintignore:AWSAT003,AWSAT005
+		"arn:aws:s3:::bucket", //lintignore:AWSAT005
 	}
 
 	for _, arn := range invalidARNs {

@@ -42,7 +42,7 @@ func TestSecretsManagerARNPattern(t *testing.T) {
 	}
 
 	notValid := []string{
-		"arn:aws:secretsmanager:invalid-region:123456789012:secret:my-secret-AbCdEf",
+		"arn:aws:secretsmanager:invalid-region:123456789012:secret:my-secret-AbCdEf", //lintignore:AWSAT005
 		"not-an-arn-at-all",
 	}
 
