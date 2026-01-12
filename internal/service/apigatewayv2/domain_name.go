@@ -276,7 +276,7 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	}
 
 	if output == nil || len(output.DomainNameConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

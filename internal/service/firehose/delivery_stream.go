@@ -1854,7 +1854,7 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	}
 
 	if output == nil || output.DeliveryStreamDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamDescription, nil
@@ -1925,7 +1925,7 @@ func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *
 	}
 
 	if output.DeliveryStreamEncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamEncryptionConfiguration, nil

@@ -317,7 +317,7 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	}
 
 	if output == nil || output.Analyzer == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analyzer, nil

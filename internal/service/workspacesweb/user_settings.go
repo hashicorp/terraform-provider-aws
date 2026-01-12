@@ -358,7 +358,7 @@ func findUserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, arn 
 	}
 
 	if output == nil || output.UserSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserSettings, nil

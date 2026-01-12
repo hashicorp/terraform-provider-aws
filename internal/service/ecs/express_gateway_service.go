@@ -629,7 +629,7 @@ func findExpressGatewayService(ctx context.Context, conn *ecs.Client, input *ecs
 	}
 
 	if out == nil || out.Service == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Service, nil

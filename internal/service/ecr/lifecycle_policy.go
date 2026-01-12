@@ -164,7 +164,7 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -174,13 +174,15 @@ type lifecyclePolicyRuleSelection struct {
 	TagStatus      *string   `json:"tagStatus,omitempty"`
 	TagPatternList []*string `json:"tagPatternList,omitempty"`
 	TagPrefixList  []*string `json:"tagPrefixList,omitempty"`
+	StorageClass   *string   `json:"storageClass,omitempty"`
 	CountType      *string   `json:"countType,omitempty"`
 	CountUnit      *string   `json:"countUnit,omitempty"`
 	CountNumber    *int64    `json:"countNumber,omitempty"`
 }
 
 type lifecyclePolicyRuleAction struct {
-	Type *string `json:"type"`
+	TargetStorageClass *string `json:"targetStorageClass,omitempty"`
+	Type               *string `json:"type"`
 }
 
 type lifecyclePolicyRule struct {

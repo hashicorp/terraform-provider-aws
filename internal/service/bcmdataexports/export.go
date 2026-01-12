@@ -472,7 +472,7 @@ func findExportByARN(ctx context.Context, conn *bcmdataexports.Client, exportArn
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -161,7 +161,7 @@ func findDedicatedIPPool(ctx context.Context, conn *sesv2.Client, input *sesv2.G
 	}
 
 	if output == nil || output.DedicatedIpPool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DedicatedIpPool, nil

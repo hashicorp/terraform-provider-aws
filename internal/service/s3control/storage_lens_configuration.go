@@ -567,7 +567,7 @@ func findStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 	}
 
 	if output == nil || output.StorageLensConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StorageLensConfiguration, nil

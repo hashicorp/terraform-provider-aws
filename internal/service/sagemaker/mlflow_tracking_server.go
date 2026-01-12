@@ -248,7 +248,7 @@ func findMlflowTrackingServerByName(ctx context.Context, conn *sagemaker.Client,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -218,7 +218,7 @@ func findRoleCustomPermission(ctx context.Context, conn *quicksight.Client, inpu
 	}
 
 	if output == nil || aws.ToString(output.CustomPermissionsName) == "" {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CustomPermissionsName, nil

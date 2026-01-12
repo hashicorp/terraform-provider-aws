@@ -1487,7 +1487,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
@@ -1648,7 +1648,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	}
 
 	if output == nil || output.AutoTerminationPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AutoTerminationPolicy, nil
@@ -2145,7 +2145,7 @@ func findCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Clien
 	}
 
 	if instanceGroup.AutoScalingPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return instanceGroup.AutoScalingPolicy, nil

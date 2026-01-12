@@ -202,7 +202,7 @@ func findIdentityCenterConfigurationByID(ctx context.Context, conn *lakeformatio
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

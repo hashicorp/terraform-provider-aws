@@ -217,7 +217,7 @@ func findPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

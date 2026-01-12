@@ -334,7 +334,7 @@ func findMetricsConfiguration(ctx context.Context, conn *s3.Client, bucket, id s
 	}
 
 	if output == nil || output.MetricsConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MetricsConfiguration, nil

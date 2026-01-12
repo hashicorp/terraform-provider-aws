@@ -189,7 +189,7 @@ func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name strin
 		return nil, err
 	}
 	if policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return policy, nil

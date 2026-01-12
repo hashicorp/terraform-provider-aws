@@ -199,7 +199,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	}
 
 	if output == nil || output.OrganizationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

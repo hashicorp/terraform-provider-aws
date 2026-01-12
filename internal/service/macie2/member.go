@@ -291,7 +291,7 @@ func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -193,7 +193,7 @@ func findCellByName(ctx context.Context, conn *route53recoveryreadiness.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

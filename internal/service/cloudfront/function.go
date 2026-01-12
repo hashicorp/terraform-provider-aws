@@ -268,7 +268,7 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *cloudfront.Client, name
 	}
 
 	if output == nil || output.FunctionSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

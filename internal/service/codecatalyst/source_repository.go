@@ -161,7 +161,7 @@ func findSourceRepositoryByName(ctx context.Context, conn *codecatalyst.Client, 
 	}
 
 	if out == nil || out.Name == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

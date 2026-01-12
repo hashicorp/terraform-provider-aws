@@ -812,7 +812,7 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

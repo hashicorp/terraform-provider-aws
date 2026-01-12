@@ -380,7 +380,7 @@ func findGameServerGroupByName(ctx context.Context, conn *gamelift.Client, name 
 	}
 
 	if output == nil || output.GameServerGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GameServerGroup, nil

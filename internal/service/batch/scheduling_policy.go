@@ -204,7 +204,7 @@ func findSchedulingPolicies(ctx context.Context, conn *batch.Client, input *batc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SchedulingPolicies, nil

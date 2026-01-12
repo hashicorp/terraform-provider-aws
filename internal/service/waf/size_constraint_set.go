@@ -199,7 +199,7 @@ func findSizeConstraintSetByID(ctx context.Context, conn *waf.Client, id string)
 	}
 
 	if output == nil || output.SizeConstraintSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SizeConstraintSet, nil

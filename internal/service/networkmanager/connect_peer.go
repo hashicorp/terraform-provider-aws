@@ -354,7 +354,7 @@ func findConnectPeer(ctx context.Context, conn *networkmanager.Client, input *ne
 	}
 
 	if output == nil || output.ConnectPeer == nil || output.ConnectPeer.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConnectPeer, nil

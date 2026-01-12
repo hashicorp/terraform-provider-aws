@@ -219,7 +219,7 @@ func findGroup(ctx context.Context, conn *quicksight.Client, input *quicksight.D
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil

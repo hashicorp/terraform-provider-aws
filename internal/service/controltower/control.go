@@ -390,7 +390,7 @@ func findEnabledControlByARN(ctx context.Context, conn *controltower.Client, arn
 	}
 
 	if output == nil || output.EnabledControlDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EnabledControlDetails, nil
@@ -414,7 +414,7 @@ func findControlOperationByID(ctx context.Context, conn *controltower.Client, id
 	}
 
 	if output == nil || output.ControlOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ControlOperation, nil

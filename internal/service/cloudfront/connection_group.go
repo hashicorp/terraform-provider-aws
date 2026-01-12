@@ -384,7 +384,7 @@ func findConnectionGroupByID(ctx context.Context, conn *cloudfront.Client, id st
 	}
 
 	if output == nil || output.ConnectionGroup == nil || output.ConnectionGroup.Name == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -408,7 +408,7 @@ func findConnectionGroupByRoutingEndpoint(ctx context.Context, conn *cloudfront.
 	}
 
 	if output == nil || output.ConnectionGroup == nil || output.ConnectionGroup.Name == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

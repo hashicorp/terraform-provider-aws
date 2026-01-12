@@ -308,7 +308,7 @@ func findAccountAssignmentCreationStatus(
 	}
 
 	if output == nil || output.AccountAssignmentCreationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentCreationStatus, nil
@@ -350,7 +350,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.AccountAssignmentDeletionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentDeletionStatus, nil

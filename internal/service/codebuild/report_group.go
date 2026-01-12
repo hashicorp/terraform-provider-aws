@@ -242,7 +242,7 @@ func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReportGroups, nil

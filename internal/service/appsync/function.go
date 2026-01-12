@@ -367,7 +367,7 @@ func findFunctionByTwoPartKey(ctx context.Context, conn *appsync.Client, apiID, 
 	}
 
 	if output == nil || output.FunctionConfiguration == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.FunctionConfiguration, nil

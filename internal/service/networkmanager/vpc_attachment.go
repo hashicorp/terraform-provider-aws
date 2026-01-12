@@ -444,7 +444,7 @@ func findVPCAttachment(ctx context.Context, conn *networkmanager.Client, input *
 	}
 
 	if output == nil || output.VpcAttachment == nil || output.VpcAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcAttachment, nil

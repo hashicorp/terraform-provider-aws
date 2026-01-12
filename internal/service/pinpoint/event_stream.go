@@ -144,7 +144,7 @@ func findEventStreamByApplicationId(ctx context.Context, conn *pinpoint.Client, 
 	}
 
 	if output == nil || output.EventStream == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventStream, nil

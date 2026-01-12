@@ -175,7 +175,7 @@ func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devo
 	}
 
 	if out == nil || out.EventSources == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

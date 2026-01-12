@@ -238,7 +238,7 @@ func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id st
 	}
 
 	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Namespace, nil

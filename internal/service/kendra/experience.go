@@ -439,7 +439,7 @@ func FindExperienceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -416,7 +416,7 @@ func findCapacityProviderByName(ctx context.Context, conn *lambda.Client, name s
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.CapacityProvider, nil

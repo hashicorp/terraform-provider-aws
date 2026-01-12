@@ -465,7 +465,7 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 	}
 
 	if output == nil || output.Policy == nil || output.Policy.SecurityServicePolicyData == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

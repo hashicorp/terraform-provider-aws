@@ -1372,7 +1372,7 @@ func findDistribution(ctx context.Context, conn *cloudfront.Client, input *cloud
 	}
 
 	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

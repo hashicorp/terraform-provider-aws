@@ -234,7 +234,7 @@ func findTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkma
 	}
 
 	if output == nil || output.TransitGatewayRouteTableAttachment == nil || output.TransitGatewayRouteTableAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TransitGatewayRouteTableAttachment, nil

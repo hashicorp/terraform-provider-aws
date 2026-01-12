@@ -240,7 +240,7 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

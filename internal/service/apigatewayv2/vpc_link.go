@@ -190,7 +190,7 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatew
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -276,7 +276,7 @@ func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, 
 	}
 
 	if output == nil || output.IpAccessSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IpAccessSettings, nil

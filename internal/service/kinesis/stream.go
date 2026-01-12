@@ -564,7 +564,7 @@ func findLimits(ctx context.Context, conn *kinesis.Client) (*kinesis.DescribeLim
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -589,7 +589,7 @@ func findStreamByName(ctx context.Context, conn *kinesis.Client, name string) (*
 	}
 
 	if output == nil || output.StreamDescriptionSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StreamDescriptionSummary, nil

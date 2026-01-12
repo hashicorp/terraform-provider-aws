@@ -666,7 +666,7 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -456,7 +456,7 @@ func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.
 	}
 
 	if output == nil || output.AgentActionGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentActionGroup, nil

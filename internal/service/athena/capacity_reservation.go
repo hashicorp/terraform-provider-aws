@@ -333,7 +333,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	}
 
 	if out == nil || out.CapacityReservation == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CapacityReservation, nil

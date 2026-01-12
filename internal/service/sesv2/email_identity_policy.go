@@ -229,7 +229,7 @@ func findEmailIdentityPolicyByTwoPartKey(ctx context.Context, conn *sesv2.Client
 		return aws.String(output), nil
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEmailIdentityPolicies(ctx context.Context, conn *sesv2.Client, input *sesv2.GetEmailIdentityPoliciesInput) (map[string]string, error) {
@@ -247,7 +247,7 @@ func findEmailIdentityPolicies(ctx context.Context, conn *sesv2.Client, input *s
 	}
 
 	if output == nil || output.Policies == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policies, nil

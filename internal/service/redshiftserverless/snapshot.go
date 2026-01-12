@@ -207,7 +207,7 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Snapshot, nil

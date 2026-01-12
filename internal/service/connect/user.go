@@ -407,7 +407,7 @@ func findUser(ctx context.Context, conn *connect.Client, input *connect.Describe
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil

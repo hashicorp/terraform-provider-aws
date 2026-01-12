@@ -175,7 +175,7 @@ func findConnectionByARN(ctx context.Context, conn *codestarconnections.Client, 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

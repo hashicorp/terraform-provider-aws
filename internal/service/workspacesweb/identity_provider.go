@@ -281,7 +281,7 @@ func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, 
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, "", tfresource.NewEmptyResultError(input)
+		return nil, "", tfresource.NewEmptyResultError()
 	}
 
 	portalARN, err := portalARNFromIdentityProviderARN(arn)

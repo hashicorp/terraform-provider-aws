@@ -237,7 +237,7 @@ func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

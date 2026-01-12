@@ -642,7 +642,7 @@ func findEntityRecognizer(ctx context.Context, conn *comprehend.Client, in *comp
 	}
 
 	if out == nil || out.EntityRecognizerProperties == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.EntityRecognizerProperties, nil

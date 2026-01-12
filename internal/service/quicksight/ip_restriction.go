@@ -255,7 +255,7 @@ func findIPRestrictionByID(ctx context.Context, conn *quicksight.Client, id stri
 	}
 
 	if output == nil || (!aws.ToBool(output.Enabled) && len(output.IpRestrictionRuleMap) == 0 && len(output.VpcEndpointIdRestrictionRuleMap) == 0 && len(output.VpcIdRestrictionRuleMap) == 0) {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

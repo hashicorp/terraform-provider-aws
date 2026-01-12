@@ -209,7 +209,7 @@ func findDomainByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owne
 	}
 
 	if output == nil || output.Domain == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Domain, nil

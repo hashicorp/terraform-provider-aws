@@ -15,10 +15,6 @@ import (
 )
 
 func testAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_sinks.test"

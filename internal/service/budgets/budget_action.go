@@ -429,7 +429,7 @@ func findBudgetAction(ctx context.Context, conn *budgets.Client, input *budgets.
 	}
 
 	if output == nil || output.Action == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Action, nil

@@ -929,7 +929,7 @@ func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.Describ
 	}
 
 	if output == nil || output.Route == nil || output.Route.Metadata == nil || output.Route.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Route, nil

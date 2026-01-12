@@ -620,7 +620,7 @@ func findDistributionTenant(ctx context.Context, conn *cloudfront.Client, input 
 	}
 
 	if output == nil || output.DistributionTenant == nil || output.DistributionTenant.Domains == nil || output.DistributionTenant.DistributionId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

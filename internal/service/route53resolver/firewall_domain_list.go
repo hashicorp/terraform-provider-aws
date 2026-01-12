@@ -224,7 +224,7 @@ func findFirewallDomainListByID(ctx context.Context, conn *route53resolver.Clien
 	}
 
 	if output == nil || output.FirewallDomainList == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallDomainList, nil

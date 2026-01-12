@@ -154,7 +154,7 @@ func findAuthPolicy(ctx context.Context, conn *vpclattice.Client, input *vpclatt
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

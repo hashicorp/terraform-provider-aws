@@ -313,7 +313,7 @@ func findScope(ctx context.Context, conn *networkflowmonitor.Client, input *netw
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
