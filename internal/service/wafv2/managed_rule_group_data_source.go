@@ -106,7 +106,7 @@ func findManagedRuleGroup(ctx context.Context, conn *wafv2.Client, input *wafv2.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
