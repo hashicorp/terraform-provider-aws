@@ -22,7 +22,7 @@ data "aws_region" "current" {}
 # Example VPC for Neptune Graph
 resource "aws_vpc" "example" {
   cidr_block = "10.0.0.0/16"
-  
+
   tags = {
     Name = "neptune-graph-vpc"
   }
@@ -33,7 +33,7 @@ resource "aws_subnet" "example1" {
   vpc_id            = aws_vpc.example.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_region.current.region}a"
-  
+
   tags = {
     Name = "neptune-graph-subnet-1"
   }
@@ -44,7 +44,7 @@ resource "aws_subnet" "example2" {
   vpc_id            = aws_vpc.example.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "${data.aws_region.current.region}b"
-  
+
   tags = {
     Name = "neptune-graph-subnet-2"
   }
@@ -70,7 +70,7 @@ resource "aws_security_group" "example" {
 
 # Example Graph resource
 resource "aws_neptunegraph_graph" "example" {
-  graph_name = "example-graph-test-20260112"
+  graph_name         = "example-graph-test-20260112"
   provisioned_memory = 16
 }
 
@@ -92,6 +92,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 * `subnetIds` - (Set of String) Subnets in which private graph endpoint ENIs are created.
 * `vpcSecurityGroupIds` - (Set of String) Security groups to be attached to the private graph endpoint.
 
