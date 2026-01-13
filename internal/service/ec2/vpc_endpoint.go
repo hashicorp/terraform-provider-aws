@@ -121,9 +121,12 @@ func resourceVPCEndpoint() *schema.Resource {
 				},
 			},
 			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					return strings.ToLower(newValue) == strings.ToLower(oldValue)
+				},
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"network_interface_ids": {
