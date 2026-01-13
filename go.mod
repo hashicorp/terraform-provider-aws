@@ -173,7 +173,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackagevod v1.39.17
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.29.17
-	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.9
+	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.14
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.16
