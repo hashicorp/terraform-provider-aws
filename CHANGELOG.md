@@ -5,6 +5,11 @@ FEATURES:
 * **New Data Source:** `aws_wafv2_managed_rule_group` ([#45899](https://github.com/hashicorp/terraform-provider-aws/issues/45899))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
+ENHANCEMENTS:
+
+* data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
+* resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
+
 BUG FIXES:
 
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization ([#45909](https://github.com/hashicorp/terraform-provider-aws/issues/45909))
