@@ -125,7 +125,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					return strings.ToLower(newValue) == strings.ToLower(oldValue)
+					return strings.EqualFold(oldValue, newValue) // Case insensitive comparison
 				},
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
