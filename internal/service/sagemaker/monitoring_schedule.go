@@ -305,7 +305,7 @@ func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
 		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -329,7 +329,7 @@ func waitMonitoringScheduleDeleted(ctx context.Context, conn *sagemaker.Client, 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
 		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
