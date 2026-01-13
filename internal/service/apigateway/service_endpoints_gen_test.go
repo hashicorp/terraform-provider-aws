@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
@@ -363,10 +364,20 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	}
 
 	hostname := endpoint.Hostname()
-	_, err = net.LookupHost(hostname)
+
+	// Use a short timeout for DNS lookup to avoid hanging in restricted network environments (e.g., GHA)
+	lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	resolver := &net.Resolver{}
+	_, err = resolver.LookupHost(lookupCtx, hostname)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
+		// Treat timeout as "not found" since FIPS endpoints may not be resolvable in all environments
+		if lookupCtx.Err() == context.DeadlineExceeded {
+			return expectDefaultEndpoint(ctx, t, region)
+		}
 		t.Fatalf("looking up API Gateway endpoint %q: %s", hostname, err)
 	}
 
