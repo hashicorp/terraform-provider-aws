@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,6 +52,50 @@ func resourceMonitoringSchedule() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"monitoring_job_definition": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"monitoring_app_specification": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"container_arguments": {
+													Type:     schema.TypeList,
+													MaxItems: 50,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"container_entrypoint": {
+													Type:     schema.TypeList,
+													MaxItems: 100,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"image_uri": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"post_analytics_processor_source_uri": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validHTTPSOrS3URI,
+												},
+												"record_preprocessor_source_uri": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validHTTPSOrS3URI,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"monitoring_job_definition_name": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -293,76 +338,167 @@ func waitMonitoringScheduleDeleted(ctx context.Context, conn *sagemaker.Client, 
 	return nil, err
 }
 
-func expandMonitoringScheduleConfig(configured []any) *awstypes.MonitoringScheduleConfig {
-	if len(configured) == 0 {
+func expandMonitoringScheduleConfig(tfList []any) *awstypes.MonitoringScheduleConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringScheduleConfig{}
 
-	c := &awstypes.MonitoringScheduleConfig{}
-
-	if v, ok := m["monitoring_job_definition_name"].(string); ok && v != "" {
-		c.MonitoringJobDefinitionName = aws.String(v)
+	if v, ok := tfMap["monitoring_job_definition"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringJobDefinition = expandMonitoringJobDefinition(v)
 	}
 
-	if v, ok := m["monitoring_type"].(string); ok && v != "" {
-		c.MonitoringType = awstypes.MonitoringType(v)
+	if v, ok := tfMap["monitoring_job_definition_name"].(string); ok && v != "" {
+		apiObject.MonitoringJobDefinitionName = aws.String(v)
 	}
 
-	if v, ok := m["schedule_config"].([]any); ok && len(v) > 0 {
-		c.ScheduleConfig = expandScheduleConfig(v)
+	if v, ok := tfMap["monitoring_type"].(string); ok && v != "" {
+		apiObject.MonitoringType = awstypes.MonitoringType(v)
 	}
 
-	return c
+	if v, ok := tfMap["schedule_config"].([]any); ok && len(v) > 0 {
+		apiObject.ScheduleConfig = expandScheduleConfig(v)
+	}
+
+	return apiObject
 }
 
-func expandScheduleConfig(configured []any) *awstypes.ScheduleConfig {
-	if len(configured) == 0 {
+func expandMonitoringJobDefinition(tfList []any) *awstypes.MonitoringJobDefinition {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringJobDefinition{}
 
-	c := &awstypes.ScheduleConfig{}
-
-	if v, ok := m[names.AttrScheduleExpression].(string); ok && v != "" {
-		c.ScheduleExpression = aws.String(v)
+	if v, ok := tfMap["monitoring_app_specification"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringAppSpecification = expandMonitoringAppSpecification(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenMonitoringScheduleConfig(config *awstypes.MonitoringScheduleConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func expandMonitoringAppSpecification(tfList []any) *awstypes.MonitoringAppSpecification {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	m := map[string]any{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringAppSpecification{}
 
-	if config.MonitoringJobDefinitionName != nil {
-		m["monitoring_job_definition_name"] = aws.ToString(config.MonitoringJobDefinitionName)
+	if v, ok := tfMap["container_arguments"].([]any); ok && len(v) > 0 {
+		apiObject.ContainerArguments = flex.ExpandStringValueList(v)
 	}
 
-	m["monitoring_type"] = config.MonitoringType
-
-	if config.ScheduleConfig != nil {
-		m["schedule_config"] = flattenScheduleConfig(config.ScheduleConfig)
+	if v, ok := tfMap["container_entrypoint"].([]any); ok && len(v) > 0 {
+		apiObject.ContainerEntrypoint = flex.ExpandStringValueList(v)
 	}
 
-	return []map[string]any{m}
+	if v, ok := tfMap["image_uri"].(string); ok && v != "" {
+		apiObject.ImageUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["post_analytics_processor_source_uri"].(string); ok && v != "" {
+		apiObject.PostAnalyticsProcessorSourceUri = aws.String(v)
+	}
+
+	if v, ok := tfMap["record_preprocessor_source_uri"].(string); ok && v != "" {
+		apiObject.RecordPreprocessorSourceUri = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenScheduleConfig(config *awstypes.ScheduleConfig) []map[string]any {
-	if config == nil {
-		return []map[string]any{}
+func expandScheduleConfig(tfList []any) *awstypes.ScheduleConfig {
+	if len(tfList) == 0 {
+		return nil
 	}
 
-	m := map[string]any{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ScheduleConfig{}
 
-	if config.ScheduleExpression != nil {
-		m[names.AttrScheduleExpression] = aws.ToString(config.ScheduleExpression)
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
+		apiObject.ScheduleExpression = aws.String(v)
 	}
 
-	return []map[string]any{m}
+	return apiObject
+}
+
+func flattenMonitoringScheduleConfig(apiObject *awstypes.MonitoringScheduleConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.MonitoringJobDefinition != nil {
+		tfMap["monitoring_job_definition"] = flattenMonitoringJobDefinition(apiObject.MonitoringJobDefinition)
+	}
+
+	if apiObject.MonitoringJobDefinitionName != nil {
+		tfMap["monitoring_job_definition_name"] = aws.ToString(apiObject.MonitoringJobDefinitionName)
+	}
+
+	tfMap["monitoring_type"] = apiObject.MonitoringType
+
+	if apiObject.ScheduleConfig != nil {
+		tfMap["schedule_config"] = flattenScheduleConfig(apiObject.ScheduleConfig)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMonitoringJobDefinition(apiObject *awstypes.MonitoringJobDefinition) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.MonitoringAppSpecification != nil {
+		tfMap["monitoring_app_specification"] = flattenMonitoringAppSpecification(apiObject.MonitoringAppSpecification)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMonitoringAppSpecification(apiObject *awstypes.MonitoringAppSpecification) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"container_arguments":  apiObject.ContainerArguments,
+		"container_entrypoint": apiObject.ContainerEntrypoint,
+	}
+
+	if apiObject.ImageUri != nil {
+		tfMap["image_uri"] = aws.ToString(apiObject.ImageUri)
+	}
+
+	if apiObject.PostAnalyticsProcessorSourceUri != nil {
+		tfMap["post_analytics_processor_source_uri"] = aws.ToString(apiObject.PostAnalyticsProcessorSourceUri)
+	}
+
+	if apiObject.RecordPreprocessorSourceUri != nil {
+		tfMap["record_preprocessor_source_uri"] = aws.ToString(apiObject.RecordPreprocessorSourceUri)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenScheduleConfig(apiObject *awstypes.ScheduleConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.ScheduleExpression != nil {
+		tfMap[names.AttrScheduleExpression] = aws.ToString(apiObject.ScheduleExpression)
+	}
+
+	return []any{tfMap}
 }

@@ -29,16 +29,29 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `monitoring_schedule_config` - (Required) The configuration object that specifies the monitoring schedule and defines the monitoring job. Fields are documented below.
 * `name` - (Optional) The name of the monitoring schedule. The name must be unique within an AWS Region within an AWS account. If omitted, Terraform will assign a random, unique name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### monitoring_schedule_config
 
+* `monitoring_job_definition` - (Optional) Defines the monitoring job. Fields are documented below.
 * `monitoring_job_definition_name` - (Required) The name of the monitoring job definition to schedule.
 * `monitoring_type` - (Required) The type of the monitoring job definition to schedule. Valid values are `DataQuality`, `ModelQuality`, `ModelBias` or `ModelExplainability`
 * `schedule_config` - (Optional) Configures the monitoring schedule. Fields are documented below.
+
+### monitoring_job_definition
+
+* `monitoring_app_specification` - (Optional) Configures the monitoring job to run a specified Docker container image. Fields are documented below.
+
+### monitoring_app_specification
+
+* `container_arguments` - (Optional) List of arguments for the container used to run the monitoring job.
+* `container_entrypoint` - (Optional) Entrypoint for the container used to run the monitoring job.
+* `image_uri` - (Required) Container image to be run by the monitoring job.
+* `post_analytics_processor_source_uri` - (Optional) Script that is called after analysis has been performed.
+* `record_preprocessor_source_uri` - (Optional) Script that is called per row prior to running analysis.
 
 #### schedule_config
 
