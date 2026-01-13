@@ -3212,7 +3212,7 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
-	name := config.GetAttr(names.AttrName)
+	name := planRaw.GetAttr(names.AttrName)
 	if name.IsKnown() {
 		table, err := findTableByName(ctx, conn, name.AsString())
 		if err != nil && !retry.NotFound(err) {
