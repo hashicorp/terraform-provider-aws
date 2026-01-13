@@ -40,6 +40,9 @@ var (
 	InvocationParseResourceID                    = invocationParseResourceID
 
 	ValidFunctionName               = validFunctionName
+	FunctionNameValidator           = functionNameValidator
+	KafkaOrARNPattern               = kafkaOrARNPattern
+	FunctionRegexpPattern           = functionRegexp
 	ValidPermissionAction           = validPermissionAction
 	ValidPermissionEventSourceToken = validPermissionEventSourceToken
 	ValidQualifier                  = validQualifier
