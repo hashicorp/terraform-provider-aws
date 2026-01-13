@@ -8249,6 +8249,87 @@ func TestAccDynamoDBTable_gsiWarmThroughput_switchBilling(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_nameKnownAfterApply(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -12394,4 +12475,47 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, maxRead, maxWrite, warmRead, warmWrite)
+}
+
+// testAccTableConfig_nameKnownAfterApply_validation simulates name = (known after apply) because the name of the "test"
+// resource depends on the id of "base" which is also known after apply
+func testAccTableConfig_nameKnownAfterApply(rName string) string {
+	return fmt.Sprintf(`
+resource "null_resource" "test" {}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-${null_resource.test.id}"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName string) string {
+	return fmt.Sprintf(`
+resource "null_resource" "test" {}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-${null_resource.test.id}"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  attribute {
+    name = "unindexed"
+    type = "N"
+  }
+}
+`, rName)
 }

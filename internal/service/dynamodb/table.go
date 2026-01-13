@@ -3193,16 +3193,19 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 
 	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
 	remoteGSIAttributes := map[string]bool{}
-	table, err := findTableByName(ctx, conn, d.Get(names.AttrName).(string))
-	if err != nil && !retry.NotFound(err) {
-		return err
-	}
+	name := planRaw.GetAttr(names.AttrName)
+	if name.IsKnown() {
+		table, err := findTableByName(ctx, conn, name.AsString())
+		if err != nil && !retry.NotFound(err) {
+			return err
+		}
 
-	if table != nil {
-		for _, g := range table.GlobalSecondaryIndexes {
-			for _, ks := range g.KeySchema {
-				remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
-				delete(indexedAttributes, aws.ToString(ks.AttributeName))
+		if table != nil {
+			for _, g := range table.GlobalSecondaryIndexes {
+				for _, ks := range g.KeySchema {
+					remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+					delete(indexedAttributes, aws.ToString(ks.AttributeName))
+				}
 			}
 		}
 	}
