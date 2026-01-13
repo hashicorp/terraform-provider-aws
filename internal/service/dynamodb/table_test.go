@@ -12347,3 +12347,113 @@ resource "aws_dynamodb_table" "test" {
 }
 `, rName, maxRead, maxWrite, warmRead, warmWrite)
 }
+
+func TestAccDynamoDBTable_streamDisableWithReplicaRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_streamDisableWithReplicaRemoval_initial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+				),
+			},
+			{
+				Config: testAccTableConfig_streamDisableWithReplicaRemoval_final(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTableConfig_streamDisableWithReplicaRemoval_initial(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+  name         = %[1]q
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  replica {
+    region_name = data.aws_region.third.name
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_streamDisableWithReplicaRemoval_final(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "TestTableHashKey"
+  name         = %[1]q
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  stream_enabled = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}

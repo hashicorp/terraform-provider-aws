@@ -1192,6 +1192,30 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
+	// Special handling for disabling streams when removing all replicas
+	// AWS doesn't allow disabling streams on Global Table replicas, so we must remove replicas first
+	var streamDisableAfterReplicas bool
+	if d.HasChange("stream_enabled") && d.HasChange("replica") {
+		// Check if we're disabling streams
+		_, newStreamEnabled := d.GetChange("stream_enabled")
+		if !newStreamEnabled.(bool) {
+			// Check if we're removing all replicas
+			oRaw, nRaw := d.GetChange("replica")
+			oldReplicas := oRaw.(*schema.Set)
+			newReplicas := nRaw.(*schema.Set)
+
+			if oldReplicas.Len() > 0 && newReplicas.Len() == 0 {
+				// We're removing all replicas and disabling streams - handle replicas first
+				streamDisableAfterReplicas = true
+				log.Printf("[DEBUG] Detected stream disable + replica removal - will process replicas first")
+
+				if err := updateReplica(ctx, conn, d); err != nil {
+					return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+				}
+			}
+		}
+	}
+
 	// make change when
 	//   stream_enabled has change (below) OR
 	//   stream_view_type has change and stream_enabled is true (special case)
@@ -1206,7 +1230,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	if d.HasChange("stream_enabled") {
+	if d.HasChange("stream_enabled") && !streamDisableAfterReplicas {
 		hasTableUpdate = true
 
 		input.StreamSpecification = &awstypes.StreamSpecification{
@@ -1328,6 +1352,25 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
+	// Handle stream disabling after replicas have been removed
+	if streamDisableAfterReplicas {
+		log.Printf("[DEBUG] Now disabling stream after replicas have been removed")
+		streamInput := &dynamodb.UpdateTableInput{
+			TableName: aws.String(d.Id()),
+			StreamSpecification: &awstypes.StreamSpecification{
+				StreamEnabled: aws.Bool(false),
+			},
+		}
+
+		if _, err := conn.UpdateTable(ctx, streamInput); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), fmt.Errorf("disabling stream after replica removal: %w", err))
+		}
+
+		if _, err := waitTableActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
+		}
+	}
+
 	if d.HasChange("server_side_encryption") {
 		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]any)); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
@@ -1419,8 +1462,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange("replica") {
 		replicaTagsChange = true
 
-		if err := updateReplica(ctx, conn, d); err != nil {
-			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+		if !streamDisableAfterReplicas {
+			if err := updateReplica(ctx, conn, d); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+			}
 		}
 	}
 
