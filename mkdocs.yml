@@ -37,8 +37,9 @@ nav:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - AI Agents: ai-agents.md
       - AI Agent Guides:
-          - ARN-Based Resource Identity: ai-agent-guides/arn-based-resource-identity.md
-          - Parameterized Resource Identity: ai-agent-guides/parameterized-resource-identity.md
+          - Go-VCR: ai-agent-guides/go-vcr-migration.md
+          - Resource Identity (ARN-based): ai-agent-guides/arn-based-resource-identity.md
+          - Resource Identity (Parameterized): ai-agent-guides/parameterized-resource-identity.md
           - Smarterr: ai-agent-guides/smarterr.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md
