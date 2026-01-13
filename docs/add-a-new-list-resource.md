@@ -28,19 +28,19 @@ skaff list -c -n <resource name>
 
 ### Framework resources
 
-Framework target resource will have the tag `@FrameworkResource()` in the resource file. For these resources use the following, replacing `<resource name>` with the name of the resource being added, eg `JobDefinition`.
+Framework target resource will have the tag `@FrameworkResource()` in the resource file. For these resources use the following, replacing `<resource-name>` with the name of the resource being added, eg `JobDefinition`.
 
 ```console
-skaff list -c -p -n <resource name>
+skaff list -c -p -n <resource-name>
 ```
 
 `Skaff` will generate the following files:
 
-- `internal/service/<service>/<resource_name>_list.go` - List Resource implementation
-- `internal/service/<service>/<resource_name>_list_test.go` - List Resource acceptance tests
-- `website/docs/list-resources/<service>_<resource_name>.html.markdown` - List Resource documentation
-- `internal/service/<service>/testdata/<ResourceName>/list_basic/main.tf` - Basic List Resource acceptance test configuration
-- `internal/service/<service>/testdata/<ResourceName>/list_basic/query.tfquery.hcl` - Query for using list resource
+- `internal/service/<service-name>/<resource-name>_list.go` - List Resource implementation
+- `internal/service/<service-name>/<resource-name>_list_test.go` - List Resource acceptance tests
+- `website/docs/list-resources/<service-name>_<resource-name>.html.markdown` - List Resource documentation
+- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/main.tf` - Basic List Resource acceptance test configuration
+- `internal/service/<service-name>/testdata/<Resource-Name>/list_basic/query.tfquery.hcl` - Query for using list resource
 
 ### Fill in the `List` handler
 
@@ -129,4 +129,4 @@ go generate internal/service/<service>/generate.go
 
 - **Minimal Generated Config**: Generated test configurations are basic and need substantial updates with all required resource dependencies.
 - **PreCheck Functions**: Remove custom precheck functions unless they exist - use standard `acctest.PreCheck(ctx, t)`.
-- **ARN Validation**: ARNs have multiple forms and may cause the test check to fail. Find the correct format for the <resource> and update the validation.
+- **ARN Validation**: ARNs have multiple forms and may cause the test check to fail. Find the correct format for the `<resource-name>` and update the validation.
