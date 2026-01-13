@@ -436,6 +436,9 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 // matches the current account to prevent false diffs. This is needed because ModifySecurityGroupRules
 // API doesn't accept UserId format in ReferencedGroupId field, and after updates the API may return
 // just groupId even if state had accountId/groupId format.
+//
+// However, if the state already has accountId/groupId format (from user config), we preserve that
+// format to match what the user configured, preventing false diffs.
 func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
 	if apiValue.IsNull() || stateValue.IsNull() {
 		return apiValue
@@ -444,20 +447,22 @@ func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValu
 	apiStr := apiValue.ValueString()
 	stateStr := stateValue.ValueString()
 
-	// If API returned just groupId and state has accountId/groupId where accountId matches,
-	// normalize to groupId to prevent false diff.
+	// If state has accountId/groupId format and accountId matches current account,
+	// preserve the state format (accountId/groupId) to match user's config, even though
+	// API returned just groupId. This prevents false diffs when user configured accountId/groupId.
 	if parts := strings.Split(stateStr, "/"); len(parts) == 2 {
 		if parts[0] == currentAccountID && apiStr == parts[1] {
-			// State has accountId/groupId, API has groupId, accountId matches -> normalize to groupId
-			return apiValue
+			// State has accountId/groupId, API has groupId, accountId matches
+			// Preserve state format to match user config
+			return stateValue
 		}
 	}
 
 	// If state has just groupId and API returned accountId/groupId where accountId matches,
-	// normalize to groupId.
+	// normalize to groupId (preserve the simpler format).
 	if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
 		if parts[0] == currentAccountID && stateStr == parts[1] {
-			// API has accountId/groupId, state has groupId, accountId matches -> normalize to groupId
+			// API has accountId/groupId, state has groupId, accountId matches -> keep groupId
 			return types.StringValue(parts[1])
 		}
 	}
