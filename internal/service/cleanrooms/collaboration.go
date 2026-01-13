@@ -33,7 +33,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetCollaborationOutput")
 // @Testing(preIdentityVersion="v6.26.0")
-func ResourceCollaboration() *schema.Resource {
+func resourceCollaboration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCollaborationCreate,
 		ReadWithoutTimeout:   resourceCollaborationRead,
@@ -168,7 +168,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	creatorAbilities := d.Get("creator_member_abilities").([]any)
 
-	input := &cleanrooms.CreateCollaborationInput{
+	input := cleanrooms.CreateCollaborationInput{
 		Name:                   aws.String(d.Get(names.AttrName).(string)),
 		CreatorDisplayName:     aws.String(d.Get("creator_display_name").(string)),
 		CreatorMemberAbilities: expandMemberAbilities(creatorAbilities),
@@ -194,7 +194,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Description = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateCollaboration(ctx, input)
+	out, err := conn.CreateCollaboration(ctx, &input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), err)
 	}
@@ -257,7 +257,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cleanrooms.UpdateCollaborationInput{
+		input := cleanrooms.UpdateCollaborationInput{
 			CollaborationIdentifier: aws.String(d.Id()),
 		}
 
@@ -273,7 +273,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.AnalyticsEngine = types.AnalyticsEngine(d.Get("analytics_engine").(string))
 		}
 
-		_, err := conn.UpdateCollaboration(ctx, input)
+		_, err := conn.UpdateCollaboration(ctx, &input)
 		if err != nil {
 			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionUpdating, ResNameCollaboration, d.Id(), err)
 		}
@@ -305,10 +305,10 @@ func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetCollaborationOutput, error) {
-	in := &cleanrooms.GetCollaborationInput{
+	in := cleanrooms.GetCollaborationInput{
 		CollaborationIdentifier: aws.String(id),
 	}
-	out, err := conn.GetCollaboration(ctx, in)
+	out, err := conn.GetCollaboration(ctx, &in)
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		//We throw Access Denied for NFE in Cleanrooms for collaborations since they are cross account
@@ -336,9 +336,8 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 	out, err := conn.ListMembers(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
