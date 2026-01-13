@@ -77,11 +77,12 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CreateControlPanel(ctx, input)
-	result := output.ControlPanel
-
+	
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: %s", err)
 	}
+
+	result := output.ControlPanel
 
 	if result == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: empty response")
