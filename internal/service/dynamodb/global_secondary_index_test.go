@@ -1711,15 +1711,15 @@ func TestAccDynamoDBGlobalSecondaryIndex_validate_KeySchemas(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 0, 0),
-				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with a\s+"key_type" of "HASH", got: 0`),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with\s+"key_type" "HASH", got: 0`),
 			},
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 5, 0),
-				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with a\s+"key_type" of "HASH", got: 5`),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at least 1 and at most 4 elements with\s+"key_type" "HASH", got: 5`),
 			},
 			{
 				Config:      testAccGlobalSecondaryIndexConfig_validateAttribute_numberOfKeySchemas(rNameTable, rName, 1, 5),
-				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at most 4 elements with a "key_type" of\s+"RANGE", got: 5`),
+				ExpectError: regexache.MustCompile(`Attribute key_schema must contain at most 4 elements with "key_type" "RANGE",\s+got: 5`),
 			},
 		},
 	})
