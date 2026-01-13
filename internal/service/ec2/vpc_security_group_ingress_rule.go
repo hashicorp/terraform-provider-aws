@@ -440,12 +440,30 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 // However, if the state already has accountId/groupId format (from user config), we preserve that
 // format to match what the user configured, preventing false diffs. This applies to both same-account
 // and cross-account cases.
+//
+// During import (when stateValue is null), if the API returns just groupId for a same-account reference,
+// we format it as accountId/groupId to match what users typically configure, ensuring consistency.
 func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
-	if apiValue.IsNull() || stateValue.IsNull() {
+	if apiValue.IsNull() {
 		return apiValue
 	}
 
 	apiStr := apiValue.ValueString()
+
+	// During import, stateValue is null. Format same-account references as accountId/groupId
+	// to match what users typically configure, ensuring imported resources are consistent.
+	if stateValue.IsNull() {
+		// If API value is already in accountId/groupId format, return as-is
+		if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
+			return apiValue
+		}
+		// If API value is just groupId (same-account reference), format as accountId/groupId
+		if strings.HasPrefix(apiStr, "sg-") {
+			return types.StringValue(strings.Join([]string{currentAccountID, apiStr}, "/"))
+		}
+		return apiValue
+	}
+
 	stateStr := stateValue.ValueString()
 
 	// If state has accountId/groupId format, preserve it to match user's config.
