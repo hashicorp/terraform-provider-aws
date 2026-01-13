@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"maps"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -8202,8 +8201,9 @@ func TestAccDynamoDBTable_gsiWarmThroughput_switchBilling(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_validation_nameKnownAfterApply(t *testing.T) {
+func TestAccDynamoDBTable_nameKnownAfterApply(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -8219,23 +8219,16 @@ func TestAccDynamoDBTable_validation_nameKnownAfterApply(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_validation_nameKnownAfterApply(rName),
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrWith(resourceName, names.AttrName, func(value string) error {
-						prefix := fmt.Sprintf("%s-", rName)
-						if !strings.HasPrefix(value, prefix) {
-							return fmt.Errorf(`attribute "%s" ("%s") does not start with "%s"`, names.AttrName, value, prefix)
-						}
-
-						return nil
-					}),
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_validation_nameUnknown(t *testing.T) {
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -8251,15 +8244,17 @@ func TestAccDynamoDBTable_validation_nameUnknown(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_validation_nameUnknown(rName),
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
 				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
 			},
 		},
 	})
 }
 
-func TestAccDynamoDBTable_validation_onUpdate(t *testing.T) {
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed_onUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -8274,10 +8269,13 @@ func TestAccDynamoDBTable_validation_onUpdate(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_validation_nameKnownAfterApply(rName),
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
 			},
 			{
-				Config:      testAccTableConfig_validation_nameUnknown(rName),
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
 				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
 			},
 		},
@@ -12433,7 +12431,7 @@ resource "aws_dynamodb_table" "test" {
 
 // testAccTableConfig_nameKnownAfterApply_validation simulates name = (known after apply) because the name of the "test"
 // resource depends on the id of "base" which is also known after apply
-func testAccTableConfig_validation_nameKnownAfterApply(rName string) string {
+func testAccTableConfig_nameKnownAfterApply(rName string) string {
 	return fmt.Sprintf(`
 resource "null_resource" "test" {}
 
@@ -12451,7 +12449,7 @@ resource "aws_dynamodb_table" "test" {
 `, rName)
 }
 
-func testAccTableConfig_validation_nameUnknown(rName string) string {
+func testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName string) string {
 	return fmt.Sprintf(`
 resource "null_resource" "test" {}
 
