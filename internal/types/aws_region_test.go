@@ -43,6 +43,7 @@ func TestCanonicalRegionPatterns(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.region, func(t *testing.T) {
+			t.Parallel()
 			result := regex.MatchString(tc.region)
 			if result != tc.valid {
 				t.Errorf("region %s: expected %t, got %t", tc.region, tc.valid, result)
