@@ -63,7 +63,7 @@ func (r *resourceShareAssociationExclusiveResource) Schema(ctx context.Context, 
 				Optional:    true,
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
-						PrincipalValidator(),
+						principalValidator(),
 					),
 				},
 			},

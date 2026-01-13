@@ -14,19 +14,19 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 )
 
-// ARNValidator validates ARNs specifically for RAM principals.
+// principalARNValidator validates ARNs specifically for RAM principals.
 // Only allows: organizations (organization/, ou/) and iam (role/, user/) ARNs.
-type ARNValidator struct{}
+type principalARNValidator struct{}
 
-func (v ARNValidator) Description(_ context.Context) string {
+func (v principalARNValidator) Description(_ context.Context) string {
 	return "value must be a valid RAM principal ARN (organization, OU, IAM role, or IAM user)"
 }
 
-func (v ARNValidator) MarkdownDescription(ctx context.Context) string {
+func (v principalARNValidator) MarkdownDescription(ctx context.Context) string {
 	return v.Description(ctx)
 }
 
-func (v ARNValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+func (v principalARNValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		return
 	}
@@ -73,12 +73,7 @@ func (v ARNValidator) ValidateString(ctx context.Context, request validator.Stri
 	))
 }
 
-// arnValidator returns a validator that checks for valid RAM principal ARNs.
-func arnValidator() validator.String {
-	return ARNValidator{}
-}
-
-// PrincipalValidator returns a string validator which ensures that any configured
+// principalValidator returns a string validator which ensures that any configured
 // attribute value is a valid RAM principal:
 //   - AWS account ID (exactly 12 digits) - uses fwvalidators.AWSAccountID()
 //   - Organization ARN
@@ -88,10 +83,10 @@ func arnValidator() validator.String {
 //   - Service principal name - uses fwvalidators.ServicePrincipal()
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-func PrincipalValidator() validator.String {
+func principalValidator() validator.String {
 	return stringvalidator.Any(
 		fwvalidators.AWSAccountID(),
-		arnValidator(),
+		principalARNValidator{},
 		fwvalidators.ServicePrincipal(),
 	)
 }
