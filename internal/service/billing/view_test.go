@@ -192,46 +192,6 @@ func TestAccBillingView_tags(t *testing.T) {
 func TestAccBillingView_dataFilterExpressionTags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var view awstypes.BillingViewElement
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_billing_view.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccViewConfig_dataFilterExpressionTags(rName, "Environment", []string{"production", "staging"}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &view),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.key", "Environment"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "production"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.1", "staging"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-func TestAccBillingView_dataFilterExpressionTagsUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-
 	var view1, view2 awstypes.BillingViewElement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_billing_view.test"
@@ -282,46 +242,6 @@ func TestAccBillingView_dataFilterExpressionTagsUpdate(t *testing.T) {
 func TestAccBillingView_dataFilterExpressionDimensions(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var view awstypes.BillingViewElement
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_billing_view.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"123456789012", "210987654321"}),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &view),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.0", "123456789012"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.1", "210987654321"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-func TestAccBillingView_dataFilterExpressionDimensionsUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-
 	var view1, view2 awstypes.BillingViewElement
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_billing_view.test"
@@ -346,13 +266,13 @@ func TestAccBillingView_dataFilterExpressionDimensionsUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"123456789012", "210987654321", "111222333444"}),
+				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"111222333444", "999999999912"}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view2),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.key", "LINKED_ACCOUNT"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.dimensions.0.values.#", "2"),
 				),
 			},
 			{
