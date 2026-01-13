@@ -76,7 +76,7 @@ func (d *dataSourceAccessPoints) Read(ctx context.Context, req datasource.ReadRe
 		input.AccountId = aws.String(d.Meta().AccountID(ctx))
 	}
 
-	out, err := findAccessPoints(ctx, conn, input)
+	out, err := findAccessPoints(ctx, conn, &input)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
@@ -90,8 +90,8 @@ func (d *dataSourceAccessPoints) Read(ctx context.Context, req datasource.ReadRe
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-func findAccessPoints(ctx context.Context, conn *s3control.Client, input s3control.ListAccessPointsInput) ([]awstypes.AccessPoint, error) {
-	paginator := s3control.NewListAccessPointsPaginator(conn, &input)
+func findAccessPoints(ctx context.Context, conn *s3control.Client, input *s3control.ListAccessPointsInput) ([]awstypes.AccessPoint, error) {
+	paginator := s3control.NewListAccessPointsPaginator(conn, input)
 
 	var output []awstypes.AccessPoint
 	for paginator.HasMorePages() {
