@@ -77,18 +77,15 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CreateControlPanel(ctx, input)
-	
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	result := output.ControlPanel
-
-	if result == nil {
+	if output == nil || output.ControlPanel == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: empty response")
 	}
 
-	d.SetId(aws.ToString(result.ControlPanelArn))
+	d.SetId(aws.ToString(output.ControlPanel.ControlPanelArn))
 
 	if _, err := waitControlPanelCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %s", d.Id(), err)
