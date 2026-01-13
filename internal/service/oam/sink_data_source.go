@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam
@@ -10,13 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_oam_sink", name="Sink")
-func DataSourceSink() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+func dataSourceSink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinkRead,
 
@@ -42,37 +43,22 @@ func DataSourceSink() *schema.Resource {
 	}
 }
 
-const (
-	DSNameSink = "Sink Data Source"
-)
-
 func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
-
 	out, err := findSinkByID(ctx, conn, sinkIdentifier)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, sinkIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Sink (%s): %s", sinkIdentifier, err)
 	}
 
-	d.SetId(aws.ToString(out.Arn))
-
-	d.Set(names.AttrARN, out.Arn)
+	arn := aws.ToString(out.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, out.Name)
 	d.Set("sink_id", out.Id)
 
-	tags, err := listTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, d.Id(), err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameSink, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }

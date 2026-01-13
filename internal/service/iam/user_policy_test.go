@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -88,7 +88,7 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 				Config: testAccUserPolicyConfig_basic(rName, strconv.Quote(policy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(ctx, resourceName, &userPolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

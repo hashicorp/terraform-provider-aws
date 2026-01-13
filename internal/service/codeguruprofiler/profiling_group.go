@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeguruprofiler
@@ -256,7 +256,7 @@ func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client
 	}
 
 	if out == nil || out.ProfilingGroup == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfilingGroup, nil

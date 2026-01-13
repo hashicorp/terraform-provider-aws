@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -518,7 +518,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -539,7 +539,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err
@@ -561,7 +561,7 @@ func waitFileCacheDeleted(ctx context.Context, conn *fsx.Client, id string, time
 
 	if output, ok := outputRaw.(*awstypes.FileCache); ok {
 		if status, details := output.Lifecycle, output.FailureDetails; status == awstypes.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureDetails.Message)))
 		}
 
 		return output, err

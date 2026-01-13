@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpointsmsvoicev2_test
@@ -78,7 +78,7 @@ func TestAccPinpointSMSVoiceV2OptOutList_disappears(t *testing.T) {
 				Config: testAccOptOutListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptOutListExists(ctx, resourceName, &optOutList),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpinpointsmsvoicev2.ResourceOptOutList, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourceOptOutList, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

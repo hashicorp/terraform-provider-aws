@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift
@@ -223,7 +223,7 @@ func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 	}
 
 	if output == nil || output.Build == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Build, nil

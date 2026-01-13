@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -23,6 +23,7 @@ import (
 // @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(importIgnore="hsm_partition_password;hsm_server_public_certificate")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMConfigurationCreate,

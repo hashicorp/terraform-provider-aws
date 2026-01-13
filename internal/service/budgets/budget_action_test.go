@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets_test
@@ -216,7 +216,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

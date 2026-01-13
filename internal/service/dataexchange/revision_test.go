@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange_test
@@ -117,8 +117,8 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -142,8 +142,8 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

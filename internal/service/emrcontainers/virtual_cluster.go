@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrcontainers
@@ -221,7 +221,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *
 	}
 
 	if output == nil || output.VirtualCluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualCluster, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -135,7 +135,7 @@ func TestAccElastiCacheCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_engineRedis(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, t, resourceName, &ec),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

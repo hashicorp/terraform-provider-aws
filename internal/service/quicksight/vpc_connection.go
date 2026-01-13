@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -413,7 +413,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 	}
 
 	if output == nil || output.VPCConnection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VPCConnection, nil

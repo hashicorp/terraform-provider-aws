@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -283,7 +283,7 @@ func findResolverRuleByID(ctx context.Context, conn *route53resolver.Client, id 
 	}
 
 	if output == nil || output.ResolverRule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverRule, nil
@@ -316,7 +316,7 @@ func waitRuleCreated(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -337,7 +337,7 @@ func waitRuleUpdated(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -358,7 +358,7 @@ func waitRuleDeleted(ctx context.Context, conn *route53resolver.Client, id strin
 
 	if output, ok := outputRaw.(*awstypes.ResolverRule); ok {
 		if output.Status == awstypes.ResolverRuleStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

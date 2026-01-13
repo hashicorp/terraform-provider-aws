@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam
@@ -8,15 +8,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/oam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_oam_sinks", name="Sinks")
-func DataSourceSinks() *schema.Resource {
+func dataSourceSinks() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSinksRead,
 
@@ -30,32 +32,38 @@ func DataSourceSinks() *schema.Resource {
 	}
 }
 
-const (
-	DSNameSinks = "Sinks Data Source"
-)
-
 func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
-	listSinksInput := &oam.ListSinksInput{}
 
-	paginator := oam.NewListSinksPaginator(conn, listSinksInput)
-	var arns []string
+	var input oam.ListSinksInput
+	out, err := findSinks(ctx, conn, &input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-
-		if err != nil {
-			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSinks, "", err)
-		}
-
-		for _, listSinksItem := range page.Items {
-			arns = append(arns, aws.ToString(listSinksItem.Arn))
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Sinks: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region(ctx))
-	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(out, func(v awstypes.ListSinksItem) string {
+		return aws.ToString(v.Arn)
+	}))
 
-	return nil
+	return diags
+}
+
+func findSinks(ctx context.Context, conn *oam.Client, input *oam.ListSinksInput) ([]awstypes.ListSinksItem, error) {
+	var output []awstypes.ListSinksItem
+
+	pages := oam.NewListSinksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Items...)
+	}
+
+	return output, nil
 }

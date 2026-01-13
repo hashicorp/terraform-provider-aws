@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms
@@ -461,7 +461,7 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 	}
 
 	if out == nil || out.Membership == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

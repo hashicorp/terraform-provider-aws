@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -229,7 +229,7 @@ func findWebAppCustomization(ctx context.Context, conn *transfer.Client, input *
 	}
 
 	if out == nil || out.WebAppCustomization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.WebAppCustomization, nil

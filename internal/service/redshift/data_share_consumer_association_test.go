@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,23 +19,23 @@ import (
 
 func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_data_share_consumer_association.test"
 	regionDataSourceName := "data.aws_region.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataShareConsumerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
+					testAccCheckDataShareConsumerAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "consumer_region", regionDataSourceName, names.AttrName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
@@ -54,23 +52,23 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 
 func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_data_share_consumer_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataShareConsumerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
+					testAccCheckDataShareConsumerAssociationExists(ctx, t, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceDataShareConsumerAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,22 +78,22 @@ func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 
 func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_data_share_consumer_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataShareConsumerAssociationConfig_associateEntireAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataShareConsumerAssociationExists(ctx, resourceName),
+					testAccCheckDataShareConsumerAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "associate_entire_account", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/.+$`)),
@@ -110,9 +108,9 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 	})
 }
 
-func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_data_share_consumer_association" {
@@ -136,14 +134,14 @@ func testAccCheckDataShareConsumerAssociationDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckDataShareConsumerAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDataShareConsumerAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindDataShareConsumerAssociationByFourPartKey(ctx, conn, rs.Primary.Attributes["data_share_arn"], rs.Primary.Attributes["associate_entire_account"], rs.Primary.Attributes["consumer_arn"], rs.Primary.Attributes["consumer_region"])
 

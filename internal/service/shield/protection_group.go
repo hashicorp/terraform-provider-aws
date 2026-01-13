@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -210,7 +210,7 @@ func findProtectionGroupByID(ctx context.Context, conn *shield.Client, id string
 	}
 
 	if resp.ProtectionGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return resp.ProtectionGroup, nil

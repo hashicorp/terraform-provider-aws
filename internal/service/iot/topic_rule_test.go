@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -96,7 +96,7 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 				Config: testAccTopicRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceTopicRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceTopicRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

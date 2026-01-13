@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package listresource
@@ -351,7 +351,7 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 	var diags diag.Diagnostics
 	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
-		return nil
+		return diags
 	}
 
 	switch params.When {
@@ -395,8 +395,8 @@ func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSD
 		// reset tags in context for next resource
 		tagsInContext.TagsOut = nil
 
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }

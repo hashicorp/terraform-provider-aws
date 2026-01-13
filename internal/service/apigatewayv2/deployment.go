@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -199,7 +199,7 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -235,7 +235,7 @@ func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.Client, apiI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DeploymentStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DeploymentStatusMessage)))
 
 		return output, err
 	}

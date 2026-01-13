@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -286,7 +286,7 @@ func findDeliveryDestination(ctx context.Context, conn *cloudwatchlogs.Client, i
 	}
 
 	if output == nil || output.DeliveryDestination == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryDestination, nil

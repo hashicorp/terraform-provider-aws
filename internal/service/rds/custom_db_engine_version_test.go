@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -279,7 +279,7 @@ func TestAccRDSCustomDBEngineVersion_disappears(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_sqlServer(rName, ami),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCustomDBEngineVersion(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCustomDBEngineVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

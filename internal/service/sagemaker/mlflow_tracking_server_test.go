@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -159,7 +159,7 @@ func TestAccSageMakerMlflowTrackingServer_disappears(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

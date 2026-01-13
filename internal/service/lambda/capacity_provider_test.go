@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -82,7 +82,7 @@ func TestAccLambdaCapacityProvider_disappears(t *testing.T) {
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &capacityprovider),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflambda.ResourceCapacityProvider, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflambda.ResourceCapacityProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

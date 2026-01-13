@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -89,7 +89,7 @@ func testAccEC2AllowedImagesSettings_disappears(t *testing.T) {
 				Config: testAccAllowedImagesSettingsConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAllowedImagesSettingsExists(ctx, resourceName, &settings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAllowedImagesSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceAllowedImagesSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

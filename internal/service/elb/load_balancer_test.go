@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -128,7 +128,7 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &loadBalancer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceLoadBalancer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceLoadBalancer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

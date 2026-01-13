@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -340,7 +340,7 @@ func findInstanceStorageConfig(ctx context.Context, conn *connect.Client, input 
 	}
 
 	if output == nil || output.StorageConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StorageConfig, nil

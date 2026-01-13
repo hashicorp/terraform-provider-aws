@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric
@@ -176,7 +176,7 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 	}
 
 	if output == nil || output.AppBundle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppBundle, nil

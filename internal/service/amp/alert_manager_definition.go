@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -161,14 +160,14 @@ func findAlertManagerDefinitionByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.AlertManagerDefinition == nil || output.AlertManagerDefinition.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AlertManagerDefinition, nil
 }
 
-func statusAlertManagerDefinition(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAlertManagerDefinition(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAlertManagerDefinitionByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -187,10 +186,10 @@ func waitAlertManagerDefinitionCreated(ctx context.Context, conn *amp.Client, id
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AlertManagerDefinitionStatusCodeCreating),
 		Target:  enum.Slice(types.AlertManagerDefinitionStatusCodeActive),
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
+		Refresh: statusAlertManagerDefinition(conn, id),
 		Timeout: timeout,
 	}
 
@@ -198,7 +197,7 @@ func waitAlertManagerDefinitionCreated(ctx context.Context, conn *amp.Client, id
 
 	if output, ok := outputRaw.(*types.AlertManagerDefinitionDescription); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.AlertManagerDefinitionStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -211,10 +210,10 @@ func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *amp.Client, id
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AlertManagerDefinitionStatusCodeUpdating),
 		Target:  enum.Slice(types.AlertManagerDefinitionStatusCodeActive),
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
+		Refresh: statusAlertManagerDefinition(conn, id),
 		Timeout: timeout,
 	}
 
@@ -222,7 +221,7 @@ func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *amp.Client, id
 
 	if output, ok := outputRaw.(*types.AlertManagerDefinitionDescription); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.AlertManagerDefinitionStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -235,10 +234,10 @@ func waitAlertManagerDefinitionDeleted(ctx context.Context, conn *amp.Client, id
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AlertManagerDefinitionStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusAlertManagerDefinition(ctx, conn, id),
+		Refresh: statusAlertManagerDefinition(conn, id),
 		Timeout: timeout,
 	}
 

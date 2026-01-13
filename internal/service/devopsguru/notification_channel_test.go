@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -76,7 +76,7 @@ func testAccNotificationChannel_disappears(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdevopsguru.ResourceNotificationChannel, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceNotificationChannel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

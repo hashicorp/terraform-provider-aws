@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -64,7 +64,7 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 				Config: testAccDedicatedIPPoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceDedicatedIPPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceDedicatedIPPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -87,7 +87,7 @@ func TestAccWorkSpacesWebDataProtectionSettingsAssociation_disappears(t *testing
 				Config: testAccDataProtectionSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataProtectionSettingsAssociationExists(ctx, resourceName, &dataProtectionSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceDataProtectionSettingsAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceDataProtectionSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

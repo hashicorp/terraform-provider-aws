@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -1842,12 +1842,13 @@ func convertInt32ValueableToXMLItem(ctx context.Context, elem basetypes.Int32Val
 
 // convertComplexValueToXMLItem handles complex type conversions
 func convertComplexValueToXMLItem(elem attr.Value, itemValue reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if elem != nil && !elem.IsNull() && !elem.IsUnknown() {
 		if itemValue.Type().AssignableTo(reflect.TypeOf(elem)) {
 			itemValue.Set(reflect.ValueOf(elem))
 		}
 	}
-	return nil
+	return diags
 }
 
 // setXMLWrapperQuantityField sets the Quantity field in XML wrapper struct

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm
@@ -320,7 +320,7 @@ func findNetworkProfileByARN(ctx context.Context, conn *devicefarm.Client, arn s
 	}
 
 	if output == nil || output.NetworkProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NetworkProfile, nil

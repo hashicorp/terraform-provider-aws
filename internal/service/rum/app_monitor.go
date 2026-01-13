@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rum
@@ -326,7 +326,7 @@ func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*
 	}
 
 	if output == nil || output.AppMonitor == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppMonitor, nil

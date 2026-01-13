@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -74,7 +74,7 @@ func testAccSSHKey_disappears(t *testing.T) {
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceSSHKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceSSHKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas
@@ -332,7 +332,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -362,7 +362,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if apiObject := output.Quota.ErrorReason; apiObject != nil {
@@ -370,7 +370,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output.Quota.Value == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -399,7 +399,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	}
 
 	if output == nil || output.RequestedQuota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RequestedQuota, nil

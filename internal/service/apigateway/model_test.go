@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,20 +21,20 @@ import (
 func TestAccAPIGatewayModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetModelOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	modelName := sdkacctest.RandString(16)
 	resourceName := "aws_api_gateway_model.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		CheckDestroy:             testAccCheckModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(ctx, resourceName, &conf),
+					testAccCheckModelExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "a test schema"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, modelName),
@@ -55,21 +54,21 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetModelOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	modelName := sdkacctest.RandString(16)
 	resourceName := "aws_api_gateway_model.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		CheckDestroy:             testAccCheckModelDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceModel(), resourceName),
+					testAccCheckModelExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,14 +76,14 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.GetModelOutput) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["rest_api_id"])
 
@@ -98,9 +97,9 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.GetMod
 	}
 }
 
-func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckModelDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_model" {

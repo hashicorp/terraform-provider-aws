@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dsql_test
@@ -94,7 +94,7 @@ func TestAccDSQLCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdsql.ResourceCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdsql.ResourceCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

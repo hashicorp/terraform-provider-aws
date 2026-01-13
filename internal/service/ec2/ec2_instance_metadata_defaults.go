@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -136,7 +136,7 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 
 	switch {
 	case err == nil && inttypes.IsZero(output):
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 		fallthrough
 	case retry.NotFound(err):
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))

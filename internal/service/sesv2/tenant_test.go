@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -77,7 +77,7 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 				Config: testAccTenantConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTenantExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceTenant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceTenant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

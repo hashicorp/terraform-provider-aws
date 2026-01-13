@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -292,7 +292,7 @@ func findSubscriberNotificationBySubscriberID(ctx context.Context, conn *securit
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return nil, &tfresource.EmptyResultError{}
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

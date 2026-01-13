@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -258,7 +258,7 @@ func findSecurityProfile(ctx context.Context, conn *connect.Client, input *conne
 	}
 
 	if output == nil || output.SecurityProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SecurityProfile, nil

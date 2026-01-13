@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -384,7 +384,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if err == nil && endpoint.S3Settings == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -114,7 +114,7 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHumanTaskUI(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHumanTaskUI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

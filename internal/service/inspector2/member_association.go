@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -171,7 +171,7 @@ func findMember(ctx context.Context, conn *inspector2.Client, input *inspector2.
 	}
 
 	if output == nil || output.Member == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Member, nil

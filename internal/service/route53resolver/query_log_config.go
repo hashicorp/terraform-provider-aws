@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -170,7 +170,7 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	}
 
 	if output == nil || output.ResolverQueryLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfig, nil

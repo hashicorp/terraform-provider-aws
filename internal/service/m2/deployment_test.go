@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2_test
@@ -77,7 +77,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceDeployment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

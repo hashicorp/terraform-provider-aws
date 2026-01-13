@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeartifact
@@ -332,7 +332,7 @@ func findRepositoryByThreePartKey(ctx context.Context, conn *codeartifact.Client
 	}
 
 	if output == nil || output.Repository == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Repository, nil

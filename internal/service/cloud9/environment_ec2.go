@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloud9
@@ -246,7 +246,7 @@ func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.Des
 	}
 
 	if environment.Lifecycle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return environment, nil
@@ -267,7 +267,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environments, nil
@@ -325,7 +325,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err
@@ -349,7 +349,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err

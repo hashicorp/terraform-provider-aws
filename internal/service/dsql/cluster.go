@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dsql
@@ -384,7 +384,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -408,7 +408,7 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	}
 
 	if output == nil || output.ServiceName == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceName, nil

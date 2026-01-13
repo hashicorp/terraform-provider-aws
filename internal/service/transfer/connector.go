@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -366,7 +366,7 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	}
 
 	if output == nil || output.Connector == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connector, nil
@@ -569,7 +569,7 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -590,7 +590,7 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -611,7 +611,7 @@ func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

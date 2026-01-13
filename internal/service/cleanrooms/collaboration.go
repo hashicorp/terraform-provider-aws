@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms
@@ -323,7 +323,7 @@ func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id stri
 	}
 
 	if out == nil || out.Collaboration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -347,7 +347,7 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 	}
 
 	if out == nil || out.MemberSummaries == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

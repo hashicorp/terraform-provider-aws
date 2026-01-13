@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -173,7 +173,7 @@ func TestAccLightsailInstancePublicPorts_disappears(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceInstancePublicPorts(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceInstancePublicPorts(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -201,7 +201,7 @@ func TestAccLightsailInstancePublicPorts_disappears_Instance(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceInstance(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

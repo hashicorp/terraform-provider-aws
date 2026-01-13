@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appautoscaling_test
@@ -81,7 +81,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappautoscaling.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

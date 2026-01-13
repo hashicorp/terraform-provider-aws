@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition
@@ -225,7 +225,7 @@ func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 	}
 
 	if out == nil || out.CollectionARN == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +31,8 @@ import (
 // @SDKResource("aws_prometheus_workspace", name="Workspace")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.WorkspaceDescription")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 // @Testing(generator=false)
 func resourceWorkspace() *schema.Resource {
 	return &schema.Resource{
@@ -298,9 +299,8 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	output, err := conn.DescribeWorkspace(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -309,14 +309,14 @@ func findWorkspaceByID(ctx context.Context, conn *amp.Client, id string) (*types
 	}
 
 	if output == nil || output.Workspace == nil || output.Workspace.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspace(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -335,10 +335,10 @@ func waitWorkspaceCreated(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeCreating),
 		Target:  enum.Slice(types.WorkspaceStatusCodeActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -355,10 +355,10 @@ func waitWorkspaceUpdated(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeUpdating),
 		Target:  enum.Slice(types.WorkspaceStatusCodeActive),
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -375,10 +375,10 @@ func waitWorkspaceDeleted(ctx context.Context, conn *amp.Client, id string) (*ty
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusWorkspace(ctx, conn, id),
+		Refresh: statusWorkspace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -399,9 +399,8 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	output, err := conn.DescribeLoggingConfiguration(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -410,14 +409,14 @@ func findLoggingConfigurationByWorkspaceID(ctx context.Context, conn *amp.Client
 	}
 
 	if output == nil || output.LoggingConfiguration == nil || output.LoggingConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingConfiguration, nil
 }
 
-func statusLoggingConfiguration(ctx context.Context, conn *amp.Client, workspaceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLoggingConfiguration(conn *amp.Client, workspaceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findLoggingConfigurationByWorkspaceID(ctx, conn, workspaceID)
 
 		if retry.NotFound(err) {
@@ -436,10 +435,10 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeCreating),
 		Target:  enum.Slice(types.LoggingConfigurationStatusCodeActive),
-		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Refresh: statusLoggingConfiguration(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -447,7 +446,7 @@ func waitLoggingConfigurationCreated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -460,10 +459,10 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(types.LoggingConfigurationStatusCodeActive),
-		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Refresh: statusLoggingConfiguration(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -471,7 +470,7 @@ func waitLoggingConfigurationUpdated(ctx context.Context, conn *amp.Client, work
 
 	if output, ok := outputRaw.(*types.LoggingConfigurationMetadata); ok {
 		if statusCode := output.Status.StatusCode; statusCode == types.LoggingConfigurationStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 		}
 
 		return output, err
@@ -484,10 +483,10 @@ func waitLoggingConfigurationDeleted(ctx context.Context, conn *amp.Client, work
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.LoggingConfigurationStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Refresh: statusLoggingConfiguration(conn, workspaceID),
 		Timeout: timeout,
 	}
 

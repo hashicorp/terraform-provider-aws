@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package odb_test
@@ -179,7 +179,7 @@ func TestAccODBCloudAutonomousVmCluster_disappears(t *testing.T) {
 				Config: autonomousVMClusterResourceTestEntity.avmcBasic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					autonomousVMClusterResourceTestEntity.checkCloudAutonomousVmClusterExists(ctx, resourceName, &cloudautonomousvmcluster),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfodb.ResourceCloudAutonomousVMCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -261,7 +261,7 @@ func (autonomousVMClusterResourceTest) findAVMC(ctx context.Context, conn *odb.C
 	}
 
 	if out == nil || out.CloudAutonomousVmCluster == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CloudAutonomousVmCluster, nil

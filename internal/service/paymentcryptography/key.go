@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography
@@ -499,7 +499,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	}
 
 	if out == nil || out.Key == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.

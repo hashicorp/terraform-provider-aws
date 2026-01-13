@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -390,7 +390,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcEndpointDetails, nil
@@ -426,7 +426,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -448,7 +448,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -470,7 +470,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

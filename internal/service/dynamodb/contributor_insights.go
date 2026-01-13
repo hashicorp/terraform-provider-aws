@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -200,7 +200,7 @@ func findContributorInsightsByTwoPartKey(ctx context.Context, conn *dynamodb.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -221,7 +221,7 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -259,7 +259,7 @@ func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, 
 
 	if output, ok := outputRaw.(*dynamodb.DescribeContributorInsightsOutput); ok {
 		if status, failureException := output.ContributorInsightsStatus, output.FailureException; status == awstypes.ContributorInsightsStatusFailed && failureException != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
 		}
 
 		return output, err
@@ -280,7 +280,7 @@ func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.Client, 
 
 	if output, ok := outputRaw.(*dynamodb.DescribeContributorInsightsOutput); ok {
 		if status, failureException := output.ContributorInsightsStatus, output.FailureException; status == awstypes.ContributorInsightsStatusFailed && failureException != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(failureException.ExceptionName), aws.ToString(failureException.ExceptionDescription)))
 		}
 
 		return output, err

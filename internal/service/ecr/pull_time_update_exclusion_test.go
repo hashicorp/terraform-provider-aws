@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -73,7 +73,7 @@ func TestAccECRPullTimeUpdateExclusion_disappears(t *testing.T) {
 				Config: testAccPullTimeUpdateExclusionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPullTimeUpdateExclusionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfecr.ResourcePullTimeUpdateExclusion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfecr.ResourcePullTimeUpdateExclusion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

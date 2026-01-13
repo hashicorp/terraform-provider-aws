@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -71,7 +71,7 @@ func TestAccIoTTopicRuleDestination_disappears(t *testing.T) {
 				Config: testAccTopicRuleDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceTopicRuleDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceTopicRuleDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

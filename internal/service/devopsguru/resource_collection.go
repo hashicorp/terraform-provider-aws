@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru
@@ -267,7 +267,7 @@ func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id
 	}
 
 	if out == nil || out.ResourceCollection == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	switch collectionType {

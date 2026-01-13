@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets
@@ -626,7 +626,7 @@ func findBudget(ctx context.Context, conn *budgets.Client, input *budgets.Descri
 	}
 
 	if output == nil || output.Budget == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Budget, nil
@@ -682,7 +682,7 @@ func findNotificationsByTwoPartKey(ctx context.Context, conn *budgets.Client, ac
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -730,7 +730,7 @@ func findSubscribersByThreePartKey(ctx context.Context, conn *budgets.Client, ac
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

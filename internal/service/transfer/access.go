@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -337,7 +337,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 	}
 
 	if output == nil || output.Access == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Access, nil

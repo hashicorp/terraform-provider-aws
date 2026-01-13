@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -95,7 +95,7 @@ func TestAccDataSyncTask_disappears(t *testing.T) {
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceTask(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -111,7 +111,7 @@ func testAccTeamsChannelConfiguration_disappears(t *testing.T) {
 				Config: testAccTeamsChannelConfigurationConfig_basic(rName, channelID, teamID, tenantID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceTeamsChannelConfiguration, testResourceTeamsChannelConfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceTeamsChannelConfiguration, testResourceTeamsChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
 			},

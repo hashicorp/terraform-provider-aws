@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -74,7 +74,7 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAPIAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

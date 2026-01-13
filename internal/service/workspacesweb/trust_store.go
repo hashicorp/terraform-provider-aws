@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -364,7 +364,7 @@ func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn st
 	}
 
 	if output == nil || output.TrustStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrustStore, nil

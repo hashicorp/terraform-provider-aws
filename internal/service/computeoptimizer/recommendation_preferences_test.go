@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package computeoptimizer_test
@@ -88,7 +88,7 @@ func testAccRecommendationPreferences_disappears(t *testing.T) {
 				Config: testAccRecommendationPreferencesConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecommendationPreferencesExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcomputeoptimizer.ResourceRecommendationPreferences, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcomputeoptimizer.ResourceRecommendationPreferences, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

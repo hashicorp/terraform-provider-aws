@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -128,7 +128,7 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceInputSecurityGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceInputSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

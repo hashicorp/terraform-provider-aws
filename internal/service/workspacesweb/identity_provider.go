@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -281,7 +281,7 @@ func findIdentityProviderByARN(ctx context.Context, conn *workspacesweb.Client, 
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, "", tfresource.NewEmptyResultError(input)
+		return nil, "", tfresource.NewEmptyResultError()
 	}
 
 	portalARN, err := portalARNFromIdentityProviderARN(arn)

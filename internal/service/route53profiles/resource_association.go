@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
@@ -287,7 +287,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	}
 
 	if out == nil || out.ProfileResourceAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileResourceAssociation, nil

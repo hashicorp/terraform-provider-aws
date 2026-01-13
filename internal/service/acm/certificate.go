@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,6 +61,8 @@ const (
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
 // @Testing(generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -807,7 +808,7 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 	}
 
 	if output == nil || output.Certificate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Certificate, nil
@@ -841,14 +842,14 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn stri
 	}
 
 	if certificate.RenewalSummary == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateDomainValidationsAvailable(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		certificate, err := findCertificateByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -886,9 +887,9 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 }
 
 func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
+		Refresh: statusCertificateDomainValidationsAvailable(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -901,8 +902,8 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Cl
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateRenewal(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -918,10 +919,10 @@ func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string)
 }
 
 func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.RenewalSummary, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RenewalStatusPendingAutoRenewal),
 		Target:  enum.Slice(types.RenewalStatusSuccess),
-		Refresh: statusCertificateRenewal(ctx, conn, arn),
+		Refresh: statusCertificateRenewal(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -929,7 +930,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 
 	if output, ok := outputRaw.(*types.RenewalSummary); ok {
 		if output.RenewalStatus == types.RenewalStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
+			retry.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
 		}
 
 		return output, err

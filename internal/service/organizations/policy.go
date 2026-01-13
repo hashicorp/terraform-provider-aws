@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -118,7 +118,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -133,16 +133,14 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrType, policySummary.Type)
 
 	if policySummary.AwsManaged {
-		return diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "AWS-managed Organizations policies cannot be imported",
-				Detail:   fmt.Sprintf("This resource should be removed from your Terraform state using `terraform state rm` (https://www.terraform.io/docs/commands/state/rm.html) and references should use the ID (%s) directly.", d.Id()),
-			},
-		}
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "AWS-managed Organizations policies cannot be imported",
+			Detail:   fmt.Sprintf("This resource should be removed from your Terraform state using `terraform state rm` (https://www.terraform.io/docs/commands/state/rm.html) and references should use the ID (%s) directly.", d.Id()),
+		})
 	}
 
-	return nil
+	return diags
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -182,7 +180,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
@@ -191,14 +189,14 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	})
 
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -223,10 +221,14 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Policy, error) {
-	input := &organizations.DescribePolicyInput{
+	input := organizations.DescribePolicyInput{
 		PolicyId: aws.String(id),
 	}
 
+	return findPolicy(ctx, conn, &input)
+}
+
+func findPolicy(ctx context.Context, conn *organizations.Client, input *organizations.DescribePolicyInput) (*awstypes.Policy, error) {
 	output, err := conn.DescribePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {
@@ -241,7 +243,7 @@ func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) 
 	}
 
 	if output == nil || output.Policy == nil || output.Policy.PolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

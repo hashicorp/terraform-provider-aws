@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -1487,7 +1487,7 @@ func findCluster(ctx context.Context, conn *emr.Client, input *emr.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
@@ -1529,7 +1529,7 @@ func waitClusterCreated(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1555,7 +1555,7 @@ func waitClusterDeleted(ctx context.Context, conn *emr.Client, id string) (*awst
 
 	if output, ok := outputRaw.(*awstypes.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", stateChangeReason.Code, aws.ToString(stateChangeReason.Message)))
 		}
 
 		return output, err
@@ -1648,7 +1648,7 @@ func findAutoTerminationPolicy(ctx context.Context, conn *emr.Client, input *emr
 	}
 
 	if output == nil || output.AutoTerminationPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AutoTerminationPolicy, nil
@@ -2145,7 +2145,7 @@ func findCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.Clien
 	}
 
 	if instanceGroup.AutoScalingPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return instanceGroup.AutoScalingPolicy, nil

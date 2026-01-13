@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -63,7 +63,7 @@ func TestAccEMRSecurityConfiguration_disappears(t *testing.T) {
 				Config: testAccSecurityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceSecurityConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceSecurityConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

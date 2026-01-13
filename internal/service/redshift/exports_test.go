@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -16,6 +16,7 @@ var (
 	ResourceEventSubscription            = resourceEventSubscription
 	ResourceHSMClientCertificate         = resourceHSMClientCertificate
 	ResourceHSMConfiguration             = resourceHSMConfiguration
+	ResourceIdcApplication               = newIDCApplicationResource
 	ResourceIntegration                  = newIntegrationResource
 	ResourceLogging                      = newLoggingResource
 	ResourceParameterGroup               = resourceParameterGroup
@@ -43,6 +44,7 @@ var (
 	FindLoggingStatusByID                         = findLoggingStatusByID
 	FindParameterGroupByName                      = findParameterGroupByName
 	FindPartnerByFourPartKey                      = findPartnerByFourPartKey
+	FindRedshiftIDCApplicationByARN               = findRedshiftIDCApplicationByARN // nosemgrep:ci.redshift-in-var-name
 	FindResourcePolicyByARN                       = findResourcePolicyByARN
 	FindScheduledActionByName                     = findScheduledActionByName
 	FindSnapshotCopyByID                          = findSnapshotCopyByID

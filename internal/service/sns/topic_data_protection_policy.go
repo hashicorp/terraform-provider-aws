@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -127,7 +127,7 @@ func findDataProtectionPolicyByARN(ctx context.Context, conn *sns.Client, arn st
 	}
 
 	if output == nil || aws.ToString(output.DataProtectionPolicy) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataProtectionPolicy, nil

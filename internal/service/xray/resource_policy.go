@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray
@@ -189,7 +189,7 @@ func findResourcePolicyByName(ctx context.Context, conn *xray.Client, name strin
 		return nil, err
 	}
 	if policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return policy, nil

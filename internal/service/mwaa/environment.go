@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mwaa
@@ -692,7 +692,7 @@ func findEnvironment(ctx context.Context, conn *mwaa.Client, input *mwaa.GetEnvi
 	}
 
 	if output == nil || output.Environment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environment, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -347,7 +347,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.KeySigningKeys {
@@ -390,7 +390,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 
 	if output, ok := outputRaw.(*awstypes.KeySigningKey); ok {
 		if status := aws.ToString(output.Status); status == keySigningKeyStatusInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

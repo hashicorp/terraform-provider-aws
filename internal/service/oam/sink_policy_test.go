@@ -1,34 +1,27 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfoam "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	var sinkPolicy oam.GetSinkPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,10 +77,6 @@ func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 }
 
 func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	var sinkPolicy oam.GetSinkPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -177,47 +166,39 @@ func testAccCheckSinkPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &oam.GetSinkPolicyInput{
-				SinkIdentifier: aws.String(rs.Primary.ID),
+			_, err := tfoam.FindSinkPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetSinkPolicy(ctx, input)
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameSinkPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ObservabilityAccessManager Sink %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSinkPolicyExists(ctx context.Context, name string, sinkPolicy *oam.GetSinkPolicyOutput) resource.TestCheckFunc {
+func testAccCheckSinkPolicyExists(ctx context.Context, n string, v *oam.GetSinkPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSinkPolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSinkPolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-		resp, err := conn.GetSinkPolicy(ctx, &oam.GetSinkPolicyInput{
-			SinkIdentifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfoam.FindSinkPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSinkPolicy, rs.Primary.ID, err)
+			return err
 		}
 
-		*sinkPolicy = *resp
+		*v = *output
 
 		return nil
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -498,7 +498,7 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	}
 
 	if output == nil || output.StackSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSet, nil
@@ -561,7 +561,7 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	}
 
 	if output == nil || output.StackSetOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSetOperation, nil
@@ -629,7 +629,7 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	if output, ok := outputRaw.(*awstypes.StackSetOperation); ok {
 		if output.Status == awstypes.StackSetOperationStatusFailed {
 			if results, findErr := findStackSetOperationResultsByThreePartKey(ctx, conn, stackSetName, operationID, callAs); findErr == nil {
-				tfresource.SetLastError(err, stackSetOperationError(results))
+				retry.SetLastError(err, stackSetOperationError(results))
 			}
 		}
 

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -186,7 +186,7 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	}
 
 	if output == nil || output.ResourceInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceInfo, nil

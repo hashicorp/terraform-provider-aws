@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -327,7 +327,7 @@ func waitExportTaskCreated(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
 
 		return output, err
 	}
@@ -346,7 +346,7 @@ func waitExportTaskDeleted(ctx context.Context, conn *rds.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ExportTask); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureCause)))
 
 		return output, err
 	}

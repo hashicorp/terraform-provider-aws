@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf
@@ -179,7 +179,7 @@ func findGeoMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*aws
 	}
 
 	if output == nil || output.GeoMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GeoMatchSet, nil

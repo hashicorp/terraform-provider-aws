@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -190,7 +190,7 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatew
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -226,7 +226,7 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.Client, id str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
 
 		return output, err
 	}
@@ -248,7 +248,7 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.Client, vpcLinkI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -93,7 +93,7 @@ func findGlobalSettings(ctx context.Context, conn *backup.Client) (map[string]st
 	}
 
 	if output == nil || output.GlobalSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GlobalSettings, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -32,7 +32,7 @@ func findAllowedImagesSettings(ctx context.Context, conn *ec2.Client) (*ec2.GetA
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Disabled => NotFound.
@@ -53,7 +53,7 @@ func findAvailabilityZones(ctx context.Context, conn *ec2.Client, input *ec2.Des
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AvailabilityZones, nil
@@ -91,7 +91,7 @@ func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 	}
 
 	if len(availabilityZones) == 0 {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Eventual consistency check.
@@ -209,7 +209,7 @@ func findDefaultCreditSpecification(ctx context.Context, conn *ec2.Client, input
 	}
 
 	if output == nil || output.InstanceFamilyCreditSpecification == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceFamilyCreditSpecification, nil
@@ -559,7 +559,7 @@ func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awsty
 	}
 
 	if output == nil || output.AccountLevel == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountLevel, nil
@@ -607,7 +607,7 @@ func findInstanceState(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	}
 
 	if output.InstanceState == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceState, nil
@@ -763,7 +763,7 @@ func findInternetGatewayAttachment(ctx context.Context, conn *ec2.Client, intern
 
 	// Eventual consistency check.
 	if aws.ToString(output.VpcId) != vpcID {
-		return nil, tfresource.NewEmptyResultError(vpcID)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1187,7 +1187,7 @@ func findPlacementGroups(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PlacementGroups, nil
@@ -1355,7 +1355,7 @@ func findSpotDatafeedSubscription(ctx context.Context, conn *ec2.Client) (*awsty
 	}
 
 	if output == nil || output.SpotDatafeedSubscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SpotDatafeedSubscription, nil
@@ -1644,7 +1644,7 @@ func findVPCAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1675,7 +1675,7 @@ func findVPCAttributeByTwoPartKey(ctx context.Context, conn *ec2.Client, vpcID s
 	}
 
 	if v == nil {
-		return false, tfresource.NewEmptyResultError(input)
+		return false, tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToBool(v.Value), nil
@@ -2348,7 +2348,7 @@ func findNetworkInterfacePermissionByID(ctx context.Context, conn *ec2.Client, i
 	}
 
 	if output.PermissionState == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Eventual consistency check.
@@ -2430,7 +2430,7 @@ func findNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.Client, i
 	}
 
 	if networkInterface.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return networkInterface.Attachment, nil
@@ -2461,7 +2461,7 @@ func findNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.Client, i
 	}
 
 	if output.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -3579,7 +3579,7 @@ func findClientVPNEndpointClientConnectResponseOptionsByID(ctx context.Context, 
 	}
 
 	if output.ClientConnectOptions == nil || output.ClientConnectOptions.Status == nil {
-		return nil, tfresource.NewEmptyResultError(id)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ClientConnectOptions, nil
@@ -3967,7 +3967,7 @@ func findVPNGatewayVPCAttachmentByTwoPartKey(ctx context.Context, conn *ec2.Clie
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(vpcID)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findVPNGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) (*awstypes.VpnGateway, error) {
@@ -3995,7 +3995,7 @@ func findVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpnGateways, nil
@@ -4054,7 +4054,7 @@ func findCustomerGateways(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CustomerGateways, nil
@@ -4653,7 +4653,7 @@ func findImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -4668,7 +4668,7 @@ func findImageBlockPublicAccessState(ctx context.Context, conn *ec2.Client) (*st
 	}
 
 	if output == nil || output.ImageBlockPublicAccessState == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImageBlockPublicAccessState, nil
@@ -4687,7 +4687,7 @@ func findImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id st
 	}
 
 	if len(output.LaunchPermissions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LaunchPermissions, nil
@@ -4721,7 +4721,7 @@ func findSerialConsoleAccessStatus(ctx context.Context, conn *ec2.Client) (*ec2.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -5166,7 +5166,7 @@ func findTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, c
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output {
@@ -5182,7 +5182,7 @@ func findTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, c
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, conn *ec2.Client, multicastDomainID, groupIPAddress, eniID string) (*awstypes.TransitGatewayMulticastGroup, error) {
@@ -5202,7 +5202,7 @@ func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, c
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output {
@@ -5218,7 +5218,7 @@ func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, c
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) (*awstypes.TransitGatewayPeeringAttachment, error) {
@@ -5396,7 +5396,7 @@ func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Routes, err
@@ -5796,7 +5796,7 @@ func findEIPs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddresse
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Addresses, nil
@@ -6078,7 +6078,7 @@ func findSnapshotAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Des
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -6315,7 +6315,7 @@ func findVerifiedAccessGroupPolicy(ctx context.Context, conn *ec2.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -6344,7 +6344,7 @@ func findVerifiedAccessEndpointPolicy(ctx context.Context, conn *ec2.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -7034,7 +7034,7 @@ func findVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) (*aw
 	}
 
 	if output == nil || output.VpcBlockPublicAccessOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcBlockPublicAccessOptions, nil
@@ -7193,7 +7193,7 @@ func findRouteServerAssociations(ctx context.Context, conn *ec2.Client, input *e
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RouteServerAssociations, nil
@@ -7344,7 +7344,7 @@ func findRouteServerPropagations(ctx context.Context, conn *ec2.Client, input *e
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RouteServerPropagations, nil

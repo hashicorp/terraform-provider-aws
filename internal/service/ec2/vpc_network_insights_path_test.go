@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -70,7 +70,7 @@ func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "udp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInsightsPath(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInsightsPath(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

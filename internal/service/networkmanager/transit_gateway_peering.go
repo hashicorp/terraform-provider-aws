@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -200,7 +200,7 @@ func findTransitGatewayPeering(ctx context.Context, conn *networkmanager.Client,
 	}
 
 	if output == nil || output.TransitGatewayPeering == nil || output.TransitGatewayPeering.Peering == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TransitGatewayPeering, nil
@@ -235,7 +235,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
-		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+		retry.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
 
 		return output, err
 	}
@@ -256,7 +256,7 @@ func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
-		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+		retry.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
 
 		return output, err
 	}

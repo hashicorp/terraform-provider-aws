@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package deploy
@@ -243,7 +243,7 @@ func findApplicationByName(ctx context.Context, conn *codedeploy.Client, name st
 	}
 
 	if output == nil || output.Application == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Application, nil

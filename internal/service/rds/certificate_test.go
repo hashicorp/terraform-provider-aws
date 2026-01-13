@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -195,7 +195,7 @@ func testAccCertificate_disappears(t *testing.T) {
 				Config: testAccCertificateConfig_basic("rds-ca-rsa4096-g1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCertificate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

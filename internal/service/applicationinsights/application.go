@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package applicationinsights
@@ -231,7 +231,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	}
 
 	if output == nil || output.ApplicationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationInfo, nil

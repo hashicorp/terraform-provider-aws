@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -313,7 +313,7 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(sourceName)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 type customLogSourceResourceModel struct {

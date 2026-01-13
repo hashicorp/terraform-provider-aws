@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}
@@ -97,7 +97,7 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Get information about a resource from AWS
 	{{- end }}
-	tflog.Info(ctx, "Listing {{ .HumanFriendlyService }} {{ .HumanResourceName }}")
+	tflog.Info(ctx, "Listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input {{ .SDKPackage }}.List{{ .ListResource }}sInput
 		for item, err := range list{{ .ListResource }}s(ctx, conn, &input) {
@@ -117,8 +117,8 @@ func (l *listResource{{ .ListResource }}) List(ctx context.Context, request list
 	        // TIP: -- 4. Set the ID, arguments, and attributes
 	        // Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
 	        {{- end }}
-			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanResourceName }}")
-			diags := resource{{. ListResource }}Read(ctx, rd, awsClient)
+			tflog.Info(ctx, "Reading {{ .HumanFriendlyService }} {{ .HumanListResourceName }}")
+			diags := resource{{ .ListResource }}Read(ctx, rd, awsClient)
 			if diags.HasError() {
 				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
 				yield(result)
@@ -170,7 +170,7 @@ func list{{ .ListResource }}s(ctx context.Context, conn *{{ .SDKPackage }}.Clien
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanResourceName }} resources: %w", err))
+				yield(awstypes.{{ .ListResource }}{}, fmt.Errorf("listing {{ .HumanFriendlyService }} {{ .HumanListResourceName }} resources: %w", err))
 				return
 			}
 

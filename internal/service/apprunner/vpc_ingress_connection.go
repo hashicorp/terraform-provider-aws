@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner
@@ -196,7 +196,7 @@ func findVPCIngressConnectionByARN(ctx context.Context, conn *apprunner.Client, 
 	}
 
 	if output == nil || output.VpcIngressConnection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.VpcIngressConnection.Status; status == types.VpcIngressConnectionStatusDeleted {

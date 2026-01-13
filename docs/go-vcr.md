@@ -1,4 +1,4 @@
-<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- Copyright IBM Corp. 2014, 2026 -->
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 # Go-VCR
@@ -92,8 +92,7 @@ If the service includes resources with generated tags tests, two additional `@Ta
 Add the following annotations to the resource definition:
 
 ```go
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 ```
 
 ### Validating Changes

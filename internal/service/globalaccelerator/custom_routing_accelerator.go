@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -344,7 +344,7 @@ func findCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelera
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Accelerator, nil
@@ -369,7 +369,7 @@ func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *glob
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AcceleratorAttributes, nil

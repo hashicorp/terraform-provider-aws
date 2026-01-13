@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -41,9 +41,22 @@ func resourceDistribution() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Set non API attributes to their Default settings in the schema
+				conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+
+				output, err := findDistributionByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return nil, err
+				}
+
+				if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode == awstypes.ConnectionModeTenantOnly {
+					return nil, fmt.Errorf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_multitenant_distribution resource instead", d.Id(), connectionMode)
+				}
+
+				// Set non API attributes to their default settings in the schema.
 				d.Set("retain_on_delete", false)
 				d.Set("wait_for_deployment", true)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -73,6 +86,20 @@ func resourceDistribution() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"connection_function_association": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrID: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 64),
+						},
+					},
+				},
 			},
 			"continuous_deployment_policy_id": {
 				Type:     schema.TypeString,
@@ -903,6 +930,41 @@ func resourceDistribution() *schema.Resource {
 					},
 				},
 			},
+			"viewer_mtls_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMode: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ViewerMtlsMode](),
+						},
+						"trust_store_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"trust_store_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"advertise_trust_store_ca_names": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"ignore_certificate_expiry": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"wait_for_deployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -983,6 +1045,11 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if aws.ToString(distributionConfig.Comment) != "" {
 		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
+	if distributionConfig.ConnectionFunctionAssociation != nil {
+		if err := d.Set("connection_function_association", []any{flattenConnectionFunctionAssociation(distributionConfig.ConnectionFunctionAssociation)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting connection_function_association: %s", err)
+		}
+	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
 	// API call for staging distributions.
@@ -1048,6 +1115,13 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if err := d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting viewer_certificate: %s", err)
+	}
+	if distributionConfig.ViewerMtlsConfig != nil {
+		if err := d.Set("viewer_mtls_config", flattenViewerMtlsConfig(distributionConfig.ViewerMtlsConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting viewer_mtls_config: %s", err)
+		}
+	} else {
+		d.Set("viewer_mtls_config", []any{})
 	}
 	d.Set("web_acl_id", distributionConfig.WebACLId)
 
@@ -1280,7 +1354,11 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistribution(ctx, &input)
+	return findDistribution(ctx, conn, &input)
+}
+
+func findDistribution(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetDistributionInput) (*cloudfront.GetDistributionOutput, error) {
+	output, err := conn.GetDistribution(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return nil, &sdkretry.NotFoundError{
@@ -1294,13 +1372,13 @@ func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 	}
 
 	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFuncOf[any, string] {
+func statusDistribution(conn *cloudfront.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDistributionByID(ctx, conn, id)
 
@@ -1386,6 +1464,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 		apiObject.CallerReference = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("connection_function_association"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ConnectionFunctionAssociation = expandConnectionFunctionAssociation(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.Logging = expandLoggingConfig(v.([]any)[0].(map[string]any))
 	} else {
@@ -1402,6 +1484,10 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 
 	if v, ok := d.GetOk("viewer_certificate"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.ViewerCertificate = expandViewerCertificate(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("viewer_mtls_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.ViewerMtlsConfig = expandViewerMtlsConfig(v.([]any)[0].(map[string]any))
 	}
 
 	return apiObject
@@ -1532,7 +1618,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1540,7 +1626,7 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1556,11 +1642,11 @@ func flattenCacheBehavior(apiObject *awstypes.CacheBehavior) map[string]any {
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -1682,7 +1768,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["forwarded_values"] = []any{flattenForwardedValues(apiObject.ForwardedValues)}
 	}
 
-	if len(apiObject.FunctionAssociations.Items) > 0 {
+	if apiObject.FunctionAssociations != nil && len(apiObject.FunctionAssociations.Items) > 0 {
 		tfMap["function_association"] = flattenFunctionAssociations(apiObject.FunctionAssociations)
 	}
 
@@ -1690,7 +1776,7 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["grpc_config"] = []any{flattenGRPCConfig(apiObject.GrpcConfig)}
 	}
 
-	if len(apiObject.LambdaFunctionAssociations.Items) > 0 {
+	if apiObject.LambdaFunctionAssociations != nil && len(apiObject.LambdaFunctionAssociations.Items) > 0 {
 		tfMap["lambda_function_association"] = flattenLambdaFunctionAssociations(apiObject.LambdaFunctionAssociations)
 	}
 
@@ -1702,11 +1788,11 @@ func flattenDefaultCacheBehavior(apiObject *awstypes.DefaultCacheBehavior) map[s
 		tfMap["smooth_streaming"] = aws.ToBool(apiObject.SmoothStreaming)
 	}
 
-	if len(apiObject.TrustedKeyGroups.Items) > 0 {
+	if apiObject.TrustedKeyGroups != nil && len(apiObject.TrustedKeyGroups.Items) > 0 {
 		tfMap["trusted_key_groups"] = flattenTrustedKeyGroups(apiObject.TrustedKeyGroups)
 	}
 
-	if len(apiObject.TrustedSigners.Items) > 0 {
+	if apiObject.TrustedSigners != nil && len(apiObject.TrustedSigners.Items) > 0 {
 		tfMap["trusted_signers"] = flattenTrustedSigners(apiObject.TrustedSigners)
 	}
 
@@ -2891,4 +2977,99 @@ func flattenSigners(apiObjects []awstypes.Signer) []any {
 	}
 
 	return tfList
+}
+func expandConnectionFunctionAssociation(tfMap map[string]any) *awstypes.ConnectionFunctionAssociation {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.ConnectionFunctionAssociation{
+		Id: aws.String(tfMap[names.AttrID].(string)),
+	}
+}
+
+func flattenConnectionFunctionAssociation(apiObject *awstypes.ConnectionFunctionAssociation) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]any{
+		names.AttrID: aws.ToString(apiObject.Id),
+	}
+}
+
+func expandViewerMtlsConfig(tfMap map[string]any) *awstypes.ViewerMtlsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ViewerMtlsConfig{}
+
+	if v, ok := tfMap[names.AttrMode]; ok && v.(string) != "" {
+		apiObject.Mode = awstypes.ViewerMtlsMode(v.(string))
+	}
+
+	if v, ok := tfMap["trust_store_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TrustStoreConfig = expandTrustStoreConfig(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func flattenViewerMtlsConfig(apiObject *awstypes.ViewerMtlsConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if apiObject.Mode != "" {
+		tfMap[names.AttrMode] = string(apiObject.Mode)
+	}
+
+	if apiObject.TrustStoreConfig != nil {
+		tfMap["trust_store_config"] = []any{flattenTrustStoreConfig(apiObject.TrustStoreConfig)}
+	}
+
+	return []any{tfMap}
+}
+
+func expandTrustStoreConfig(tfMap map[string]any) *awstypes.TrustStoreConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.TrustStoreConfig{
+		TrustStoreId: aws.String(tfMap["trust_store_id"].(string)),
+	}
+
+	if v, ok := tfMap["advertise_trust_store_ca_names"]; ok {
+		apiObject.AdvertiseTrustStoreCaNames = aws.Bool(v.(bool))
+	}
+
+	if v, ok := tfMap["ignore_certificate_expiry"]; ok {
+		apiObject.IgnoreCertificateExpiry = aws.Bool(v.(bool))
+	}
+
+	return apiObject
+}
+
+func flattenTrustStoreConfig(apiObject *awstypes.TrustStoreConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"trust_store_id": aws.ToString(apiObject.TrustStoreId),
+	}
+
+	if apiObject.AdvertiseTrustStoreCaNames != nil {
+		tfMap["advertise_trust_store_ca_names"] = aws.ToBool(apiObject.AdvertiseTrustStoreCaNames)
+	}
+
+	if apiObject.IgnoreCertificateExpiry != nil {
+		tfMap["ignore_certificate_expiry"] = aws.ToBool(apiObject.IgnoreCertificateExpiry)
+	}
+
+	return tfMap
 }

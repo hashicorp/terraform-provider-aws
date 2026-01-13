@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -333,7 +333,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	}
 
 	if out == nil || out.CapacityReservation == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CapacityReservation, nil

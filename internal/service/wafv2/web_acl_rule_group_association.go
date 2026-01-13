@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -81,7 +81,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 			Blocks: map[string]schema.Block{
 				"action_to_use": schema.ListNestedBlock{
-					CustomType: fwtypes.NewListNestedObjectTypeOf[actionToUseModel](ctx),
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ruleActionModel](ctx),
 					Validators: []validator.List{
 						listvalidator.SizeAtMost(1),
 						listvalidator.SizeAtLeast(1),
@@ -103,7 +103,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											NestedObject: schema.NestedBlockObject{
 												Blocks: map[string]schema.Block{
 													"insert_header": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customHTTPHeaderModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtLeast(1),
 														},
@@ -159,7 +159,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 												},
 												Blocks: map[string]schema.Block{
 													"response_header": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[responseHeaderModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customHTTPHeaderModel](ctx),
 														NestedObject: schema.NestedBlockObject{
 															Attributes: map[string]schema.Attribute{
 																names.AttrName: schema.StringAttribute{
@@ -198,7 +198,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											NestedObject: schema.NestedBlockObject{
 												Blocks: map[string]schema.Block{
 													"insert_header": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customHTTPHeaderModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtLeast(1),
 														},
@@ -240,7 +240,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											NestedObject: schema.NestedBlockObject{
 												Blocks: map[string]schema.Block{
 													"insert_header": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customHTTPHeaderModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtLeast(1),
 														},
@@ -282,7 +282,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 											NestedObject: schema.NestedBlockObject{
 												Blocks: map[string]schema.Block{
 													"insert_header": schema.ListNestedBlock{
-														CustomType: fwtypes.NewListNestedObjectTypeOf[insertHeaderModel](ctx),
+														CustomType: fwtypes.NewListNestedObjectTypeOf[customHTTPHeaderModel](ctx),
 														Validators: []validator.List{
 															listvalidator.SizeAtLeast(1),
 														},
@@ -1208,11 +1208,11 @@ type managedRuleGroupModel struct {
 }
 
 type ruleActionOverrideModel struct {
-	Name        types.String                                      `tfsdk:"name"`
-	ActionToUse fwtypes.ListNestedObjectValueOf[actionToUseModel] `tfsdk:"action_to_use"`
+	Name        types.String                                     `tfsdk:"name"`
+	ActionToUse fwtypes.ListNestedObjectValueOf[ruleActionModel] `tfsdk:"action_to_use"`
 }
 
-type actionToUseModel struct {
+type ruleActionModel struct {
 	Allow     fwtypes.ListNestedObjectValueOf[allowActionModel]     `tfsdk:"allow"`
 	Block     fwtypes.ListNestedObjectValueOf[blockActionModel]     `tfsdk:"block"`
 	Captcha   fwtypes.ListNestedObjectValueOf[captchaActionModel]   `tfsdk:"captcha"`
@@ -1241,21 +1241,16 @@ type countActionModel struct {
 }
 
 type customRequestHandlingModel struct {
-	InsertHeader fwtypes.ListNestedObjectValueOf[insertHeaderModel] `tfsdk:"insert_header"`
+	InsertHeader fwtypes.ListNestedObjectValueOf[customHTTPHeaderModel] `tfsdk:"insert_header"`
 }
 
 type customResponseModel struct {
-	CustomResponseBodyKey types.String                                         `tfsdk:"custom_response_body_key"`
-	ResponseCode          types.Int32                                          `tfsdk:"response_code"`
-	ResponseHeader        fwtypes.ListNestedObjectValueOf[responseHeaderModel] `tfsdk:"response_header"`
+	CustomResponseBodyKey types.String                                           `tfsdk:"custom_response_body_key"`
+	ResponseCode          types.Int32                                            `tfsdk:"response_code"`
+	ResponseHeader        fwtypes.ListNestedObjectValueOf[customHTTPHeaderModel] `tfsdk:"response_header"`
 }
 
-type insertHeaderModel struct {
-	Name  types.String `tfsdk:"name"`
-	Value types.String `tfsdk:"value"`
-}
-
-type responseHeaderModel struct {
+type customHTTPHeaderModel struct {
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }

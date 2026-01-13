@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition_test
@@ -164,7 +164,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_contentModeration(rName, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceProject, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceProject, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

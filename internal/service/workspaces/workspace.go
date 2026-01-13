@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -353,7 +353,7 @@ func findWorkspaceByID(ctx context.Context, conn *workspaces.Client, id string) 
 	}
 
 	if inttypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
