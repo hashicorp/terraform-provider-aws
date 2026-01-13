@@ -373,8 +373,8 @@ github.com/aws/aws-sdk-go-v2/service/mgn v1.39.1 h1:lRCVeW3b9befT2po84qjXIbe9A45
 github.com/aws/aws-sdk-go-v2/service/mgn v1.39.1/go.mod h1:P5lN4onNQaR2TMah79+A5YXGxtm7iPUSKpvas6Hdy1A=
 github.com/aws/aws-sdk-go-v2/service/mq v1.34.15 h1:wExBc5n/W64VlFTRpRkidFiltx1oA+jUMuDzoNQwMKc=
 github.com/aws/aws-sdk-go-v2/service/mq v1.34.15/go.mod h1:XqYQEK2qR/C9zOThps53a7UV6PsSR2uwIpjvskU7RBw=
-github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.16 h1:hjz/MS88eIbATk6csCtbgGQzemvq989WTA0SR068GM0=
-github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.16/go.mod h1:4qrozKYUUYie+sbDQEgOSNH3ALn2fvkyAd0moggFmaY=
+github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.17 h1:LilOoff/YKbEI9gjE5YLPgoNYCcYTuK3oGhI6Dx7cN4=
+github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.17/go.mod h1:Cxxa4XimOR2SvN4KP+kxZ8Ntjx+vuFKhkHddE4Rt3fY=
 github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.4 h1:PtX4ZpHBckHq2DmHIxh7Nn5r2pYYtQAFQ8Stl4bqiF8=
 github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.4/go.mod h1:oMgkR7uTJu/m/nzTsxSq6xvPw/IMSQ8Z0DdYFQpoM9E=
 github.com/aws/aws-sdk-go-v2/service/neptune v1.43.8 h1:fonYzHtaUVBPjnr2HgZ3hldbamSlFZa6iAL35k5Os18=
