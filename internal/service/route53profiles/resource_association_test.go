@@ -194,12 +194,10 @@ func TestAccRoute53ProfilesResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ProfilesResourceAssociation_queryLogConfig(t *testing.T) {
+func TestAccRoute53ProfilesResourceAssociation_queryLogConflict(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
+	// See https://github.com/hashicorp/terraform-provider-aws/issues/45268
 	var resourceAssociation awstypes.ProfileResourceAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53profiles_resource_association.test"
@@ -215,7 +213,7 @@ func TestAccRoute53ProfilesResourceAssociation_queryLogConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAssociationConfig_queryLogConfig(rName),
+				Config: testAccResourceAssociationConfig_queryLogConflict(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
 					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, names.AttrID),
@@ -384,7 +382,7 @@ resource "aws_route53profiles_resource_association" "test" {
 `, rName))
 }
 
-func testAccResourceAssociationConfig_queryLogConfig(rName string) string {
+func testAccResourceAssociationConfig_queryLogConflict(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
