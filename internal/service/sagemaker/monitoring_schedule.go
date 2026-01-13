@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,6 +59,52 @@ func resourceMonitoringSchedule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"baseline": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"baselining_job_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"constraints_resource": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"s3_uri": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validHTTPSOrS3URI,
+															},
+														},
+													},
+												},
+												"statistics_resource": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"s3_uri": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validHTTPSOrS3URI,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									names.AttrEnvironment: {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
 									"monitoring_app_specification": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
@@ -89,6 +136,304 @@ func resourceMonitoringSchedule() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validHTTPSOrS3URI,
+												},
+											},
+										},
+									},
+									"monitoring_output_config": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"kms_key_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"monitoring_input": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"batch_transform_input": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"data_captured_destination_s3_uri": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validHTTPSOrS3URI,
+																		},
+																		"dataset_format": {
+																			Type:     schema.TypeList,
+																			MaxItems: 1,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"csv": {
+																						Type:     schema.TypeList,
+																						MaxItems: 1,
+																						Optional: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								names.AttrHeader: {
+																									Type:     schema.TypeBool,
+																									Optional: true,
+																								},
+																							},
+																						},
+																					},
+																					names.AttrJSON: {
+																						Type:     schema.TypeList,
+																						MaxItems: 1,
+																						Optional: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"line": {
+																									Type:     schema.TypeBool,
+																									Optional: true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																		"end_time_offset": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"exclude_features_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"features_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"inference_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"local_path": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 256),
+																		},
+																		"probability_attribute": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 256),
+																		},
+																		"probability_threshold_attribute": {
+																			Type:         schema.TypeFloat,
+																			Optional:     true,
+																			ValidateFunc: validation.FloatBetween(0, 1),
+																		},
+																		"s3_data_distribution_type": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+																		},
+																		"s3_input_mode": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+																		},
+																		"start_time_offset": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"endpoint_input": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"end_time_offset": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"endpoint_name": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 63),
+																		},
+																		"exclude_features_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"features_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"inference_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"local_path": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validation.StringLenBetween(1, 256),
+																		},
+																		"probability_attribute": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"probability_threshold_attribute": {
+																			Type:     schema.TypeFloat,
+																			Optional: true,
+																		},
+																		"s3_data_distribution_type": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3DataDistributionType](),
+																		},
+																		"s3_input_mode": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3InputMode](),
+																		},
+																		"start_time_offset": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"monitoring_output": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"s3_output": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"local_path": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"s3_upload_mode": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ProcessingS3UploadMode](),
+																		},
+																		"s3_uri": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validHTTPSOrS3URI,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"monitoring_resources": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cluster_config": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"instance_count": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 100),
+															},
+															"instance_type": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"volume_kms_key_id": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: verify.ValidARN,
+															},
+															"volume_size_in_gb": {
+																Type:         schema.TypeInt,
+																Required:     true,
+																ValidateFunc: validation.IntBetween(1, 16384),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"network_config": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable_inter_container_traffic_encryption": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"enable_network_isolation": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"vpc_config": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"security_group_ids": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"subnets": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"stopping_condition": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"max_runtime_in_seconds": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(1, 86400),
 												},
 											},
 										},
@@ -373,8 +718,63 @@ func expandMonitoringJobDefinition(tfList []any) *awstypes.MonitoringJobDefiniti
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.MonitoringJobDefinition{}
 
+	if v, ok := tfMap["baseline"].([]any); ok && len(v) > 0 {
+		apiObject.BaselineConfig = expandMonitoringBaselineConfig(v)
+	}
+
+	if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
+		apiObject.Environment = flex.ExpandStringValueMap(v)
+	}
+
 	if v, ok := tfMap["monitoring_app_specification"].([]any); ok && len(v) > 0 {
 		apiObject.MonitoringAppSpecification = expandMonitoringAppSpecification(v)
+	}
+
+	if v, ok := tfMap["monitoring_input"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringInputs = expandMonitoringInputs(v)
+	}
+
+	if v, ok := tfMap["monitoring_output_config"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringOutputConfig = expandMonitoringOutputConfig(v)
+	}
+
+	if v, ok := tfMap["monitoring_resources"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringResources = expandMonitoringResources(v)
+	}
+
+	if v, ok := tfMap["network_config"].([]any); ok && len(v) > 0 {
+		apiObject.NetworkConfig = expandNetworkConfig(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["stopping_condition"].([]any); ok && len(v) > 0 {
+		apiObject.StoppingCondition = expandMonitoringStoppingCondition(v)
+	}
+
+	return apiObject
+}
+
+func expandMonitoringBaselineConfig(tfList []any) *awstypes.MonitoringBaselineConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringBaselineConfig{}
+
+	if v, ok := tfMap["baselining_job_name"].(string); ok && v != "" {
+		apiObject.BaseliningJobName = aws.String(v)
+	}
+
+	if v, ok := tfMap["constraints_resource"].([]any); ok && len(v) > 0 {
+		apiObject.ConstraintsResource = expandMonitoringConstraintsResource(v)
+	}
+
+	if v, ok := tfMap["statistics_resource"].([]any); ok && len(v) > 0 {
+		apiObject.StatisticsResource = expandMonitoringStatisticsResource(v)
 	}
 
 	return apiObject
@@ -406,6 +806,50 @@ func expandMonitoringAppSpecification(tfList []any) *awstypes.MonitoringAppSpeci
 
 	if v, ok := tfMap["record_preprocessor_source_uri"].(string); ok && v != "" {
 		apiObject.RecordPreprocessorSourceUri = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandMonitoringInputs(tfList []any) []awstypes.MonitoringInput {
+	apiObjects := make([]awstypes.MonitoringInput, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.MonitoringInput{}
+
+		if v, ok := tfMap["batch_transform_input"].([]any); ok && len(v) > 0 {
+			apiObject.BatchTransformInput = expandBatchTransformInput(v)
+		}
+
+		if v, ok := tfMap["endpoint_input"].([]any); ok && len(v) > 0 {
+			apiObject.EndpointInput = expandEndpointInput(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandNetworkConfig(tfList []any) *awstypes.NetworkConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.NetworkConfig{}
+
+	if v, ok := tfMap["enable_inter_container_traffic_encryption"].(bool); ok {
+		apiObject.EnableInterContainerTrafficEncryption = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["enable_network_isolation"].(bool); ok {
+		apiObject.EnableNetworkIsolation = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["vpc_config"].([]any); ok && len(v) > 0 {
+		apiObject.VpcConfig = expandVPCConfig(v)
 	}
 
 	return apiObject
@@ -457,8 +901,62 @@ func flattenMonitoringJobDefinition(apiObject *awstypes.MonitoringJobDefinition)
 
 	tfMap := map[string]any{}
 
+	if apiObject.BaselineConfig != nil {
+		tfMap["baseline"] = flattenMonitoringBaselineConfig(apiObject.BaselineConfig)
+	}
+
+	if apiObject.Environment != nil {
+		tfMap[names.AttrEnvironment] = apiObject.Environment
+	}
+
 	if apiObject.MonitoringAppSpecification != nil {
 		tfMap["monitoring_app_specification"] = flattenMonitoringAppSpecification(apiObject.MonitoringAppSpecification)
+	}
+
+	if apiObject.MonitoringInputs != nil {
+		tfMap["monitoring_input"] = flattenMonitoringInputs(apiObject.MonitoringInputs)
+	}
+
+	if apiObject.MonitoringOutputConfig != nil {
+		tfMap["monitoring_output_config"] = flattenMonitoringOutputConfig(apiObject.MonitoringOutputConfig)
+	}
+
+	if apiObject.MonitoringResources != nil {
+		tfMap["monitoring_resources"] = flattenMonitoringResources(apiObject.MonitoringResources)
+	}
+
+	if apiObject.NetworkConfig != nil {
+		tfMap["network_config"] = flattenNetworkConfig(apiObject.NetworkConfig)
+	}
+
+	if apiObject.RoleArn != nil {
+		tfMap["role_arn"] = aws.ToString(apiObject.RoleArn)
+	}
+
+	if apiObject.StoppingCondition != nil {
+		tfMap["stopping_condition"] = flattenMonitoringStoppingCondition(apiObject.StoppingCondition)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMonitoringBaselineConfig(apiObject *awstypes.MonitoringBaselineConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.BaseliningJobName != nil {
+		tfMap["baselining_job_name"] = aws.ToString(apiObject.BaseliningJobName)
+	}
+
+	if apiObject.ConstraintsResource != nil {
+		tfMap["constraints_resource"] = flattenMonitoringConstraintsResource(apiObject.ConstraintsResource)
+	}
+
+	if apiObject.StatisticsResource != nil {
+		tfMap["statistics_resource"] = flattenMonitoringStatisticsResource(apiObject.StatisticsResource)
 	}
 
 	return []any{tfMap}
@@ -484,6 +982,48 @@ func flattenMonitoringAppSpecification(apiObject *awstypes.MonitoringAppSpecific
 
 	if apiObject.RecordPreprocessorSourceUri != nil {
 		tfMap["record_preprocessor_source_uri"] = aws.ToString(apiObject.RecordPreprocessorSourceUri)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMonitoringInputs(apiObjects []awstypes.MonitoringInput) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+
+		if apiObject.BatchTransformInput != nil {
+			tfMap["batch_transform_input"] = flattenBatchTransformInput(apiObject.BatchTransformInput)
+		}
+
+		if apiObject.EndpointInput != nil {
+			tfMap["endpoint_input"] = flattenEndpointInput(apiObject.EndpointInput)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenNetworkConfig(apiObject *awstypes.NetworkConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{}
+
+	if apiObject.EnableInterContainerTrafficEncryption != nil {
+		tfMap["enable_inter_container_traffic_encryption"] = aws.ToBool(apiObject.EnableInterContainerTrafficEncryption)
+	}
+
+	if apiObject.EnableNetworkIsolation != nil {
+		tfMap["enable_network_isolation"] = aws.ToBool(apiObject.EnableNetworkIsolation)
+	}
+
+	if apiObject.VpcConfig != nil {
+		tfMap["vpc_config"] = flattenVPCConfig(apiObject.VpcConfig)
 	}
 
 	return []any{tfMap}
