@@ -14,7 +14,7 @@ List Resources are dependent on [resource identity](https://developer.hashicorp.
 
 ## Steps to Add a List Resource
 
-Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_defintion`, the list resource should be named `aws_batch_job_definition`.
+Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
 
 Use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
 
@@ -110,14 +110,13 @@ go generate internal/service/<service>/generate.go
 ### Prerequisites Issues
 
 - **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
-- **Branch Naming**: Use the convention `f-list-resource-<service>_<resource>` (e.g., `f-list-resource-batch_job_defintion`)
+- **Branch Naming**: Use the convention `f-list-resource-<service>_<resource>` (e.g., `f-list-resource-batch_job_definition`)
 
 ### Common Implementation Issues
 
 - **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types. Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
 - **Variable Name Errors**: Generated code contains compilation errors:
-  - Change `r.Meta()` to `l.Meta()`
-  - Change `awsClient` to `l.Meta()`
+    - Change `r.Meta()` to `l.Meta()`
 - **Resource Identifier**: Use the same identifier as the target resource (often name, not ARN)
 
 ### Test Configuration Issues
