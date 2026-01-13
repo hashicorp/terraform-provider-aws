@@ -330,10 +330,10 @@ func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id stri
 }
 
 func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.ListMembersOutput, error) {
-	in := &cleanrooms.ListMembersInput{
+	input := cleanrooms.ListMembersInput{
 		CollaborationIdentifier: aws.String(id),
 	}
-	out, err := conn.ListMembers(ctx, in)
+	out, err := conn.ListMembers(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -353,7 +353,7 @@ func findMembersByCollaborationId(ctx context.Context, conn *cleanrooms.Client, 
 }
 
 func expandMemberAbilities(data []any) []types.MemberAbility {
-	mappedAbilities := []types.MemberAbility{}
+	mappedAbilities := make([]types.MemberAbility, 0)
 	for _, v := range data {
 		switch v.(string) {
 		case "CAN_QUERY":
@@ -377,7 +377,7 @@ func expandQueryLogStatus(status string) (types.CollaborationQueryLogStatus, err
 }
 
 func expandDataEncryptionMetadata(data []any) *types.DataEncryptionMetadata {
-	dataEncryptionMetadata := &types.DataEncryptionMetadata{}
+	dataEncryptionMetadata := types.DataEncryptionMetadata{}
 	if len(data) > 0 {
 		metadata := data[0].(map[string]any)
 		dataEncryptionMetadata.PreserveNulls = aws.Bool(metadata["preserve_nulls"].(bool))
@@ -385,19 +385,19 @@ func expandDataEncryptionMetadata(data []any) *types.DataEncryptionMetadata {
 		dataEncryptionMetadata.AllowJoinsOnColumnsWithDifferentNames = aws.Bool(metadata["allow_joins_on_columns_with_different_names"].(bool))
 		dataEncryptionMetadata.AllowDuplicates = aws.Bool(metadata["allow_duplicates"].(bool))
 	}
-	return dataEncryptionMetadata
+	return &dataEncryptionMetadata
 }
 
 func expandMembers(data []any) *[]types.MemberSpecification {
-	members := []types.MemberSpecification{}
+	members := make([]types.MemberSpecification, 0)
 	for _, member := range data {
 		memberMap := member.(map[string]any)
-		member := &types.MemberSpecification{
+		m := types.MemberSpecification{
 			AccountId:       aws.String(memberMap[names.AttrAccountID].(string)),
 			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]any)),
 			DisplayName:     aws.String(memberMap[names.AttrDisplayName].(string)),
 		}
-		members = append(members, *member)
+		members = append(members, m)
 	}
 	return &members
 }
@@ -415,7 +415,7 @@ func flattenDataEncryptionMetadata(dataEncryptionMetadata *types.DataEncryptionM
 }
 
 func flattenMembers(members []types.MemberSummary, ownerAccount *string) []any {
-	flattenedMembers := []any{}
+	flattenedMembers := make([]any, 0)
 	for _, member := range members {
 		if aws.ToString(member.AccountId) != aws.ToString(ownerAccount) {
 			memberMap := map[string]any{}
@@ -430,7 +430,7 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []any {
 }
 
 func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string) []string {
-	flattenedAbilities := []string{}
+	flattenedAbilities := make([]string, 0)
 	for _, member := range members {
 		if aws.ToString(member.AccountId) == aws.ToString(ownerAccount) {
 			return flattenMemberAbilities(member.Abilities)
@@ -440,7 +440,7 @@ func flattenCreatorAbilities(members []types.MemberSummary, ownerAccount *string
 }
 
 func flattenMemberAbilities(abilities []types.MemberAbility) []string {
-	flattenedAbilities := []string{}
+	flattenedAbilities := make([]string, 0)
 	for _, ability := range abilities {
 		flattenedAbilities = append(flattenedAbilities, string(ability))
 	}

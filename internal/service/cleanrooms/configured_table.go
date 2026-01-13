@@ -226,11 +226,11 @@ func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetConfiguredTableOutput, error) {
-	in := &cleanrooms.GetConfiguredTableInput{
+	input := cleanrooms.GetConfiguredTableInput{
 		ConfiguredTableIdentifier: aws.String(id),
 	}
 
-	out, err := conn.GetConfiguredTable(ctx, in)
+	out, err := conn.GetConfiguredTable(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
