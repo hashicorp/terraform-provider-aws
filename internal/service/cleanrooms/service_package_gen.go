@@ -87,6 +87,16 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 			}),
 			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
 		},
+		{
+			Factory:  newConfiguredTableResourceAsListResource,
+			TypeName: "aws_cleanrooms_configured_table",
+			Name:     "Configured Table",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
 	})
 }
 
