@@ -443,6 +443,7 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 //
 // During import (when stateValue is null), if the API returns just groupId for a same-account reference,
 // we format it as accountId/groupId to match what users typically configure, ensuring consistency.
+// However, if the API already returns accountId/groupId format, we preserve that.
 func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
 	if apiValue.IsNull() {
 		return apiValue
