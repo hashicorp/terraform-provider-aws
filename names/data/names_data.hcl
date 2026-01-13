@@ -5822,6 +5822,33 @@ service "mobile" {
   not_implemented          = true
 }
 
+service "mpa" {
+  sdk {
+    id            = "MPA"
+    arn_namespace = "mpa"
+  }
+
+  names {
+    provider_name_upper = "MPA"
+    human_friendly      = "Multi-party Approval"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListApprovalTeams"
+    endpoint_region_overrides = {
+      "aws" = "us-east-1"
+    }
+  }
+
+  resource_prefix {
+    correct = "aws_mpa_"
+  }
+
+  provider_package_correct = "mpa"
+  doc_prefix               = ["mpa_"]
+  brand                    = "AWS"
+}
+
 service "mq" {
   sdk {
     id            = "mq"
