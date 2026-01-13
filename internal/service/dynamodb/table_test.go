@@ -3539,6 +3539,12 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
+			},
 		},
 	})
 }
@@ -3566,6 +3572,11 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccTableConfig_streamSpecification(rName, true, "NEW_IMAGE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
@@ -3574,6 +3585,11 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "NEW_IMAGE"),
@@ -3586,6 +3602,12 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
+			},
+			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
@@ -3594,6 +3616,12 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "null"),
@@ -3606,14 +3634,10 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
@@ -3624,6 +3648,26 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3639,7 +3683,11 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_streamSpecification("anything", true, ""),
-				ExpectError: regexache.MustCompile(`stream_view_type is required when stream_enabled = true`),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
+			},
+			{
+				Config:      testAccTableConfig_streamSpecification("anything", true, "null"),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
 			},
 		},
 	})

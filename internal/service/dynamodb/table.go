@@ -70,9 +70,6 @@ func resourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validStreamSpec(diff)
-			},
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				return validateTableAttributes(ctx, diff, meta)
 			},
@@ -102,25 +99,6 @@ func resourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				if v := diff.Get("restore_source_name"); v != "" {
-					return nil
-				}
-
-				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
-					diff.Get("restore_source_table_arn") != "" {
-					return nil
-				}
-
-				var errs []error
-				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				if err := validateProvisionedThroughputField(diff, "write_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				return errors.Join(errs...)
-			},
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta any) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
@@ -147,10 +125,9 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
-			validateWarmThroughputCustomDiff,
-			validateTTLCustomDiff,
+			suppressTableWarmThroughputDefaults,
 			customDiffGlobalSecondaryIndex,
-			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				rs := diff.GetRawState()
 				if rs.IsNull() {
 					return nil
@@ -594,6 +571,10 @@ func resourceTable() *schema.Resource {
 
 		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
 			validateGlobalSecondaryIndexes,
+			validateStreamSpecification,
+			validateProvisionedThroughputField(cty.GetAttrPath("read_capacity")),
+			validateProvisionedThroughputField(cty.GetAttrPath("write_capacity")),
+			validateTTLList,
 		},
 	}
 }
@@ -3226,26 +3207,8 @@ func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta a
 		}
 	}
 
-	var hasConfiguredGsi bool
-	config := d.GetRawConfig()
-	if config.IsKnown() {
-		hasConfiguredGsi = config.GetAttr("global_secondary_index").AsValueSet().Length() > 0
-	}
-
 	// Check if all indexed attributes have an attribute definition
-	var attributes []any
-	if hasConfiguredGsi {
-		vals := d.GetRawConfig().GetAttr("attribute").AsValueSet().Values()
-		for _, v := range vals {
-			attr := map[string]any{}
-			for k, v := range v.AsValueMap() {
-				attr[k] = v.AsString()
-			}
-			attributes = append(attributes, attr)
-		}
-	} else {
-		attributes = d.Get("attribute").(*schema.Set).List()
-	}
+	attributes := d.Get("attribute").(*schema.Set).List()
 
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
@@ -3298,39 +3261,6 @@ func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.
 
 	if readCapacity < 1 {
 		return fmt.Errorf("read capacity must be > 0 when billing mode is %s", awstypes.BillingModeProvisioned)
-	}
-
-	return nil
-}
-
-func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) error {
-	oldBillingMode, newBillingMode := diff.GetChange("billing_mode")
-	v := diff.Get(key).(int)
-	if oldBillingMode, newBillingMode := awstypes.BillingMode(oldBillingMode.(string)), awstypes.BillingMode(newBillingMode.(string)); newBillingMode == awstypes.BillingModeProvisioned {
-		if v < provisionedThroughputMinValue {
-			// Assuming the field is ignored, likely due to autoscaling
-			if oldBillingMode == awstypes.BillingModePayPerRequest {
-				return nil
-			}
-			return fmt.Errorf("%s must be at least 1 when billing_mode is %q", key, newBillingMode)
-		}
-	} else if newBillingMode == awstypes.BillingModePayPerRequest && oldBillingMode != awstypes.BillingModeProvisioned {
-		if v != 0 {
-			return fmt.Errorf("%s can not be set when billing_mode is %q", key, awstypes.BillingModePayPerRequest)
-		}
-	}
-	return nil
-}
-
-func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	configRaw := d.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
-	}
-
-	// Handle table-level warm throughput suppression
-	if err := suppressTableWarmThroughputDefaults(d, configRaw); err != nil {
-		return err
 	}
 
 	return nil
@@ -3432,7 +3362,95 @@ func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath 
 	}
 }
 
-func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
+func validateStreamSpecification(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	streamEnabled := req.RawConfig.GetAttr("stream_enabled")
+	if !streamEnabled.IsKnown() {
+		return
+	}
+
+	streamViewType := req.RawConfig.GetAttr("stream_view_type")
+	if !streamViewType.IsKnown() {
+		return
+	}
+
+	if streamEnabled.IsNull() {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeAlsoRequiresError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+			))
+		}
+	} else if streamEnabled.True() {
+		if streamViewType.IsNull() || streamViewType.AsString() == "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeRequiredWhenError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"true",
+			))
+		}
+	} else {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenWillBeError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"false",
+			))
+		}
+	}
+}
+
+func validateProvisionedThroughputField(path cty.Path) schema.ValidateRawResourceConfigFunc {
+	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+		v, err := path.Apply(req.RawConfig)
+		if err != nil {
+			resp.Diagnostics = sdkdiag.AppendFromErr(resp.Diagnostics, err)
+			return
+		}
+
+		if !v.IsKnown() || v.IsNull() {
+			return
+		}
+
+		billingMode := req.RawConfig.GetAttr("billing_mode")
+		if !billingMode.IsKnown() || billingMode.IsNull() {
+			return
+		}
+
+		bm := awstypes.BillingMode(billingMode.AsString())
+		value, _ := v.AsBigFloat().Int64()
+
+		switch bm {
+		case awstypes.BillingModeProvisioned:
+			if value < provisionedThroughputMinValue {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewInvalidValueAttributeCombinationError(
+					path,
+					fmt.Sprintf("Attribute %q must be at least %d when %q is %q.",
+						errs.PathString(path),
+						provisionedThroughputMinValue,
+						cty.GetAttrPath("billing_mode"),
+						string(awstypes.BillingModeProvisioned),
+					),
+				))
+			}
+
+		case awstypes.BillingModePayPerRequest:
+			if value != 0 {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenError(
+					path,
+					cty.GetAttrPath("billing_mode"),
+					string(awstypes.BillingModePayPerRequest),
+				))
+			}
+		}
+	}
+}
+
+func suppressTableWarmThroughputDefaults(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	configRaw := d.GetRawConfig()
+	if !configRaw.IsKnown() || configRaw.IsNull() {
+		return nil
+	}
+
 	// If warm throughput is explicitly configured, don't suppress any diffs
 	if warmThroughput := configRaw.GetAttr("warm_throughput"); warmThroughput.IsKnown() && !warmThroughput.IsNull() && warmThroughput.LengthInt() > 0 {
 		return nil
@@ -3465,29 +3483,20 @@ func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.V
 	return nil
 }
 
-func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	var diags diag.Diagnostics
-
-	configRaw := d.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
+func validateTTLList(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	ttl := req.RawConfig.GetAttr("ttl")
+	if !ttl.IsKnown() || ttl.IsNull() {
+		return
 	}
 
 	ttlPath := cty.GetAttrPath("ttl")
-	ttl := configRaw.GetAttr("ttl")
-	if ttl.IsKnown() && !ttl.IsNull() {
-		if ttl.LengthInt() == 1 {
-			idx := cty.NumberIntVal(0)
-			ttl := ttl.Index(idx)
-			ttlPath := ttlPath.Index(idx)
-			ttlPlantimeValidate(ttlPath, ttl, &diags)
-		}
+	for i, ttlElem := range tfcty.ValueElements(ttl) {
+		ttlElemPath := ttlPath.Index(i)
+		validateTTL(ctx, ttlElem, ttlElemPath, &resp.Diagnostics)
 	}
-
-	return sdkdiag.DiagnosticsError(diags)
 }
 
-func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+func validateTTL(_ context.Context, ttl cty.Value, ttlPath cty.Path, diags *diag.Diagnostics) {
 	attribute := ttl.GetAttr("attribute_name")
 	if !attribute.IsKnown() {
 		return
@@ -3511,8 +3520,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 		} else if attribute.AsString() == "" {
 			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
 				ttlPath.GetAttr("attribute_name"),
-				"Attribute %q cannot have an empty value",
+				"Attribute %q cannot have an empty value when %q is \"true\"",
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
+				errs.PathString(ttlPath.GetAttr(names.AttrEnabled)),
 			))
 		}
 	}
@@ -3522,7 +3532,7 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
 
-func customDiffGlobalSecondaryIndex(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	if diff.Id() == "" {
 		return nil
 	}
