@@ -4,9 +4,9 @@
 package cleanrooms_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,8 +47,8 @@ func TestAccCleanRoomsCollaboration_List_Basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cleanrooms", regexp.MustCompile(`collaboration/.+`))),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cleanrooms", regexp.MustCompile(`collaboration/.+`))),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cleanrooms", regexache.MustCompile(`collaboration/.+`))),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNRegexp("cleanrooms", regexache.MustCompile(`collaboration/.+`))),
 				},
 			},
 
