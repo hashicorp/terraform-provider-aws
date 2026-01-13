@@ -438,7 +438,8 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 // just groupId even if state had accountId/groupId format.
 //
 // However, if the state already has accountId/groupId format (from user config), we preserve that
-// format to match what the user configured, preventing false diffs.
+// format to match what the user configured, preventing false diffs. This applies to both same-account
+// and cross-account cases.
 func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
 	if apiValue.IsNull() || stateValue.IsNull() {
 		return apiValue
@@ -447,13 +448,14 @@ func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValu
 	apiStr := apiValue.ValueString()
 	stateStr := stateValue.ValueString()
 
-	// If state has accountId/groupId format and accountId matches current account,
-	// preserve the state format (accountId/groupId) to match user's config, even though
-	// API returned just groupId. This prevents false diffs when user configured accountId/groupId.
+	// If state has accountId/groupId format, preserve it to match user's config.
+	// This prevents false diffs when:
+	// 1. Same account: state has accountId/groupId, API returns groupId
+	// 2. Cross account: state has otherAccountId/groupId, API returns groupId (after ModifySecurityGroupRules)
 	if parts := strings.Split(stateStr, "/"); len(parts) == 2 {
-		if parts[0] == currentAccountID && apiStr == parts[1] {
-			// State has accountId/groupId, API has groupId, accountId matches
-			// Preserve state format to match user config
+		if apiStr == parts[1] {
+			// State has accountId/groupId, API has groupId (matches the groupId part)
+			// Preserve state format to match user config, regardless of accountId
 			return stateValue
 		}
 	}
