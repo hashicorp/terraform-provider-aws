@@ -345,7 +345,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving devicefarm default endpoint: %s", err)
+		t.Fatalf("resolving Device Farm default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -359,7 +359,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving devicefarm FIPS endpoint: %s", err)
+		t.Fatalf("resolving Device Farm FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -367,7 +367,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up devicefarm endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up Device Farm endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

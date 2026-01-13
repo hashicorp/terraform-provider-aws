@@ -420,7 +420,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving cognitoidp default endpoint: %s", err)
+		t.Fatalf("resolving Cognito IDP (Identity Provider) default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -434,7 +434,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving cognitoidp FIPS endpoint: %s", err)
+		t.Fatalf("resolving Cognito IDP (Identity Provider) FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -442,7 +442,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up cognitoidp endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up Cognito IDP (Identity Provider) endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

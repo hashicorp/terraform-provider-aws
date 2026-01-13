@@ -345,7 +345,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving pcs default endpoint: %s", err)
+		t.Fatalf("resolving Parallel Computing Service default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -359,7 +359,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving pcs FIPS endpoint: %s", err)
+		t.Fatalf("resolving Parallel Computing Service FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -367,7 +367,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up pcs endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up Parallel Computing Service endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

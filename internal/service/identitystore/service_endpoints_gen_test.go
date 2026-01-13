@@ -347,7 +347,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving identitystore default endpoint: %s", err)
+		t.Fatalf("resolving SSO Identity Store default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -361,7 +361,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving identitystore FIPS endpoint: %s", err)
+		t.Fatalf("resolving SSO Identity Store FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -369,7 +369,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up identitystore endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up SSO Identity Store endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

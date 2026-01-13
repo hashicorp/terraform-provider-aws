@@ -418,7 +418,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving elbv2 default endpoint: %s", err)
+		t.Fatalf("resolving ELB (Elastic Load Balancing) default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -432,7 +432,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving elbv2 FIPS endpoint: %s", err)
+		t.Fatalf("resolving ELB (Elastic Load Balancing) FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -440,7 +440,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up elbv2 endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up ELB (Elastic Load Balancing) endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

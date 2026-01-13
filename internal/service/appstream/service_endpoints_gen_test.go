@@ -347,7 +347,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving appstream default endpoint: %s", err)
+		t.Fatalf("resolving AppStream 2.0 default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -361,7 +361,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving appstream FIPS endpoint: %s", err)
+		t.Fatalf("resolving AppStream 2.0 FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -369,7 +369,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up appstream endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up AppStream 2.0 endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

@@ -345,7 +345,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving codeconnections default endpoint: %s", err)
+		t.Fatalf("resolving CodeConnections default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -359,7 +359,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving codeconnections FIPS endpoint: %s", err)
+		t.Fatalf("resolving CodeConnections FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -367,7 +367,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up codeconnections endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up CodeConnections endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{

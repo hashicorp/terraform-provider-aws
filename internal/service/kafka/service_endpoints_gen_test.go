@@ -418,7 +418,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving kafka default endpoint: %s", err)
+		t.Fatalf("resolving Managed Streaming for Kafka default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -432,7 +432,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving kafka FIPS endpoint: %s", err)
+		t.Fatalf("resolving Managed Streaming for Kafka FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
@@ -440,7 +440,7 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up kafka endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up Managed Streaming for Kafka endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{
