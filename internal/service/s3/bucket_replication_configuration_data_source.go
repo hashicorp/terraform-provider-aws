@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -28,7 +28,7 @@ const (
 )
 
 type dataSourceBucketReplicationConfiguration struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[dataSourceBucketReplicationConfigurationModel]
 }
 
 func (d *dataSourceBucketReplicationConfiguration) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
@@ -322,6 +322,7 @@ func (d *dataSourceBucketReplicationConfiguration) Read(ctx context.Context, req
 }
 
 type dataSourceBucketReplicationConfigurationModel struct {
+	framework.WithRegionModel
 	Bucket types.String                                                `tfsdk:"bucket"`
 	Role   types.String                                                `tfsdk:"role"`
 	Rule   fwtypes.ListNestedObjectValueOf[dsBucketRepConfigRuleModel] `tfsdk:"rule"`
@@ -342,6 +343,7 @@ type dsBucketRepConfigRuleModel struct {
 type dsBucketRepConfigDeleteMarkerReplicationModel struct {
 	Status types.String `tfsdk:"status"`
 }
+
 type dsBucketRepConfigDestinationModel struct {
 	AccessControlTranslation fwtypes.ListNestedObjectValueOf[dsBucketRepConfigAccessControlTranslationModel] `tfsdk:"access_control_translation"`
 	Account                  types.String                                                                    `tfsdk:"account"`
@@ -355,9 +357,11 @@ type dsBucketRepConfigDestinationModel struct {
 type dsBucketRepConfigAccessControlTranslationModel struct {
 	Owner types.String `tfsdk:"owner"`
 }
+
 type dsBucketRepConfigEncryptionConfigurationModel struct {
 	ReplicaKmsKeyId types.String `tfsdk:"replica_kms_key_id"`
 }
+
 type dsBucketRepConfigMetricsModel struct {
 	EventThreshold fwtypes.ListNestedObjectValueOf[dsBucketRepConfigEventThresholdModel] `tfsdk:"event_threshold"`
 	Status         types.String                                                          `tfsdk:"status"`
@@ -366,10 +370,12 @@ type dsBucketRepConfigMetricsModel struct {
 type dsBucketRepConfigEventThresholdModel struct {
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
+
 type dsBucketRepConfigReplicationTimeModel struct {
 	Status types.String                                                `tfsdk:"status"`
 	Time   fwtypes.ListNestedObjectValueOf[dsBucketRepConfigTimeModel] `tfsdk:"time"`
 }
+
 type dsBucketRepConfigTimeModel struct {
 	Minutes types.Int64 `tfsdk:"minutes"`
 }
@@ -377,26 +383,32 @@ type dsBucketRepConfigTimeModel struct {
 type dsBucketRepConfigExistingObjectReplicationModel struct {
 	Status types.String `tfsdk:"status"`
 }
+
 type dsBucketRepConfigFilterModel struct {
 	And    fwtypes.ListNestedObjectValueOf[dsBucketRepConfigFilterAndModel] `tfsdk:"and"`
 	Tag    fwtypes.ListNestedObjectValueOf[dsBucketRepConfigFilterTagModel] `tfsdk:"tag"`
 	Prefix types.String                                                     `tfsdk:"prefix"`
 }
+
 type dsBucketRepConfigFilterAndModel struct {
 	Prefix types.String                                                     `tfsdk:"prefix"`
 	Tag    fwtypes.ListNestedObjectValueOf[dsBucketRepConfigFilterTagModel] `tfsdk:"tag"`
 }
+
 type dsBucketRepConfigFilterTagModel struct {
 	Key   types.String `tfsdk:"key"`
 	Value types.String `tfsdk:"value"`
 }
+
 type dsBucketRepConfigSourceSelectionCriteriaModel struct {
 	ReplicaModifications   fwtypes.ListNestedObjectValueOf[dsBucketRepConfigReplicaModificationsModel]   `tfsdk:"replica_modifications"`
 	SseKmsEncryptedObjects fwtypes.ListNestedObjectValueOf[dsBucketRepConfigSseKmsEncryptedObjectsModel] `tfsdk:"sse_kms_encrypted_objects"`
 }
+
 type dsBucketRepConfigReplicaModificationsModel struct {
 	Status types.String `tfsdk:"status"`
 }
+
 type dsBucketRepConfigSseKmsEncryptedObjectsModel struct {
 	Status types.String `tfsdk:"status"`
 }

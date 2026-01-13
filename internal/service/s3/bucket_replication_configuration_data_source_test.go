@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,16 +22,14 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_s3_bucket_replication_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	var providers []*schema.Provider
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx), acctest.Region(), acctest.AlternateRegion()),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationDataSourceConfig_basic(rName, string(types.StorageClassStandard)),
@@ -117,9 +114,12 @@ func TestAccS3BucketReplicationConfigurationDataSource_basic(t *testing.T) {
 }
 
 func testAccBucketReplicationConfigurationDataSourceConfig_basic(rName, storageClass string) string {
-	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccBucketReplicationConfigurationConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  provider                = "awsalternate"
+  region = %[2]q
+
   description             = "TF Acceptance Test S3 repl KMS key"
   deletion_window_in_days = 7
 }
@@ -237,11 +237,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 }
 
 data "aws_s3_bucket_replication_configuration" "test" {
-  bucket = aws_s3_bucket.source.id
-
-  depends_on = [
-    aws_s3_bucket_replication_configuration.test,
-  ]
+  bucket = aws_s3_bucket_replication_configuration.test.bucket
 }
-`, storageClass))
+`, storageClass, acctest.AlternateRegion()))
 }

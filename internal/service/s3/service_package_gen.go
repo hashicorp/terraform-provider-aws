@@ -26,6 +26,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Factory:  newDataSourceBucketReplicationConfiguration,
 			TypeName: "aws_s3_bucket_replication_configuration",
 			Name:     "Bucket Replication Configuration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
 			Factory:  newDirectoryBucketsDataSource,
