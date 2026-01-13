@@ -51,6 +51,9 @@ func TestAccDSDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_time"),
+					resource.TestCheckNoResourceAttr(resourceName, "os_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "stage_last_updated_date_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSize, "Small"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SimpleAD"),
@@ -405,6 +408,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_settings.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "os_version"),
 				),
 			},
 			{
