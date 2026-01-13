@@ -11,7 +11,8 @@ import (
 // without anchors for use within larger regex patterns.
 // It supports standard regions (us-east-1), government regions (us-gov-west-1),
 // and sovereign cloud regions (eusc-de-east-1).
-const CanonicalRegionPatternNoAnchors = `[a-z]{2,4}(-[a-z]+)+-\d{1,2}`
+// Uses non-capturing groups to avoid interfering with capture groups in composed patterns.
+const CanonicalRegionPatternNoAnchors = `[a-z]{2,4}(?:-[a-z]+)+-\d{1,2}`
 
 // CanonicalRegionPattern is the anchored version of CanonicalRegionPatternNoAnchors.
 const CanonicalRegionPattern = `^` + CanonicalRegionPatternNoAnchors + `$`
