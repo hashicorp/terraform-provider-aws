@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
@@ -421,7 +422,7 @@ func expectDefaultEndpoint(ctx context.Context, t *testing.T, region string) cas
 
 	endpoint, err := defaultEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving accessanalyzer default endpoint: %s", err)
+		t.Fatalf("resolving Application Auto Scaling default endpoint: %s", err)
 	}
 
 	return caseExpectations{
@@ -435,15 +436,23 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 
 	endpoint, err := defaultFIPSEndpoint(ctx, region)
 	if err != nil {
-		t.Fatalf("resolving accessanalyzer FIPS endpoint: %s", err)
+		t.Fatalf("resolving Application Auto Scaling FIPS endpoint: %s", err)
 	}
 
 	hostname := endpoint.Hostname()
-	_, err = net.LookupHost(hostname)
-	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+
+	// Use a short timeout for DNS lookup to avoid hanging in restricted network environments (e.g., GHA)
+	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resolver := &net.Resolver{}
+	_, err = resolver.LookupHost(lookupCtx, hostname)
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
+		return expectDefaultEndpoint(ctx, t, region)
+	} else if err != nil && errors.Is(err, context.DeadlineExceeded) {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		t.Fatalf("looking up accessanalyzer endpoint %q: %s", hostname, err)
+		t.Fatalf("looking up Application Auto Scaling endpoint %q: %s", hostname, err)
 	}
 
 	return caseExpectations{
