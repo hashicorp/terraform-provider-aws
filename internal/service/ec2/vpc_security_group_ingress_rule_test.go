@@ -554,6 +554,64 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 	})
 }
 
+func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_accountIDFormat_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.SecurityGroupRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDAccountIDFormat(rName, "description1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "security-group-rule/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDAccountIDFormat(rName, "description2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
+					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "security-group-rule/{id}"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
+					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
+					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.SecurityGroupRule
@@ -955,4 +1013,29 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
   depends_on = [aws_vpc_peering_connection_accepter.peer]
 }
 `, rName, acctest.Region()))
+}
+
+func testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDAccountIDFormat(rName, description string) string {
+	return acctest.ConfigCompose(testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_security_group" "referenced" {
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s-referenced"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "test" {
+  security_group_id = aws_security_group.test.id
+
+  referenced_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.referenced.id}"
+  from_port                    = 80
+  ip_protocol                  = "tcp"
+  to_port                      = 8080
+  description                  = %[2]q
+}
+`, rName, description))
 }
