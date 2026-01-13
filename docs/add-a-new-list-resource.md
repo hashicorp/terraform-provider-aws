@@ -111,6 +111,14 @@ To register the new list resource:
 go generate internal/service/<service>/generate.go
 ```
 
+## Run Acceptance Tests
+
+Run the acceptance tests for the new list resource to ensure everything is functioning as expected. Replace `<service-name>` and `<resource-name>` with the appropriate service and resource names.
+
+```sh
+  make testacc PKG=<service-name> TESTARGS='-run=TestAcc<service-name><resource-name>_List_'
+```
+
 ## Troubleshooting
 
 ### Prerequisites Issues
