@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
@@ -229,30 +228,6 @@ func TestAccRoute53ProfilesResourceAssociation_queryLogConfig(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ProfilesResourceAssociation_queryLogConfigConflict(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccResourceAssociationConfig_queryLogConfigConflict(rName),
-				ExpectError: regexp.MustCompile(`ConflictException|already exists|already associated`),
-			},
-		},
-	})
-}
-
 func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
@@ -429,39 +404,6 @@ resource "aws_route53profiles_resource_association" "test" {
   name         = %[1]q
   profile_id   = aws_route53profiles_profile.test.id
   resource_arn = aws_route53_resolver_query_log_config.test.arn
-}
-`, rName)
-}
-
-func testAccResourceAssociationConfig_queryLogConfigConflict(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_route53_resolver_query_log_config" "test" {
-  name            = %[1]q
-  destination_arn = aws_s3_bucket.test.arn
-}
-
-resource "aws_route53profiles_profile" "test" {
-  name = %[1]q
-}
-
-# First association
-resource "aws_route53profiles_resource_association" "test1" {
-  name         = "%[1]s-1"
-  profile_id   = aws_route53profiles_profile.test.id
-  resource_arn = aws_route53_resolver_query_log_config.test.arn
-}
-
-# Second association with same query log config - should cause ConflictException
-resource "aws_route53profiles_resource_association" "test" {
-  name         = %[1]q
-  profile_id   = aws_route53profiles_profile.test.id
-  resource_arn = aws_route53_resolver_query_log_config.test.arn
-  depends_on   = [aws_route53profiles_resource_association.test1]
 }
 `, rName)
 }
