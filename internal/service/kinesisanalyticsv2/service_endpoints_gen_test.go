@@ -366,18 +366,16 @@ func expectDefaultFIPSEndpoint(ctx context.Context, t *testing.T, region string)
 	hostname := endpoint.Hostname()
 
 	// Use a short timeout for DNS lookup to avoid hanging in restricted network environments (e.g., GHA)
-	lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	lookupCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	resolver := &net.Resolver{}
 	_, err = resolver.LookupHost(lookupCtx, hostname)
-	if dnsErr, ok := errs.As[*net.DNSError](err); ok && dnsErr.IsNotFound {
+	if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
+		return expectDefaultEndpoint(ctx, t, region)
+	} else if err != nil && errors.Is(err, context.DeadlineExceeded) {
 		return expectDefaultEndpoint(ctx, t, region)
 	} else if err != nil {
-		// Treat timeout as "not found" since FIPS endpoints may not be resolvable in all environments
-		if lookupCtx.Err() == context.DeadlineExceeded {
-			return expectDefaultEndpoint(ctx, t, region)
-		}
 		t.Fatalf("looking up Kinesis Analytics V2 endpoint %q: %s", hostname, err)
 	}
 
