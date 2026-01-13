@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -269,10 +268,10 @@ func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func waitDevEnvironmentCreated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStarting),
 		Target:                    enum.Slice(types.DevEnvironmentStatusRunning, types.DevEnvironmentStatusStopped, types.DevEnvironmentStatusStopping),
-		Refresh:                   statusDevEnvironment(ctx, conn, id, spaceName, projectName),
+		Refresh:                   statusDevEnvironment(conn, id, spaceName, projectName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -287,10 +286,10 @@ func waitDevEnvironmentCreated(ctx context.Context, conn *codecatalyst.Client, i
 }
 
 func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string, timeout time.Duration) (*codecatalyst.GetDevEnvironmentOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.DevEnvironmentStatusStopping, types.DevEnvironmentStatusPending, types.DevEnvironmentStatusStopped),
 		Target:                    enum.Slice(types.DevEnvironmentStatusRunning),
-		Refresh:                   statusDevEnvironment(ctx, conn, id, spaceName, projectName),
+		Refresh:                   statusDevEnvironment(conn, id, spaceName, projectName),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -304,8 +303,8 @@ func waitDevEnvironmentUpdated(ctx context.Context, conn *codecatalyst.Client, i
 	return nil, err
 }
 
-func statusDevEnvironment(ctx context.Context, conn *codecatalyst.Client, id string, spaceName *string, projectName *string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDevEnvironment(conn *codecatalyst.Client, id string, spaceName *string, projectName *string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findDevEnvironmentByID(ctx, conn, id, spaceName, projectName)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -328,9 +327,8 @@ func findDevEnvironmentByID(ctx context.Context, conn *codecatalyst.Client, id s
 
 	out, err := conn.GetDevEnvironment(ctx, in)
 	if errs.IsA[*types.AccessDeniedException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {
