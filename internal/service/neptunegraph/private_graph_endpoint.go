@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptunegraph
@@ -214,10 +214,6 @@ func (r *resourcePrivateGraphEndpoint) Delete(ctx context.Context, req resource.
 	}
 }
 
-// func (r *resourcePrivateGraphEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-// }
-
 func findPrivateGraphEndpointByID(ctx context.Context, conn *neptunegraph.Client, id string) (*neptunegraph.GetPrivateGraphEndpointOutput, error) {
 	parts := strings.Split(id, "_")
 	if len(parts) != 2 {
@@ -290,6 +286,7 @@ func waitPrivateGraphEndpointDeleted(ctx context.Context, conn *neptunegraph.Cli
 }
 
 type resourcePrivateGraphEndpointModel struct {
+	framework.WithRegionModel
 	GraphIdentifier                types.String        `tfsdk:"graph_identifier"`
 	Id                             types.String        `tfsdk:"id"`
 	PrivateGraphEndpointIdentifier types.String        `tfsdk:"private_graph_endpoint_identifier"`
