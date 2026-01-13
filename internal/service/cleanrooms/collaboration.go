@@ -305,10 +305,10 @@ func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetCollaborationOutput, error) {
-	in := cleanrooms.GetCollaborationInput{
+	input := cleanrooms.GetCollaborationInput{
 		CollaborationIdentifier: aws.String(id),
 	}
-	out, err := conn.GetCollaboration(ctx, &in)
+	out, err := conn.GetCollaboration(ctx, &input)
 
 	if errs.IsA[*types.AccessDeniedException](err) {
 		//We throw Access Denied for NFE in Cleanrooms for collaborations since they are cross account
