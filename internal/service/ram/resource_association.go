@@ -256,7 +256,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	return nil, err
 }
 
-func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) (*awstypes.ResourceShareAssociation, error) {
+func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) (*awstypes.ResourceShareAssociation, error) { //nolint:unparam
 	const (
 		timeout = 5 * time.Minute
 	)

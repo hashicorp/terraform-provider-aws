@@ -212,7 +212,7 @@ func statusPrincipalAssociation(ctx context.Context, conn *ram.Client, resourceS
 	}
 }
 
-func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) (*awstypes.ResourceShareAssociation, error) {
+func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) (*awstypes.ResourceShareAssociation, error) { //nolint:unparam
 	const (
 		timeout = 3 * time.Minute
 	)
@@ -235,7 +235,7 @@ func waitPrincipalAssociationCreated(ctx context.Context, conn *ram.Client, reso
 	return nil, err
 }
 
-func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) (*awstypes.ResourceShareAssociation, error) {
+func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) (*awstypes.ResourceShareAssociation, error) { //nolint:unparam
 	const (
 		timeout = 3 * time.Minute
 	)
