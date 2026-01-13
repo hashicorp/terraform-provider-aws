@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -9,27 +9,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_ssoadmin_application_assignment", name="Application Assignment")
-func newResourceApplicationAssignment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceApplicationAssignment{}, nil
+func newApplicationAssignmentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &applicationAssignmentResource{}, nil
 }
 
 const (
@@ -38,15 +37,17 @@ const (
 	applicationAssignmentIDPartCount = 3
 )
 
-type resourceApplicationAssignment struct {
-	framework.ResourceWithConfigure
+type applicationAssignmentResource struct {
+	framework.ResourceWithModel[applicationAssignmentResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationAssignmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -59,22 +60,20 @@ func (r *resourceApplicationAssignment) Schema(ctx context.Context, req resource
 				},
 			},
 			"principal_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.PrincipalType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.PrincipalType](),
 				},
 			},
 		},
 	}
 }
 
-func (r *resourceApplicationAssignment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var plan resourceApplicationAssignmentData
+	var plan applicationAssignmentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -109,17 +108,17 @@ func (r *resourceApplicationAssignment) Create(ctx context.Context, req resource
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplicationAssignment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationAssignmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAssignmentData
+	var state applicationAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findApplicationAssignmentByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -131,21 +130,21 @@ func (r *resourceApplicationAssignment) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	state.ApplicationARN = flex.StringToFramework(ctx, out.ApplicationArn)
+	state.ApplicationARN = fwtypes.ARNValue(aws.ToString(out.ApplicationArn))
 	state.PrincipalID = flex.StringToFramework(ctx, out.PrincipalId)
-	state.PrincipalType = flex.StringValueToFramework(ctx, out.PrincipalType)
+	state.PrincipalType = fwtypes.StringEnumValue(out.PrincipalType)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplicationAssignment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationAssignmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Np-op update
 }
 
-func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationAssignmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SSOAdminClient(ctx)
 
-	var state resourceApplicationAssignmentData
+	var state applicationAssignmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -170,10 +169,6 @@ func (r *resourceApplicationAssignment) Delete(ctx context.Context, req resource
 	}
 }
 
-func (r *resourceApplicationAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.DescribeApplicationAssignmentOutput, error) {
 	parts, err := intflex.ExpandResourceId(id, applicationAssignmentIDPartCount, false)
 	if err != nil {
@@ -189,7 +184,7 @@ func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, i
 	out, err := conn.DescribeApplicationAssignment(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -199,15 +194,16 @@ func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type resourceApplicationAssignmentData struct {
-	ApplicationARN types.String `tfsdk:"application_arn"`
-	ID             types.String `tfsdk:"id"`
-	PrincipalID    types.String `tfsdk:"principal_id"`
-	PrincipalType  types.String `tfsdk:"principal_type"`
+type applicationAssignmentResourceModel struct {
+	framework.WithRegionModel
+	ApplicationARN fwtypes.ARN                                `tfsdk:"application_arn"`
+	ID             types.String                               `tfsdk:"id"`
+	PrincipalID    types.String                               `tfsdk:"principal_id"`
+	PrincipalType  fwtypes.StringEnum[awstypes.PrincipalType] `tfsdk:"principal_type"`
 }

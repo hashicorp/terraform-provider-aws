@@ -209,14 +209,16 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination`](#destination).
 * `scrape_configuration` - (Required) The configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
 * `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source`](#source).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
 
 * `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
@@ -287,4 +289,4 @@ For example:
 % terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-308e030908df024c72c6f06b9a8460963e8ab284b9de650ff8947d41912ef1d6 -->
+<!-- cache-key: cdktf-0.20.8 input-bdaccd3a8571f760fbda16edec6902d8498def23e6fa608c3e5c7ac6df0e6e38 -->

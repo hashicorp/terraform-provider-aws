@@ -14,8 +14,8 @@ Manages an AWS Config Aggregate Authorization
 
 ```terraform
 resource "aws_config_aggregate_authorization" "example" {
-  account_id = "123456789012"
-  region     = "eu-west-2"
+  account_id            = "123456789012"
+  authorized_aws_region = "eu-west-2"
 }
 ```
 
@@ -23,8 +23,9 @@ resource "aws_config_aggregate_authorization" "example" {
 
 This resource supports the following arguments:
 
-* `account_id` - (Required) Account ID
-* `region` - (Required) Region
+* `account_id` - (Required) Account ID.
+* `authorized_aws_region` - (Optional) The region authorized to collect aggregated data.
+* `region` - (Optional, **Deprecated**) The region authorized to collect aggregated data. Use `authorized_aws_region` instead.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -36,7 +37,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config aggregate authorizations using `account_id:region`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config aggregate authorizations using `account_id:authorized_aws_region`. For example:
 
 ```terraform
 import {
@@ -45,7 +46,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Config aggregate authorizations using `account_id:region`. For example:
+Using `terraform import`, import Config aggregate authorizations using `account_id:authorized_aws_region`. For example:
 
 ```console
 % terraform import aws_config_aggregate_authorization.example 123456789012:us-east-1

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -9,8 +9,8 @@ var (
 	ResourceDashboard                     = resourceDashboard
 	ResourceMetricAlarm                   = resourceMetricAlarm
 	ResourceMetricStream                  = resourceMetricStream
-	ResourceContributorInsightRule        = newResourceContributorInsightRule
-	ResourceContributorManagedInsightRule = newResourceContributorManagedInsightRule
+	ResourceContributorInsightRule        = newContributorInsightRuleResource
+	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
 
 	FindCompositeAlarmByName                                   = findCompositeAlarmByName
 	FindDashboardByName                                        = findDashboardByName

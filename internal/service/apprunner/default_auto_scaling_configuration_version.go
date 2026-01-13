@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner
@@ -17,19 +17,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_apprunner_default_auto_scaling_configuration_version", name="Default AutoScaling Configuration Version")
-func newResourceDefaultAutoScalingConfigurationVersion(context.Context) (resource.ResourceWithConfigure, error) {
+func newDefaultAutoScalingConfigurationVersionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &defaultAutoScalingConfigurationVersionResource{}
 
 	return r, nil
 }
 
 type defaultAutoScalingConfigurationVersionResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[defaultAutoScalingConfigurationVersionResourceModel]
 	framework.WithNoOpDelete
 	framework.WithImportByID
 }
@@ -78,7 +78,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Read(ctx context.Contex
 
 	output, err := findDefaultAutoScalingConfigurationSummary(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -137,6 +137,7 @@ func putDefaultAutoScalingConfiguration(ctx context.Context, conn *apprunner.Cli
 }
 
 type defaultAutoScalingConfigurationVersionResourceModel struct {
+	framework.WithRegionModel
 	AutoScalingConfigurationARN fwtypes.ARN  `tfsdk:"auto_scaling_configuration_arn"`
 	ID                          types.String `tfsdk:"id"`
 }

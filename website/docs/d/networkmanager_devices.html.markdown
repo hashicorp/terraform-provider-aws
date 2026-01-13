@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_devices"
 description: |-
-  Retrieve information about devices.
+  Provides details about existing Network Manager devices.
 ---
 
 # Data Source: aws_networkmanager_devices
 
-Retrieve information about devices.
+Provides details about existing Network Manager devices.
 
 ## Example Usage
 

@@ -1,0 +1,295 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: go-no-smerr-enrichappend-deprecated
+    languages: [go]
+    message: Use smerr.AddEnrich instead of deprecated smerr.EnrichAppend.
+    severity: ERROR
+    pattern: smerr.EnrichAppend($CTX, $DIAGS, $FUNC)
+    fix: smerr.AddEnrich($CTX, $DIAGS, $FUNC)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-sdkdiag-appendfromerr
+    languages: [go]
+    message: Use smerr.Append(ctx, diags, err) instead of sdkdiag.AppendFromErr.
+    severity: ERROR
+    pattern: sdkdiag.AppendFromErr($DIAGS, $ERR)
+    fix: smerr.Append(ctx, $DIAGS, $ERR)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-sdkdiag-appenderrorf
+    languages: [go]
+    message: Use smerr.Append(ctx, diags, err, smerr.ID, ...) instead of sdkdiag.AppendErrorf.
+    severity: ERROR
+    patterns:
+      - pattern: sdkdiag.AppendErrorf($DIAGS, $FMT, $ID, $ERR)
+      - pattern: sdkdiag.AppendErrorf($DIAGS, $FMT, $ERR)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-create-appenddiagerror
+    languages: [go]
+    message: Use smerr.Append(ctx, diags, err, smerr.ID, ...) instead of create.AppendDiagError.
+    severity: ERROR
+    pattern: create.AppendDiagError($DIAGS, ...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-diagnostics-adderror
+    languages: [go]
+    message: Use smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ...) instead of Diagnostics.AddError.
+    severity: ERROR
+    patterns:
+      - pattern: $RESP.Diagnostics.AddError($MSG, $ERR)
+      - pattern: $RESP.Diagnostics.AddError(fmt.Sprintf($FMT, ...), $ERR)
+      - pattern: $RESP.Diagnostics.AddError($MSG, $ERR.Error())
+      - pattern-not-inside: smerr.AddError(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-create-adderror
+    languages: [go]
+    message: Use smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, ...) instead of create.AddError.
+    severity: ERROR
+    pattern: create.AddError(&$RESP.Diagnostics, ...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-direct-diag-adderror
+    languages: [go]
+    message: Use smerr.AddError instead of resp.Diagnostics.AddError (migrate to smarterr/smerr).
+    severity: ERROR
+    patterns:
+      - pattern: $RESP.Diagnostics.AddError($MSG, $ERR)
+      - pattern-not-inside: smerr.AddError(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-direct-diag-appenderrorf
+    languages: [go]
+    message: Use smerr.Append or smerr.EnrichAppend() instead of diag.AppendErrorf (migrate to smarterr/smerr).
+    severity: ERROR
+    pattern: diag.AppendErrorf(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-direct-diag-appendfromerr
+    languages: [go]
+    message: Use smerr.Append() or smerr.EnrichAppend() instead of diag.AppendFromErr (migrate to smarterr/smerr).
+    severity: ERROR
+    pattern: diag.AppendFromErr(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-direct-diag-append
+    languages: [go]
+    message: Use smerr.EnrichAppend() or smerr.EnrichAppendDiagnostic() instead of resp.Diagnostics.Append (migrate to smarterr/smerr).
+    severity: ERROR
+    patterns:
+      - pattern: $RESP.Diagnostics.Append(...)
+      - pattern-not-inside: smerr.EnrichAppend(...)
+      - pattern-not-inside: smerr.EnrichAppendDiagnostic(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-bare-return-err
+    languages: [go]
+    message: Return errors wrapped with smarterr.NewError (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return nil, $ERR
+      - pattern-not-inside: |
+          return nil, smarterr.NewError(...)
+      - pattern-not-inside: |
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return nil, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return nil, $ERR
+          }
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-bare-return-value-err
+    languages: [go]
+    message: Return errors wrapped with smarterr.NewError (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return $VALUE, $ERR
+      - pattern-not: |
+          return $VALUE, nil
+      - pattern-not-inside: |
+          return $VALUE, smarterr.NewError(...)
+      - pattern-not-inside: |
+          func $FUNC(...) (..., diag.Diagnostics) {
+            ...
+            return $VALUE, $ERR
+          }
+      - pattern-not-inside: |
+          smerr.AddEnrich(...)
+          if $DIAGS.HasError() {
+            return $VALUE, $ERR
+          }
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+      exclude:
+        - "*_test.go"
+
+  - id: go-no-bare-assertsinglevalueresult
+    languages: [go]
+    message: Wrap tfresource.AssertSingleValueResult with smarterr.Assert (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return tfresource.AssertSingleValueResult(...)
+      - pattern-not-inside: smarterr.Assert(tfresource.AssertSingleValueResult(...))
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+
+  - id: go-no-fmt-errorf-return
+    languages: [go]
+    message: Use smarterr.NewError(err) instead of fmt.Errorf in helper functions (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return fmt.Errorf($MSG, ..., $ERR)
+      - pattern-not-inside: smarterr.NewError(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+      exclude:
+        - "*_test.go"
+
+  - id: go-no-staterefreshfunc-bare-error
+    languages: [go]
+    message: Use smarterr.NewError(err) instead of bare err in StateRefreshFunc returns (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return nil, "", $ERR
+      - pattern-not: |
+          return nil, "", smarterr.NewError(...)
+      - pattern-not: |
+          return nil, "", nil
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+      exclude:
+        - "*_test.go"
+
+  - id: go-no-unexpected-format-fmt-errorf
+    languages: [go]
+    message: Use smarterr.NewError(fmt.Errorf(...)) instead of bare fmt.Errorf with "unexpected format" (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return ..., fmt.Errorf("...unexpected format...", ...)
+      - pattern-not: |
+          return ..., smarterr.NewError(fmt.Errorf("...unexpected format...", ...))
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+      exclude:
+        - "*_test.go"
+
+  - id: go-no-stdlib-append-diagnostics
+    languages: [go]
+    message: Use smerr.EnrichAppend(ctx, &diags, ...) instead of standard library append with diagnostics (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return append($DIAGS, ...)
+      - pattern-not: |
+          smerr.EnrichAppend(...)
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"
+      exclude:
+        - "*_test.go"
+
+  - id: go-no-bare-empty-result-error
+    languages: [go]
+    message: Wrap tfresource.NewEmptyResultError with smarterr.NewError (migrate to smarterr).
+    severity: ERROR
+    patterns:
+      - pattern: |
+          return nil, tfresource.NewEmptyResultError(...)
+      - pattern-not-inside: smarterr.NewError(tfresource.NewEmptyResultError(...))
+    paths:
+      include:
+        - "/internal/service/appsync/"
+        - "/internal/service/bedrockagentcore/"
+        - "/internal/service/cloudwatch/"
+        - "/internal/service/invoicing/"

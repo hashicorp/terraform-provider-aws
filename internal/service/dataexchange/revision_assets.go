@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange
@@ -34,7 +34,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -42,18 +42,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 // @FrameworkResource("aws_dataexchange_revision_assets", name="Revision Assets")
 // @Tags(identifierAttribute="arn")
+// @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
-// @Testing(noImport=true)
 func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -66,7 +67,7 @@ const (
 )
 
 type revisionAssetsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[revisionAssetsResourceModel]
 	framework.WithTimeouts
 }
 
@@ -687,7 +688,7 @@ func (r *revisionAssetsResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	out, err := findRevisionByID(ctx, conn, state.DataSetID.ValueString(), state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -832,9 +833,15 @@ func (r *revisionAssetsResource) ModifyPlan(ctx context.Context, req resource.Mo
 		}
 
 		if !plan.Comment.Equal(state.Comment) || !plan.Finalized.Equal(state.Finalized) {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), timetypes.NewRFC3339Unknown())...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		} else {
-			resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), state.UpdatedAt)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 	}
 }
@@ -847,7 +854,7 @@ func findRevisionByID(ctx context.Context, conn *dataexchange.Client, dataSetId,
 	output, err := conn.GetRevision(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -894,6 +901,7 @@ func finalizeAsset(ctx context.Context, conn *dataexchange.Client, datasetId, re
 }
 
 type revisionAssetsResourceModel struct {
+	framework.WithRegionModel
 	ARN          types.String                               `tfsdk:"arn"`
 	Assets       fwtypes.SetNestedObjectValueOf[assetModel] `tfsdk:"asset"`
 	Comment      types.String                               `tfsdk:"comment"`
@@ -950,7 +958,7 @@ type kmsKeyToGrantModel struct {
 }
 
 func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, jobID string, timeout time.Duration) (*dataexchange.GetJobOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.StateWaiting, awstypes.StateInProgress),
 		Target:       enum.Slice(awstypes.StateCompleted),
 		Refresh:      statusJob(ctx, conn, jobID),
@@ -986,11 +994,11 @@ func startJob(ctx context.Context, id *string, conn *dataexchange.Client) error 
 	return err
 }
 
-func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) retry.StateRefreshFunc {
+func statusJob(ctx context.Context, conn *dataexchange.Client, jobID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, jobID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1010,7 +1018,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	out, err := conn.GetJob(ctx, &input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError: err,
 			}
 		}
@@ -1019,7 +1027,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -1054,5 +1062,5 @@ func md5Reader(src io.Reader) (string, error) {
 		return "", err
 	}
 
-	return itypes.Base64Encode(h.Sum(nil)), nil
+	return inttypes.Base64Encode(h.Sum(nil)), nil
 }

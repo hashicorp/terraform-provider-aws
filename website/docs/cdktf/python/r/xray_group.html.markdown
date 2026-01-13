@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `group_name` - (Required) The name of the group.
 * `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
 * `insights_configuration` - (Optional) Configuration options for enabling insights.
@@ -61,6 +62,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_xray_group.example
+  identity = {
+    "arn" = "arn:aws:xray:us-west-2:123456789012:group/example-group/AFAEAFE"
+  }
+}
+
+resource "aws_xray_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the X-Ray group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import XRay Groups using the ARN. For example:
 
@@ -85,4 +107,4 @@ Using `terraform import`, import XRay Groups using the ARN. For example:
 % terraform import aws_xray_group.example arn:aws:xray:us-west-2:1234567890:group/example-group/TNGX7SW5U6QY36T4ZMOUA3HVLBYCZTWDIOOXY3CJAXTHSS3YCWUA
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c4d56cef910d164beac1ffe0e0b2bf4f82a3b7cc426d2bf6fc1f277a3c4b8c57 -->
+<!-- cache-key: cdktf-0.20.8 input-291fc629043fa71797d98b289a864a94d1e17b3615e2ab0a0598bc88fbaaceb2 -->

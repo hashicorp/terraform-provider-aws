@@ -61,6 +61,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the service mesh.
 * `meshOwner` - (Optional) AWS account ID of the service mesh's owner.
 
@@ -75,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Service mesh specification. See the [`aws_appmesh_mesh`](/docs/providers/aws/r/appmesh_mesh.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-ba78ffa3ddc16f7a9174784cda3bdc1d6c12594ef33d1054c1dcab860e596496 -->
+<!-- cache-key: cdktf-0.20.8 input-3a18ad9bf7d5c0b46b9eb98c059bc3a993630967b0965d5dfa2cc9efca1af211 -->

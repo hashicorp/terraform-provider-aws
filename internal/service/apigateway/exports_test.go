@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -25,7 +25,7 @@ var (
 	ResourceResource                    = resourceResource
 	ResourceRestAPI                     = resourceRestAPI
 	ResourceRestAPIPolicy               = resourceRestAPIPolicy
-	ResourceRestAPIPut                  = newResourceRestAPIPut
+	ResourceRestAPIPut                  = newRestAPIPutResource
 	ResourceStage                       = resourceStage
 	ResourceUsagePlan                   = resourceUsagePlan
 	ResourceUsagePlanKey                = resourceUsagePlanKey

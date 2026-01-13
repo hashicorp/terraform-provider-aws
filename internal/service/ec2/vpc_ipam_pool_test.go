@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -96,7 +96,7 @@ func TestAccIPAMPool_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -317,7 +317,7 @@ func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -351,7 +351,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 `
@@ -390,7 +390,7 @@ var testAccIPAMPoolConfig_ipv6 = acctest.ConfigCompose(testAccIPAMPoolConfig_bas
 resource "aws_vpc_ipam_pool" "test" {
   address_family        = "ipv6"
   ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
-  locale                = data.aws_region.current.name
+  locale                = data.aws_region.current.region
   publicly_advertisable = false
 }
 `)
@@ -399,7 +399,7 @@ var testAccIPAMPoolConfig_ipv6PublicIPAmazon = acctest.ConfigCompose(testAccIPAM
 resource "aws_vpc_ipam_pool" "test" {
   address_family   = "ipv6"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
-  locale           = data.aws_region.current.name
+  locale           = data.aws_region.current.region
   public_ip_source = "amazon"
   aws_service      = "ec2"
 }
@@ -409,7 +409,7 @@ var testAccIPAMPoolConfig_ipv6Contiguous = acctest.ConfigCompose(testAccIPAMPool
 resource "aws_vpc_ipam_pool" "test" {
   address_family        = "ipv6"
   ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
-  locale                = data.aws_region.current.name
+  locale                = data.aws_region.current.region
   public_ip_source      = "byoip"
   aws_service           = "ec2"
   publicly_advertisable = false
@@ -451,6 +451,6 @@ resource "aws_vpc_ipam_scope" "test" {
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv6"
   ipam_scope_id  = aws_vpc_ipam_scope.test.id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 `)

@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tracker_name` - (Required) Name of the tracker resource.
 
 ## Attribute Reference
@@ -49,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tracker_arn` - ARN for the tracker resource. Used when you need to specify a resource across all AWS.
 * `update_time` - Timestamp for when the tracker resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-1d715a18b3a0c32a57737954fe82e98046643caa783ff781643c2ebb86a4dbff -->
+<!-- cache-key: cdktf-0.20.8 input-4c4d39ee343ad0ecb6eff6915853cc0fe3346b0a1ef7a4755de993c32a67e00c -->

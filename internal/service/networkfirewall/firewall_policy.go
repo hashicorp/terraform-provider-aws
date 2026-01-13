@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -6,6 +6,7 @@ package networkfirewall
 import (
 	"context"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -14,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -142,6 +145,12 @@ func resourceFirewallPolicy() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"deep_threat_inspection": {
+											Type:         nullable.TypeNullableBool,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: nullable.ValidateTypeStringNullableBool,
+										},
 										"override": {
 											Type:     schema.TypeList,
 											MaxItems: 1,
@@ -266,7 +275,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findFirewallPolicyByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -328,7 +337,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidOperationException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(d.Id()),
 		})
@@ -353,7 +362,7 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 	output, err := conn.DescribeFirewallPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -364,7 +373,7 @@ func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input
 	}
 
 	if output == nil || output.FirewallPolicyResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -378,11 +387,11 @@ func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, 
 	return findFirewallPolicy(ctx, conn, input)
 }
 
-func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFirewallPolicyByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -395,7 +404,7 @@ func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn
 }
 
 func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusFirewallPolicy(ctx, conn, arn),
@@ -493,6 +502,11 @@ func expandStatefulRuleGroupReferences(tfList []any) []awstypes.StatefulRuleGrou
 
 		apiObject := awstypes.StatefulRuleGroupReference{}
 
+		if v, ok := tfMap["deep_threat_inspection"]; ok {
+			if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+				apiObject.DeepThreatInspection = aws.Bool(v)
+			}
+		}
 		if v, ok := tfMap["override"].([]any); ok && len(v) > 0 {
 			apiObject.Override = expandStatefulRuleGroupOverride(v)
 		}
@@ -678,6 +692,9 @@ func flattenPolicyStatefulRuleGroupReferences(apiObjects []awstypes.StatefulRule
 			names.AttrResourceARN: aws.ToString(apiObject.ResourceArn),
 		}
 
+		if apiObject.DeepThreatInspection != nil {
+			tfMap["deep_threat_inspection"] = strconv.FormatBool(aws.ToBool(apiObject.DeepThreatInspection))
+		}
 		if apiObject.Override != nil {
 			tfMap["override"] = flattenStatefulRuleGroupOverride(apiObject.Override)
 		}

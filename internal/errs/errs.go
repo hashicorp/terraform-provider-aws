@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package errs
@@ -11,15 +11,6 @@ import (
 // errorMessager is a simple interface for types with ErrorMessage().
 type errorMessager interface {
 	ErrorMessage() string
-}
-
-func AsContains(err error, target any, message string) bool {
-	if errors.As(err, target) {
-		if v, ok := target.(errorMessager); ok && strings.Contains(v.ErrorMessage(), message) {
-			return true
-		}
-	}
-	return false
 }
 
 type ErrorWithErrorMessage interface {

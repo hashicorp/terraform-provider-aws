@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `key_id` - (Required) The ID of the KMS Key to attach the policy.
 * `policy` - (Required) A valid policy JSON document. Although this is a key policy, not an IAM policy, an [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
@@ -94,4 +95,4 @@ Using `terraform import`, import KMS Key Policies using the `key_id`. For exampl
 % terraform import aws_kms_key_policy.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-93175acbae862906327f4f8a607a99ad40bcba6f894b59f1002cd44902d5932d -->
+<!-- cache-key: cdktf-0.20.8 input-5b9bd979325c4637a5829774ad13da385764a35df6b34b06a44a34e70d947b5d -->

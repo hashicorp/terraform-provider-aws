@@ -14,6 +14,8 @@ source (e.g., the "rebuild every time a code change is pushed" option in the Cod
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
@@ -260,6 +262,11 @@ resource "aws_codebuild_project" "project-using-github-app" {
 }
 ```
 
+### Runner Project
+
+While no special configuration is required for `aws_codebuild_project` to create a project as a Runner Project, an `aws_codebuild_webhook` resource with an appropriate `filter_group` is required.
+See the [`aws_codebuild_webhook` resource documentation example](/docs/providers/aws/r/codebuild_webhook.html#for-codebuild-runner-project) for more details.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -273,6 +280,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `auto_retry_limit` - (Optional) Specify a maximum number of additional automatic retries after a failed build.
+  The default is 0.
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as
   `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
@@ -346,6 +356,7 @@ The following arguments are optional:
 
 ### cache
 
+* `cache_namespace` - (Optional) Namespace that determines the scope in which a cache is shared across multiple projects.
 * `location` - (Required when cache type is `S3`) Location where the AWS CodeBuild project stores cached resources. For
   type `S3`, the value must be a valid S3 bucket name/prefix.
 * `modes` - (Required when cache type is `LOCAL`) Specifies settings that AWS CodeBuild uses to store and reuse build
@@ -360,6 +371,7 @@ The following arguments are optional:
   `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, `BUILD_GENERAL1_2XLARGE`, `BUILD_LAMBDA_1GB`,
   `BUILD_LAMBDA_2GB`, `BUILD_LAMBDA_4GB`, `BUILD_LAMBDA_8GB`, `BUILD_LAMBDA_10GB`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+* `docker_server` - (Optional) Configuration block. Detailed below.
 * `fleet` - (Optional) Configuration block. Detailed below.
 * `environment_variable` - (Optional) Configuration block. Detailed below.
 * `image_pull_credentials_type` - (Optional) Type of credentials AWS CodeBuild uses to pull images in your build. Valid
@@ -377,6 +389,11 @@ The following arguments are optional:
   `LINUX_GPU_CONTAINER`, `ARM_CONTAINER`, `WINDOWS_SERVER_2019_CONTAINER`, `WINDOWS_SERVER_2022_CONTAINER`,
   `LINUX_LAMBDA_CONTAINER`, `ARM_LAMBDA_CONTAINER`, `LINUX_EC2`, `ARM_EC2`, `WINDOWS_EC2`, `MAC_ARM`. For additional information, see
   the [CodeBuild User Guide](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html).
+
+#### environment: docker_server
+
+* `compute_type` - (Required) Compute type for the Docker server. Valid values: `BUILD_GENERAL1_SMALL`, `BUILD_GENERAL1_MEDIUM`, `BUILD_GENERAL1_LARGE`, `BUILD_GENERAL1_XLARGE`, and `BUILD_GENERAL1_2XLARGE`.
+* `security_group_ids` - (Optional) List of security group IDs to assign to the Docker server.
 
 #### environment: fleet
 
@@ -576,6 +593,27 @@ This resource exports the following attributes in addition to the arguments abov
   `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_project.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:project/project-name"
+  }
+}
+
+resource "aws_codebuild_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:

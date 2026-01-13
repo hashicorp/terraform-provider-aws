@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -11,14 +11,17 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -359,7 +362,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -457,6 +460,127 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 	})
 }
 
+// Validates that a provisioned product in tainted status properly triggers an update
+// on subsequent applies.
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/42585
+func TestAccServiceCatalogProvisionedProduct_retryTaintedUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+	artifactsDataSourceName := "data.aws_servicecatalog_provisioning_artifacts.product_artifacts"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	initialArtifactID := "provisioning_artifact_details.0.id"
+	newArtifactID := "provisioning_artifact_details.1.id"
+	var v awstypes.ProvisionedProductDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1 - Setup
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, false, false, "original"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, initialArtifactID),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 2 - Trigger a failure, leaving the provisioned product tainted
+			{
+				Config:      testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact(acctest.CtTrue),
+							}),
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+								"use_previous_value": knownvalue.Bool(false),
+								names.AttrValue:      knownvalue.StringExact("updated"),
+							}),
+						})),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("TAINTED")),
+					// Verify state is rolled back to the parameters from the original setup run
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("original"),
+						}),
+					})),
+				},
+			},
+			// Step 3 - Verify an update is planned, even without configuration changes
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, true, "updated"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectError: regexache.MustCompile(`The following resource\(s\) failed to update:`),
+			},
+			// Step 4 - Resolve the failure, verifying an update is completed
+			{
+				Config: testAccProvisionedProductConfig_retryTaintedUpdate(rName, true, false, "updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_id", artifactsDataSourceName, newArtifactID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("AVAILABLE")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provisioning_parameters"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("FailureSimulation"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact(acctest.CtFalse),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey:        knownvalue.StringExact("ExtraParam"),
+							"use_previous_value": knownvalue.Bool(false),
+							names.AttrValue:      knownvalue.StringExact("updated"),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
@@ -466,13 +590,9 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			input := &servicecatalog.DescribeProvisionedProductInput{
-				Id:             aws.String(rs.Primary.ID),
-				AcceptLanguage: aws.String(rs.Primary.Attributes["accept_language"]),
-			}
-			_, err := conn.DescribeProvisionedProduct(ctx, input)
+			_, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -480,29 +600,29 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("Service Catalog Provisioned Product (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("Service Catalog Provisioned Product %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string, pprod *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(ctx context.Context, n string, v *awstypes.ProvisionedProductDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-		out, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
+		output, err := tfservicecatalog.FindProvisionedProductByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["accept_language"])
+
 		if err != nil {
-			return fmt.Errorf("describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		*pprod = *out.ProvisionedProductDetail
+		*v = *output.ProvisionedProductDetail
 
 		return nil
 	}
@@ -844,7 +964,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
   stack_set_provisioning_preferences {
     accounts                = [data.aws_caller_identity.current.account_id]
-    regions                 = [data.aws_region.current.name]
+    regions                 = [data.aws_region.current.region]
     failure_tolerance_count = %[3]d
     max_concurrency_count   = %[4]d
   }
@@ -987,4 +1107,72 @@ resource "aws_s3_bucket" "conflict" {
   bucket = %[2]q
 }
 `, rName, conflictingBucketName, tagValue))
+}
+
+func testAccProvisionedProductConfig_retryTaintedUpdate(rName string, useNewVersion bool, simulateFailure bool, extraParam string) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedProductPortfolioBaseConfig(rName),
+		fmt.Sprintf(`
+locals {
+  initial_provisioning_artifact = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[0]
+  new_provisioning_artifact     = data.aws_servicecatalog_provisioning_artifacts.product_artifacts.provisioning_artifact_details[1]
+}
+
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                     = %[1]q
+  product_id               = aws_servicecatalog_product.test.id
+  provisioning_artifact_id = %[2]t ? local.new_provisioning_artifact.id : local.initial_provisioning_artifact.id
+
+  provisioning_parameters {
+    key   = "FailureSimulation"
+    value = "%[3]t"
+  }
+
+  provisioning_parameters {
+    key   = "ExtraParam"
+    value = %[4]q
+  }
+}
+
+resource "aws_servicecatalog_product" "test" {
+  description = %[1]q
+  name        = %[1]q
+  owner       = "test"
+  type        = "CLOUD_FORMATION_TEMPLATE"
+
+  provisioning_artifact_parameters {
+    name         = "%[1]s - Initial"
+    description  = "Initial"
+    template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+    type         = "CLOUD_FORMATION_TEMPLATE"
+  }
+}
+
+resource "aws_servicecatalog_provisioning_artifact" "new_version" {
+  product_id = aws_servicecatalog_product.test.id
+
+  name         = "%[1]s - New"
+  description  = "New"
+  template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  type         = "CLOUD_FORMATION_TEMPLATE"
+}
+
+data "aws_servicecatalog_provisioning_artifacts" "product_artifacts" {
+  product_id = aws_servicecatalog_product.test.id
+
+  depends_on = [aws_servicecatalog_provisioning_artifact.new_version]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "product_template.yaml"
+
+  source = "${path.module}/testdata/retry-tainted-update/product_template.yaml"
+}
+`, rName, useNewVersion, simulateFailure, extraParam))
 }

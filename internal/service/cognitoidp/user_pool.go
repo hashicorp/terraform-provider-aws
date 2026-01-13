@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -395,7 +396,6 @@ func resourceUserPool() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
@@ -860,7 +860,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.UserPoolTier = v
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
 
@@ -880,7 +880,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any))
 		}
 
-		if v := d.Get("email_mfa_configuration").([]any); len(v) > 0 && v[0] != nil {
+		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 {
 			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
 		}
 
@@ -898,7 +898,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -916,7 +916,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	userPool, err := findUserPoolByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Pool %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1046,7 +1046,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -1069,6 +1069,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"email_verification_message",
 		"email_verification_subject",
 		"lambda_config",
+		names.AttrName,
 		"password_policy",
 		"sign_in_policy",
 		"sms_authentication_message",
@@ -1152,6 +1153,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
 		}
 
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("password_policy"); ok {
 			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				passwordPolicy := expandPasswordPolicyType(v)
@@ -1197,7 +1202,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
-		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 		}
 
@@ -1222,7 +1227,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateUserPool(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1309,7 +1314,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	output, err := conn.DescribeUserPool(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1320,7 +1325,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	}
 
 	if output == nil || output.UserPool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserPool, nil
@@ -1334,7 +1339,7 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	output, err := conn.GetUserPoolMfaConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1345,15 +1350,19 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
-	if len(tfList) == 0 || tfList[0] == nil {
+	if len(tfList) == 0 {
 		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
 	}
 
 	tfMap := tfList[0].(map[string]any)
@@ -1849,7 +1858,7 @@ func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType
 
 	apiObject := &awstypes.UserPoolAddOnsType{}
 
-	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
 	}
 

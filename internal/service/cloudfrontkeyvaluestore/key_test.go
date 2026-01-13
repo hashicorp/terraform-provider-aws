@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfrontkeyvaluestore_test
@@ -11,11 +11,14 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,11 +42,15 @@ func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// Add this check here until annotations can support comma
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{key_value_store_arn},{key}"),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -109,7 +116,7 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value1),
@@ -125,7 +132,7 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", "aws_cloudfront_key_value_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value2),
@@ -154,7 +161,7 @@ func TestAccCloudFrontKeyValueStoreKey_disappears(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfrontkeyvaluestore.ResourceKey, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfrontkeyvaluestore.ResourceKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +180,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes[names.AttrKey])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -205,14 +212,14 @@ func testAccCheckKeyExists(ctx context.Context, n string) resource.TestCheckFunc
 
 func testAccKeyConfig_basic(rName, value string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudfront_key_value_store" "test" {
-  name = %[1]q
-}
-
 resource "aws_cloudfrontkeyvaluestore_key" "test" {
   key                 = %[1]q
   key_value_store_arn = aws_cloudfront_key_value_store.test.arn
   value               = %[2]q
+}
+
+resource "aws_cloudfront_key_value_store" "test" {
+  name = %[1]q
 }
 `, rName, value)
 }
@@ -221,19 +228,19 @@ func testAccKeyConfig_mutex(rNames []string, rName, value string) string {
 	rNameJson, _ := json.Marshal(rNames)
 	rNameString := string(rNameJson)
 	return fmt.Sprintf(`
-locals {
-  key_list = %[1]s
+resource "aws_cloudfrontkeyvaluestore_key" "test" {
+  count               = length(local.key_list)
+  key                 = local.key_list[count.index]
+  key_value_store_arn = aws_cloudfront_key_value_store.test.arn
+  value               = %[3]q
 }
 
 resource "aws_cloudfront_key_value_store" "test" {
   name = %[2]q
 }
 
-resource "aws_cloudfrontkeyvaluestore_key" "test" {
-  count               = length(local.key_list)
-  key                 = local.key_list[count.index]
-  key_value_store_arn = aws_cloudfront_key_value_store.test.arn
-  value               = %[3]q
+locals {
+  key_list = %[1]s
 }
 `, rNameString, rName, value)
 }

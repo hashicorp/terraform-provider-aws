@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -214,7 +214,7 @@ func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfdatasync.FindAgentByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -323,11 +323,14 @@ resource "aws_security_group" "test" {
 resource "aws_instance" "test" {
   depends_on = [aws_internet_gateway.test]
 
-  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  ami                    = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids = [aws_security_group.test.id]
+  subnet_id              = aws_subnet.test[0].id
+
+  # The Instance must have a public IP address because the aws_datasync_agent retrieves
+  # the activation key by making an HTTP request to the instance
   associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -392,7 +395,7 @@ resource "aws_datasync_agent" "test" {
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
-  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
+  service_name       = "com.amazonaws.${data.aws_region.current.region}.datasync"
   vpc_id             = aws_vpc.test.id
   security_group_ids = [aws_security_group.test.id]
   subnet_ids         = [aws_subnet.test[0].id]

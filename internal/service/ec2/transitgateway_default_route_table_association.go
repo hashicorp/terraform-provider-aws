@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func newTransitGatewayDefaultRouteTableAssociationResource(_ context.Context) (r
 }
 
 type transitGatewayDefaultRouteTableAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[transitGatewayDefaultRouteTableAssociationResourceModel]
 	framework.WithTimeouts
 }
 
@@ -128,7 +128,7 @@ func (r *transitGatewayDefaultRouteTableAssociationResource) Read(ctx context.Co
 
 	tgw, err := findTransitGatewayByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -218,6 +218,7 @@ func (r *transitGatewayDefaultRouteTableAssociationResource) Delete(ctx context.
 }
 
 type transitGatewayDefaultRouteTableAssociationResourceModel struct {
+	framework.WithRegionModel
 	ID                          types.String   `tfsdk:"id"`
 	OriginalDefaultRouteTableID types.String   `tfsdk:"original_default_route_table_id"`
 	RouteTableID                types.String   `tfsdk:"transit_gateway_route_table_id"`

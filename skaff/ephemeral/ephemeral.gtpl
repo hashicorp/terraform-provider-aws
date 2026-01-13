@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}
@@ -64,16 +64,16 @@ import (
 
 // Function annotations are used for ephemeral registration to the Provider. DO NOT EDIT.
 // @EphemeralResource("{{ .ProviderResourceName }}", name="{{ .HumanEphemeralResourceName }}")
-func newEphemeral{{ .EphemeralResource }}(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeral{{ .EphemeralResource }}{}, nil
+func new{{ .EphemeralResource }}EphemeralResource(context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &{{ .EphemeralResourceLowerCamel }}EphemeralResource{}, nil
 }
 
 const (
-	EPName{{ .EphemeralResource }} = "{{ .HumanEphemeralResourceName }} Ephemeral Resource"
+	ERName{{ .EphemeralResource }} = "{{ .HumanEphemeralResourceName }} Ephemeral Resource"
 )
 
-type ephemeral{{ .EphemeralResource }} struct {
-	framework.EphemeralResourceWithConfigure
+type {{ .EphemeralResourceLowerCamel }}EphemeralResource struct {
+	framework.EphemeralResourceWithModel[{{ .EphemeralResourceLowerCamel }}EphemeralResourceModel]
 }
 
 {{ if .IncludeComments }}
@@ -101,7 +101,7 @@ type ephemeral{{ .EphemeralResource }} struct {
 // For more about schema options, visit
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 {{- end }}
-func (e *ephemeral{{ .EphemeralResource }}) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
+func (e *{{ .EphemeralResourceLowerCamel }}EphemeralResource) Schema(ctx context.Context, req ephemeral.SchemaRequest, resp *ephemeral.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -146,7 +146,7 @@ func (e *ephemeral{{ .EphemeralResource }}) Schema(ctx context.Context, req ephe
 {{- if .IncludeComments }}
 // TIP: ==== ASSIGN CRUD METHODS ====
 {{- end }}
-func (e *ephemeral{{ .EphemeralResource }}) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
+func (e *{{ .EphemeralResourceLowerCamel }}EphemeralResource) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
 	{{- if .IncludeComments }}
 	// TIP: ==== EPHEMERAL RESOURCE OPEN ====
 	// Generally, the Open function should do the following things. Make
@@ -167,7 +167,7 @@ func (e *ephemeral{{ .EphemeralResource }}) Open(ctx context.Context, req epheme
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}
-	var data ephemeral{{ .EphemeralResource }}Model
+	var data {{ .EphemeralResourceLowerCamel }}EphemeralResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -217,7 +217,8 @@ func (e *ephemeral{{ .EphemeralResource }}) Open(ctx context.Context, req epheme
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 {{- end }}
-type ephemeral{{ .EphemeralResource }}Model struct {
+type {{ .EphemeralResourceLowerCamel }}EphemeralResourceModel struct {
+	framework.WithRegionModel
 	ARN             types.String                                          `tfsdk:"arn"`
 	ComplexArgument fwtypes.ListNestedObjectValueOf[complexArgumentModel] `tfsdk:"complex_argument"`
 	Description     types.String                                          `tfsdk:"description"`

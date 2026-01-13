@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -401,13 +401,14 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (any, error) {
+	image, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Image, error) {
 		return findImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 AMI %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -416,8 +417,6 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMI (%s): %s", d.Id(), err)
 	}
-
-	image := outputRaw.(*awstypes.Image)
 
 	if image.State == awstypes.ImageStatePending {
 		// This could happen if a user manually adds an image we didn't create
@@ -433,13 +432,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	}
 
 	d.Set("architecture", image.Architecture)
-	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-		Service:   names.EC2,
-	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	d.Set("boot_mode", image.BootMode)
 	d.Set(names.AttrDescription, image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
@@ -572,13 +565,15 @@ func updateDescription(ctx context.Context, conn *ec2.Client, id string, descrip
 	}
 
 	_, err := conn.ModifyImageAttribute(ctx, &input)
+
 	if err != nil {
-		return fmt.Errorf("updating description: %s", err)
+		return fmt.Errorf("updating description: %w", err)
 	}
 
 	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+
 	if err != nil {
-		return fmt.Errorf("updating description: waiting for completion: %s", err)
+		return fmt.Errorf("updating description: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -820,10 +815,10 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []awstypes.
 const imageDeprecationPropagationTimeout = 2 * time.Minute
 
 func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.Client, imageID, expectedValue string) error {
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -847,10 +842,10 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 	}
 	expected = expected.Round(time.Minute)
 
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -878,10 +873,10 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 }
 
 func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, imageID string) error {
-	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -896,4 +891,7 @@ func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, ima
 			MinTimeout: amiRetryMinTimeout,
 		},
 	)
+}
+func amiARN(ctx context.Context, c *conns.AWSClient, imageID string) string {
+	return c.RegionalARNNoAccount(ctx, names.EC2, "image/"+imageID)
 }

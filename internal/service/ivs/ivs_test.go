@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs_test
@@ -18,6 +18,7 @@ func TestAccIVS_serial(t *testing.T) {
 			"update":             testAccPlaybackKeyPair_update,
 			"tags":               testAccPlaybackKeyPair_tags,
 			acctest.CtDisappears: testAccPlaybackKeyPair_disappears,
+			"identity":           testAccIVSPlaybackKeyPair_IdentitySerial,
 		},
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,7 +39,7 @@ func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWi
 }
 
 type instanceMetadataDefaultsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[instanceMetadataDefaultsResourceModel]
 }
 
 func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -134,10 +135,10 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 	output, err := findInstanceMetadataDefaults(ctx, conn)
 
 	switch {
-	case err == nil && itypes.IsZero(output):
-		err = tfresource.NewEmptyResultError(nil)
+	case err == nil && inttypes.IsZero(output):
+		err = tfresource.NewEmptyResultError()
 		fallthrough
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -216,22 +217,8 @@ func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request r
 	}
 }
 
-func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
-	input := ec2.GetInstanceMetadataDefaultsInput{}
-	output, err := conn.GetInstanceMetadataDefaults(ctx, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AccountLevel == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AccountLevel, nil
-}
-
 type instanceMetadataDefaultsResourceModel struct {
+	framework.WithRegionModel
 	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`
 	HttpPutResponseHopLimit types.Int64                                                       `tfsdk:"http_put_response_hop_limit"`
 	HttpTokens              fwtypes.StringEnum[awstypes.MetadataDefaultHttpTokensState]       `tfsdk:"http_tokens"`

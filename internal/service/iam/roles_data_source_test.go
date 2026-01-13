@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -128,7 +128,9 @@ data "aws_iam_roles" "test" {}
 
 func testAccRolesDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -141,7 +143,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -162,7 +164,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -175,7 +179,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -201,7 +205,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, rIndex string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -214,7 +220,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""

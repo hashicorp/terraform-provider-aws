@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the approval rule template. This needs to be less than 100 characters.
 
 ## Attribute Reference
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `lastModifiedUser` - ARN of the user who made the most recent changes to the approval rule template.
 * `ruleContentSha256` - SHA-256 hash signature for the content of the approval rule template.
 
-<!-- cache-key: cdktf-0.20.8 input-98231bebffea86eca15b51adc087fc2f29b27084e6d362ae00eb79cfb0b83130 -->
+<!-- cache-key: cdktf-0.20.8 input-4298d2bc6e292c502c08739c8b2e9961f4bf7c7a5e25c4c627d7b4ddf0a3a5cb -->

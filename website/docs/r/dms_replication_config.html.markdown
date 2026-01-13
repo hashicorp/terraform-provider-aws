@@ -42,6 +42,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `compute_config` - (Required) Configuration block for provisioning an DMS Serverless replication.
 * `start_replication` - (Optional) Whether to run or stop the serverless replication, default is false.
 * `replication_config_identifier` - (Required) Unique identifier that you want to use to create the config.
@@ -88,6 +89,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `60m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_dms_replication_config.example
+  identity = {
+    "arn" = "arn:aws:dms:us-east-1:123456789012:replication-config:example-config"
+  }
+}
+
+resource "aws_dms_replication_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the DMS replication configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication configs using the `arn`. For example:
 

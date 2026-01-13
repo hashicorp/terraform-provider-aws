@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,8 +41,7 @@ func newGuardrailVersionResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type guardrailVersionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[guardrailVersionResourceModel]
+	framework.ResourceWithModel[guardrailVersionResourceModel]
 	framework.WithTimeouts
 }
 
@@ -129,7 +128,7 @@ func (r *guardrailVersionResource) Read(ctx context.Context, request resource.Re
 
 	output, err := findGuardrailByTwoPartKey(ctx, conn, data.GuardrailARN.ValueString(), data.Version.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -185,7 +184,10 @@ func (r *guardrailVersionResource) Delete(ctx context.Context, request resource.
 }
 
 func (r *guardrailVersionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts, err := flex.ExpandResourceId(request.ID, guardrailIDParts, false)
+	const (
+		guardrailVersionIDParts = 2
+	)
+	parts, err := flex.ExpandResourceId(request.ID, guardrailVersionIDParts, false)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Unexpected Import Identifier",
@@ -199,6 +201,7 @@ func (r *guardrailVersionResource) ImportState(ctx context.Context, request reso
 }
 
 type guardrailVersionResourceModel struct {
+	framework.WithRegionModel
 	Description  types.String   `tfsdk:"description"`
 	GuardrailARN fwtypes.ARN    `tfsdk:"guardrail_arn"`
 	SkipDestroy  types.Bool     `tfsdk:"skip_destroy"`

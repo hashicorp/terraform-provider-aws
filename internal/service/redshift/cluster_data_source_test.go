@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,9 +63,9 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	subnetGroupResourceName := "aws_redshift_subnet_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -88,9 +87,9 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	bucketResourceName := "aws_s3_bucket.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -100,7 +99,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucketName, bucketResourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrS3KeyPrefix, "cluster-logging/"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrS3KeyPrefix, "aws_redshift_logging.test", names.AttrS3KeyPrefix),
 				),
 			},
 		},
@@ -111,9 +110,9 @@ func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testi
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -132,9 +131,9 @@ func TestAccRedshiftClusterDataSource_multiAZEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	resourceName := "aws_redshift_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -157,7 +156,7 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_username     = "foo"
   master_password     = "Password1"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   cluster_type        = "single-node"
   skip_final_snapshot = true
 }
@@ -190,7 +189,7 @@ resource "aws_redshift_cluster" "test" {
   database_name             = "testdb"
   master_username           = "foo"
   master_password           = "Password1"
-  node_type                 = "dc2.large"
+  node_type                 = "ra3.large"
   cluster_type              = "multi-node"
   number_of_nodes           = 2
   publicly_accessible       = false
@@ -247,18 +246,20 @@ resource "aws_redshift_cluster" "test" {
   database_name       = "testdb"
   master_password     = "Password1"
   master_username     = "foo"
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
+}
 
-  logging {
-    bucket_name   = aws_s3_bucket.test.id
-    enable        = true
-    s3_key_prefix = "cluster-logging/"
-  }
+resource "aws_redshift_logging" "test" {
+  cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+  bucket_name        = aws_s3_bucket.test.bucket
+  s3_key_prefix      = "cluster-logging/"
 }
 
 data "aws_redshift_cluster" "test" {
   cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+
+  depends_on = [aws_redshift_logging.test]
 }
 `, rName)
 }
@@ -288,7 +289,9 @@ data "aws_redshift_cluster" "test" {
 func testAccClusterDataSourceConfig_multiAZEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {

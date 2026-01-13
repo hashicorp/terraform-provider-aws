@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -23,32 +23,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_namespace", name="Namespace")
-func newResourceNamespace(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceNamespace{}, nil
+func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &namespaceResource{}, nil
 }
 
-const (
-	resNameNamespace = "Namespace"
-)
-
-type resourceNamespace struct {
-	framework.ResourceWithConfigure
+type namespaceResource struct {
+	framework.ResourceWithModel[namespaceResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *namespaceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -87,154 +85,150 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *namespaceResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data namespaceResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan resourceNamespaceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	input := s3tables.CreateNamespaceInput{
+		Namespace:      []string{namespace},
+		TableBucketARN: aws.String(tableBucketARN),
 	}
 
-	var input s3tables.CreateNamespaceInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	input.Namespace = []string{plan.Namespace.ValueString()}
+	_, err := conn.CreateNamespace(ctx, &input)
 
-	out, err := conn.CreateNamespace(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Namespace (%s)", namespace), err.Error())
+
 		return
 	}
 
-	namespace, err := findNamespace(ctx, conn, plan.TableBucketARN.ValueString(), out.Namespace[0])
+	output, err := findNamespaceByTwoPartKey(ctx, conn, tableBucketARN, namespace)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameNamespace, plan.Namespace.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Namespace (%s)", namespace), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, namespace, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	plan.Namespace = types.StringValue(out.Namespace[0])
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *namespaceResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data namespaceResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state resourceNamespaceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	output, err := findNamespaceByTwoPartKey(ctx, conn, tableBucketARN, namespace)
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := findNamespace(ctx, conn, state.TableBucketARN.ValueString(), state.Namespace.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameNamespace, state.Namespace.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Namespace (%s)", namespace), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var state resourceNamespaceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *namespaceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data namespaceResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().S3TablesClient(ctx)
+
+	namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.DeleteNamespaceInput{
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+	_, err := conn.DeleteNamespace(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteNamespace(ctx, &input)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Tables Namespace (%s)", namespace), err.Error())
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, resNameNamespace, state.Namespace.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceNamespace) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	identifier, err := parseNamespaceIdentifier(req.ID)
+func (r *namespaceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	identifier, err := parseNamespaceIdentifier(request.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Invalid Import ID",
 			"Import IDs for S3 Tables Namespaces must use the format <table bucket ARN>"+namespaceIDSeparator+"<namespace>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
+				fmt.Sprintf("Had %q", request.ID),
 		)
 		return
 	}
 
-	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
+	identifier.PopulateState(ctx, &response.State, &response.Diagnostics)
 }
 
-func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name string) (*s3tables.GetNamespaceOutput, error) {
-	in := s3tables.GetNamespaceInput{
-		Namespace:      aws.String(name),
-		TableBucketARN: aws.String(bucketARN),
+func findNamespaceByTwoPartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace string) (*s3tables.GetNamespaceOutput, error) {
+	input := s3tables.GetNamespaceInput{
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
 	}
 
-	out, err := conn.GetNamespace(ctx, &in)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findNamespace(ctx, conn, &input)
+}
 
+func findNamespace(ctx context.Context, conn *s3tables.Client, input *s3tables.GetNamespaceInput) (*s3tables.GetNamespaceOutput, error) {
+	output, err := conn.GetNamespace(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourceNamespaceModel struct {
+type namespaceResourceModel struct {
+	framework.WithRegionModel
 	CreatedAt      timetypes.RFC3339 `tfsdk:"created_at"`
 	CreatedBy      types.String      `tfsdk:"created_by"`
 	Namespace      types.String      `tfsdk:"namespace" autoflex:"-"`
@@ -244,9 +238,9 @@ type resourceNamespaceModel struct {
 
 var namespaceNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type namespaceIdentifier struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/aws/aws-sdk-go-v2/service/signer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,7 +30,7 @@ import (
 
 // @SDKResource("aws_signer_signing_profile", name="Signing Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceSigningProfile() *schema.Resource {
+func resourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningProfileCreate,
 		ReadWithoutTimeout:   resourceSigningProfileRead,
@@ -128,6 +130,14 @@ func ResourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
+			"signing_parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -173,6 +183,10 @@ func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		input.SigningMaterial = expandSigningMaterial(v)
 	}
 
+	if v, ok := d.Get("signing_parameters").(map[string]any); ok && len(v) > 0 {
+		input.SigningParameters = flex.ExpandStringValueMap(v)
+	}
+
 	_, err := conn.PutSigningProfile(ctx, input)
 
 	if err != nil {
@@ -190,7 +204,7 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findSigningProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -221,6 +235,11 @@ func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if output.SigningMaterial != nil {
 		if err := d.Set("signing_material", flattenSigningMaterial(output.SigningMaterial)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
+	}
+	if output.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(output.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
 		}
 	}
 	d.Set(names.AttrStatus, output.Status)
@@ -326,7 +345,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	output, err := conn.GetSigningProfile(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			LastError:   err,
 		}
@@ -337,11 +356,11 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}

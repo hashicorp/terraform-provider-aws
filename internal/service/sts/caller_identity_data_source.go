@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sts
@@ -25,7 +25,7 @@ func newCallerIdentityDataSource(context.Context) (datasource.DataSourceWithConf
 }
 
 type callerIdentityDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[callerIdentityDataSourceModel]
 }
 
 func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -49,7 +49,7 @@ func (d *callerIdentityDataSource) Schema(ctx context.Context, request datasourc
 }
 
 func (d *callerIdentityDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data CallerIdentityDataSourceModel
+	var data callerIdentityDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -84,13 +84,13 @@ func findCallerIdentity(ctx context.Context, conn *sts.Client) (*sts.GetCallerId
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-type CallerIdentityDataSourceModel struct {
+type callerIdentityDataSourceModel struct {
 	AccountID types.String `tfsdk:"account_id"`
 	ARN       types.String `tfsdk:"arn"`
 	ID        types.String `tfsdk:"id"`

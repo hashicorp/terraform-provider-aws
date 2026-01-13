@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -49,6 +49,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"advancedEventSelector":       testAccTrail_advancedEventSelector,
 			acctest.CtDisappears:          testAccTrail_disappears,
 			"migrateV0":                   testAccTrail_migrateV0,
+			"Identity":                    testAccCloudTrailTrail_IdentitySerial,
 		},
 	}
 

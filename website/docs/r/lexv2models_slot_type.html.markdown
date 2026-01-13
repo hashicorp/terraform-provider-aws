@@ -86,6 +86,7 @@ All of the bots, slot types, and slots used by the intent must have the same loc
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot type.
 * `composite_slot_type_setting` - (Optional) Specifications for a composite slot type.
 See [`composite_slot_type_setting` argument reference](#composite_slot_type_setting-argument-reference) below.

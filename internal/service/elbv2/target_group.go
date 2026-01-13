@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,16 +42,15 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.TargetGroup")
 // @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
+// @Testing(plannableImportAction="NoOp")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
 		ReadWithoutTimeout:   resourceTargetGroupRead,
 		UpdateWithoutTimeout: resourceTargetGroupUpdate,
 		DeleteWithoutTimeout: resourceTargetGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		CustomizeDiff: customdiff.Sequence(
 			resourceTargetGroupCustomizeDiff,
@@ -130,7 +130,7 @@ func resourceTargetGroup() *schema.Resource {
 							StateFunc: func(v any) string {
 								return strings.ToUpper(v.(string))
 							},
-							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
+							ValidateFunc:     validation.StringInSlice(enum.Slice(healthCheckProtocolEnumValues()...), true),
 							DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 						},
 						names.AttrTimeout: {
@@ -297,6 +297,12 @@ func resourceTargetGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_control_port": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 65535),
+			},
 			"target_failover": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -424,7 +430,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	).Generate()
 	exist, err := findTargetGroupByName(ctx, conn, name)
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", name, err)
 	}
 
@@ -495,6 +501,11 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.HealthCheckProtocol = healthCheckProtocol
 		}
 	}
+	if targetType == awstypes.TargetTypeEnumInstance || targetType == awstypes.TargetTypeEnumIp {
+		if v, ok := d.GetOk("target_control_port"); ok {
+			input.TargetControlPort = aws.Int32(int32(v.(int)))
+		}
+	}
 
 	output, err := conn.CreateTargetGroup(ctx, input)
 
@@ -520,7 +531,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.TargetGroups[0].TargetGroupArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, elbv2PropagationTimeout, func(ctx context.Context) (any, error) {
 		return findTargetGroupByARN(ctx, conn, d.Id())
 	})
 
@@ -587,7 +598,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	targetGroup, err := findTargetGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -610,6 +621,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(targetGroup.TargetGroupName)))
+	d.Set("target_control_port", targetGroup.TargetControlPort)
 	targetType := targetGroup.TargetType
 	d.Set("target_type", targetType)
 
@@ -774,7 +786,7 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 2 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceInUseException](ctx, timeout, func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceInUseException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteTargetGroup(ctx, &elasticloadbalancingv2.DeleteTargetGroupInput{
 			TargetGroupArn: aws.String(d.Id()),
 		})
@@ -944,7 +956,7 @@ func findTargetGroupByARN(ctx context.Context, conn *elasticloadbalancingv2.Clie
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -965,7 +977,7 @@ func findTargetGroupByName(ctx context.Context, conn *elasticloadbalancingv2.Cli
 
 	// Eventual consistency check.
 	if aws.ToString(output.TargetGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -991,7 +1003,7 @@ func findTargetGroups(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1015,7 +1027,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	output, err := conn.DescribeTargetGroupAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1026,7 +1038,7 @@ func findTargetGroupAttributesByARN(ctx context.Context, conn *elasticloadbalanc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

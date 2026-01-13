@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,34 +13,31 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource( "aws_datazone_domain", name="Domain")
+// @FrameworkResource("aws_datazone_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
-func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDomain{}
+func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &domainResource{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
@@ -48,18 +45,16 @@ func newResourceDomain(_ context.Context) (resource.ResourceWithConfigure, error
 	return r, nil
 }
 
-const (
-	ResNameDomain            = "Domain"
-	CreateDomainRetryTimeout = 30 * time.Second
-)
-
-type resourceDomain struct {
-	framework.ResourceWithConfigure
+type domainResource struct {
+	framework.ResourceWithModel[domainResourceModel]
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	authType := fwtypes.StringEnumType[awstypes.AuthType]()
+
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
@@ -68,6 +63,15 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 			"domain_execution_role": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
+			},
+			"domain_version": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DomainVersion](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"kms_key_identifier": schema.StringAttribute{
@@ -86,6 +90,16 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"root_domain_unit_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrServiceRole: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+			},
 			"skip_deletion_check": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -97,6 +111,7 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		Blocks: map[string]schema.Block{
 			"single_sign_on": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[singleSignOnModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -106,21 +121,17 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrType: schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.AuthType](),
-							},
+							CustomType: authType,
+							Optional:   true,
+							Computed:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
 							},
-							Default: stringdefault.StaticString("DISABLED"),
+							Default: authType.AttributeDefault(awstypes.AuthTypeDisabled),
 						},
 						"user_assignment": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.UserAssignment](),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.UserAssignment](),
+							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
 							},
@@ -136,241 +147,229 @@ func (r *resourceDomain) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *resourceDomain) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DataZoneClient(ctx)
-
-	var plan domainResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *domainResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &datazone.CreateDomainInput{
-		ClientToken:         aws.String(sdkid.UniqueId()),
-		DomainExecutionRole: plan.DomainExecutionRole.ValueStringPointer(),
-		Name:                plan.Name.ValueStringPointer(),
-		Tags:                getTagsIn(ctx),
+	conn := r.Meta().DataZoneClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input datazone.CreateDomainInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.Description.IsNull() {
-		in.Description = plan.Description.ValueStringPointer()
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
+
+	const (
+		timeout = 30 * time.Second
+	)
+	out, err := tfresource.RetryWhenAWSErrCodeContains(ctx, timeout, func(ctx context.Context) (*datazone.CreateDomainOutput, error) {
+		return conn.CreateDomain(ctx, &input)
+	}, errCodeAccessDenied)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating DataZone Domain (%s)", name), err.Error())
+		return
 	}
 
-	if !plan.KmsKeyIdentifier.IsNull() {
-		in.KmsKeyIdentifier = plan.KmsKeyIdentifier.ValueStringPointer()
+	data.ID = fwflex.StringToFramework(ctx, out.Id)
+
+	output, err := waitDomainCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) create", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	if !plan.SingleSignOn.IsNull() {
-		var tfList []singleSignOnModel
-		resp.Diagnostics.Append(plan.SingleSignOn.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
+	// Do not set single sign on in state if it was null and response is DISABLED as this is equivalent.
+	if output != nil {
+		if output.SingleSignOn != nil && output.SingleSignOn.Type == awstypes.AuthTypeDisabled && data.SingleSignOn.IsNull() {
+			output.SingleSignOn = nil
+		}
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+}
+
+func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().DataZoneClient(ctx)
+
+	output, err := findDomainByID(ctx, conn, data.ID.ValueString())
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Do not set single sign on in state if it was null and response is DISABLED as this is equivalent.
+	if output.SingleSignOn.Type == awstypes.AuthTypeDisabled && data.SingleSignOn.IsNull() {
+		output.SingleSignOn = nil
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	setTagsOut(ctx, output.Tags)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *domainResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old domainResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().DataZoneClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		var input datazone.UpdateDomainInput
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		in.SingleSignOn = expandSingleSignOn(tfList)
-	}
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.Identifier = fwflex.StringFromFramework(ctx, new.ID)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeContains(ctx, CreateDomainRetryTimeout, func() (any, error) {
-		return conn.CreateDomain(ctx, in)
-	}, ErrorCodeAccessDenied)
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameDomain, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if outputRaw == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionCreating, ResNameDomain, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	out := outputRaw.(*datazone.CreateDomainOutput)
-
-	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.Id)
-	plan.PortalUrl = flex.StringToFramework(ctx, out.PortalUrl)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDomainCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForCreation, ResNameDomain, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourceDomain) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().DataZoneClient(ctx)
-
-	var state domainResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findDomainByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionSetting, ResNameDomain, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.DomainExecutionRole = flex.StringToFrameworkARN(ctx, out.DomainExecutionRole)
-	state.ID = flex.StringToFramework(ctx, out.Id)
-	state.KmsKeyIdentifier = flex.StringToFrameworkARN(ctx, out.KmsKeyIdentifier)
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.PortalUrl = flex.StringToFramework(ctx, out.PortalUrl)
-
-	if out.SingleSignOn.Type == awstypes.AuthType("DISABLED") && state.SingleSignOn.IsNull() {
-		// Do not set single sign on in state if it was null and response is DISABLED as this is equivalent
-		elemType := fwtypes.NewObjectTypeOf[singleSignOnModel](ctx).ObjectType
-		state.SingleSignOn = types.ListNull(elemType)
-	} else {
-		singleSignOn, d := flattenSingleSignOn(ctx, out.SingleSignOn)
-		resp.Diagnostics.Append(d...)
-		state.SingleSignOn = singleSignOn
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceDomain) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().DataZoneClient(ctx)
-
-	var plan, state domainResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !plan.Description.Equal(state.Description) ||
-		!plan.DomainExecutionRole.Equal(state.DomainExecutionRole) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.SingleSignOn.Equal(state.SingleSignOn) {
-		in := &datazone.UpdateDomainInput{
-			ClientToken: aws.String(sdkid.UniqueId()),
-			Identifier:  plan.ID.ValueStringPointer(),
-		}
-
-		if !plan.Description.IsNull() {
-			in.Description = plan.Description.ValueStringPointer()
-		}
-
-		if !plan.DomainExecutionRole.IsNull() {
-			in.DomainExecutionRole = plan.DomainExecutionRole.ValueStringPointer()
-		}
-
-		if !plan.Name.IsNull() {
-			in.Name = plan.Name.ValueStringPointer()
-		}
-
-		if !plan.SingleSignOn.IsNull() {
-			var tfList []singleSignOnModel
-			resp.Diagnostics.Append(plan.SingleSignOn.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			in.SingleSignOn = expandSingleSignOn(tfList)
-		}
-
-		out, err := conn.UpdateDomain(ctx, in)
+		_, err := conn.UpdateDomain(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameDomain, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataZone, create.ErrActionUpdating, ResNameDomain, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
+			response.Diagnostics.AddError(fmt.Sprintf("updating DataZone Domain (%s)", new.ID.ValueString()), err.Error())
 
-		plan.ID = flex.StringToFramework(ctx, out.Id)
+			return
+		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceDomain) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data domainResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var state domainResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &datazone.DeleteDomainInput{
+	input := datazone.DeleteDomainInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		Identifier:  state.ID.ValueStringPointer(),
+		Identifier:  data.ID.ValueStringPointer(),
 	}
-
-	if !state.SkipDeletionCheck.IsNull() {
-		in.SkipDeletionCheck = state.SkipDeletionCheck.ValueBoolPointer()
+	if !data.SkipDeletionCheck.IsNull() {
+		input.SkipDeletionCheck = data.SkipDeletionCheck.ValueBoolPointer()
 	}
+	_, err := conn.DeleteDomain(ctx, &input)
 
-	_, err := conn.DeleteDomain(ctx, in)
-	if err != nil {
-		if isResourceMissing(err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionDeleting, ResNameDomain, state.ID.String(), err),
-			err.Error(),
-		)
+	if isResourceMissing(err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDomainDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataZone, create.ErrActionWaitingForDeletion, ResNameDomain, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting DataZone Domain (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitDomainDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for DataZone Domain (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceDomain) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*datazone.GetDomainOutput, error) {
+	input := datazone.GetDomainInput{
+		Identifier: aws.String(id),
+	}
+	output, err := conn.GetDomain(ctx, &input)
+
+	if isResourceMissing(err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusDomain(conn *datazone.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findDomainByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitDomainCreated(ctx context.Context, conn *datazone.Client, id string, timeout time.Duration) (*datazone.GetDomainOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusCreating),
 		Target:  enum.Slice(awstypes.DomainStatusAvailable),
-		Refresh: statusDomain(ctx, conn, id),
+		Refresh: statusDomain(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*datazone.GetDomainOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*datazone.GetDomainOutput); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -380,118 +379,39 @@ func waitDomainDeleted(ctx context.Context, conn *datazone.Client, id string, ti
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusAvailable, awstypes.DomainStatusDeleting),
 		Target:  []string{},
-		Refresh: statusDomain(ctx, conn, id),
+		Refresh: statusDomain(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*datazone.GetDomainOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*datazone.GetDomainOutput); ok {
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusDomain(ctx context.Context, conn *datazone.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		out, err := findDomainByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
-}
-
-func findDomainByID(ctx context.Context, conn *datazone.Client, id string) (*datazone.GetDomainOutput, error) {
-	in := &datazone.GetDomainInput{
-		Identifier: aws.String(id),
-	}
-
-	out, err := conn.GetDomain(ctx, in)
-	if err != nil {
-		if isResourceMissing(err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
-func flattenSingleSignOn(ctx context.Context, apiObject *awstypes.SingleSignOn) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: singleSignOnAttrTypes}
-
-	if apiObject == nil {
-		return types.ListNull(elemType), diags
-	}
-
-	obj := map[string]attr.Value{
-		names.AttrType:    flex.StringValueToFramework(ctx, apiObject.Type),
-		"user_assignment": flex.StringValueToFramework(ctx, apiObject.UserAssignment),
-	}
-	objVal, d := types.ObjectValue(singleSignOnAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
-}
-
-func expandSingleSignOn(tfList []singleSignOnModel) *awstypes.SingleSignOn {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	tfObj := tfList[0]
-	apiObject := &awstypes.SingleSignOn{}
-
-	if !tfObj.Type.IsNull() {
-		apiObject.Type = awstypes.AuthType(tfObj.Type.ValueString())
-	}
-
-	if !tfObj.UserAssignment.IsNull() {
-		apiObject.UserAssignment = awstypes.UserAssignment(tfObj.UserAssignment.ValueString())
-	}
-
-	return apiObject
-}
-
 type domainResourceModel struct {
-	ARN                 types.String   `tfsdk:"arn"`
-	Description         types.String   `tfsdk:"description"`
-	DomainExecutionRole fwtypes.ARN    `tfsdk:"domain_execution_role"`
-	ID                  types.String   `tfsdk:"id"`
-	KmsKeyIdentifier    fwtypes.ARN    `tfsdk:"kms_key_identifier"`
-	Name                types.String   `tfsdk:"name"`
-	PortalUrl           types.String   `tfsdk:"portal_url"`
-	SkipDeletionCheck   types.Bool     `tfsdk:"skip_deletion_check"`
-	SingleSignOn        types.List     `tfsdk:"single_sign_on"`
-	Tags                tftags.Map     `tfsdk:"tags"`
-	TagsAll             tftags.Map     `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	ARN                 types.String                                       `tfsdk:"arn"`
+	Description         types.String                                       `tfsdk:"description"`
+	DomainExecutionRole fwtypes.ARN                                        `tfsdk:"domain_execution_role"`
+	DomainVersion       fwtypes.StringEnum[awstypes.DomainVersion]         `tfsdk:"domain_version"`
+	ID                  types.String                                       `tfsdk:"id"`
+	KMSKeyIdentifier    fwtypes.ARN                                        `tfsdk:"kms_key_identifier"`
+	Name                types.String                                       `tfsdk:"name"`
+	PortalURL           types.String                                       `tfsdk:"portal_url"`
+	RootDomainUnitId    types.String                                       `tfsdk:"root_domain_unit_id"`
+	ServiceRole         fwtypes.ARN                                        `tfsdk:"service_role"`
+	SkipDeletionCheck   types.Bool                                         `tfsdk:"skip_deletion_check"`
+	SingleSignOn        fwtypes.ListNestedObjectValueOf[singleSignOnModel] `tfsdk:"single_sign_on"`
+	Tags                tftags.Map                                         `tfsdk:"tags"`
+	TagsAll             tftags.Map                                         `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value                                     `tfsdk:"timeouts"`
 }
 
 type singleSignOnModel struct {
-	Type           types.String `tfsdk:"type"`
-	UserAssignment types.String `tfsdk:"user_assignment"`
-}
-
-var singleSignOnAttrTypes = map[string]attr.Type{
-	names.AttrType:    types.StringType,
-	"user_assignment": types.StringType,
+	Type           fwtypes.StringEnum[awstypes.AuthType]       `tfsdk:"type"`
+	UserAssignment fwtypes.StringEnum[awstypes.UserAssignment] `tfsdk:"user_assignment"`
 }

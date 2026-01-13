@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dx_gateway: Add `tags` argument and `tags_all` attribute. This functionality requires the `directconnect:TagResource` and `directconnect:UntagResource` IAM permissions
+```
+
+```release-note:enhancement
+data-source/aws_dx_gateway: Add `tags` attribute
+```

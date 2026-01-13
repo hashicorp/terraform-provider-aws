@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -25,19 +25,19 @@ import (
 
 // @FrameworkDataSource("aws_lb_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="arn")
-func newDataSourceListenerRule(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceListenerRule{}, nil
+func newListenerRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &listenerRuleDataSource{}, nil
 }
 
 const (
 	dsNameListenerRule = "Listener Rule Data Source"
 )
 
-type dataSourceListenerRule struct {
-	framework.DataSourceWithConfigure
+type listenerRuleDataSource struct {
+	framework.DataSourceWithModel[listenerRuleDataSourceModel]
 }
 
-func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *listenerRuleDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -69,129 +69,179 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"authenticate_cognito": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[authenticateCognitoActionConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								"authentication_request_extra_params": schema.MapAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
-								},
-								"on_unauthenticated_request": schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrScope: schema.StringAttribute{
-									Computed: true,
-								},
-								"session_cookie_name": schema.StringAttribute{
-									Computed: true,
-								},
-								"session_timeout": schema.Int64Attribute{
-									Computed: true,
-								},
-								"user_pool_arn": schema.StringAttribute{
-									Computed: true,
-								},
-								"user_pool_client_id": schema.StringAttribute{
-									Computed: true,
-								},
-								"user_pool_domain": schema.StringAttribute{
-									Computed: true,
-								},
-							},
-						},
-						"authenticate_oidc": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							Attributes: map[string]schema.Attribute{
-								"authentication_request_extra_params": schema.MapAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
-								},
-								"authorization_endpoint": schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrClientID: schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrIssuer: schema.StringAttribute{
-									Computed: true,
-								},
-								"on_unauthenticated_request": schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrScope: schema.StringAttribute{
-									Computed: true,
-								},
-								"session_cookie_name": schema.StringAttribute{
-									Computed: true,
-								},
-								"session_timeout": schema.Int64Attribute{
-									Computed: true,
-								},
-								"token_endpoint": schema.StringAttribute{
-									Computed: true,
-								},
-								"user_info_endpoint": schema.StringAttribute{
-									Computed: true,
-								},
-							},
-						},
-						"fixed_response": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							Attributes: map[string]schema.Attribute{
-								names.AttrContentType: schema.StringAttribute{
-									Computed: true,
-								},
-								"message_body": schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrStatusCode: schema.StringAttribute{
-									Computed: true,
-								},
-							},
-						},
-						"forward": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							Blocks: map[string]schema.Block{
-								"stickiness": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-									Attributes: map[string]schema.Attribute{
-										names.AttrDuration: schema.Int32Attribute{
-											Computed: true,
-										},
-										names.AttrEnabled: schema.BoolAttribute{
-											Computed: true,
-										},
+						"authenticate_cognito": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authenticateCognitoActionConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"authentication_request_extra_params": schema.MapAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
 									},
-								},
-								"target_group": schema.SetNestedBlock{
-									NestedObject: schema.NestedBlockObject{
-										Attributes: map[string]schema.Attribute{
-											names.AttrARN: schema.StringAttribute{
-												Computed: true,
-											},
-											names.AttrWeight: schema.Int32Attribute{
-												Computed: true,
-											},
-										},
+									"on_unauthenticated_request": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrScope: schema.StringAttribute{
+										Computed: true,
+									},
+									"session_cookie_name": schema.StringAttribute{
+										Computed: true,
+									},
+									"session_timeout": schema.Int64Attribute{
+										Computed: true,
+									},
+									"user_pool_arn": schema.StringAttribute{
+										Computed: true,
+									},
+									"user_pool_client_id": schema.StringAttribute{
+										Computed: true,
+									},
+									"user_pool_domain": schema.StringAttribute{
+										Computed: true,
 									},
 								},
 							},
 						},
-						"redirect": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							Attributes: map[string]schema.Attribute{
-								"host": schema.StringAttribute{
-									Computed: true,
+						"authenticate_oidc": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[authenticateOIDCActionConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"authentication_request_extra_params": schema.MapAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+									"authorization_endpoint": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrClientID: schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrIssuer: schema.StringAttribute{
+										Computed: true,
+									},
+									"on_unauthenticated_request": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrScope: schema.StringAttribute{
+										Computed: true,
+									},
+									"session_cookie_name": schema.StringAttribute{
+										Computed: true,
+									},
+									"session_timeout": schema.Int64Attribute{
+										Computed: true,
+									},
+									"token_endpoint": schema.StringAttribute{
+										Computed: true,
+									},
+									"user_info_endpoint": schema.StringAttribute{
+										Computed: true,
+									},
 								},
-								names.AttrPath: schema.StringAttribute{
-									Computed: true,
+							},
+						},
+						"fixed_response": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[fixedResponseActionConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrContentType: schema.StringAttribute{
+										Computed: true,
+									},
+									"message_body": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrStatusCode: schema.StringAttribute{
+										Computed: true,
+									},
 								},
-								names.AttrPort: schema.StringAttribute{
-									Computed: true,
+							},
+						},
+						"forward": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[forwardActionConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"stickiness": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[targetGroupStickinessConfigModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrDuration: schema.Int32Attribute{
+													Computed: true,
+												},
+												names.AttrEnabled: schema.BoolAttribute{
+													Computed: true,
+												},
+											},
+										},
+									},
+									"target_group": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[targetGroupTupleModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrARN: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrWeight: schema.Int32Attribute{
+													Computed: true,
+												},
+											},
+										},
+									},
 								},
-								names.AttrProtocol: schema.StringAttribute{
-									Computed: true,
+							},
+						},
+						"jwt_validation": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[jwtValidationConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrIssuer: schema.StringAttribute{
+										Computed: true,
+									},
+									"jwks_endpoint": schema.StringAttribute{
+										Computed: true,
+									},
 								},
-								"query": schema.StringAttribute{
-									Computed: true,
+								Blocks: map[string]schema.Block{
+									"additional_claim": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[additionalClaimsModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrFormat: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrName: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrValues: schema.SetAttribute{
+													ElementType: types.StringType,
+													Computed:    true,
+												},
+											},
+										},
+									},
 								},
-								names.AttrStatusCode: schema.StringAttribute{
-									Computed: true,
+							},
+						},
+						"redirect": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[redirectActionConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"host": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrPath: schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrPort: schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrProtocol: schema.StringAttribute{
+										Computed: true,
+									},
+									"query": schema.StringAttribute{
+										Computed: true,
+									},
+									names.AttrStatusCode: schema.StringAttribute{
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -202,69 +252,121 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[ruleConditionModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"host_header": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[hostHeaderConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								names.AttrValues: schema.SetAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
+						"host_header": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+									names.AttrValues: schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
 								},
 							},
 						},
-						"http_header": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[httpHeaderConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								"http_header_name": schema.StringAttribute{
-									Computed: true,
-								},
-								names.AttrValues: schema.SetAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
-								},
-							},
-						},
-						"http_request_method": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[httpRquestMethodConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								names.AttrValues: schema.SetAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
+						"http_header": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[httpHeaderConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"http_header_name": schema.StringAttribute{
+										Computed: true,
+									},
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+									names.AttrValues: schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
 								},
 							},
 						},
-						"path_pattern": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[pathPatternConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								names.AttrValues: schema.SetAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
+						"http_request_method": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[httpRquestMethodConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrValues: schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
 								},
 							},
 						},
-						"query_string": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[queryStringConfigModel](ctx),
-							Blocks: map[string]schema.Block{
-								names.AttrValues: schema.SetNestedBlock{
-									CustomType: fwtypes.NewSetNestedObjectTypeOf[queryStringKeyValuePairModel](ctx),
-									NestedObject: schema.NestedBlockObject{
-										Attributes: map[string]schema.Attribute{
-											names.AttrKey: schema.StringAttribute{
-												Computed: true,
-											},
-											names.AttrValue: schema.StringAttribute{
-												Computed: true,
+						"path_pattern": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[pathPatternConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"regex_values": schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+									names.AttrValues: schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+								},
+							},
+						},
+						"query_string": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[queryStringConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									names.AttrValues: schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[queryStringKeyValuePairModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKey: schema.StringAttribute{
+													Computed: true,
+												},
+												names.AttrValue: schema.StringAttribute{
+													Computed: true,
+												},
 											},
 										},
 									},
 								},
 							},
 						},
-						"source_ip": schema.SingleNestedBlock{ // nosemgrep:ci.avoid-SingleNestedBlock pre-existing, will be converted
-							CustomType: fwtypes.NewObjectTypeOf[pathPatternConfigModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								names.AttrValues: schema.SetAttribute{
-									ElementType: types.StringType,
-									Computed:    true,
+						"source_ip": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sourceIPConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrValues: schema.SetAttribute{
+										ElementType: types.StringType,
+										Computed:    true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"transform": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[transformModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrType: schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"host_header_rewrite_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[hostHeaderRewriteConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
+								},
+							},
+						},
+						"url_rewrite_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[urlRewriteConfigModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"rewrite": transformRewriteConfigDataSourceSchema(ctx),
 								},
 							},
 						},
@@ -275,7 +377,23 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+func transformRewriteConfigDataSourceSchema(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[rewriteConfigModel](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"regex": schema.StringAttribute{
+					Computed: true,
+				},
+				"replace": schema.StringAttribute{
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func (d *listenerRuleDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrARN),
@@ -292,10 +410,10 @@ func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasourc
 	}
 }
 
-func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *listenerRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ELBV2Client(ctx)
 
-	var data dataSourceListenerRuleModel
+	var data listenerRuleDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -331,7 +449,7 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	// The listener arn isn't in the response but can be derived from the rule arn
+	// The listener ARN isn't in the response but can be derived from the rule ARN
 	data.ListenerARN = fwtypes.ARNValue(listenerARNFromRuleARN(aws.ToString(out.RuleArn)))
 
 	priority, err := strconv.ParseInt(aws.ToString(out.Priority), 10, 32)
@@ -347,26 +465,29 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceListenerRuleModel struct {
+type listenerRuleDataSourceModel struct {
+	framework.WithRegionModel
 	Action      fwtypes.ListNestedObjectValueOf[actionModel]       `tfsdk:"action"`
 	ARN         fwtypes.ARN                                        `tfsdk:"arn"`
 	Condition   fwtypes.SetNestedObjectValueOf[ruleConditionModel] `tfsdk:"condition"`
 	ListenerARN fwtypes.ARN                                        `tfsdk:"listener_arn"`
 	Priority    types.Int32                                        `tfsdk:"priority" autoflex:"-"`
 	Tags        tftags.Map                                         `tfsdk:"tags"`
+	Transform   fwtypes.SetNestedObjectValueOf[transformModel]     `tfsdk:"transform"`
 }
 
 // The API includes a TargetGroupArn field at the root level of the Action. This only applies when Type == "forward"
 // and there is a single target group. The read also populates the ForwardConfig with the single TargetGroup,
 // so it is redundant. Using the ForwardConfig in all cases improves consistency.
 type actionModel struct {
-	Type                      types.String                                                `tfsdk:"type"`
-	AuthenticateCognitoConfig fwtypes.ObjectValueOf[authenticateCognitoActionConfigModel] `tfsdk:"authenticate_cognito"`
-	AuthenticateOidcConfig    fwtypes.ObjectValueOf[authenticateOIDCActionConfigModel]    `tfsdk:"authenticate_oidc"`
-	FixedResponseConfig       fwtypes.ObjectValueOf[fixedResponseActionConfigModel]       `tfsdk:"fixed_response"`
-	ForwardConfig             fwtypes.ObjectValueOf[forwardActionConfigModel]             `tfsdk:"forward"`
-	Order                     types.Int32                                                 `tfsdk:"order"`
-	RedirectConfig            fwtypes.ObjectValueOf[redirectActionConfigModel]            `tfsdk:"redirect"`
+	Type                      types.String                                                          `tfsdk:"type"`
+	AuthenticateCognitoConfig fwtypes.ListNestedObjectValueOf[authenticateCognitoActionConfigModel] `tfsdk:"authenticate_cognito"`
+	AuthenticateOidcConfig    fwtypes.ListNestedObjectValueOf[authenticateOIDCActionConfigModel]    `tfsdk:"authenticate_oidc"`
+	FixedResponseConfig       fwtypes.ListNestedObjectValueOf[fixedResponseActionConfigModel]       `tfsdk:"fixed_response"`
+	ForwardConfig             fwtypes.ListNestedObjectValueOf[forwardActionConfigModel]             `tfsdk:"forward"`
+	JWTValidationConfig       fwtypes.ListNestedObjectValueOf[jwtValidationConfigModel]             `tfsdk:"jwt_validation"`
+	Order                     types.Int32                                                           `tfsdk:"order"`
+	RedirectConfig            fwtypes.ListNestedObjectValueOf[redirectActionConfigModel]            `tfsdk:"redirect"`
 }
 
 type authenticateCognitoActionConfigModel struct {
@@ -381,8 +502,8 @@ type authenticateCognitoActionConfigModel struct {
 }
 
 type authenticateOIDCActionConfigModel struct {
-	AuthorizationEndpoint            types.String        `tfsdk:"authorization_endpoint"`
 	AuthenticationRequestExtraParams fwtypes.MapOfString `tfsdk:"authentication_request_extra_params"`
+	AuthorizationEndpoint            types.String        `tfsdk:"authorization_endpoint"`
 	ClientId                         types.String        `tfsdk:"client_id"`
 	Issuer                           types.String        `tfsdk:"issuer"`
 	OnUnauthenticatedRequest         types.String        `tfsdk:"on_unauthenticated_request"`
@@ -400,8 +521,8 @@ type fixedResponseActionConfigModel struct {
 }
 
 type forwardActionConfigModel struct {
-	TargetGroupStickinessConfig fwtypes.ObjectValueOf[targetGroupStickinessConfigModel] `tfsdk:"stickiness"`
-	TargetGroups                fwtypes.SetNestedObjectValueOf[targetGroupTupleModel]   `tfsdk:"target_group"`
+	TargetGroupStickinessConfig fwtypes.ListNestedObjectValueOf[targetGroupStickinessConfigModel] `tfsdk:"stickiness"`
+	TargetGroups                fwtypes.SetNestedObjectValueOf[targetGroupTupleModel]             `tfsdk:"target_group"`
 }
 
 type targetGroupStickinessConfigModel struct {
@@ -424,20 +545,22 @@ type redirectActionConfigModel struct {
 }
 
 type ruleConditionModel struct {
-	HostHeaderConfig        fwtypes.ObjectValueOf[hostHeaderConfigModel]       `tfsdk:"host_header"`
-	HttpHeaderConfig        fwtypes.ObjectValueOf[httpHeaderConfigModel]       `tfsdk:"http_header"`
-	HttpRequestMethodConfig fwtypes.ObjectValueOf[httpRquestMethodConfigModel] `tfsdk:"http_request_method"`
-	PathPatternConfig       fwtypes.ObjectValueOf[pathPatternConfigModel]      `tfsdk:"path_pattern"`
-	QueryStringConfig       fwtypes.ObjectValueOf[queryStringConfigModel]      `tfsdk:"query_string"`
-	SourceIpConfig          fwtypes.ObjectValueOf[sourceIPConfigModel]         `tfsdk:"source_ip"`
+	HostHeaderConfig        fwtypes.ListNestedObjectValueOf[hostHeaderConfigModel]       `tfsdk:"host_header"`
+	HttpHeaderConfig        fwtypes.ListNestedObjectValueOf[httpHeaderConfigModel]       `tfsdk:"http_header"`
+	HttpRequestMethodConfig fwtypes.ListNestedObjectValueOf[httpRquestMethodConfigModel] `tfsdk:"http_request_method"`
+	PathPatternConfig       fwtypes.ListNestedObjectValueOf[pathPatternConfigModel]      `tfsdk:"path_pattern"`
+	QueryStringConfig       fwtypes.ListNestedObjectValueOf[queryStringConfigModel]      `tfsdk:"query_string"`
+	SourceIpConfig          fwtypes.ListNestedObjectValueOf[sourceIPConfigModel]         `tfsdk:"source_ip"`
 }
 
 type hostHeaderConfigModel struct {
-	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	RegexValues fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
+	Values      fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type httpHeaderConfigModel struct {
 	HTTPHeaderName types.String                     `tfsdk:"http_header_name"`
+	RegexValues    fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
 	Values         fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
@@ -446,7 +569,8 @@ type httpRquestMethodConfigModel struct {
 }
 
 type pathPatternConfigModel struct {
-	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+	RegexValues fwtypes.SetValueOf[types.String] `tfsdk:"regex_values"`
+	Values      fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }
 
 type queryStringConfigModel struct {
@@ -459,5 +583,36 @@ type queryStringKeyValuePairModel struct {
 }
 
 type sourceIPConfigModel struct {
+	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
+}
+
+type transformModel struct {
+	Type                    types.String                                                  `tfsdk:"type"`
+	HostHeaderRewriteConfig fwtypes.ListNestedObjectValueOf[hostHeaderRewriteConfigModel] `tfsdk:"host_header_rewrite_config"`
+	URLRewriteConfig        fwtypes.ListNestedObjectValueOf[urlRewriteConfigModel]        `tfsdk:"url_rewrite_config"`
+}
+
+type hostHeaderRewriteConfigModel struct {
+	Rewrites fwtypes.ListNestedObjectValueOf[rewriteConfigModel] `tfsdk:"rewrite"`
+}
+
+type urlRewriteConfigModel struct {
+	Rewrites fwtypes.ListNestedObjectValueOf[rewriteConfigModel] `tfsdk:"rewrite"`
+}
+
+type rewriteConfigModel struct {
+	Regex   types.String `tfsdk:"regex"`
+	Replace types.String `tfsdk:"replace"`
+}
+
+type jwtValidationConfigModel struct {
+	Issuer           types.String                                          `tfsdk:"issuer"`
+	JwksEndpoint     types.String                                          `tfsdk:"jwks_endpoint"`
+	AdditionalClaims fwtypes.SetNestedObjectValueOf[additionalClaimsModel] `tfsdk:"additional_claim"`
+}
+
+type additionalClaimsModel struct {
+	Format types.String                     `tfsdk:"format"`
+	Name   types.String                     `tfsdk:"name"`
 	Values fwtypes.SetValueOf[types.String] `tfsdk:"values"`
 }

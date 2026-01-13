@@ -1,5 +1,3 @@
 module testdata
 
-go 1.23
-
-toolchain go1.23.9
+go 1.25.5

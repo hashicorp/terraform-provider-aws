@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,7 +38,7 @@ func newAPIKeyResource(_ context.Context) (resource.ResourceWithConfigure, error
 }
 
 type apiKeyResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[apiKeyResourceModel]
 	framework.WithNoUpdate
 }
 
@@ -126,7 +127,7 @@ func (r *apiKeyResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	output, err := findAPIKeyByTwoPartKey(ctx, conn, data.APIKey.ValueString(), data.Scope.ValueEnum())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -232,6 +233,7 @@ func findAPIKeys(ctx context.Context, conn *wafv2.Client, input *wafv2.ListAPIKe
 }
 
 type apiKeyResourceModel struct {
+	framework.WithRegionModel
 	APIKey       types.String                       `tfsdk:"api_key"`
 	Scope        fwtypes.StringEnum[awstypes.Scope] `tfsdk:"scope"`
 	TokenDomains fwtypes.SetOfString                `tfsdk:"token_domains"`

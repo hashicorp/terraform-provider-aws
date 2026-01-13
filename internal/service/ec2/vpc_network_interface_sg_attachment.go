@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -105,11 +106,11 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (any, error) {
+	groupIdentifier, err := tfresource.RetryWhenNewResourceNotFound(ctx, max(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func(ctx context.Context) (*awstypes.GroupIdentifier, error) {
 		return findNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface (%s) Security Group (%s) Attachment not found, removing from state", networkInterfaceID, sgID)
 		d.SetId("")
 		return diags
@@ -119,20 +120,10 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s) Security Group (%s) Attachment: %s", networkInterfaceID, sgID, err)
 	}
 
-	groupIdentifier := outputRaw.(*awstypes.GroupIdentifier)
-
 	d.Set(names.AttrNetworkInterfaceID, networkInterfaceID)
 	d.Set("security_group_id", groupIdentifier.GroupId)
 
 	return diags
-}
-
-func maxDuration(a, b time.Duration) time.Duration {
-	if a >= b {
-		return a
-	}
-
-	return b
 }
 
 func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -147,7 +138,7 @@ func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.R
 
 	eni, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 

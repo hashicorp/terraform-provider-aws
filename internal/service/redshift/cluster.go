@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -8,12 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/go-cty/cty"
@@ -26,6 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,8 +35,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	clusterInvalidClusterStateFaultTimeout = 15 * time.Minute
+)
+
 // @SDKResource("aws_redshift_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/redshift/types;awstypes;awstypes.Cluster")
+// @Testing(importIgnore="final_snapshot_identifier;master_password;skip_final_snapshot;apply_immediately")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
@@ -135,12 +144,10 @@ func resourceCluster() *schema.Resource {
 			},
 			"cluster_public_key": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"cluster_revision_number": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"cluster_subnet_group_name": {
@@ -184,13 +191,13 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				Default:      "true",
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrEndpoint: {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"enhanced_vpc_routing": {
@@ -222,43 +229,6 @@ func resourceCluster() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"logging": {
-				Type: schema.TypeList,
-				Deprecated: "logging is deprecated. Use the aws_redshift_logging resource instead. " +
-					"This argument will be removed in a future major version.",
-				MaxItems:         1,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"enable": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"log_destination_type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.LogDestinationType](),
-						},
-						"log_exports": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrS3KeyPrefix: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"maintenance_track_name": {
 				Type:     schema.TypeString,
@@ -368,7 +338,7 @@ func resourceCluster() *schema.Resource {
 			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
@@ -386,31 +356,6 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-			},
-			"snapshot_copy": {
-				Type: schema.TypeList,
-				Deprecated: "snapshot_copy is deprecated. Use the aws_redshift_snapshot_copy resource instead. " +
-					"This argument will be removed in a future major version.",
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_region": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"grant_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRetentionPeriod: {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  7,
-						},
-					},
-				},
 			},
 			"snapshot_identifier": {
 				Type:          schema.TypeString,
@@ -453,7 +398,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	clusterID := d.Get(names.AttrClusterIdentifier).(string)
-	inputR := &redshift.RestoreFromClusterSnapshotInput{
+	inputR := redshift.RestoreFromClusterSnapshotInput{
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
 		AutomatedSnapshotRetentionPeriod: aws.Int32(int32(d.Get("automated_snapshot_retention_period").(int))),
 		ClusterIdentifier:                aws.String(clusterID),
@@ -461,7 +406,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		PubliclyAccessible:               aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 	}
-	inputC := &redshift.CreateClusterInput{
+	inputC := redshift.CreateClusterInput{
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
 		AutomatedSnapshotRetentionPeriod: aws.Int32(int32(d.Get("automated_snapshot_retention_period").(int))),
 		ClusterIdentifier:                aws.String(clusterID),
@@ -491,10 +436,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
-		inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-		inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-	}
+	v := d.Get("availability_zone_relocation_enabled")
+	inputR.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+	inputC.AvailabilityZoneRelocation = aws.Bool(v.(bool))
 
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		inputR.ClusterParameterGroupName = aws.String(v.(string))
@@ -516,9 +460,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		inputC.ElasticIp = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncrypted); ok {
-		inputC.Encrypted = aws.Bool(v.(bool)) // encryption is true by default
-		inputR.Encrypted = aws.Bool(v.(bool))
+	isEncrypted := true
+	v = d.Get(names.AttrEncrypted)
+	if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+		isEncrypted = v
 	}
 
 	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
@@ -601,13 +546,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			inputR.SnapshotClusterIdentifier = aws.String(v.(string))
 		}
 
-		output, err := conn.RestoreFromClusterSnapshot(ctx, inputR)
-
+		output, err := conn.RestoreFromClusterSnapshot(ctx, &inputR)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "restoring Redshift Cluster (%s) from snapshot: %s", clusterID, err)
 		}
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
+
+		if _, err := waitClusterRestored(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): restoring cluster: %s", d.Id(), err)
+		}
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok && masterPasswordWO == "" {
 			if _, ok := d.GetOk("manage_master_password"); !ok {
@@ -626,36 +574,35 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			inputC.ClusterType = aws.String(clusterTypeSingleNode)
 		}
 
-		output, err := conn.CreateCluster(ctx, inputC)
-
+		output, err := conn.CreateCluster(ctx, &inputC)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", clusterID, err)
 		}
 
 		d.SetId(aws.ToString(output.Cluster.ClusterIdentifier))
-	}
 
-	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for completion: %s", d.Id(), err)
-	}
-
-	if _, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
-	}
-
-	if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", d.Id(), err)
+		if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		tfMap := v.([]any)[0].(map[string]any)
+	cluster, err := waitClusterRelocationStatusResolved(ctx, conn, d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): waiting for relocation: %s", d.Id(), err)
+	}
 
-		if v, ok := tfMap["enable"].(bool); ok && v {
-			if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): %s", d.Id(), err)
-			}
+	if isEncrypted != aws.ToBool(cluster.Encrypted) {
+		input := redshift.ModifyClusterInput{
+			ClusterIdentifier: aws.String(d.Id()),
+			Encrypted:         aws.Bool(isEncrypted),
+		}
+		_, err := conn.ModifyCluster(ctx, &input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): modifying Encrypted(%t): %s", d.Id(), isEncrypted, err)
+		}
+
+		if _, err := waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Redshift Cluster (%s): modifying Encrypted(%t): %s", d.Id(), isEncrypted, err)
 		}
 	}
 
@@ -664,11 +611,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.RedshiftClient(ctx)
 
 	rsc, err := findClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -678,23 +626,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", d.Id(), err)
 	}
 
-	loggingStatus, err := conn.DescribeLoggingStatus(ctx, &redshift.DescribeLoggingStatusInput{
-		ClusterIdentifier: aws.String(d.Id()),
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s) logging status: %s", d.Id(), err)
-	}
-
 	d.Set("allow_version_upgrade", rsc.AllowVersionUpgrade)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clusterARN(ctx, c, d.Id()))
 	if rsc.AquaConfiguration != nil {
 		d.Set("aqua_configuration_status", rsc.AquaConfiguration.AquaConfigurationStatus)
 	}
@@ -722,15 +655,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set(names.AttrEncrypted, rsc.Encrypted)
+	d.Set(names.AttrEncrypted, strconv.FormatBool(aws.ToBool(rsc.Encrypted)))
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v awstypes.ClusterIamRole) string {
 		return aws.ToString(v.IamRoleArn)
 	}))
 	d.Set(names.AttrKMSKeyID, rsc.KmsKeyId)
-	if err := d.Set("logging", flattenLogging(loggingStatus)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
-	}
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 	d.Set("master_username", rsc.MasterUsername)
@@ -745,9 +675,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, rsc.PubliclyAccessible)
-	if err := d.Set("snapshot_copy", flattenSnapshotCopy(rsc.ClusterSnapshotCopyStatus)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting snapshot_copy: %s", err)
-	}
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
@@ -776,8 +703,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", names.AttrAvailabilityZone, "iam_roles", "logging", "multi_az", "snapshot_copy", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
-		input := &redshift.ModifyClusterInput{
+	if d.HasChangesExcept("aqua_configuration_status", names.AttrAvailabilityZone, "iam_roles", "multi_az", names.AttrTags, names.AttrTagsAll, "skip_final_snapshot") {
+		input := redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -822,15 +749,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ClusterVersion = aws.String(d.Get("cluster_version").(string))
 		}
 
+		var isEncrypted bool
+		v := d.Get(names.AttrEncrypted)
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			isEncrypted = v
+		}
+
 		if d.HasChange(names.AttrEncrypted) {
-			input.Encrypted = aws.Bool(d.Get(names.AttrEncrypted).(bool))
+			input.Encrypted = aws.Bool(isEncrypted)
 		}
 
 		if d.HasChange("enhanced_vpc_routing") {
 			input.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
 		}
 
-		if d.Get(names.AttrEncrypted).(bool) && d.HasChange(names.AttrKMSKeyID) {
+		if isEncrypted && d.HasChange(names.AttrKMSKeyID) {
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
@@ -858,6 +791,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
 		}
 
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
+		}
+
 		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
 			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
@@ -870,7 +807,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
 		}
 
-		_, err := conn.ModifyCluster(ctx, input)
+		_, err := conn.ModifyCluster(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s): %s", d.Id(), err)
@@ -890,14 +827,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := ns.Difference(os), os.Difference(ns)
 
-		input := &redshift.ModifyClusterIamRolesInput{
+		input := redshift.ModifyClusterIamRolesInput{
 			AddIamRoles:       flex.ExpandStringValueSet(add),
 			ClusterIdentifier: aws.String(d.Id()),
 			RemoveIamRoles:    flex.ExpandStringValueSet(del),
 			DefaultIamRoleArn: aws.String(d.Get("default_iam_role_arn").(string)),
 		}
 
-		_, err := conn.ModifyClusterIamRoles(ctx, input)
+		_, err := conn.ModifyClusterIamRoles(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s) IAM roles: %s", d.Id(), err)
@@ -909,25 +846,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if d.HasChange("aqua_configuration_status") {
-		input := &redshift.ModifyAquaConfigurationInput{
+		input := redshift.ModifyAquaConfigurationInput{
 			AquaConfigurationStatus: awstypes.AquaConfigurationStatus(d.Get("aqua_configuration_status").(string)),
 			ClusterIdentifier:       aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyAquaConfiguration(ctx, input)
+		_, err := conn.ModifyAquaConfiguration(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s) Aqua Configuration: %s", d.Id(), err)
 		}
 
 		if d.Get(names.AttrApplyImmediately).(bool) {
-			input := &redshift.RebootClusterInput{
+			input := redshift.RebootClusterInput{
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-				func() (any, error) {
-					return conn.RebootCluster(ctx, input)
+			_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+				func(ctx context.Context) (any, error) {
+					return conn.RebootCluster(ctx, &input)
 				})
 
 			if err != nil {
@@ -946,12 +883,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 	// Availability Zone cannot be changed at the same time as other settings
 	if d.HasChange(names.AttrAvailabilityZone) {
-		input := &redshift.ModifyClusterInput{
+		input := redshift.ModifyClusterInput{
 			AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 			ClusterIdentifier: aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyCluster(ctx, input)
+		_, err := conn.ModifyCluster(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "relocating Redshift Cluster (%s): %s", d.Id(), err)
@@ -962,47 +899,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	}
 
-	if d.HasChange("snapshot_copy") {
-		if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
-				if !errs.IsA[*awstypes.SnapshotCopyAlreadyEnabledFault](err) {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
-				}
-				if err := toggleSnapshotCopy(ctx, conn, d.Id(), v.([]any)[0].(map[string]any)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
-				}
-			}
-		} else {
-			if err := disableSnapshotCopy(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
-			}
-		}
-	}
-
-	if d.HasChange("logging") {
-		if v, ok := d.GetOk("logging"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			tfMap := v.([]any)[0].(map[string]any)
-
-			if v, ok := tfMap["enable"].(bool); ok && v {
-				if err := enableLogging(ctx, conn, d.Id(), tfMap); err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
-				}
-			} else {
-				if err := disableLogging(ctx, conn, d.Id()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange("multi_az") {
 		azRelocationEnabled, multiAZ := d.Get("availability_zone_relocation_enabled").(bool), d.Get("multi_az").(bool)
-		input := &redshift.ModifyClusterInput{
+		input := redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 			MultiAZ:           aws.Bool(multiAZ),
 		}
 
-		_, err := conn.ModifyCluster(ctx, input)
+		_, err := conn.ModifyCluster(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s) multi-AZ: %s", d.Id(), err)
@@ -1015,12 +919,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		if !multiAZ {
 			// Disabling MultiAZ, Redshift automatically enables AZ Relocation.
 			// For that reason is necessary to align it with the current configuration.
-			input = &redshift.ModifyClusterInput{
+			input := redshift.ModifyClusterInput{
 				AvailabilityZoneRelocation: aws.Bool(azRelocationEnabled),
 				ClusterIdentifier:          aws.String(d.Id()),
 			}
 
-			_, err = conn.ModifyCluster(ctx, input)
+			_, err = conn.ModifyCluster(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s) AZ relocation: %s", d.Id(), err)
@@ -1040,7 +944,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	input := &redshift.DeleteClusterInput{
+	input := redshift.DeleteClusterInput{
 		ClusterIdentifier:        aws.String(d.Id()),
 		SkipFinalClusterSnapshot: aws.Bool(skipFinalSnapshot),
 	}
@@ -1054,9 +958,9 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
-			return conn.DeleteCluster(ctx, input)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.DeleteCluster(ctx, &input)
 		})
 
 	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
@@ -1081,108 +985,6 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("skip_final_snapshot", true)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func enableLogging(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
-	input := &redshift.EnableLoggingInput{
-		ClusterIdentifier: aws.String(clusterID),
-	}
-
-	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
-		input.BucketName = aws.String(v)
-	}
-
-	if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
-		input.LogDestinationType = awstypes.LogDestinationType(v)
-	}
-
-	if v, ok := tfMap["log_exports"].(*schema.Set); ok && v.Len() > 0 {
-		input.LogExports = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
-		input.S3KeyPrefix = aws.String(v)
-	}
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
-			return conn.EnableLogging(ctx, input)
-		})
-
-	if err != nil {
-		return fmt.Errorf("enabling logging: %w", err)
-	}
-
-	return nil
-}
-
-func disableLogging(ctx context.Context, conn *redshift.Client, clusterID string) error {
-	input := &redshift.DisableLoggingInput{
-		ClusterIdentifier: aws.String(clusterID),
-	}
-
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidClusterStateFault](ctx, clusterInvalidClusterStateFaultTimeout,
-		func() (any, error) {
-			return conn.DisableLogging(ctx, input)
-		})
-
-	if err != nil {
-		return fmt.Errorf("disabling logging: %w", err)
-	}
-
-	return nil
-}
-
-func enableSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
-	input := &redshift.EnableSnapshotCopyInput{
-		ClusterIdentifier: aws.String(clusterID),
-		DestinationRegion: aws.String(tfMap["destination_region"].(string)),
-	}
-
-	if v, ok := tfMap[names.AttrRetentionPeriod]; ok {
-		input.RetentionPeriod = aws.Int32(int32(v.(int)))
-	}
-
-	if v, ok := tfMap["grant_name"]; ok {
-		input.SnapshotCopyGrantName = aws.String(v.(string))
-	}
-
-	_, err := conn.EnableSnapshotCopy(ctx, input)
-	if err != nil {
-		return fmt.Errorf("enabling snapshot copy: %w", err)
-	}
-
-	return nil
-}
-
-func disableSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string) error {
-	input := &redshift.DisableSnapshotCopyInput{
-		ClusterIdentifier: aws.String(clusterID),
-	}
-
-	_, err := conn.DisableSnapshotCopy(ctx, input)
-	if err != nil {
-		return fmt.Errorf("disabling snapshot copy: %w", err)
-	}
-
-	return nil
-}
-
-// toggleSnapshotCopy calls disableSnapshotCopy followed by enableSnapshotCopy
-//
-// This workflow is necessary in cases where the existing snapshot copy configuration
-// needs to be updated. Once enabled, `EnableSnapshotCopy` cannot be called to update existing
-// settings. While the `ModifySnapshotCopyRetentionPeriod` API is available to update the
-// `retention_period` argument, there is no mechanism to update other arguments such
-// as `destination_region` or `snapshot_copy_grant_name` without disabling first.
-func toggleSnapshotCopy(ctx context.Context, conn *redshift.Client, clusterID string, tfMap map[string]any) error {
-	if err := disableSnapshotCopy(ctx, conn, clusterID); err != nil {
-		return err
-	}
-	if err := enableSnapshotCopy(ctx, conn, clusterID, tfMap); err != nil {
-		return err
-	}
-	return nil
 }
 
 func flattenClusterNode(apiObject awstypes.ClusterNode) map[string]any {
@@ -1241,47 +1043,6 @@ func clusterMultiAZStatus(cluster *awstypes.Cluster) (bool, error) {
 	}
 }
 
-func flattenLogging(ls *redshift.DescribeLoggingStatusOutput) []any {
-	if ls == nil {
-		return []any{}
-	}
-
-	cfg := make(map[string]any)
-
-	cfg["enable"] = aws.ToBool(ls.LoggingEnabled)
-
-	if ls.BucketName != nil {
-		cfg[names.AttrBucketName] = aws.ToString(ls.BucketName)
-	}
-
-	cfg["log_destination_type"] = ls.LogDestinationType
-
-	if ls.LogExports != nil {
-		cfg["log_exports"] = ls.LogExports
-	}
-
-	if ls.S3KeyPrefix != nil {
-		cfg[names.AttrS3KeyPrefix] = aws.ToString(ls.S3KeyPrefix)
-	}
-
-	return []any{cfg}
-}
-
-func flattenSnapshotCopy(scs *awstypes.ClusterSnapshotCopyStatus) []any {
-	if scs == nil {
-		return []any{}
-	}
-
-	cfg := make(map[string]any)
-	if scs.DestinationRegion != nil {
-		cfg["destination_region"] = aws.ToString(scs.DestinationRegion)
-	}
-	if scs.RetentionPeriod != nil {
-		cfg[names.AttrRetentionPeriod] = aws.ToInt64(scs.RetentionPeriod)
-	}
-	if scs.SnapshotCopyGrantName != nil {
-		cfg["grant_name"] = aws.ToString(scs.SnapshotCopyGrantName)
-	}
-
-	return []any{cfg}
+func clusterARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARN(ctx, names.Redshift, "cluster:"+id)
 }

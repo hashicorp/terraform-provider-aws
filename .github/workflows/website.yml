@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 ## These checks will be superseded by documentation.yml
 ## when the provider documentation layout is moved to
 ## the Terraform Registry layout.
@@ -26,7 +29,7 @@ jobs:
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
@@ -42,7 +45,7 @@ jobs:
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
@@ -58,7 +61,7 @@ jobs:
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: YakDriver/md-check-links@0a295ce2e08c544aae01cccc9b4c6801a8398942 # v2.2.0
         name: markdown-link-check website/docs/**/*.md
         with:
@@ -76,7 +79,7 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
@@ -86,11 +89,11 @@ jobs:
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -102,11 +105,11 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -118,13 +121,13 @@ jobs:
   tflint:
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -134,7 +137,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -142,45 +145,40 @@ jobs:
 
       - run: tflint --config .ci/.tflint.hcl --init
 
-      - run: |
-          exit_code=0
+      - run: sudo apt-get update && sudo apt-get install -y parallel
 
-          # Configure the rules for tflint.
-          # The *_invalid_* rules disabled here prevent evaluation of expressions.
-          # Do not disable *_invalid_name rules, since these are good checks for e.g. "%s" formatting verbs
-          # being carried over from test cases.
-          shared_rules=(
-              "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
-              "--disable-rule=aws_db_instance_default_parameter_group"
-              "--disable-rule=aws_elasticache_cluster_default_parameter_group"
-              "--disable-rule=aws_elasticache_replication_group_default_parameter_group"
-              "--disable-rule=aws_iam_policy_sid_invalid_characters"
-              "--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document"
-              "--disable-rule=aws_iam_server_certificate_invalid_certificate_body"
-              "--disable-rule=aws_iam_server_certificate_invalid_private_key"
-              "--disable-rule=aws_iot_certificate_invalid_csr"
-              "--disable-rule=aws_lb_invalid_load_balancer_type"
-              "--disable-rule=aws_lb_target_group_invalid_protocol"
-              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
-              "--disable-rule=aws_s3_object_copy_invalid_source"
-              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
-              "--disable-rule=aws_transfer_ssh_key_invalid_body"
-              "--disable-rule=terraform_unused_declarations"
-              "--disable-rule=terraform_typed_variables"
-          )
-          while read -r filename; do
+      - run: |
+          validate_file() {
+            filename=$1
+
+            # Configure the rules for tflint.
+            shared_rules=(
+                "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
+                "--disable-rule=aws_db_instance_default_parameter_group"
+                "--disable-rule=aws_elasticache_cluster_default_parameter_group"
+                "--disable-rule=aws_elasticache_replication_group_default_parameter_group"
+                "--disable-rule=aws_iam_policy_sid_invalid_characters"
+                "--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document"
+                "--disable-rule=aws_iam_server_certificate_invalid_certificate_body"
+                "--disable-rule=aws_iam_server_certificate_invalid_private_key"
+                "--disable-rule=aws_iot_certificate_invalid_csr"
+                "--disable-rule=aws_lb_invalid_load_balancer_type"
+                "--disable-rule=aws_lb_target_group_invalid_protocol"
+                "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
+                "--disable-rule=aws_s3_object_copy_invalid_source"
+                "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
+                "--disable-rule=aws_transfer_ssh_key_invalid_body"
+                "--disable-rule=terraform_unused_declarations"
+                "--disable-rule=terraform_typed_variables"
+            )
+
             rules=("${shared_rules[@]}")
             if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.markdown" ]]; then
-                # ./website/docs/guides/version-2-upgrade.html.markdown should still include pre-0.12 syntax,
-                # since v1.0 does not support Terraform 0.12.
                 rules+=(
                 "--disable-rule=terraform_deprecated_index"
                 "--disable-rule=terraform_deprecated_interpolation"
                 )
             elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.markdown" ]]; then
-                # ./website/docs/guides/version-3-upgrade.html.markdown has one example showing migration from
-                # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
-                # tflint-ignore directive to documentation is not ideal.
                 rules+=(
                 "--enable-rule=terraform_deprecated_index"
                 "--disable-rule=terraform_deprecated_interpolation"
@@ -192,10 +190,10 @@ jobs:
                 )
             fi
 
-            # We need to capture the output and error code here. We don't want to exit on the first error
-            set +e
-            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
-            set -e
-          done < <(find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | sort -u)
+            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}"
+          }
+          export -f validate_file
 
-          exit $exit_code
+          find ./website/docs -not \( -path ./website/docs/cdktf -prune \) -type f -name '*.markdown' | \
+            sort -u | \
+            parallel -j 16 --halt soon,fail=1 validate_file {}

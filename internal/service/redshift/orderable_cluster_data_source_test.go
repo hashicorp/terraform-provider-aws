@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift_test
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,7 +19,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -40,7 +39,7 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -59,9 +58,9 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
-	nodeType := "dc2.8xlarge"
+	nodeType := "ra3.xlplus"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -80,9 +79,9 @@ func TestAccRedshiftOrderableClusterDataSource_nodeType(t *testing.T) {
 func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_orderable_cluster.test"
-	preferredNodeType := "dc2.8xlarge"
+	preferredNodeType := "ra3.xlplus"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableClusterPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -99,7 +98,7 @@ func TestAccRedshiftOrderableClusterDataSource_preferredNodeTypes(t *testing.T) 
 }
 
 func testAccOrderableClusterPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 	input := &redshift.DescribeOrderableClusterOptionsInput{
 		MaxRecords: aws.Int32(20),
@@ -120,7 +119,7 @@ func testAccOrderableClusterDataSourceConfig_type(clusterType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_type         = %[1]q
-  preferred_node_types = ["dc2.large", "ds2.xlarge"]
+  preferred_node_types = ["ra3.large", "ds2.xlarge"]
 }
 `, clusterType)
 }
@@ -129,7 +128,7 @@ func testAccOrderableClusterDataSourceConfig_version(clusterVersion string) stri
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   cluster_version      = %[1]q
-  preferred_node_types = ["dc2.8xlarge", "ds2.8xlarge"]
+  preferred_node_types = ["ra3.xlplus", "ra3.large"]
 }
 `, clusterVersion)
 }
@@ -138,7 +137,7 @@ func testAccOrderableClusterDataSourceConfig_nodeType(nodeType string) string {
 	return fmt.Sprintf(`
 data "aws_redshift_orderable_cluster" "test" {
   node_type            = %[1]q
-  preferred_node_types = ["dc2.8xlarge", "ds2.8xlarge"]
+  preferred_node_types = ["ra3.xlplus", "ra3.large"]
 }
 `, nodeType)
 }

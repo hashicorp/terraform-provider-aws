@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: "2"
 linters:
   default: none
@@ -21,6 +24,8 @@ linters:
   settings:
     usetesting:
       os-setenv: true
+      context-background: false
+      context-todo: false
 issues:
   max-issues-per-linter: 10
   max-same-issues: 3

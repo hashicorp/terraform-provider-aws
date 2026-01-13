@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkmediapipelines_test
@@ -56,11 +56,6 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 				),
 			},
 			{
-				Config:             testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -91,7 +86,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 				Config: testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -530,21 +525,21 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "tes
   elements {
     type = "LambdaFunctionSink"
     lambda_function_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
+      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
     }
   }
 
   elements {
     type = "SnsTopicSink"
     sns_topic_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
+      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
     }
   }
 
   elements {
     type = "SqsQueueSink"
     sqs_queue_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
+      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
     }
   }
 

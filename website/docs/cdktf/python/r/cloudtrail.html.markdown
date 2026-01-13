@@ -57,7 +57,7 @@ class MyConvertedCode(TerraformStack):
                 actions=["s3:GetBucketAcl"],
                 condition=[DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -78,7 +78,7 @@ class MyConvertedCode(TerraformStack):
                     variable="s3:x-amz-acl"
                 ), DataAwsIamPolicyDocumentStatementCondition(
                     test="StringEquals",
-                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:trail/example"
+                    values=["arn:${" + data_aws_partition_current.partition + "}:cloudtrail:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:trail/example"
                     ],
                     variable="aws:SourceArn"
                 )
@@ -372,6 +372,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
@@ -453,4 +454,4 @@ Using `terraform import`, import Cloudtrails using the `arn`. For example:
 % terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-26297bfd292ca930ba753b2272b274951231e47c2f8d534370f28bd5d55535b6 -->
+<!-- cache-key: cdktf-0.20.8 input-a1f175998792e4fbf1f09fac4172e6ca4d2fdde7fc2ceb0d008fa36c132b4212 -->

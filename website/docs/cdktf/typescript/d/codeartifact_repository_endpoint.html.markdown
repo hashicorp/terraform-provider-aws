@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) Name of the domain that contains the repository.
 * `repository` - (Required) Name of the repository.
 * `format` - (Required) Which endpoint of a repository to return. A repository has one endpoint for each package format: `npm`, `pypi`, `maven`, and `nuget`.
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `repositoryEndpoint` - URL of the returned endpoint.
 
-<!-- cache-key: cdktf-0.20.8 input-845ec7d27ada856d0ad7aca19277d5091cd5696d048ed754b76ab9909399306c -->
+<!-- cache-key: cdktf-0.20.8 input-2292c7d1df9448b9f0f90a564b74159cbeb68ec633ecec6d3f746e8b39025664 -->

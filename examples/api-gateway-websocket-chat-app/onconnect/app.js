@@ -1,6 +1,9 @@
-// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: MIT-0
+/**
+ * Copyright IBM Corp. 2014, 2026
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
+// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 const AWS = require('aws-sdk');
 
 const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: process.env.AWS_REGION });

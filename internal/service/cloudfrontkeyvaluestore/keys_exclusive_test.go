@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfrontkeyvaluestore_test
@@ -24,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +35,9 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var keys []string
 	var values []string
-	for i := 1; i < 6; i++ {
+
+	// Test with a large number of key value pairs to ensure batching is working correctly
+	for i := 1; i < 170; i++ {
 		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
@@ -92,7 +94,7 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -287,6 +289,85 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_empty(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	maxBatchSize := sdkacctest.RandIntRange(35, 49)
+	var keys []string
+	var values []string
+	// Test with a large number of key value pairs to ensure batching is working correctly
+	for i := 1; i < 170; i++ {
+		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+	}
+	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+	kvsResourceName := "aws_cloudfront_key_value_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeysExclusiveConfig_maxBatchSize(keys, values, rName, maxBatchSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
+					testCheckMultipleKeyValuePairs(keys, values, resourceName),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "key_value_store_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "key_value_store_arn",
+				ImportStateVerifyIgnore:              []string{"max_batch_size"},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	keys := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	values := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	valuesUpdated := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testCheckMultipleKeyValuePairs(keys, values, resourceName),
+				),
+			},
+			{
+				Config: testAccKeysExclusiveConfig_basic(keys, valuesUpdated, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testCheckMultipleKeyValuePairs(keys, valuesUpdated, resourceName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
@@ -298,7 +379,7 @@ func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfcloudfrontkeyvaluestore.FindKeyValueStoreByARN(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -323,7 +404,6 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.Tes
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
 
 		_, out, err := tfcloudfrontkeyvaluestore.FindResourceKeyValuePairsForKeyValueStore(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
-
 		if err != nil {
 			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKeysExclusive, rs.Primary.Attributes["key_value_store_arn"], err)
 		}
@@ -347,7 +427,6 @@ func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string,
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
 
 		resp, err := tfcloudfrontkeyvaluestore.FindKeyValueStoreByARN(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
-
 		if err != nil {
 			return fmt.Errorf("error finding Cloudfront KeyValueStore in out of band test")
 		}
@@ -360,7 +439,6 @@ func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string,
 		}
 
 		_, err = conn.UpdateKeys(ctx, &input)
-
 		if err != nil {
 			return fmt.Errorf("Error updating CloudFront KeyValueStore %s Key for out of band tests", rs.Primary.Attributes["key_value_store_arn"])
 		}
@@ -430,4 +508,35 @@ resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "test" {
   ]
 }
 `, rName)
+}
+
+func testAccKeysExclusiveConfig_maxBatchSize(keys, values []string, rName string, maxBatchSize int) string {
+	keysJson, _ := json.Marshal(keys)
+	keysString := string(keysJson)
+	valuesJson, _ := json.Marshal(values)
+	valuesString := string(valuesJson)
+	return fmt.Sprintf(`
+locals {
+  key_list      = %[1]s
+  value_list    = %[2]s
+  key_value_set = { for i, v in local.key_list : local.key_list[i] => local.value_list[i] }
+}
+
+resource "aws_cloudfront_key_value_store" "test" {
+  name = %[3]q
+}
+
+resource "aws_cloudfrontkeyvaluestore_keys_exclusive" "test" {
+  key_value_store_arn = aws_cloudfront_key_value_store.test.arn
+  max_batch_size      = %[4]d
+  dynamic "resource_key_value_pair" {
+    for_each = local.key_value_set
+    content {
+      key   = resource_key_value_pair.key
+      value = resource_key_value_pair.value
+
+    }
+  }
+}
+`, keysString, valuesString, rName, maxBatchSize)
 }

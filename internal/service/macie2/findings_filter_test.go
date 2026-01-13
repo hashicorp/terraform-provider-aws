@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,7 +130,7 @@ func testAccFindingsFilter_disappears(t *testing.T) {
 				Config: testAccFindingsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceFindingsFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceFindingsFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -471,7 +471,7 @@ func testAccCheckFindingsFilterDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfmacie2.FindFindingsFilterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -549,7 +549,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
   }
   depends_on = [aws_macie2_account.test]
@@ -570,7 +570,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
     criterion {
       field = "sample"
@@ -600,7 +600,7 @@ resource "aws_macie2_findings_filter" "test" {
   finding_criteria {
     criterion {
       field = "region"
-      eq    = [data.aws_region.current.name]
+      eq    = [data.aws_region.current.region]
     }
     criterion {
       field = "sample"

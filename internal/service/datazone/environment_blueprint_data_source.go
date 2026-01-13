@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone
@@ -20,19 +20,19 @@ import (
 )
 
 // @FrameworkDataSource("aws_datazone_environment_blueprint", name="Environment Blueprint")
-func newDataSourceEnvironmentBlueprint(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceEnvironmentBlueprint{}, nil
+func newEnvironmentBlueprintDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &environmentBlueprintDataSource{}, nil
 }
 
 const (
 	DSNameEnvironmentBlueprint = "Environment Blueprint Data Source"
 )
 
-type dataSourceEnvironmentBlueprint struct {
-	framework.DataSourceWithConfigure
+type environmentBlueprintDataSource struct {
+	framework.DataSourceWithModel[environmentBlueprintDataSourceModel]
 }
 
-func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *environmentBlueprintDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"blueprint_provider": schema.StringAttribute{
@@ -55,7 +55,7 @@ func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasou
 	}
 }
 
-func (d *dataSourceEnvironmentBlueprint) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *environmentBlueprintDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().DataZoneClient(ctx)
 
 	var data environmentBlueprintDataSourceModel
@@ -101,7 +101,7 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for i := range out.Items {
@@ -112,13 +112,14 @@ func _findEnvironmentBlueprintByName(ctx context.Context, conn *datazone.Client,
 	}
 
 	if out.NextToken == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return _findEnvironmentBlueprintByName(ctx, conn, domainId, name, managed, out.NextToken)
 }
 
 type environmentBlueprintDataSourceModel struct {
+	framework.WithRegionModel
 	BlueprintProvider types.String `tfsdk:"blueprint_provider"`
 	Description       types.String `tfsdk:"description"`
 	DomainId          types.String `tfsdk:"domain_id"`

@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the route.
 * `meshName` - (Required) Name of the service mesh in which the virtual router exists.
 * `virtualRouterName` - (Required) Name of the virtual router in which the route exists.
@@ -56,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Route specification. See the [`aws_appmesh_route`](/docs/providers/aws/r/appmesh_route.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.20.8 input-119e87c5e7bf086d7ee0180ecf07e79aa01fb3e55da6898cca84b3ba689d68ce -->
+<!-- cache-key: cdktf-0.20.8 input-670466588cc0b604115f419fb461fe8a717eaef130d81b1f0fb349f2537a6aaf -->

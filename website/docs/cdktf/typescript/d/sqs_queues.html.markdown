@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `queueNamePrefix` - (Optional) A string to use for filtering the list results. Only those queues whose name begins with the specified string are returned. Queue URLs and names are case-sensitive.
 
 ## Attribute Reference
@@ -48,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `queueUrls` - A list of queue URLs.
 
-<!-- cache-key: cdktf-0.20.8 input-1e5fe100d7582003d54198ed26f28cc150e201a30f6ce59c4e3b9c34624d3a76 -->
+<!-- cache-key: cdktf-0.20.8 input-c9cb105b7fe8caad46fa10f86dd34326d2955c934955b74d7e0414d862931183 -->

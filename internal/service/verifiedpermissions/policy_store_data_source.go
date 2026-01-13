@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -15,29 +15,35 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_verifiedpermissions_policy_store", name="Policy Store")
-func newDataSourcePolicyStore(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourcePolicyStore{}, nil
+// @Tags(identifierAttribute="arn")
+func newPolicyStoreDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &policyStoreDataSource{}, nil
 }
 
 const (
 	DSNamePolicyStore = "Policy Store Data Source"
 )
 
-type dataSourcePolicyStore struct {
-	framework.DataSourceWithConfigure
+type policyStoreDataSource struct {
+	framework.DataSourceWithModel[policyStoreDataSourceModel]
 }
 
-func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *policyStoreDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+			},
+			names.AttrDeletionProtection: schema.StringAttribute{
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
@@ -49,51 +55,50 @@ func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.Schem
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"validation_settings": schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[validationSettingsDataSource](ctx),
-				ElementType: fwtypes.NewObjectTypeOf[validationSettingsDataSource](ctx),
-				Computed:    true,
-			},
+			names.AttrTags:        tftags.TagsAttributeComputedOnly(),
+			"validation_settings": framework.DataSourceComputedListOfObjectAttribute[validationSettingsModel](ctx),
 		},
 	}
 }
-func (d *dataSourcePolicyStore) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().VerifiedPermissionsClient(ctx)
-
-	var data dataSourcePolicyStoreData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *policyStoreDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data policyStoreDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+	conn := d.Meta().VerifiedPermissionsClient(ctx)
+
+	output, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
 
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, DSNamePolicyStore, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
-
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourcePolicyStoreData struct {
-	ARN                types.String                                                  `tfsdk:"arn"`
-	CreatedDate        timetypes.RFC3339                                             `tfsdk:"created_date"`
-	Description        types.String                                                  `tfsdk:"description"`
-	ID                 types.String                                                  `tfsdk:"id"`
-	LastUpdatedDate    timetypes.RFC3339                                             `tfsdk:"last_updated_date"`
-	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsDataSource] `tfsdk:"validation_settings"`
+type policyStoreDataSourceModel struct {
+	framework.WithRegionModel
+	ARN                types.String                                             `tfsdk:"arn"`
+	CreatedDate        timetypes.RFC3339                                        `tfsdk:"created_date"`
+	DeletionProtection fwtypes.StringEnum[awstypes.DeletionProtection]          `tfsdk:"deletion_protection"`
+	Description        types.String                                             `tfsdk:"description"`
+	ID                 types.String                                             `tfsdk:"id"`
+	LastUpdatedDate    timetypes.RFC3339                                        `tfsdk:"last_updated_date"`
+	Tags               tftags.Map                                               `tfsdk:"tags"`
+	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsModel] `tfsdk:"validation_settings"`
 }
 
-type validationSettingsDataSource struct {
+type validationSettingsModel struct {
 	Mode fwtypes.StringEnum[awstypes.ValidationMode] `tfsdk:"mode"`
 }

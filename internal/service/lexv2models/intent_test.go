@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -574,7 +574,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		slotPriorityAWS,
 	}
 
-	intentCreateTF := tflexv2models.ResourceIntentData{
+	intentCreateTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		Name:                   types.StringValue(testString),
@@ -609,7 +609,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		SampleUtterances:          sampleUtterancesAWS,
 	}
 
-	intentModifyTF := tflexv2models.ResourceIntentData{
+	intentModifyTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		Name:                   types.StringValue(testString),
@@ -649,7 +649,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	testTimeStr := "2023-12-08T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
 
-	intentDescribeTF := tflexv2models.ResourceIntentData{
+	intentDescribeTF := tflexv2models.IntentResourceModel{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
 		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
@@ -773,21 +773,21 @@ func TestIntentAutoFlex(t *testing.T) {
 		{
 			TestName: "create intent",
 			TFFull:   &intentCreateTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentCreateAWS,
 			AWSEmpty: &lexmodelsv2.CreateIntentInput{},
 		},
 		{
 			TestName: "update intent",
 			TFFull:   &intentModifyTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentModifyAWS,
 			AWSEmpty: &lexmodelsv2.UpdateIntentInput{},
 		},
 		{
 			TestName: "describe intent",
 			TFFull:   &intentDescribeTF,
-			TFEmpty:  &tflexv2models.ResourceIntentData{},
+			TFEmpty:  &tflexv2models.IntentResourceModel{},
 			AWSFull:  &intentDescribeAWS,
 			AWSEmpty: &lexmodelsv2.DescribeIntentOutput{},
 		},
@@ -954,7 +954,7 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceIntent, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceIntent, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1021,6 +1021,48 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "660",
 					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_confirmationSetting_promptSpecifications_defaults(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_NoDefaults(rName, 1, "test", 640, 640),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateConfirmationSetting_promtSpecifications_WithDefault(rName, 1, "test", 640, 640),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 				),
 			},
 		},
@@ -2027,6 +2069,98 @@ resource "aws_lexv2models_intent" "test" {
 
         text_input_specification {
           start_timeout_ms = 30000
+        }
+      }
+    }
+  }
+}
+`, rName, retries, textMsg, endTOMs1, endTOMs2))
+}
+
+func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_NoDefaults(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+
+    prompt_specification {
+      allow_interrupt            = true
+      max_retries                = %[2]d
+      message_selection_strategy = "Ordered"
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[3]q
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, retries, textMsg, endTOMs1, endTOMs2))
+}
+
+func testAccIntentConfig_updateConfirmationSetting_promtSpecifications_WithDefault(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+
+    prompt_specification {
+      allow_interrupt            = true
+      max_retries                = %[2]d
+      message_selection_strategy = "Ordered"
+
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = %[4]d
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[3]q
+          }
         }
       }
     }

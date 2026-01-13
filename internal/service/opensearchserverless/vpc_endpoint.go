@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,7 +52,7 @@ const (
 )
 
 type vpcEndpointResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
@@ -61,7 +62,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the interface endpoint.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
@@ -70,6 +72,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				Description: "One or more security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint. Up to 5 security groups can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
@@ -79,6 +82,7 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				Description: "One or more subnet IDs from which you'll access OpenSearch Serverless. Up to 6 subnets can be provided.",
 				ElementType: types.StringType,
 				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
@@ -87,7 +91,8 @@ func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
+				Description: "ID of the VPC from which you'll access OpenSearch Serverless.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
 				},
@@ -178,7 +183,7 @@ func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest
 
 	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -343,12 +348,13 @@ func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 type vpcEndpointResourceModel struct {
-	ID               types.String                     `tfsdk:"id"`
-	Name             types.String                     `tfsdk:"name"`
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-	Timeouts         timeouts.Value                   `tfsdk:"timeouts"`
-	VPCID            types.String                     `tfsdk:"vpc_id"`
+	framework.WithRegionModel
+	ID               types.String        `tfsdk:"id"`
+	Name             types.String        `tfsdk:"name"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+	Timeouts         timeouts.Value      `tfsdk:"timeouts"`
+	VPCID            types.String        `tfsdk:"vpc_id"`
 }
 
 func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*awstypes.VpcEndpointDetail, error) {
@@ -373,7 +379,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	output, err := conn.BatchGetVpcEndpoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -384,17 +390,17 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcEndpointDetails, nil
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -407,7 +413,7 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, i
 }
 
 func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
@@ -420,7 +426,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -430,7 +436,7 @@ func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
 		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
@@ -442,7 +448,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -452,7 +458,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Clie
 }
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
 		Target:                    []string{},
 		Refresh:                   statusVPCEndpoint(ctx, conn, id),
@@ -464,7 +470,7 @@ func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Clie
 
 	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
 		if output.Status == awstypes.VpcEndpointStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

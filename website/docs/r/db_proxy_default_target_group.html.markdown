@@ -12,6 +12,8 @@ Provides a resource to manage an RDS DB proxy default target group resource.
 
 The `aws_db_proxy_default_target_group` behaves differently from normal resources, in that Terraform does not _create_ or _destroy_ this resource, since it implicitly exists as part of an RDS DB Proxy. On Terraform resource creation it is automatically imported and on resource destruction, Terraform performs no actions in RDS.
 
+~> **NOTE:** When the associated `aws_db_proxy` resource is replaced, Terraform will lose track of this resource, causing unexpected differences on the next apply. To ensure proper dependency management, add a `lifecycle` block with `replace_triggered_by` referencing the `aws_db_proxy` resource's `id` attribute.
+
 ## Example Usage
 
 ```terraform
@@ -48,6 +50,10 @@ resource "aws_db_proxy_default_target_group" "example" {
     max_idle_connections_percent = 50
     session_pinning_filters      = ["EXCLUDE_VARIABLE_SETS"]
   }
+
+  lifecycle {
+    replace_triggered_by = [aws_db_proxy.example.id]
+  }
 }
 ```
 
@@ -55,6 +61,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_proxy_name` - (Required) Name of the RDS DB Proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.
 

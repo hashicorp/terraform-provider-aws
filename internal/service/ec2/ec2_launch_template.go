@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -10,14 +10,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,9 +82,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Optional: true,
 									},
 									names.AttrKMSKeyID: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
+										Type:     schema.TypeString,
+										Optional: true,
+										// Allow empty string for backwards compatibility with verify.ValidARN.
+										ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
+											validation.StringIsEmpty,
+											verify.ValidKMSKeyID,
+										),
 									},
 									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
@@ -96,7 +98,13 @@ func resourceLaunchTemplate() *schema.Resource {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
+									},
+									"volume_initialization_rate": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.IntBetween(100, 300),
 									},
 									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
@@ -218,33 +226,6 @@ func resourceLaunchTemplate() *schema.Resource {
 				Optional:         true,
 				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
-			},
-			"elastic_gpu_specifications": {
-				Deprecated: "elastic_gpu_specifications is deprecated. AWS no longer supports the Elastic Graphics service.",
-				Type:       schema.TypeList,
-				Optional:   true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"elastic_inference_accelerator": {
-				Deprecated: "elastic_inference_accelerator is deprecated. AWS no longer supports the Elastic Inference service.",
-				Type:       schema.TypeList,
-				Optional:   true,
-				MaxItems:   1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
 			},
 			"enclave_options": {
 				Type:     schema.TypeList,
@@ -919,9 +900,15 @@ func resourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"group_id": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_name"},
+						},
 						names.AttrGroupName: {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"placement.0.group_id"},
 						},
 						"host_id": {
 							Type:     schema.TypeString,
@@ -1014,6 +1001,15 @@ func resourceLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    launchTemplateSchemaV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: launchTemplateStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		// Enable downstream updates for resources referencing schema attributes
 		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
@@ -1065,7 +1061,6 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	output, err := conn.CreateLaunchTemplate(ctx, &input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
 	}
@@ -1081,11 +1076,12 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	lt, err := findLaunchTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1097,19 +1093,11 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 
 	version := flex.Int64ToStringValue(lt.LatestVersionNumber)
 	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, launchTemplateARN(ctx, c, d.Id()))
 	d.Set("default_version", lt.DefaultVersionNumber)
 	d.Set(names.AttrDescription, ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
@@ -1138,8 +1126,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
-		"elastic_gpu_specifications",
-		"elastic_inference_accelerator",
 		"enclave_options",
 		"hibernation_options",
 		"iam_instance_profile",
@@ -1181,7 +1167,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s) Version: %s", d.Id(), err)
 		}
@@ -1201,7 +1186,6 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		_, err := conn.ModifyLaunchTemplate(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
@@ -1235,48 +1219,6 @@ func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-const (
-	LaunchTemplateFound = "Found"
-)
-
-func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		var output *awstypes.LaunchTemplate
-		var err error
-		if idIsName {
-			output, err = findLaunchTemplateByName(ctx, conn, id)
-		} else {
-			output, err = findLaunchTemplateByID(ctx, conn, id)
-		}
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, LaunchTemplateFound, nil
-	}
-}
-
-func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{""},
-		Target:                    enum.Slice(LaunchTemplateFound),
-		Refresh:                   statusLaunchTemplate(ctx, conn, id, idIsName),
-		Timeout:                   timeout,
-		Delay:                     5 * time.Second,
-		NotFoundChecks:            5,
-		ContinuousTargetOccurence: 3,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {
 	apiObject := &awstypes.RequestLaunchTemplateData{
 		// Always set at least one field.
@@ -1306,7 +1248,6 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if instanceType != "" {
 			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
@@ -1327,14 +1268,6 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 
 	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).ValueBool(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
-	}
-
-	if v, ok := d.GetOk("elastic_gpu_specifications"); ok && len(v.([]any)) > 0 {
-		apiObject.ElasticGpuSpecifications = expandElasticGpuSpecifications(v.([]any))
-	}
-
-	if v, ok := d.GetOk("elastic_inference_accelerator"); ok && len(v.([]any)) > 0 {
-		apiObject.ElasticInferenceAccelerators = expandLaunchTemplateElasticInferenceAccelerators(v.([]any))
 	}
 
 	if v, ok := d.GetOk("enclave_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -1505,6 +1438,10 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]any) *awstypes.L
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["volume_initialization_rate"].(int); ok && v != 0 {
+		apiObject.VolumeInitializationRate = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
@@ -1554,66 +1491,6 @@ func expandLaunchTemplateCPUOptionsRequest(tfMap map[string]any) *awstypes.Launc
 	}
 
 	return apiObject
-}
-
-func expandElasticGpuSpecification(tfMap map[string]any) awstypes.ElasticGpuSpecification {
-	apiObject := awstypes.ElasticGpuSpecification{}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandElasticGpuSpecifications(tfList []any) []awstypes.ElasticGpuSpecification {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.ElasticGpuSpecification
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, expandElasticGpuSpecification(tfMap))
-	}
-
-	return apiObjects
-}
-
-func expandLaunchTemplateElasticInferenceAccelerator(tfMap map[string]any) awstypes.LaunchTemplateElasticInferenceAccelerator {
-	apiObject := awstypes.LaunchTemplateElasticInferenceAccelerator{}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandLaunchTemplateElasticInferenceAccelerators(tfList []any) []awstypes.LaunchTemplateElasticInferenceAccelerator {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.LaunchTemplateElasticInferenceAccelerator
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]any)
-
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, expandLaunchTemplateElasticInferenceAccelerator(tfMap))
-	}
-
-	return apiObjects
 }
 
 func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string]any) *awstypes.LaunchTemplateIamInstanceProfileSpecificationRequest {
@@ -2187,6 +2064,10 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.Launch
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
+	if v, ok := tfMap["group_id"].(string); ok && v != "" {
+		apiObject.GroupId = aws.String(v)
+	}
+
 	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
@@ -2289,7 +2170,6 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	}
 	if apiObject.CreditSpecification != nil && instanceType != "" {
 		instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
-
 		if err != nil {
 			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 		}
@@ -2306,12 +2186,6 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		d.Set("ebs_optimized", flex.BoolToStringValue(apiObject.EbsOptimized))
 	} else {
 		d.Set("ebs_optimized", "")
-	}
-	if err := d.Set("elastic_gpu_specifications", flattenElasticGpuSpecificationResponses(apiObject.ElasticGpuSpecifications)); err != nil {
-		return fmt.Errorf("setting elastic_gpu_specifications: %w", err)
-	}
-	if err := d.Set("elastic_inference_accelerator", flattenLaunchTemplateElasticInferenceAcceleratorResponses(apiObject.ElasticInferenceAccelerators)); err != nil {
-		return fmt.Errorf("setting elastic_inference_accelerator: %w", err)
 	}
 	if apiObject.EnclaveOptions != nil {
 		tfMap := map[string]any{
@@ -2484,6 +2358,10 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
+	if v := apiObject.VolumeInitializationRate; v != nil {
+		tfMap["volume_initialization_rate"] = aws.ToInt32(v)
+	}
+
 	if v := apiObject.VolumeSize; v != nil {
 		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
@@ -2549,54 +2427,6 @@ func flattenCreditSpecification(apiObject *awstypes.CreditSpecification) map[str
 	return tfMap
 }
 
-func flattenElasticGpuSpecificationResponse(apiObject awstypes.ElasticGpuSpecificationResponse) map[string]any {
-	tfMap := map[string]any{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenElasticGpuSpecificationResponses(apiObjects []awstypes.ElasticGpuSpecificationResponse) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []any
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenElasticGpuSpecificationResponse(apiObject))
-	}
-
-	return tfList
-}
-
-func flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject awstypes.LaunchTemplateElasticInferenceAcceleratorResponse) map[string]any {
-	tfMap := map[string]any{}
-
-	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenLaunchTemplateElasticInferenceAcceleratorResponses(apiObjects []awstypes.LaunchTemplateElasticInferenceAcceleratorResponse) []any {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []any
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject))
-	}
-
-	return tfList
-}
-
 func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *awstypes.LaunchTemplateIamInstanceProfileSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
@@ -2645,11 +2475,11 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.AcceleratorManufacturers; v != nil {
-		tfMap["accelerator_manufacturers"] = flex.FlattenStringyValueSet[awstypes.AcceleratorManufacturer](v)
+		tfMap["accelerator_manufacturers"] = v
 	}
 
 	if v := apiObject.AcceleratorNames; v != nil {
-		tfMap["accelerator_names"] = flex.FlattenStringyValueSet[awstypes.AcceleratorName](v)
+		tfMap["accelerator_names"] = v
 	}
 
 	if v := apiObject.AcceleratorTotalMemoryMiB; v != nil {
@@ -2657,7 +2487,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.AcceleratorTypes; v != nil {
-		tfMap["accelerator_types"] = flex.FlattenStringyValueSet[awstypes.AcceleratorType](v)
+		tfMap["accelerator_types"] = v
 	}
 
 	if v := apiObject.AllowedInstanceTypes; v != nil {
@@ -2677,7 +2507,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.CpuManufacturers; v != nil {
-		tfMap["cpu_manufacturers"] = flex.FlattenStringyValueSet[awstypes.CpuManufacturer](v)
+		tfMap["cpu_manufacturers"] = v
 	}
 
 	if v := apiObject.ExcludedInstanceTypes; v != nil {
@@ -2685,7 +2515,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.InstanceGenerations; v != nil {
-		tfMap["instance_generations"] = flex.FlattenStringyValueSet[awstypes.InstanceGeneration](v)
+		tfMap["instance_generations"] = v
 	}
 
 	if v := apiObject.LocalStorage; v != "" {
@@ -2693,7 +2523,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.LocalStorageTypes; v != nil {
-		tfMap["local_storage_types"] = flex.FlattenStringyValueSet[awstypes.LocalStorageType](v)
+		tfMap["local_storage_types"] = v
 	}
 
 	if v := apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice; v != nil {
@@ -3142,6 +2972,10 @@ func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement)
 		tfMap[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
+	if v := apiObject.GroupId; v != nil {
+		tfMap["group_id"] = aws.ToString(v)
+	}
+
 	if v := apiObject.GroupName; v != nil {
 		tfMap[names.AttrGroupName] = aws.ToString(v)
 	}
@@ -3376,4 +3210,7 @@ func flattenLaunchTemplateEnaSrdUdpSpecification(apiObject *awstypes.LaunchTempl
 	}
 
 	return tfMap
+}
+func launchTemplateARN(ctx context.Context, c *conns.AWSClient, templateID string) string {
+	return c.RegionalARN(ctx, names.EC2, "launch-template/"+templateID)
 }

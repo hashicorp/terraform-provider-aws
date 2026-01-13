@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -22,12 +22,13 @@ import (
 )
 
 // @FrameworkDataSource("aws_ecr_lifecycle_policy_document", name="Lifecycle Policy Document")
+// @Region(overrideEnabled=false)
 func newLifecyclePolicyDocumentDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &lifecyclePolicyDocumentDataSource{}, nil
 }
 
 type lifecyclePolicyDocumentDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[lifecyclePolicyDocumentDataSourceModel]
 }
 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -63,10 +64,16 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"target_storage_class": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.OneOf("archive"),
+										},
+									},
 									names.AttrType: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.OneOf("expire"),
+											stringvalidator.OneOf("expire", "transition"),
 										},
 									},
 								},
@@ -89,11 +96,17 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 									"count_type": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.OneOf("imageCountMoreThan", "sinceImagePushed"),
+											stringvalidator.OneOf("imageCountMoreThan", "sinceImagePulled", "sinceImagePushed", "sinceImageTransitioned"),
 										},
 									},
 									"count_unit": schema.StringAttribute{
 										Optional: true,
+									},
+									names.AttrStorageClass: schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.OneOf("archive", "standard"),
+										},
 									},
 									"tag_pattern_list": schema.ListAttribute{
 										CustomType:  fwtypes.ListOfStringType,
@@ -108,7 +121,7 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 									"tag_status": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.OneOf("tagged", "untagged", "any"),
+											stringvalidator.OneOf("any", "tagged", "untagged"),
 										},
 									},
 								},
@@ -167,13 +180,15 @@ type lifecyclePolicyDocumentRule struct {
 }
 
 type lifecyclePolicyDocumentRuleAction struct {
-	Type types.String `tfsdk:"type"`
+	Type               types.String `tfsdk:"type"`
+	TargetStorageClass types.String `tfsdk:"target_storage_class"`
 }
 
 type lifecyclePolicyDocumentRuleSelection struct {
 	CountNumber    types.Int64                       `tfsdk:"count_number"`
 	CountType      types.String                      `tfsdk:"count_type"`
 	CountUnit      types.String                      `tfsdk:"count_unit"`
+	StorageClass   types.String                      `tfsdk:"storage_class"`
 	TagPatternList fwtypes.ListValueOf[types.String] `tfsdk:"tag_pattern_list"`
 	TagPrefixList  fwtypes.ListValueOf[types.String] `tfsdk:"tag_prefix_list"`
 	TagStatus      types.String                      `tfsdk:"tag_status"`

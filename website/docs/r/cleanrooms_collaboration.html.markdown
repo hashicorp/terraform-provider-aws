@@ -8,12 +8,10 @@ description: |-
 
 # Resource: aws_cleanrooms_collaboration
 
-Provides a AWS Clean Rooms collaboration.  All members included in the definition will be invited to
-join the collaboration and can create memberships.
+Provides a AWS Clean Rooms collaboration.
+All members included in the definition will be invited to join the collaboration and can create memberships.
 
 ## Example Usage
-
-### Collaboration with tags
 
 ```terraform
 resource "aws_cleanrooms_collaboration" "test_collaboration" {
@@ -22,6 +20,7 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
   creator_display_name     = "Creator "
   description              = "I made this collaboration with terraform!"
   query_log_status         = "DISABLED"
+  analytics_engine         = "SPARK"
 
   data_encryption_metadata {
     allow_clear_text                            = true
@@ -39,13 +38,12 @@ resource "aws_cleanrooms_collaboration" "test_collaboration" {
   tags = {
     Project = "Terraform"
   }
-
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
 * `name` - (Required) - The name of the collaboration.  Collaboration names do not need to be unique.
 * `description` - (Required) - A description for a collaboration.
@@ -53,6 +51,10 @@ This resource supports the following arguments:
 * `creator_display_name` - (Required - Forces new resource) - The name for the member record for the collaboration creator.
 * `query_log_status` - (Required - Forces new resource) - Determines if members of the collaboration can enable query logs within their own.
 emberships. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-queryLogStatus).
+
+The following arguments are optional:
+
+* `analytics_engine` - (Optional) Analytics engine used by the collaboration. Valid values are `CLEAN_ROOMS_SQL` (deprecated) and `SPARK`.
 * `data_encryption_metadata` - (Required - Forces new resource) - a collection of settings which determine how the [c3r client](https://docs.aws.amazon.com/clean-rooms/latest/userguide/crypto-computing.html) will encrypt data for use within this collaboration.
 * `data_encryption_metadata.allow_clear_text` - (Required - Forces new resource) - Indicates whether encrypted tables can contain cleartext data. This is a boolea
  field.
@@ -66,17 +68,18 @@ or cryptographically processed (false).
 * `member.account_id` - (Required - Forces new resource) - The account id for the invited member.
 * `member.display_name` - (Required - Forces new resource) - The display name for the invited member.
 * `member.member_abilities` - (Required - Forces new resource) - The list of abilities for the invited member. Valid values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_CreateCollaboration.html#API-CreateCollaboration-request-creatorMemberAbilities).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) - Key value pairs which tag the collaboration.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The arn of the collaboration.
-* `id` - The id of the collaboration.
-* `create_time` - The date and time the collaboration was created.
+* `arn` - ARN of the collaboration.
+* `id` - ID of the collaboration.
+* `create_time` - Date and time the collaboration was created.
 * `member status` - For each member included in the collaboration an additional computed attribute of status is added. These values [may be found here](https://docs.aws.amazon.com/clean-rooms/latest/apireference/API_MemberSummary.html#API-Type-MemberSummary-status).
-* `updated_time` - The date and time the collaboration was last updated.
+* `updated_time` - Date and time the collaboration was last updated.
 
 ## Timeouts
 
@@ -87,6 +90,32 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `1m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cleanrooms_collaboration.collaboration
+  identity = {
+    id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  }
+}
+
+resource "aws_cleanrooms_collaboration" "collaboration" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the cleanrooms collaboration.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_cleanrooms_collaboration` using the `id`. For example:
 

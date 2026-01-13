@@ -169,8 +169,6 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
-
 The following arguments are required:
 
 * `integrationName` - (Required) Name of the integration.
@@ -179,6 +177,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additionalEncryptionContext` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
 For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
 You can only include this parameter if you specify the `kmsKeyId` parameter.
@@ -187,6 +186,8 @@ You can only include this parameter if you specify the `kmsKeyId` parameter.
 If you don't specify an encryption key, Redshift uses a default AWS owned key.
 You can only include this parameter if `sourceArn` references a DynamoDB table.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/create-integration.html).
 
 ## Attribute Reference
 
@@ -235,4 +236,4 @@ Using `terraform import`, import Redshift Integration using the `arn`. For examp
 % terraform import aws_redshift_integration.example arn:aws:redshift:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-23620b131b543b1b2a65e1e7448af54803dd1232ce5557352f0af751e8caf145 -->
+<!-- cache-key: cdktf-0.20.8 input-b496848ea83b0c0a3496f1d8be57be2fed935f59a4feb07ca6a568318a01111b -->

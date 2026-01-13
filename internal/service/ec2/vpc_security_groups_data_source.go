@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,8 +50,8 @@ func dataSourceSecurityGroups() *schema.Resource {
 
 func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
@@ -78,19 +76,13 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	var arns, securityGroupIDs, vpcIDs []string
 
 	for _, v := range output {
-		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition(ctx),
-			Service:   names.EC2,
-			Region:    meta.(*conns.AWSClient).Region(ctx),
-			AccountID: aws.ToString(v.OwnerId),
-			Resource:  fmt.Sprintf("security-group/%s", aws.ToString(v.GroupId)),
-		}.String()
-		arns = append(arns, arn)
-		securityGroupIDs = append(securityGroupIDs, aws.ToString(v.GroupId))
+		ownerID, sgID := aws.ToString(v.OwnerId), aws.ToString(v.GroupId)
+		arns = append(arns, securityGroupARN(ctx, c, ownerID, sgID))
+		securityGroupIDs = append(securityGroupIDs, sgID)
 		vpcIDs = append(vpcIDs, aws.ToString(v.VpcId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.SetId(c.Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrIDs, securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)

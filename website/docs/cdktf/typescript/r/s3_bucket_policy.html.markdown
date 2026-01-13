@@ -70,10 +70,13 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+-> Only one `aws_s3_bucket_policy` resource should be defined per S3 bucket. Defining multiple `aws_s3_bucket_policy` resources with different Terraform names but the same `bucket` value may result in unexpected policy overwrites. Each resource uses the `PutBucketPolicy` API, which replaces the entire existing policy without error or warning. Because Terraform treats each resource independently, the policy applied last will silently override any previously applied policy.
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to which to apply the policy.
 * `policy` - (Required) Text of the policy. Although this is a bucket policy rather than an IAM policy, the [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) data source may be used, so long as it specifies a principal. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy). Note: Bucket policies are limited to 20 KB in size.
 
@@ -82,6 +85,32 @@ This resource supports the following arguments:
 This resource exports no additional attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_policy.example
+  identity = {
+    bucket = "my-tf-test-bucket"
+  }
+}
+
+resource "aws_s3_bucket_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) Name of the S3 bucket.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket policies using the bucket name. For example:
 
@@ -99,7 +128,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     S3BucketPolicy.generateConfigForImport(
       this,
-      "allowAccessFromAnotherAccount",
+      "example",
       "my-tf-test-bucket"
     );
   }
@@ -110,7 +139,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import S3 bucket policies using the bucket name. For example:
 
 ```console
-% terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
+% terraform import aws_s3_bucket_policy.example my-tf-test-bucket
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ce73bb0e8c95d107e5421c665248cb3f86ed08c2b8db8245400a825a612f812b -->
+<!-- cache-key: cdktf-0.20.8 input-a15ab2d1315a56cb464e925b61eec3dff376be1cd44c92c381287f92139f90b9 -->

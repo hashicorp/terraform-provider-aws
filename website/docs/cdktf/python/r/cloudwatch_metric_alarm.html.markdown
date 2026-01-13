@@ -217,11 +217,9 @@ You must choose one or the other
 
 ## Argument Reference
 
-See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
-for details about valid values.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
 * `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
@@ -251,6 +249,9 @@ This resource supports the following arguments:
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+See [related part of AWS Docs](https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html)
+for details about valid values.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 
@@ -294,6 +295,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_metric_alarm.example
+  identity = {
+    alarm_name = "alarm-12345"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `alarm_name` (String) Name of the CloudWatch metric alarm.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```python
@@ -308,13 +335,13 @@ from imports.aws.cloudwatch_metric_alarm import CloudwatchMetricAlarm
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        CloudwatchMetricAlarm.generate_config_for_import(self, "test", "alarm-12345")
+        CloudwatchMetricAlarm.generate_config_for_import(self, "example", "alarm-12345")
 ```
 
 Using `terraform import`, import CloudWatch Metric Alarm using the `alarm_name`. For example:
 
 ```console
-% terraform import aws_cloudwatch_metric_alarm.test alarm-12345
+% terraform import aws_cloudwatch_metric_alarm.example alarm-12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-475fa44a8de1c676d1dbd3a9b5c288149792b63a6235f447bf2a199f2be6dbfd -->
+<!-- cache-key: cdktf-0.20.8 input-9a7f272d9f320751461cd8357d42baaec6a411d01f769fa15ade05e4665110bd -->

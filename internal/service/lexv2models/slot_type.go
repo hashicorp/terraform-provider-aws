@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models
@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -27,13 +27,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lexv2models_slot_type", name="Slot Type")
-func newResourceSlotType(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSlotType{}
+func newSlotTypeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &slotTypeResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -48,13 +49,13 @@ const (
 	slotTypeIDPartCount = 4
 )
 
-type resourceSlotType struct {
-	framework.ResourceWithConfigure
+type slotTypeResource struct {
+	framework.ResourceWithModel[slotTypeResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *slotTypeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	subSlotTypeCompositionLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -225,10 +226,10 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 
 var slotTypeFlexOpt = flex.WithFieldNamePrefix(ResNameSlotType)
 
-func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *slotTypeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan resourceSlotTypeData
+	var plan slotTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -283,17 +284,17 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceSlotType) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *slotTypeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceSlotTypeData
+	var state slotTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := FindSlotTypeByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -312,10 +313,10 @@ func (r *resourceSlotType) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *slotTypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state resourceSlotTypeData
+	var plan, state slotTypeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -355,10 +356,10 @@ func (r *resourceSlotType) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *slotTypeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state resourceSlotTypeData
+	var state slotTypeResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -406,7 +407,7 @@ func FindSlotTypeByID(ctx context.Context, conn *lexmodelsv2.Client, id string) 
 	out, err := conn.DescribeSlotType(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -417,13 +418,14 @@ func FindSlotTypeByID(ctx context.Context, conn *lexmodelsv2.Client, id string) 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type resourceSlotTypeData struct {
+type slotTypeResourceModel struct {
+	framework.WithRegionModel
 	BotID                    types.String                                              `tfsdk:"bot_id"`
 	BotVersion               types.String                                              `tfsdk:"bot_version"`
 	LocaleID                 types.String                                              `tfsdk:"locale_id"`
@@ -485,7 +487,7 @@ type ValueSelectionSetting struct {
 	RegexFilter                fwtypes.ListNestedObjectValueOf[RegexFilter]                `tfsdk:"regex_filter"`
 }
 
-func slotTypeHasChanges(_ context.Context, plan, state resourceSlotTypeData) bool {
+func slotTypeHasChanges(_ context.Context, plan, state slotTypeResourceModel) bool {
 	return !plan.Description.Equal(state.Description) ||
 		!plan.ValueSelectionSetting.Equal(state.ValueSelectionSetting) ||
 		!plan.ExternalSourceSetting.Equal(state.ExternalSourceSetting) ||

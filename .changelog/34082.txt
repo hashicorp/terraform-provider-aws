@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cognito_user_in_group: Add import support
+```
+
+```release-note:breaking-change
+resource/aws_cognito_user_in_group: The `id` attribute is now a comma-delimited string concatenating the `user_pool_id`, `group_name`, and `username` arguments
+```

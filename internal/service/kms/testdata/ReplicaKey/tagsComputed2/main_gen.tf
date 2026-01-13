@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "awsalternate" {
@@ -25,6 +25,7 @@ resource "aws_kms_key" "test" {
   multi_region = true
 
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "null_resource" "test" {}

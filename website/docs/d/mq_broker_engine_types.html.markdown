@@ -3,16 +3,14 @@ subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker_engine_types"
 description: |-
-  Retrieve information about available broker engines.
+  Provides details about available MQ broker engine types.
 ---
 
 # Data Source: aws_mq_broker_engine_types
 
-Retrieve information about available broker engines.
+Provides details about available MQ broker engine types. Use this data source to retrieve supported engine types and their versions for Amazon MQ brokers.
 
 ## Example Usage
-
-### Basic Usage
 
 ```terraform
 data "aws_mq_broker_engine_types" "example" {
@@ -24,15 +22,20 @@ data "aws_mq_broker_engine_types" "example" {
 
 This data source supports the following arguments:
 
-* `engine_type` - (Optional) The MQ engine type to return version details for.
+* `engine_type` - (Optional) MQ engine type to return version details for.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `broker_engine_types` - A list of available engine types and versions. See [Engine Types](#engine-types).
+* `broker_engine_types` - List of available engine types and versions. See [Engine Types](#engine-types).
 
-### engine-types
+### Engine Types
 
-* `engine_type` - The broker's engine type.
-* `engine_versions` - The list of engine versions.
+* `engine_type` - Broker's engine type.
+* `engine_versions` - List of engine versions. See [Engine Versions](#engine-versions).
+
+### Engine Versions
+
+* `name` - Name of the engine version.

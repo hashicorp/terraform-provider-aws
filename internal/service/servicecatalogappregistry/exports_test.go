@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry
@@ -9,7 +9,7 @@ var (
 	FindAttributeGroupByID                    = findAttributeGroupByID
 	FindAttributeGroupAssociationByTwoPartKey = findAttributeGroupAssociationByTwoPartKey
 
-	ResourceApplication               = newResourceApplication
-	ResourceAttributeGroup            = newResourceAttributeGroup
-	ResourceAttributeGroupAssociation = newResourceAttributeGroupAssociation
+	ResourceApplication               = newApplicationResource
+	ResourceAttributeGroup            = newAttributeGroupResource
+	ResourceAttributeGroupAssociation = newAttributeGroupAssociationResource
 )

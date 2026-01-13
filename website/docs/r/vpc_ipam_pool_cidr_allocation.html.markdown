@@ -33,12 +33,12 @@ resource "aws_vpc_ipam_pool_cidr" "example" {
 resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 ```
@@ -69,12 +69,12 @@ resource "aws_vpc_ipam_pool_cidr" "example" {
 resource "aws_vpc_ipam_pool" "example" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
-  locale         = data.aws_region.current.name
+  locale         = data.aws_region.current.region
 }
 
 resource "aws_vpc_ipam" "example" {
   operating_regions {
-    region_name = data.aws_region.current.name
+    region_name = data.aws_region.current.region
   }
 }
 ```
@@ -83,6 +83,7 @@ resource "aws_vpc_ipam" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cidr` - (Optional, Forces new resource) The CIDR you want to assign to the pool.
 * `description` - (Optional, Forces new resource) The description for the allocation.
 * `disallowed_cidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.

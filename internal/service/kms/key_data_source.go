@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -22,6 +22,7 @@ import (
 func dataSourceKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKeyRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -170,7 +171,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	keyID := d.Get(names.AttrKeyID).(string)
-	input := &kms.DescribeKeyInput{
+	input := kms.DescribeKeyInput{
 		KeyId: aws.String(keyID),
 	}
 
@@ -178,7 +179,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.GrantTokens = flex.ExpandStringValueList(v.([]any))
 	}
 
-	output, err := findKey(ctx, conn, input)
+	output, err := findKey(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", keyID, err)
@@ -189,7 +190,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrAWSAccountID, output.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
 	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
-	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
+	d.Set("customer_master_key_spec", output.KeySpec)
 	d.Set("custom_key_store_id", output.CustomKeyStoreId)
 	if output.DeletionDate != nil {
 		d.Set("deletion_date", aws.ToTime(output.DeletionDate).Format(time.RFC3339))

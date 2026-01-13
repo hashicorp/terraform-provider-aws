@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,14 +15,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,6 +66,10 @@ func resourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"serial_number": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrUserName: {
@@ -89,20 +94,20 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	name := d.Get("virtual_mfa_device_name").(string)
-	input := &iam.CreateVirtualMFADeviceInput{
+	input := iam.CreateVirtualMFADeviceInput{
 		Path:                 aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                 getTagsIn(ctx),
 		VirtualMFADeviceName: aws.String(name),
 	}
 
-	output, err := conn.CreateVirtualMFADevice(ctx, input)
+	output, err := conn.CreateVirtualMFADevice(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateVirtualMFADevice(ctx, input)
+		output, err = conn.CreateVirtualMFADevice(ctx, &input)
 	}
 
 	if err != nil {
@@ -139,7 +144,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 
 	vMFA, err := findVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Virtual MFA Device (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -150,6 +155,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set(names.AttrARN, vMFA.SerialNumber)
+	d.Set("serial_number", vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {
@@ -191,22 +197,26 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if v := d.Get(names.AttrUserName); v != "" {
-		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
-			UserName:     aws.String(v.(string)),
+		input := iam.DeactivateMFADeviceInput{
 			SerialNumber: aws.String(d.Id()),
-		})
+			UserName:     aws.String(v.(string)),
+		}
+		_, err := conn.DeactivateMFADevice(ctx, &input)
+
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return diags
 		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deactivating IAM Virtual MFA Device (%s): %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting IAM Virtual MFA Device: %s", d.Id())
-	_, err := conn.DeleteVirtualMFADevice(ctx, &iam.DeleteVirtualMFADeviceInput{
+	input := iam.DeleteVirtualMFADeviceInput{
 		SerialNumber: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteVirtualMFADevice(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
@@ -220,29 +230,42 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func findVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.Client, serialNumber string) (*awstypes.VirtualMFADevice, error) {
-	input := &iam.ListVirtualMFADevicesInput{}
-	var output awstypes.VirtualMFADevice
+	var input iam.ListVirtualMFADevicesInput
+
+	return findVirtualMFADevice(ctx, conn, &input, func(v *awstypes.VirtualMFADevice) bool {
+		return aws.ToString(v.SerialNumber) == serialNumber
+	})
+}
+
+func findVirtualMFADevice(ctx context.Context, conn *iam.Client, input *iam.ListVirtualMFADevicesInput, filter tfslices.Predicate[*awstypes.VirtualMFADevice]) (*awstypes.VirtualMFADevice, error) {
+	output, err := findVirtualMFADevices(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVirtualMFADevices(ctx context.Context, conn *iam.Client, input *iam.ListVirtualMFADevicesInput, filter tfslices.Predicate[*awstypes.VirtualMFADevice]) ([]awstypes.VirtualMFADevice, error) {
+	var output []awstypes.VirtualMFADevice
 
 	pages := iam.NewListVirtualMFADevicesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
 		if err != nil {
 			return nil, err
 		}
 
 		for _, v := range page.VirtualMFADevices {
-			if !reflect.ValueOf(v).IsZero() && aws.ToString(v.SerialNumber) == serialNumber {
-				output = v
-				break
+			if p := &v; !inttypes.IsZero(p) && filter(p) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	if reflect.ValueOf(output).IsZero() {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return &output, nil
+	return output, nil
 }
 
 func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
@@ -260,13 +283,22 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 	return matches[1], matches[2], nil
 }
 
-func virtualMFADeviceTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListMFADeviceTags(ctx, &iam.ListMFADeviceTagsInput{
+func virtualMFADeviceTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListMFADeviceTagsInput{
 		SerialNumber: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListMFADeviceTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
 	}
 
-	return output.Tags, nil
+	return output, nil
 }

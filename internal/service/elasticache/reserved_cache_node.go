@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -13,19 +13,18 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,8 +33,9 @@ import (
 // @FrameworkResource("aws_elasticache_reserved_cache_node", name="Reserved Cache Node")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTests=false)
-func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceReservedCacheNode{}
+func newReservedCacheNodeResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &reservedCacheNodeResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(1 * time.Minute)
@@ -43,14 +43,14 @@ func newResourceReservedCacheNode(context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-type resourceReservedCacheNode struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceReservedCacheNodeModel]
+type reservedCacheNodeResource struct {
+	framework.ResourceWithModel[reservedCacheNodeResourceModel]
 	framework.WithNoOpDelete
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *reservedCacheNodeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -127,8 +127,8 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 
 // Create is called when the provider must create a new resource.
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
-func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceReservedCacheNodeModel
+func (r *reservedCacheNodeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data reservedCacheNodeResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -171,8 +171,8 @@ func (r *resourceReservedCacheNode) Create(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceReservedCacheNodeModel
+func (r *reservedCacheNodeResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data reservedCacheNodeResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -183,7 +183,7 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 
 	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -205,17 +205,14 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceReservedCacheNode) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
+func (r *reservedCacheNodeResource) flexOpts() []flex.AutoFlexOptionsFunc {
 	return []flex.AutoFlexOptionsFunc{
 		flex.WithFieldNamePrefix("ReservedCacheNode"),
 	}
 }
 
-type resourceReservedCacheNodeModel struct {
+type reservedCacheNodeResourceModel struct {
+	framework.WithRegionModel
 	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
@@ -240,32 +237,45 @@ type recurringChargeModel struct {
 	RecurringChargeFrequency types.String  `tfsdk:"recurring_charge_frequency"`
 }
 
-func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id string) (result awstypes.ReservedCacheNode, err error) {
+func findReservedCacheNodeByID(ctx context.Context, conn *elasticache.Client, id string) (*awstypes.ReservedCacheNode, error) {
 	input := elasticache.DescribeReservedCacheNodesInput{
 		ReservedCacheNodeId: aws.String(id),
 	}
 
-	output, err := conn.DescribeReservedCacheNodes(ctx, &input)
+	return findReservedCacheNode(ctx, conn, &input)
+}
 
-	if errs.IsA[*awstypes.ReservedCacheNodeNotFoundFault](err) {
-		return result, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findReservedCacheNode(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReservedCacheNodesInput) (*awstypes.ReservedCacheNode, error) {
+	output, err := findReservedCacheNodes(ctx, conn, input)
+
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	if output == nil || len(output.ReservedCacheNodes) == 0 {
-		return result, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findReservedCacheNodes(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeReservedCacheNodesInput) ([]awstypes.ReservedCacheNode, error) {
+	var output []awstypes.ReservedCacheNode
+
+	pages := elasticache.NewDescribeReservedCacheNodesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ReservedCacheNodeNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ReservedCacheNodes...)
 	}
 
-	if count := len(output.ReservedCacheNodes); count > 1 {
-		return result, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.ReservedCacheNodes[0], nil
+	return output, nil
 }
 
 func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client, id string, timeout time.Duration) error {
@@ -274,7 +284,7 @@ func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client,
 			reservedCacheNodeStatePaymentPending,
 		},
 		Target:         []string{reservedCacheNodeStateActive},
-		Refresh:        statusReservedCacheNode(ctx, conn, id),
+		Refresh:        statusReservedCacheNode(conn, id),
 		NotFoundChecks: 5,
 		Timeout:        timeout,
 		MinTimeout:     10 * time.Second,
@@ -286,11 +296,11 @@ func waitReservedCacheNodeCreated(ctx context.Context, conn *elasticache.Client,
 	return err
 }
 
-func statusReservedCacheNode(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusReservedCacheNode(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findReservedCacheNodeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

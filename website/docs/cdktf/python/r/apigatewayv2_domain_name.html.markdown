@@ -87,6 +87,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
 * `domain_name_configuration` - (Required) Domain name configuration. See below.
 * `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name.
@@ -148,4 +149,4 @@ Using `terraform import`, import `aws_apigatewayv2_domain_name` using the domain
 % terraform import aws_apigatewayv2_domain_name.example ws-api.example.com
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c9ed54b535d69eae12bf4f0b7e753041a7663fd1fdfbd02dca6d6fd29bde2b0a -->
+<!-- cache-key: cdktf-0.20.8 input-5f699acd9463f40094c80534ca2da9b45a4f1e0655b29e14eb047eb33297e0a3 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeconnections
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,7 +36,9 @@ import (
 
 // @FrameworkResource("aws_codeconnections_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
+// @Testing(preIdentityVersion="v5.100.0")
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
@@ -51,8 +54,8 @@ const (
 )
 
 type connectionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[connectionResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -77,7 +80,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					}...),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -183,7 +186,7 @@ func (r *connectionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	out, err := findConnectionByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -266,12 +269,8 @@ func (r *connectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable),
 		Refresh:                   statusConnection(ctx, conn, id),
@@ -289,7 +288,7 @@ func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id
 }
 
 func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionStatusPending, awstypes.ConnectionStatusAvailable, awstypes.ConnectionStatusError),
 		Target:  []string{},
 		Refresh: statusConnection(ctx, conn, id),
@@ -304,11 +303,11 @@ func waitConnectionDeleted(ctx context.Context, conn *codeconnections.Client, id
 	return nil, err
 }
 
-func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) retry.StateRefreshFunc {
+func statusConnection(ctx context.Context, conn *codeconnections.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findConnectionByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -328,7 +327,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	output, err := conn.GetConnection(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -339,13 +338,14 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil
 }
 
 type connectionResourceModel struct {
+	framework.WithRegionModel
 	ConnectionArn    types.String                                  `tfsdk:"arn"`
 	ConnectionName   types.String                                  `tfsdk:"name"`
 	ConnectionStatus fwtypes.StringEnum[awstypes.ConnectionStatus] `tfsdk:"connection_status"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dax_test
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -145,6 +146,11 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -153,9 +159,15 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 			},
 			// Ensure it shows no difference when removing server_side_encryption configuration
 			{
-				Config:             testAccClusterConfig_basic(rString),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccClusterConfig_basic(rString),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -180,6 +192,11 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -188,9 +205,12 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 			},
 			// Ensure it shows a difference when removing server_side_encryption configuration
 			{
-				Config:             testAccClusterConfig_basic(rString),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccClusterConfig_basic(rString),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -215,6 +235,11 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -223,9 +248,15 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 			},
 			// Ensure it shows no difference when removing cluster_endpoint_encryption_type configuration
 			{
-				Config:             testAccClusterConfig_basic(rString),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccClusterConfig_basic(rString),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -254,6 +285,11 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_encryption_type", clusterEndpointEncryptionType),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -262,9 +298,12 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 			},
 			// Ensure it shows a difference when removing cluster_endpoint_encryption_type configuration
 			{
-				Config:             testAccClusterConfig_basic(rString),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccClusterConfig_basic(rString),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -286,7 +325,7 @@ func TestAccDAXCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -338,7 +377,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 		resp, err := conn.DescribeClusters(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("DAX error: %v", err)
+			return fmt.Errorf("DAX error: %w", err)
 		}
 
 		for _, c := range resp.Clusters {

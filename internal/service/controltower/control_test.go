@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func testAccControl_disappears(t *testing.T) {
 				Config: testAccControlConfig_basic(ouName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -167,7 +167,7 @@ func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -202,7 +202,7 @@ func testAccControlConfig_basic(ouName string) string {
 		testAccControlConfigBase(ouName),
 		`
 resource "aws_controltower_control" "test" {
-  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.name}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
+  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.region}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
   target_identifier  = data.aws_organizations_organizational_unit.test.arn
 }
 `)
@@ -218,7 +218,7 @@ func testAccControlConfig_parameters(ouName string) string {
 		testAccControlConfigBase(ouName),
 		`
 resource "aws_controltower_control" "test" {
-  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.name}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
+  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.region}::control/AWS-GR_DISALLOW_CROSS_REGION_NETWORKING"
   target_identifier  = data.aws_organizations_organizational_unit.test.arn
 
   parameters {

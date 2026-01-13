@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -22,7 +22,7 @@ func newDefaultScraperConfigurationDataSource(context.Context) (datasource.DataS
 }
 
 type defaultScraperConfigurationDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[defaultScraperConfigurationDataSourceModel]
 }
 
 func (d *defaultScraperConfigurationDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -66,12 +66,13 @@ func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]b
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, err
 }
 
 type defaultScraperConfigurationDataSourceModel struct {
+	framework.WithRegionModel
 	Configuration types.String `tfsdk:"configuration"`
 }

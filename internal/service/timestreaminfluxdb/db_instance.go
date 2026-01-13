@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreaminfluxdb
@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,8 +46,10 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
 // @Testing(importIgnore="bucket;username;organization;password")
-func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDBInstance{}
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
+func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dbInstanceResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -60,13 +62,13 @@ const (
 	ResNameDBInstance = "DB Instance"
 )
 
-type resourceDBInstance struct {
-	framework.ResourceWithConfigure
+type dbInstanceResource struct {
+	framework.ResourceWithModel[dbInstanceResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAllocatedStorage: schema.Int64Attribute{
@@ -109,7 +111,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIf(
-						dbParameterGroupIdentifierReplaceIf, "Replace db_parameter_group_identifier diff", "Replace db_parameter_group_identifier diff",
+						dbInstanceDBParameterGroupIdentifierReplaceIf, "Replace db_parameter_group_identifier diff", "Replace db_parameter_group_identifier diff",
 					),
 				},
 				Validators: []validator.String{
@@ -183,7 +185,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Specifies whether the networkType of the Timestream for InfluxDB instance is 
@@ -298,7 +300,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"log_delivery_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[logDeliveryConfigurationData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[dbInstanceLogDeliveryConfigurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -306,7 +308,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"s3_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationData](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[dbInstanceS3ConfigurationData](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -340,11 +342,11 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func dbParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+func dbInstanceDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state resourceDBInstanceData
+	var plan, state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -356,10 +358,10 @@ func dbParameterGroupIdentifierReplaceIf(ctx context.Context, req planmodifier.S
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
 
-func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan resourceDBInstanceData
+	var plan dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -415,17 +417,17 @@ func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBInstanceData
+	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	output, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -450,17 +452,17 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan, state resourceDBInstanceData
+	var plan, state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("SecondaryAvailabilityZone"))
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -501,16 +503,18 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 
 		plan.SecondaryAvailabilityZone = fwflex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	} else {
+		plan.NetworkType = state.NetworkType
+		plan.Port = state.Port
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDBInstanceData
+	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -543,7 +547,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 }
 
-func (r *resourceDBInstance) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var allocatedStorage types.Int64
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
 	if resp.Diagnostics.HasError() {
@@ -575,7 +579,7 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -593,7 +597,7 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating, awstypes.StatusUpdatingInstanceType, awstypes.StatusUpdatingDeploymentType),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -611,7 +615,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusDeleting, awstypes.StatusDeleted),
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 		Delay:   30 * time.Second,
 	}
@@ -624,10 +628,10 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 	return nil, err
 }
 
-func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findDBInstanceByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -647,8 +651,7 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -657,45 +660,46 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type resourceDBInstanceData struct {
-	AllocatedStorage              types.Int64                                                   `tfsdk:"allocated_storage"`
-	ARN                           types.String                                                  `tfsdk:"arn"`
-	AvailabilityZone              types.String                                                  `tfsdk:"availability_zone"`
-	Bucket                        types.String                                                  `tfsdk:"bucket"`
-	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                   `tfsdk:"db_instance_type"`
-	DBParameterGroupIdentifier    types.String                                                  `tfsdk:"db_parameter_group_identifier"`
-	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                    `tfsdk:"db_storage_type"`
-	DeploymentType                fwtypes.StringEnum[awstypes.DeploymentType]                   `tfsdk:"deployment_type"`
-	Endpoint                      types.String                                                  `tfsdk:"endpoint"`
-	ID                            types.String                                                  `tfsdk:"id"`
-	InfluxAuthParametersSecretARN types.String                                                  `tfsdk:"influx_auth_parameters_secret_arn"`
-	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
-	Name                          types.String                                                  `tfsdk:"name"`
-	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                      `tfsdk:"network_type"`
-	Organization                  types.String                                                  `tfsdk:"organization"`
-	Password                      types.String                                                  `tfsdk:"password"`
-	Port                          types.Int32                                                   `tfsdk:"port"`
-	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
-	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
-	Tags                          tftags.Map                                                    `tfsdk:"tags"`
-	TagsAll                       tftags.Map                                                    `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value                                                `tfsdk:"timeouts"`
-	Username                      types.String                                                  `tfsdk:"username"`
-	VPCSecurityGroupIDs           fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  fwtypes.SetValueOf[types.String]                              `tfsdk:"vpc_subnet_ids"`
+type dbInstanceResourceModel struct {
+	framework.WithRegionModel
+	AllocatedStorage              types.Int64                                                             `tfsdk:"allocated_storage"`
+	ARN                           types.String                                                            `tfsdk:"arn"`
+	AvailabilityZone              types.String                                                            `tfsdk:"availability_zone"`
+	Bucket                        types.String                                                            `tfsdk:"bucket"`
+	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                             `tfsdk:"db_instance_type"`
+	DBParameterGroupIdentifier    types.String                                                            `tfsdk:"db_parameter_group_identifier"`
+	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                              `tfsdk:"db_storage_type"`
+	DeploymentType                fwtypes.StringEnum[awstypes.DeploymentType]                             `tfsdk:"deployment_type"`
+	Endpoint                      types.String                                                            `tfsdk:"endpoint"`
+	ID                            types.String                                                            `tfsdk:"id"`
+	InfluxAuthParametersSecretARN types.String                                                            `tfsdk:"influx_auth_parameters_secret_arn"`
+	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[dbInstanceLogDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
+	Name                          types.String                                                            `tfsdk:"name"`
+	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                                `tfsdk:"network_type"`
+	Organization                  types.String                                                            `tfsdk:"organization"`
+	Password                      types.String                                                            `tfsdk:"password"`
+	Port                          types.Int32                                                             `tfsdk:"port"`
+	PubliclyAccessible            types.Bool                                                              `tfsdk:"publicly_accessible"`
+	SecondaryAvailabilityZone     types.String                                                            `tfsdk:"secondary_availability_zone"`
+	Tags                          tftags.Map                                                              `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                              `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                          `tfsdk:"timeouts"`
+	Username                      types.String                                                            `tfsdk:"username"`
+	VPCSecurityGroupIDs           fwtypes.SetOfString                                                     `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetOfString                                                     `tfsdk:"vpc_subnet_ids"`
 }
 
-type logDeliveryConfigurationData struct {
-	S3Configuration fwtypes.ListNestedObjectValueOf[s3ConfigurationData] `tfsdk:"s3_configuration"`
+type dbInstanceLogDeliveryConfigurationData struct {
+	S3Configuration fwtypes.ListNestedObjectValueOf[dbInstanceS3ConfigurationData] `tfsdk:"s3_configuration"`
 }
 
-type s3ConfigurationData struct {
+type dbInstanceS3ConfigurationData struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 	Enabled    types.Bool   `tfsdk:"enabled"`
 }

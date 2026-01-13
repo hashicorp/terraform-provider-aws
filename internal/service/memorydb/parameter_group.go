@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -16,12 +16,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -132,7 +133,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	group, err := findParameterGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,7 +187,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			const (
 				timeout = 30 * time.Second
 			)
-			_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterGroupStateFault](ctx, timeout, func() (any, error) {
+			_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 				return conn.ResetParameterGroup(ctx, input)
 			}, " has pending changes")
 
@@ -258,7 +259,7 @@ func findParameterGroups(ctx context.Context, conn *memorydb.Client, input *memo
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -290,7 +291,7 @@ func findParameters(ctx context.Context, conn *memorydb.Client, input *memorydb.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

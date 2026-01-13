@@ -84,6 +84,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.
@@ -138,4 +139,4 @@ Using `terraform import`, import `aws_apigatewayv2_route` using the API identifi
 
 -> **Note:** The API Gateway managed route created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.20.8 input-b9d6c42d850f8d41e68e09883583bfd0059174ab6d5527af47ec51f177c33a41 -->
+<!-- cache-key: cdktf-0.20.8 input-8f0637a4b041eb65141ad0c40e0e6e6bd1052a535207afbc86d54073bfc472b5 -->

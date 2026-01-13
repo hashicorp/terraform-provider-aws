@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -16,20 +16,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_ssoadmin_account_assignment", name="Account Assignment")
-func ResourceAccountAssignment() *schema.Resource {
+func resourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountAssignmentCreate,
 		ReadWithoutTimeout:   resourceAccountAssignmentRead,
@@ -80,7 +81,7 @@ func ResourceAccountAssignment() *schema.Resource {
 			},
 			"target_type": {
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TargetType](),
 			},
@@ -100,11 +101,11 @@ func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData
 	targetType := d.Get("target_type").(string)
 
 	// We need to check if the assignment exists before creating it since the AWS SSO API doesn't prevent us from creating duplicates.
-	_, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+	_, err := findAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
 	if err == nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "listing SSO Account Assignments for Account ID (%s) Permission Set (%s): %s", targetID, permissionSetARN, err)
 	}
 
@@ -148,9 +149,9 @@ func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, 
 	permissionSetARN := idParts[4]
 	instanceARN := idParts[5]
 
-	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
+	accountAssignment, err := findAccountAssignmentByFivePartKey(ctx, conn, principalID, principalType, targetID, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
 		d.SetId("")
 		return diags
@@ -221,7 +222,7 @@ func ParseAccountAssignmentID(id string) ([]string, error) {
 	return idParts, nil
 }
 
-func FindAccountAssignment(ctx context.Context, conn *ssoadmin.Client, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*awstypes.AccountAssignment, error) {
+func findAccountAssignmentByFivePartKey(ctx context.Context, conn *ssoadmin.Client, principalID, principalType, accountID, permissionSetARN, instanceARN string) (*awstypes.AccountAssignment, error) {
 	input := &ssoadmin.ListAccountAssignmentsInput{
 		AccountId:        aws.String(accountID),
 		InstanceArn:      aws.String(instanceARN),
@@ -257,11 +258,12 @@ func findAccountAssignments(
 ) ([]awstypes.AccountAssignment, error) {
 	var output []awstypes.AccountAssignment
 
-	paginator := ssoadmin.NewListAccountAssignmentsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ssoadmin.NewListAccountAssignmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -295,7 +297,7 @@ func findAccountAssignmentCreationStatus(
 	output, err := conn.DescribeAccountAssignmentCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -306,17 +308,17 @@ func findAccountAssignmentCreationStatus(
 	}
 
 	if output == nil || output.AccountAssignmentCreationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentCreationStatus, nil
 }
 
-func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusAccountAssignmentCreation(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentCreationStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -337,7 +339,7 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	output, err := conn.DescribeAccountAssignmentDeletionStatus(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -348,17 +350,17 @@ func findAccountAssignmentDeletionStatus(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.AccountAssignmentDeletionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountAssignmentDeletionStatus, nil
 }
 
-func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) retry.StateRefreshFunc {
+func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAccountAssignmentDeletionStatus(ctx, conn, instanceARN, requestID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -371,7 +373,7 @@ func statusAccountAssignmentDeletion(ctx context.Context, conn *ssoadmin.Client,
 }
 
 func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, instanceARN, requestID string, timeout time.Duration) (*awstypes.AccountAssignmentOperationStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusValuesInProgress),
 		Target:     enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh:    statusAccountAssignmentCreation(ctx, conn, instanceARN, requestID),
@@ -383,7 +385,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -392,7 +394,7 @@ func waitAccountAssignmentCreated(ctx context.Context, conn *ssoadmin.Client, in
 }
 
 func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, instanceArn, requestID string, timeout time.Duration) (*awstypes.AccountAssignmentOperationStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StatusValuesInProgress),
 		Target:     enum.Slice(awstypes.StatusValuesSucceeded),
 		Refresh:    statusAccountAssignmentDeletion(ctx, conn, instanceArn, requestID),
@@ -404,7 +406,7 @@ func waitAccountAssignmentDeleted(ctx context.Context, conn *ssoadmin.Client, in
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.AccountAssignmentOperationStatus); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

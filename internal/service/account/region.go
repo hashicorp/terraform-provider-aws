@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account
@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -187,17 +187,17 @@ func findRegionOptStatus(ctx context.Context, conn *account.Client, accountID, r
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRegionOptStatus(ctx context.Context, conn *account.Client, accountID, region string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRegionOptStatus(conn *account.Client, accountID, region string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRegionOptStatus(ctx, conn, accountID, region)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -213,7 +213,7 @@ func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, reg
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.RegionOptStatusEnabling),
 		Target:       enum.Slice(types.RegionOptStatusEnabled),
-		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
+		Refresh:      statusRegionOptStatus(conn, accountID, region),
 		Timeout:      timeout,
 		PollInterval: 30 * time.Second,
 	}
@@ -231,7 +231,7 @@ func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, re
 	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(types.RegionOptStatusDisabling),
 		Target:       enum.Slice(types.RegionOptStatusDisabled),
-		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
+		Refresh:      statusRegionOptStatus(conn, accountID, region),
 		Timeout:      timeout,
 		PollInterval: 30 * time.Second,
 	}

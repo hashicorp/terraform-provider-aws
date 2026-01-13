@@ -72,11 +72,12 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domainName` - (Required) Already-registered domain name to connect the API to.
 * `apiId` - (Required) ID of the API to connect.
 * `stageName` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `basePath` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
-* `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
+* `domainNameId` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
 ## Attribute Reference
 
@@ -178,4 +179,4 @@ For a non-root `basePath` and a private custom domain name:
 % terraform import aws_api_gateway_base_path_mapping.example api.internal.example.com/base-path/abcde12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c51ac15572f07a88e4a3c4b4234009fb84d363692c6355e0ceff12c7d87d9000 -->
+<!-- cache-key: cdktf-0.20.8 input-bd4c7037cd50012fb37093aa9c17fb9656e90e2a82c649e2580f85fc564d3de6 -->

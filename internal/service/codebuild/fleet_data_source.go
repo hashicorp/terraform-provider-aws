@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -38,6 +38,10 @@ func dataSourceFleet() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"disk": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						names.AttrInstanceType: {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"machine_type": {
@@ -227,7 +231,7 @@ func dataSourceFleetRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionSetting, dsNameFleet, d.Id(), err)
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -448,6 +448,118 @@ func TestAccNetworkFirewallFirewall_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateProtection(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, true, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 0, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_transitGatewayAttachment(rName, false, 1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_change_protection", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -463,7 +575,7 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewall(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -482,7 +594,7 @@ func testAccCheckFirewallDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkfirewall.FindFirewallByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -528,7 +640,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccFirewallConfig_base(rName string) string {
+func testAccFirewallConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
@@ -542,7 +654,7 @@ resource "aws_networkfirewall_firewall_policy" "test" {
 }
 
 func testAccFirewallConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -556,7 +668,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_deleteProtection(rName string, deleteProtection bool) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   delete_protection   = %[1]t
   name                = %[2]q
@@ -571,7 +683,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -589,7 +701,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
@@ -608,7 +720,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_description(rName, description string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
   description         = %[2]q
@@ -623,7 +735,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_enabledAnalysisTypes(rName string, enabledAnalysisTypes []string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
   name                   = %[1]q
   enabled_analysis_types = ["%[2]s"]
@@ -638,7 +750,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_updateSubnet(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
@@ -666,7 +778,7 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_updateMultipleSubnets(rName string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[1]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
@@ -702,8 +814,11 @@ resource "aws_networkfirewall_firewall" "test" {
 }
 
 func testAccFirewallConfig_encryptionConfiguration(rName, description string) string {
-	return acctest.ConfigCompose(testAccFirewallConfig_base(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test" {}
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 
 resource "aws_networkfirewall_firewall" "test" {
   name                = %[1]q
@@ -745,4 +860,41 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallConfig_baseTGW(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_transitGatewayAttachment(rName string, changeProtection bool, availabilityZoneStartIndex, availabilityZoneEndIndex int) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseTGW(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                                = %[1]q
+  firewall_policy_arn                 = aws_networkfirewall_firewall_policy.test.arn
+  transit_gateway_id                  = aws_ec2_transit_gateway.test.id
+  availability_zone_change_protection = %[2]t
+
+  dynamic "availability_zone_mapping" {
+    for_each = slice(data.aws_availability_zones.available.zone_ids, %[3]d, %[4]d)
+    content {
+      availability_zone_id = availability_zone_mapping.value
+    }
+  }
+}
+`, rName, changeProtection, availabilityZoneStartIndex, availabilityZoneEndIndex))
 }

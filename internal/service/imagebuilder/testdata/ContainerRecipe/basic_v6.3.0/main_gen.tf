@@ -1,0 +1,44 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_imagebuilder_container_recipe" "test" {
+  name           = var.rName
+  container_type = "DOCKER"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  version        = "1.0.0"
+
+  component {
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+  }
+
+  dockerfile_template_data = "FROM $${imagebuilder:parentImage}\n$${imagebuilder:environments}\n$${imagebuilder:components}"
+
+  target_repository {
+    repository_name = aws_ecr_repository.test.name
+    service         = "ECR"
+  }
+}
+
+resource "aws_ecr_repository" "test" {
+  name = var.rName
+}
+
+data "aws_partition" "current" {}
+data "aws_region" "current" {
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.3.0"
+    }
+  }
+}
+
+provider "aws" {}

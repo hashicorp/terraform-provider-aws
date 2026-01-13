@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -24,6 +24,10 @@ func ResourceStaticIP() *schema.Resource {
 		CreateWithoutTimeout: resourceStaticIPCreate,
 		ReadWithoutTimeout:   resourceStaticIPRead,
 		DeleteWithoutTimeout: resourceStaticIPDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrName: {
@@ -69,7 +73,7 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Id()
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
 	out, err := conn.GetStaticIp(ctx, &lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(name),
@@ -85,6 +89,7 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set(names.AttrARN, out.StaticIp.Arn)
 	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
+	d.Set(names.AttrName, out.StaticIp.Name)
 	d.Set("support_code", out.StaticIp.SupportCode)
 
 	return diags

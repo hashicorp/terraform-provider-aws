@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -19,20 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_api_gateway_rest_api_put", name="Rest API Put")
-func newResourceRestAPIPut(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRestAPIPut{}
+func newRestAPIPutResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &restAPIPutResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 
@@ -43,14 +42,14 @@ const (
 	ResNameRestAPIPut = "Rest API Put"
 )
 
-type resourceRestAPIPut struct {
-	framework.ResourceWithConfigure
+type restAPIPutResource struct {
+	framework.ResourceWithModel[restAPIPutResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 	framework.WithNoUpdate
 }
 
-func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *restAPIPutResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"body": schema.StringAttribute{
@@ -97,10 +96,10 @@ func (r *resourceRestAPIPut) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceRestAPIPut) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *restAPIPutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().APIGatewayClient(ctx)
 
-	var plan resourceRestAPIPutModel
+	var plan restAPIPutResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -148,8 +147,8 @@ func (r *resourceRestAPIPut) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRestAPIPut) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceRestAPIPutModel
+func (r *restAPIPutResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state restAPIPutResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,7 +157,7 @@ func (r *resourceRestAPIPut) Read(ctx context.Context, req resource.ReadRequest,
 	conn := r.Meta().APIGatewayClient(ctx)
 
 	out, err := findRestAPIByID(ctx, conn, state.RestAPIID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -179,7 +178,7 @@ func (r *resourceRestAPIPut) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRestAPIPut) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *restAPIPutResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("rest_api_id"), req, resp)
 }
 
@@ -191,7 +190,7 @@ func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
-		Refresh:                   statusRestAPIPut(ctx, conn, id),
+		Refresh:                   statusRestAPIPut(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -205,10 +204,10 @@ func waitRestAPIPutCreated(ctx context.Context, conn *apigateway.Client, id stri
 	return nil, err
 }
 
-func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRestAPIPut(conn *apigateway.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findRestAPIByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -223,7 +222,8 @@ func statusRestAPIPut(ctx context.Context, conn *apigateway.Client, id string) r
 	}
 }
 
-type resourceRestAPIPutModel struct {
+type restAPIPutResourceModel struct {
+	framework.WithRegionModel
 	Body           types.String        `tfsdk:"body"`
 	FailOnWarnings types.Bool          `tfsdk:"fail_on_warnings"`
 	Parameters     fwtypes.MapOfString `tfsdk:"parameters"`

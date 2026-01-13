@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -14,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"syreclabs.com/go/faker"
+	"github.com/jaswdr/faker/v2"
 )
 
 const (
@@ -41,9 +40,9 @@ var comedyWords = []string{
 func main() {
 	log.SetFlags(0)
 
-	seed := int64(1) // Default rand seed
-	rand.Seed(seed)
-	faker.Seed(seed)
+	seed := int64(48) // Default rand seed
+	r := rand.New(rand.NewSource(seed))
+	fake := faker.NewWithSeedInt64(seed)
 
 	// documentFile, err := os.OpenFile("./test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	documentFile, err := os.OpenFile("../../../test-fixtures/document_classifier_multilabel/documents.csv", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
@@ -54,25 +53,25 @@ func main() {
 	documentsWriter := csv.NewWriter(documentFile)
 
 	for i := 0; i < 100; i++ {
-		f := rand.Intn(2)
+		f := r.Intn(2)
 		var doctype string
 		if f == 0 {
-			doctype = doctypes[rand.Intn(len(doctypes))]
+			doctype = doctypes[r.Intn(len(doctypes))]
 		} else {
 			doctype = strings.Join(doctypes, defaultSeparator)
 		}
 
-		title := faker.Lorem().Word()
+		title := fake.Lorem().Word()
 
 		var desc string
 		if doctype == "DRAMA" {
-			desc = dramaWords[rand.Intn(len(dramaWords))]
+			desc = dramaWords[r.Intn(len(dramaWords))]
 		} else if doctype == "COMEDY" {
-			desc = comedyWords[rand.Intn(len(comedyWords))]
+			desc = comedyWords[r.Intn(len(comedyWords))]
 		} else {
 			desc = fmt.Sprintf("%s and %s",
-				dramaWords[rand.Intn(len(dramaWords))],
-				comedyWords[rand.Intn(len(comedyWords))],
+				dramaWords[r.Intn(len(dramaWords))],
+				comedyWords[r.Intn(len(comedyWords))],
 			)
 		}
 

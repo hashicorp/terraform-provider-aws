@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -10,11 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -140,14 +142,16 @@ func customRequiredFiltersSchema() *schema.Schema {
 }
 
 // customFiltersBlock is the Plugin Framework variant of customFiltersSchema.
-func customFiltersBlock() datasourceschema.Block {
+func customFiltersBlock(ctx context.Context) datasourceschema.Block {
 	return datasourceschema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[customFilterModel](ctx),
 		NestedObject: datasourceschema.NestedBlockObject{
 			Attributes: map[string]datasourceschema.Attribute{
 				names.AttrName: datasourceschema.StringAttribute{
 					Required: true,
 				},
 				names.AttrValues: datasourceschema.SetAttribute{
+					CustomType:  fwtypes.SetOfStringType,
 					ElementType: types.StringType,
 					Required:    true,
 				},
@@ -158,9 +162,38 @@ func customFiltersBlock() datasourceschema.Block {
 
 // customFilterModel represents a single configured filter.
 type customFilterModel struct {
-	Name   types.String `tfsdk:"name"`
-	Values types.Set    `tfsdk:"values"`
+	Name   types.String        `tfsdk:"name"`
+	Values fwtypes.SetOfString `tfsdk:"values"`
 }
+
+type (
+	customFilters = fwtypes.SetNestedObjectValueOf[customFilterModel]
+)
+
+func customListFiltersBlock(ctx context.Context) listschema.ListNestedBlock {
+	return listschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+		NestedObject: listschema.NestedBlockObject{
+			Attributes: map[string]listschema.Attribute{
+				names.AttrName: listschema.StringAttribute{
+					Required: true,
+				},
+				names.AttrValues: listschema.ListAttribute{
+					CustomType:  fwtypes.ListOfStringType,
+					ElementType: types.StringType,
+					Required:    true,
+				},
+			},
+		},
+	}
+}
+
+type customListFilterModel struct {
+	Name   types.String         `tfsdk:"name"`
+	Values fwtypes.ListOfString `tfsdk:"values"`
+}
+
+type customListFilters = fwtypes.ListNestedObjectValueOf[customListFilterModel]
 
 // newCustomFilterList takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
@@ -182,14 +215,14 @@ func newCustomFilterList(s *schema.Set) []awstypes.Filter {
 	})
 }
 
-func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []awstypes.Filter {
-	if filterSet.IsNull() || filterSet.IsUnknown() {
+func newCustomFilterListFramework(ctx context.Context, customFilters customFilters) []awstypes.Filter {
+	if customFilters.IsNull() || customFilters.IsUnknown() {
 		return nil
 	}
 
 	var filters []awstypes.Filter
 
-	for _, v := range filterSet.Elements() {
+	for _, v := range customFilters.Elements() {
 		var data customFilterModel
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {

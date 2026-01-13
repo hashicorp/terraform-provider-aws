@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ce_test
@@ -128,7 +128,7 @@ data "aws_ce_tags" "test" {
   filter {
     dimension {
       key           = "REGION"
-      values        = [data.aws_region.current.name]
+      values        = [data.aws_region.current.region]
       match_options = ["EQUALS"]
     }
   }

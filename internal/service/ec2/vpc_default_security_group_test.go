@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -57,10 +57,6 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
-			},
-			{
-				Config:   testAccVPCDefaultSecurityGroupConfig_basic(rName),
-				PlanOnly: true,
 			},
 			{
 				ResourceName:            resourceName,

@@ -149,6 +149,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration_policy` - (Required) Defines how Security Hub is configured. See [below](#configuration_policy).
 * `description` - (Optional) The description of the configuration policy.
 * `name` - (Required) The name of the configuration policy.
@@ -224,4 +225,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_configuration_policy.example "00000000-1111-2222-3333-444444444444"
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-721ffba1ee84815bfddcee09500eede2e0b1933a072787923a97146e5d21cdc2 -->
+<!-- cache-key: cdktf-0.20.8 input-f589d27b32e0e786c7cf5e3147fe7485861ccd77112dd6e630fdac6db8f1f744 -->

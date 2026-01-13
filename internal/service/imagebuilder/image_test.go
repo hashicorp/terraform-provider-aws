@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +79,7 @@ func TestAccImageBuilderImage_disappears(t *testing.T) {
 				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImage(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -347,6 +347,34 @@ func TestAccImageBuilderImage_workflows(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImage_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImageConfig_loggingConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImageExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image/%s", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -358,7 +386,7 @@ func testAccCheckImageDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfimagebuilder.FindImageByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -391,7 +419,7 @@ func testAccCheckImageExists(ctx context.Context, n string) resource.TestCheckFu
 func testAccImageBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -480,7 +508,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -507,7 +535,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 
@@ -733,29 +761,102 @@ resource "aws_iam_role" "test_execute" {
   name = join("-", [%[1]q, "execute"])
 }
 
-data "aws_iam_policy" "AWSServiceRoleForImageBuilder" {
-  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/aws-service-role/AWSServiceRoleForImageBuilder"
-}
-
-resource "aws_iam_policy" "test_execute_service_policy" {
-  name   = join("-", [%[1]q, "execute-service"])
-  policy = data.aws_iam_policy.AWSServiceRoleForImageBuilder.policy
-}
-
-resource "aws_iam_role_policy_attachment" "test_execute_service" {
-  policy_arn = aws_iam_policy.test_execute_service_policy.arn
-  role       = aws_iam_role.test_execute.name
-}
-
 resource "aws_iam_policy" "test_execute" {
   name = join("-", [%[1]q, "execute"])
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action   = "ssm:SendCommand"
-      Effect   = "Allow"
-      Resource = "arn:${data.aws_partition.current.partition}:ssm:${data.aws_region.current.id}::document/AWS-UpdateSSMAgent"
-    }]
+    Statement = [
+      {
+        Sid    = "EC2Lifecycle"
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateImage",
+          "ec2:CreateTags",
+          "ec2:DescribeInstances",
+          "ec2:DescribeImages",
+          "ec2:DescribeTags",
+          "ec2:DescribeInstanceStatus",
+          "ec2:DescribeInstanceTypeOfferings",
+          "ec2:RunInstances",
+          "ec2:StopInstances",
+          "ec2:TerminateInstances"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "SSMExecution"
+        Effect = "Allow"
+        Action = [
+          "ssm:AddTagsToResource",
+          "ssm:CreateAssociation",
+          "ssm:DeleteAssociation",
+          "ssm:DescribeAssociationExecutions",
+          "ssm:DescribeDocument",
+          "ssm:DescribeInstanceAssociationsStatus",
+          "ssm:DescribeInstanceInformation",
+          "ssm:GetAutomationExecution",
+          "ssm:GetCommandInvocation",
+          "ssm:GetDocument",
+          "ssm:ListCommands",
+          "ssm:ListCommandInvocations",
+          "ssm:ListInventoryEntries",
+          "ssm:SendAutomationSignal",
+          "ssm:SendCommand",
+          "ssm:StopAutomationExecution"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ImageBuilderCore"
+        Effect = "Allow"
+        Action = [
+          "imagebuilder:GetComponent",
+          "imagebuilder:GetImage",
+          "imagebuilder:GetImageRecipe",
+          "imagebuilder:ListComponents",
+          "imagebuilder:ListImageBuildVersions",
+          "imagebuilder:ListImagePackages",
+          "imagebuilder:ListImagePipelineImages",
+          "imagebuilder:ListImageRecipes"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "ImageScanFindings"
+        Effect = "Allow"
+        Action = [
+          "inspector2:BatchGet*",
+          "inspector2:Get*",
+          "inspector2:List*"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "CloudWatchLogging"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "PassRole"
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = [
+              "ec2.amazonaws.com",
+              "ec2.amazonaws.com.cn",
+              "vmie.amazonaws.com"
+            ]
+          }
+        }
+      }
+    ]
   })
 }
 
@@ -785,8 +886,7 @@ resource "aws_imagebuilder_image" "test" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.test_execute,
-    aws_iam_role_policy_attachment.test_execute_service
+    aws_iam_role_policy_attachment.test_execute
   ]
 }
 `, rName),
@@ -923,7 +1023,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
@@ -939,7 +1039,7 @@ EOF
 
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
   target_repository {
     repository_name = aws_ecr_repository.test.name
@@ -996,4 +1096,23 @@ resource "aws_imagebuilder_image" "test" {
   depends_on = [aws_inspector2_enabler.test]
 }
 `)
+}
+
+func testAccImageConfig_loggingConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccImageBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = "/aws/imagebuilder/test-image/%[1]s"
+}
+
+resource "aws_imagebuilder_image" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+
+  logging_configuration {
+    log_group_name = aws_cloudwatch_log_group.test.name
+  }
+}
+`, rName))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -23,20 +23,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_lakeformation_data_cells_filter", name="Data Cells Filter")
-func newResourceDataCellsFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDataCellsFilter{}
+func newDataCellsFilterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &dataCellsFilterResource{}
 	r.SetDefaultCreateTimeout(2 * time.Minute)
 
 	return r, nil
@@ -46,13 +46,13 @@ const (
 	ResNameDataCellsFilter = "Data Cells Filter"
 )
 
-type resourceDataCellsFilter struct {
-	framework.ResourceWithConfigure
+type dataCellsFilterResource struct {
+	framework.ResourceWithModel[dataCellsFilterResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *dataCellsFilterResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -114,8 +114,8 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"excluded_column_names": schema.ListAttribute{
-										CustomType: fwtypes.ListOfStringType,
+									"excluded_column_names": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
 										Optional:   true,
 									},
 								},
@@ -158,18 +158,18 @@ const (
 	dataCellsFilterIDPartCount = 4
 )
 
-func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataCellsFilterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan resourceDataCellsFilterData
+	var plan dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &lakeformation.CreateDataCellsFilterInput{}
+	in := lakeformation.CreateDataCellsFilterInput{}
 
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -181,7 +181,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	_, err := conn.CreateDataCellsFilter(ctx, in)
+	_, err := conn.CreateDataCellsFilter(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, planTD.Name.String(), err),
@@ -210,7 +210,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (any, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*awstypes.DataCellsFilter, error) {
 		return findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
 	})
 
@@ -222,7 +222,6 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	output := outputRaws.(*awstypes.DataCellsFilter)
 	td := tableData{}
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
 
@@ -235,10 +234,10 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *dataCellsFilterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceDataCellsFilterData
+	var state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -246,7 +245,7 @@ func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadReq
 
 	out, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -270,10 +269,10 @@ func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *dataCellsFilterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var plan, state resourceDataCellsFilterData
+	var plan, state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -281,15 +280,13 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 	}
 
 	if !plan.TableData.Equal(state.TableData) {
-		in := &lakeformation.UpdateDataCellsFilterInput{}
-
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
-
+		in := lakeformation.UpdateDataCellsFilterInput{}
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateDataCellsFilter(ctx, in)
+		_, err := conn.UpdateDataCellsFilter(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
@@ -299,7 +296,6 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 		}
 
 		output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
-
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
@@ -310,7 +306,6 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 
 		td := tableData{}
 		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
-
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -321,10 +316,10 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *dataCellsFilterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
 
-	var state resourceDataCellsFilterData
+	var state dataCellsFilterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -368,7 +363,7 @@ func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *resourceDataCellsFilter) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *dataCellsFilterResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("table_data").AtListIndex(0).AtName("column_names"),
@@ -399,8 +394,7 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -409,13 +403,14 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 	}
 
 	if out == nil || out.DataCellsFilter == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.DataCellsFilter, nil
 }
 
-type resourceDataCellsFilterData struct {
+type dataCellsFilterResourceModel struct {
+	framework.WithRegionModel
 	ID        types.String                               `tfsdk:"id"`
 	TableData fwtypes.ListNestedObjectValueOf[tableData] `tfsdk:"table_data"`
 	Timeouts  timeouts.Value                             `tfsdk:"timeouts"`
@@ -426,14 +421,14 @@ type tableData struct {
 	Name           types.String                                    `tfsdk:"name"`
 	TableCatalogID types.String                                    `tfsdk:"table_catalog_id"`
 	TableName      types.String                                    `tfsdk:"table_name"`
-	ColumnNames    fwtypes.SetValueOf[types.String]                `tfsdk:"column_names"`
+	ColumnNames    fwtypes.SetOfString                             `tfsdk:"column_names"`
 	ColumnWildcard fwtypes.ListNestedObjectValueOf[columnWildcard] `tfsdk:"column_wildcard"`
 	RowFilter      fwtypes.ListNestedObjectValueOf[rowFilter]      `tfsdk:"row_filter"`
 	VersionID      types.String                                    `tfsdk:"version_id"`
 }
 
 type columnWildcard struct {
-	ExcludedColumnNames fwtypes.ListValueOf[types.String] `tfsdk:"excluded_column_names"`
+	ExcludedColumnNames fwtypes.SetOfString `tfsdk:"excluded_column_names"`
 }
 
 type rowFilter struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -61,7 +61,7 @@ func sweepContainerServices(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -76,7 +76,7 @@ func sweepContainerServices(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving Lightsail Container Services: %s", err)
+		return err
 	}
 
 	for _, service := range output.ContainerServices {
@@ -98,7 +98,7 @@ func sweepDatabases(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -142,7 +142,7 @@ func sweepDisks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -185,7 +185,7 @@ func sweepDistributions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -228,7 +228,7 @@ func sweepDomains(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -271,7 +271,7 @@ func sweepInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -287,7 +287,7 @@ func sweepInstances(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("Error retrieving Lightsail Instances: %s", err)
+			return fmt.Errorf("Error retrieving Lightsail Instances: %w", err)
 		}
 
 		for _, instance := range output.Instances {
@@ -300,7 +300,7 @@ func sweepInstances(region string) error {
 			_, err := conn.DeleteInstance(ctx, input)
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting Lightsail Instance (%s): %s", name, err)
+				sweeperErr := fmt.Errorf("error deleting Lightsail Instance (%s): %w", name, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
@@ -320,7 +320,7 @@ func sweepLoadBalancers(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -363,7 +363,7 @@ func sweepStaticIPs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.LightsailClient(ctx)
 
@@ -376,7 +376,7 @@ func sweepStaticIPs(region string) error {
 				log.Printf("[WARN] Skipping Lightsail Static IP sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving Lightsail Static IPs: %s", err)
+			return fmt.Errorf("Error retrieving Lightsail Static IPs: %w", err)
 		}
 
 		if len(output.StaticIps) == 0 {
@@ -392,7 +392,7 @@ func sweepStaticIPs(region string) error {
 				StaticIpName: aws.String(name),
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting Lightsail Static IP %s: %s", name, err)
+				return fmt.Errorf("Error deleting Lightsail Static IP %s: %w", name, err)
 			}
 		}
 

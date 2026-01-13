@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +30,8 @@ import (
 // @SDKResource("aws_amplify_app", name="App")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.App", serialize=true, serializeDelay=true)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -265,6 +267,22 @@ func resourceApp() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"job_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"build_compute_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.BuildComputeType](),
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -391,6 +409,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.IamServiceRoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("job_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.JobConfig = expandJobConfig(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("oauth_token"); ok {
 		input.OauthToken = aws.String(v.(string))
 	}
@@ -403,7 +425,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 		input.Repository = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.BadRequestException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.BadRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateApp(ctx, &input)
 	}, "role provided cannot be assumed")
 
@@ -422,7 +444,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	app, err := findAppByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -440,7 +462,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	} else {
 		d.Set("auto_branch_creation_config", nil)
 	}
-	d.Set("auto_branch_creation_patterns", aws.StringSlice(app.AutoBranchCreationPatterns))
+	d.Set("auto_branch_creation_patterns", app.AutoBranchCreationPatterns)
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
 	if app.CacheConfig != nil {
@@ -461,6 +483,13 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	d.Set("enable_branch_auto_deletion", app.EnableBranchAutoDeletion)
 	d.Set("environment_variables", aws.StringMap(app.EnvironmentVariables))
 	d.Set("iam_service_role_arn", app.IamServiceRoleArn)
+	if app.JobConfig != nil {
+		if err := d.Set("job_config", []any{flattenJobConfig(app.JobConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting job_config: %s", err)
+		}
+	} else {
+		d.Set("job_config", nil)
+	}
 	d.Set(names.AttrName, app.Name)
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
@@ -571,6 +600,12 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta any) di
 			input.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
 		}
 
+		if d.HasChange("job_config") {
+			if v, ok := d.Get("job_config").([]any); ok && len(v) > 0 && v[0] != nil {
+				input.JobConfig = expandJobConfig(v[0].(map[string]any))
+			}
+		}
+
 		if d.HasChange(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
@@ -627,8 +662,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+			LastError: err,
 		}
 	}
 
@@ -637,7 +671,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	}
 
 	if output == nil || output.App == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.App, nil
@@ -818,6 +852,20 @@ func expandCustomRules(tfList []any) []types.CustomRule {
 	return apiObjects
 }
 
+func expandJobConfig(tfMap map[string]any) *types.JobConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.JobConfig{}
+
+	if v, ok := tfMap["build_compute_type"].(string); ok && v != "" {
+		apiObject.BuildComputeType = types.BuildComputeType(v)
+	}
+
+	return apiObject
+}
+
 func flattenCustomRule(apiObject types.CustomRule) map[string]any {
 	tfMap := map[string]any{}
 
@@ -852,6 +900,18 @@ func flattenCustomRules(apiObjects []types.CustomRule) []any {
 	}
 
 	return tfList
+}
+
+func flattenJobConfig(apiObject *types.JobConfig) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	tfMap["build_compute_type"] = string(apiObject.BuildComputeType)
+
+	return tfMap
 }
 
 func flattenProductionBranch(apiObject *types.ProductionBranch) map[string]any {

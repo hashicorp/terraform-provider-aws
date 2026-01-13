@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -102,13 +102,6 @@ func dataSourceService() *schema.Resource {
 				Required: true,
 			},
 			names.AttrTags: tftags.TagsSchema(),
-			names.AttrTagsAll: {
-				Type:       schema.TypeMap,
-				Optional:   true,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: "tags_all is deprecated. This argument will be removed in a future major version.",
-			},
 		},
 	}
 }

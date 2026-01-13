@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -13,13 +13,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,9 +42,9 @@ func resourceFirewall() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -57,6 +58,24 @@ func resourceFirewall() *schema.Resource {
 				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"availability_zone_change_protection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"availability_zone_mapping": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zone_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
 				},
 				"delete_protection": {
 					Type:     schema.TypeBool,
@@ -118,6 +137,18 @@ func resourceFirewall() *schema.Resource {
 									},
 								},
 							},
+							"transit_gateway_attachment_sync_states": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attachment_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -132,7 +163,7 @@ func resourceFirewall() *schema.Resource {
 				},
 				"subnet_mapping": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrIPAddressType: {
@@ -150,14 +181,25 @@ func resourceFirewall() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTransitGatewayID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrTransitGatewayID, names.AttrVPCID},
+				},
+				"transit_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"update_token": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				names.AttrVPCID: {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ExactlyOneOf: []string{names.AttrTransitGatewayID, names.AttrVPCID},
 				},
 			}
 		},
@@ -172,9 +214,15 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 	input := networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
-		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
 		Tags:              getTagsIn(ctx),
-		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
+	}
+
+	if v, ok := d.GetOk("availability_zone_change_protection"); ok {
+		input.AvailabilityZoneChangeProtection = v.(bool)
+	}
+
+	if v := d.Get("availability_zone_mapping").(*schema.Set); v.Len() > 0 {
+		input.AvailabilityZoneMappings = expandAvailabilityZoneMapping(v.List())
 	}
 
 	if v, ok := d.GetOk("delete_protection"); ok {
@@ -201,6 +249,18 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SubnetChangeProtection = v.(bool)
 	}
 
+	if v := d.Get("subnet_mapping").(*schema.Set); v.Len() > 0 {
+		input.SubnetMappings = expandSubnetMappings(v.List())
+	}
+
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
+		input.TransitGatewayId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		input.VpcId = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateFirewall(ctx, &input)
 
 	if err != nil {
@@ -209,10 +269,15 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.Firewall.FirewallArn))
 
-	if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+	if output.Firewall.TransitGatewayId != nil {
+		if _, err := waitFirewallTransitGatewayAttachmentCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Transit Gateway Attachment (%s) create: %s", d.Id(), err)
+		}
+	} else {
+		if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+		}
 	}
-
 	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
@@ -222,7 +287,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findFirewallByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -234,6 +299,8 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	firewall := output.Firewall
 	d.Set(names.AttrARN, firewall.FirewallArn)
+	d.Set("availability_zone_change_protection", firewall.AvailabilityZoneChangeProtection)
+	d.Set("availability_zone_mapping", flattenAvailabilityZoneMapping(firewall.AvailabilityZoneMappings))
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
 	d.Set("enabled_analysis_types", firewall.EnabledAnalysisTypes)
@@ -250,6 +317,8 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
+	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
+	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
 	d.Set("update_token", output.UpdateToken)
 	d.Set(names.AttrVPCID, firewall.VpcId)
 
@@ -330,6 +399,68 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	// Note: The *_change_protection fields below are handled before their respective fields
 	// to account for disabling and subsequent changes.
+
+	if d.HasChange("availability_zone_change_protection") {
+		input := networkfirewall.UpdateAvailabilityZoneChangeProtectionInput{
+			AvailabilityZoneChangeProtection: d.Get("availability_zone_change_protection").(bool),
+			FirewallArn:                      aws.String(d.Id()),
+			UpdateToken:                      aws.String(updateToken),
+		}
+		output, err := conn.UpdateAvailabilityZoneChangeProtection(ctx, &input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) availability zone change protection: %s", d.Id(), err)
+		}
+		updateToken = aws.ToString(output.UpdateToken)
+	}
+
+	if d.HasChange("availability_zone_mapping") {
+		o, n := d.GetChange("availability_zone_mapping")
+		availabilityZoneToRemove, availabilityZoneToAdd := availabilityZoneMappingsDiff(o.(*schema.Set), n.(*schema.Set))
+
+		if len(availabilityZoneToAdd) > 0 {
+			input := networkfirewall.AssociateAvailabilityZonesInput{
+				FirewallArn:              aws.String(d.Id()),
+				AvailabilityZoneMappings: availabilityZoneToAdd,
+				UpdateToken:              aws.String(updateToken),
+			}
+
+			_, err := conn.AssociateAvailabilityZones(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "associating NetworkFirewall Firewall (%s) availability zones: %s", d.Id(), err)
+			}
+
+			output, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+			}
+
+			updateToken = aws.ToString(output.UpdateToken)
+		}
+
+		if len(availabilityZoneToRemove) > 0 {
+			input := networkfirewall.DisassociateAvailabilityZonesInput{
+				FirewallArn:              aws.String(d.Id()),
+				AvailabilityZoneMappings: availabilityZoneToRemove,
+				UpdateToken:              aws.String(updateToken),
+			}
+
+			_, err := conn.DisassociateAvailabilityZones(ctx, &input)
+
+			if err == nil {
+				output, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+				}
+
+				updateToken = aws.ToString(output.UpdateToken)
+			} else if !errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "inaccessible") {
+				return sdkdiag.AppendErrorf(diags, "disassociating NetworkFirewall Firewall (%s) availability zones: %s", d.Id(), err)
+			}
+		}
+	}
 
 	if d.HasChange("firewall_policy_change_protection") {
 		input := networkfirewall.UpdateFirewallPolicyChangeProtectionInput{
@@ -439,7 +570,12 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteFirewall(ctx, &input)
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteFirewall(ctx, &input)
+	}, "still in use")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -460,7 +596,7 @@ func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *netw
 	output, err := conn.DescribeFirewall(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -471,7 +607,7 @@ func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *netw
 	}
 
 	if output == nil || output.Firewall == nil || output.FirewallStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -485,11 +621,11 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 	return findFirewall(ctx, conn, &input)
 }
 
-func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -501,8 +637,28 @@ func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn strin
 	}
 }
 
+func statusFirewallTransitGatewayAttachment(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findFirewallByARN(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.FirewallStatus.TransitGatewayAttachmentSyncState == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.FirewallStatus.TransitGatewayAttachmentSyncState.TransitGatewayAttachmentStatus), nil
+	}
+}
+
 func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -518,8 +674,25 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, time
 	return nil, err
 }
 
+func waitFirewallTransitGatewayAttachmentCreated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatusCreating),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStatusPendingAcceptance, awstypes.TransitGatewayAttachmentStatusReady),
+		Refresh: statusFirewallTransitGatewayAttachment(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*networkfirewall.DescribeFirewallOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
 		Refresh: statusFirewall(ctx, conn, arn),
@@ -540,8 +713,8 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.Client, time
 }
 
 func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.Client, timeout time.Duration, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FirewallStatusValueDeleting),
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FirewallStatusValueDeleting, awstypes.FirewallStatusValueProvisioning),
 		Target:  []string{},
 		Refresh: statusFirewall(ctx, conn, arn),
 		Timeout: timeout,
@@ -602,7 +775,8 @@ func flattenFirewallStatus(apiObject *awstypes.FirewallStatus) []any {
 	}
 
 	tfMap := map[string]any{
-		"sync_states": flattenSyncStates(apiObject.SyncStates),
+		"sync_states":                            flattenSyncStates(apiObject.SyncStates),
+		"transit_gateway_attachment_sync_states": flattenTransitGatewayAttachmentSyncState(apiObject.TransitGatewayAttachmentSyncState),
 	}
 
 	return []any{tfMap}
@@ -674,4 +848,70 @@ func subnetMappingsDiff(old, new *schema.Set) ([]string, []awstypes.SubnetMappin
 	subnetsToAdd := expandSubnetMappings(toAdd.List())
 
 	return subnetsToRemove, subnetsToAdd
+}
+
+func expandAvailabilityZoneMapping(tfList []any) []awstypes.AvailabilityZoneMapping {
+	apiObjects := make([]awstypes.AvailabilityZoneMapping, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.AvailabilityZoneMapping{
+			AvailabilityZone: aws.String(tfMap["availability_zone_id"].(string)),
+		}
+
+		if v, ok := tfMap["availability_zone_id"].(string); ok && v != "" {
+			apiObject.AvailabilityZone = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenAvailabilityZoneMapping(apiObjects []awstypes.AvailabilityZoneMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"availability_zone_id": aws.ToString(apiObject.AvailabilityZone),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenTransitGatewayAttachmentSyncState(apiObject *awstypes.TransitGatewayAttachmentSyncState) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"attachment_id": apiObject.AttachmentId,
+	}
+
+	return []any{tfMap}
+}
+
+func availabilityZoneMappingsDiff(old, new *schema.Set) ([]awstypes.AvailabilityZoneMapping, []awstypes.AvailabilityZoneMapping) {
+	if old.Len() == 0 {
+		return nil, expandAvailabilityZoneMapping(new.List())
+	}
+	if new.Len() == 0 {
+		return expandAvailabilityZoneMapping(old.List()), nil
+	}
+
+	toRemove := old.Difference(new)
+	toAdd := new.Difference(old)
+
+	availabilityZonesToRemove := expandAvailabilityZoneMapping(toRemove.List())
+	availabilityZonesToAdd := expandAvailabilityZoneMapping(toAdd.List())
+
+	return availabilityZonesToRemove, availabilityZonesToAdd
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,7 +77,7 @@ func TestAccImageBuilderDistributionConfiguration_disappears(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceDistributionConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1249,7 +1249,7 @@ func testAccCheckDistributionConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfimagebuilder.FindDistributionConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1292,7 +1292,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, description)
@@ -1316,7 +1316,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   distribution {
@@ -1324,7 +1324,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.alternate.name
+    region = data.aws_region.alternate.region
   }
 }
 `, rName))
@@ -1344,7 +1344,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, amiTagKey, amiTagValue)
@@ -1362,7 +1362,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       description = %[2]q
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, description)
@@ -1372,6 +1372,7 @@ func testAccDistributionConfigurationConfig_amiKMSKeyID1(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "current" {}
@@ -1384,7 +1385,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       kms_key_id = aws_kms_key.test.arn
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1394,6 +1395,7 @@ func testAccDistributionConfigurationConfig_amiKMSKeyID2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_region" "current" {}
@@ -1406,7 +1408,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       kms_key_id = aws_kms_key.test2.arn
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1426,7 +1428,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, userGroup)
@@ -1446,7 +1448,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, userId)
@@ -1467,7 +1469,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
         organization_arns = [aws_organizations_organization.test.arn]
       }
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1493,7 +1495,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
         organizational_unit_arns = [aws_organizations_organizational_unit.test.arn]
       }
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
   `, rName)
@@ -1511,7 +1513,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = %[2]q
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, name)
@@ -1529,7 +1531,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       target_account_ids = [%[2]q]
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, targetAccountId)
@@ -1550,7 +1552,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, repositoryName)
@@ -1573,7 +1575,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       description = %[2]q
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, description)
@@ -1596,7 +1598,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       container_tags = [%[2]q]
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, containerTag)
@@ -1617,7 +1619,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       enabled    = %[2]s
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, enabled)
@@ -1648,7 +1650,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1679,7 +1681,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1701,7 +1703,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       max_parallel_launches = %[2]d
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, maxParallelLaunches)
@@ -1726,7 +1728,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, targetResourceCount)
@@ -1753,7 +1755,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       account_id         = data.aws_caller_identity.current.account_id
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1780,7 +1782,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       account_id         = data.aws_caller_identity.current.account_id
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1811,7 +1813,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       }
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
   `, rName, accountId)
@@ -1831,7 +1833,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 
   distribution {
     license_configuration_arns = [aws_licensemanager_license_configuration.test.id]
-    region                     = data.aws_region.current.name
+    region                     = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1851,7 +1853,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
 
   distribution {
     license_configuration_arns = [aws_licensemanager_license_configuration.test2.id]
-    region                     = data.aws_region.current.name
+    region                     = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1869,7 +1871,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName)
@@ -1889,7 +1891,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       role_name         = "role-name"
       s3_bucket         = aws_s3_bucket.test.id
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, diskImageFormat)
@@ -1909,7 +1911,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       role_name         = %[2]q
       s3_bucket         = aws_s3_bucket.test.id
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, roleName)
@@ -1929,7 +1931,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       role_name         = "role-name"
       s3_bucket         = aws_s3_bucket.test.id
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, s3Bucket)
@@ -1950,7 +1952,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       s3_bucket         = aws_s3_bucket.test.id
       s3_prefix         = %[2]q
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, s3Prefix)
@@ -1967,7 +1969,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       parameter_name = %[2]q
       data_type      = %[3]q
     }
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 }
 `, rName, parameterName, dataType)
@@ -1985,7 +1987,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   tags = {
@@ -2007,7 +2009,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   tags = {

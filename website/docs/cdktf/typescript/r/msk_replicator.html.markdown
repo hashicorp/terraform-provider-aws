@@ -85,8 +85,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicatorName` - (Required) The name of the replicator.
 * `kafkaCluster` - (Required) A list of Kafka clusters which are targets of the replicator.
 * `serviceExecutionRoleArn` - (Required) The ARN of the IAM role used by the replicator to access resources in the customer's account (e.g source and target clusters).
@@ -188,4 +189,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-188791203cf58a70818d2d67aac18cc2a2f3b88923b3665788cd3c802c3db811 -->
+<!-- cache-key: cdktf-0.20.8 input-8bf4594598d13dce6022640b42dd1f6965ce218f5432cc4d9d9f97068e0b2ddd -->

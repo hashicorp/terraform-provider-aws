@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -24,43 +24,50 @@ import (
 
 // @FrameworkDataSource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
-func newDataSourceCollection(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCollection{}, nil
+func newCollectionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &collectionDataSource{}, nil
 }
 
 const (
 	DSNameCollection = "Collection Data Source"
 )
 
-type dataSourceCollection struct {
-	framework.DataSourceWithConfigure
+type collectionDataSource struct {
+	framework.DataSourceWithModel[collectionDataSourceModel]
 }
 
-func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *collectionDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"collection_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to submit index, search, and data upload requests to an OpenSearch Serverless collection.",
+				Computed:    true,
 			},
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was created.",
+				Computed:    true,
 			},
 			"dashboard_endpoint": schema.StringAttribute{
-				Computed: true,
+				Description: "Collection-specific endpoint used to access OpenSearch Dashboards.",
+				Computed:    true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Computed: true,
+				Description: "Description of the collection.",
+				Computed:    true,
 			},
 			"failure_message": schema.StringAttribute{
-				Computed: true,
+				Description: "A failure reason associated with the collection.",
+				Computed:    true,
 			},
 			"failure_code": schema.StringAttribute{
-				Computed: true,
+				Description: "A failure code associated with the collection.",
+				Computed:    true,
 			},
 			names.AttrID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "ID of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrName),
@@ -71,14 +78,17 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			names.AttrKMSKeyARN: schema.StringAttribute{
-				Computed: true,
+				Description: "The ARN of the Amazon Web Services KMS key used to encrypt the collection.",
+				Computed:    true,
 			},
 			"last_modified_date": schema.StringAttribute{
-				Computed: true,
+				Description: "Date the Collection was last modified.",
+				Computed:    true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description: "Name of the collection.",
+				Optional:    true,
+				Computed:    true,
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(
 						path.MatchRelative().AtParent().AtName(names.AttrID),
@@ -86,19 +96,21 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 				},
 			},
 			"standby_replicas": schema.StringAttribute{
-				Computed: true,
+				Description: "Indicates whether standby replicas should be used for a collection.",
+				Computed:    true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
-				Computed: true,
+				Description: "Type of collection.",
+				Computed:    true,
 			},
 		},
 	}
 }
-func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *collectionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().OpenSearchServerlessClient(ctx)
 
-	var data dataSourceCollectionData
+	var data collectionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,7 +156,8 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceCollectionData struct {
+type collectionDataSourceModel struct {
+	framework.WithRegionModel
 	ARN                types.String `tfsdk:"arn"`
 	CollectionEndpoint types.String `tfsdk:"collection_endpoint"`
 	CreatedDate        types.String `tfsdk:"created_date"`

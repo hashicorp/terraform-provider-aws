@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +27,7 @@ const (
 
 // @SDKResource("aws_ssmincidents_response_plan", name="Response Plan")
 // @Tags(identifierAttribute="id")
-func ResourceResponsePlan() *schema.Resource {
+func resourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResponsePlanCreate,
 		ReadWithoutTimeout:   resourceResponsePlanRead,
@@ -228,7 +228,7 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ResponsePlan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

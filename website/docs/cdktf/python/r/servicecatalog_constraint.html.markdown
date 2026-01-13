@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accept_language` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 * `description` - (Optional) Description of the constraint.
 
@@ -131,4 +132,4 @@ Using `terraform import`, import `aws_servicecatalog_constraint` using the const
 % terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f391e00f1f29453b1e81c01e36db6ce37af9e3b44513a1ffefd379e9b7d4ba13 -->
+<!-- cache-key: cdktf-0.20.8 input-0263a827de15c6ad3e9e619c5e9632c85d9909d0209d48848722d36d0efc5a6d -->

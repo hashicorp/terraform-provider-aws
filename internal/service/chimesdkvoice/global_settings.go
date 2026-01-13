@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,6 +26,7 @@ const (
 )
 
 // @SDKResource("aws_chimesdkvoice_global_settings", name="Global Settings")
+// @Region(global=true)
 func ResourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
@@ -63,24 +63,23 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	// Include retry handling to allow for propagation of the Global Settings
 	// logging bucket configuration
 	var out *chimesdkvoice.GetGlobalSettingsOutput
-	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, globalSettingsPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var getErr error
 		input := chimesdkvoice.GetGlobalSettingsInput{}
 		out, getErr = conn.GetGlobalSettings(ctx, &input)
 
 		if getErr != nil {
-			return retry.NonRetryableError(getErr)
+			return tfresource.NonRetryableError(getErr)
 		}
 
 		if out.VoiceConnector == nil || out.VoiceConnector.CdrBucket == nil {
-			return retry.RetryableError(tfresource.NewEmptyResultError(&chimesdkvoice.GetGlobalSettingsInput{}))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		return nil
 	})
 
-	var ere *tfresource.EmptyResultError
-	if !d.IsNewResource() && errors.As(err, &ere) {
+	if !d.IsNewResource() && errors.Is(err, tfresource.ErrEmptyResult) {
 		log.Printf("[WARN] ChimeSDKVoice GlobalSettings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

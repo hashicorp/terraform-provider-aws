@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_guardduty_publishing_destination", name="Publishing Destination")
-func ResourcePublishingDestination() *schema.Resource {
+func resourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublishingDestinationCreate,
 		ReadWithoutTimeout:   resourcePublishingDestinationRead,

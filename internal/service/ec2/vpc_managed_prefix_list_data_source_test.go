@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -88,7 +88,7 @@ const testAccVPCManagedPrefixListDataSourceConfig_basic = `
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
-  name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  name = "com.amazonaws.${data.aws_region.current.region}.s3"
 }
 
 data "aws_ec2_managed_prefix_list" "s3_by_id" {
@@ -148,7 +148,7 @@ data "aws_region" "current" {}
 data "aws_ec2_managed_prefix_list" "s3_by_name" {
   filter {
     name   = "prefix-list-name"
-    values = ["com.amazonaws.${data.aws_region.current.name}.s3"]
+    values = ["com.amazonaws.${data.aws_region.current.region}.s3"]
   }
 }
 

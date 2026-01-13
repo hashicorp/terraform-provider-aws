@@ -47,6 +47,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the specific VPN Gateway to retrieve.
 * `state` - (Optional) State of the specific VPN Gateway to retrieve.
 * `availabilityZone` - (Optional) Availability Zone of the specific VPN Gateway to retrieve.
@@ -78,4 +79,4 @@ This data source exports no additional attributes.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-ab6bce22fc5d1859e0702e52dbeb5c9df4bbadb139bd6ac518cdc999aa60deb2 -->
+<!-- cache-key: cdktf-0.20.8 input-bff116bd321aad4ed6c26ddc3039a762835006ec90d3a74cdf436702988bce63 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketPublicAccessBlock(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketPublicAccessBlock(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -270,6 +270,52 @@ func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 	})
 }
 
+// This test can be safely run at all times as the dangling public access
+// block left behind by skipped destruction will ultimately be cleaned up
+// by destruction of the associated bucket.
+func TestAccS3BucketPublicAccessBlock_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketPublicAccessBlockConfig_skipDestroy(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccBucketPublicAccessBlockConfig_skipDestroy(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
+			},
+			// Remove the public access block resource from configuration
+			{
+				Config: testAccBucketPublicAccessBlockConfig_skipDestroy_postRemoval(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, bucketResourceName),
+					testAccCheckBucketPublicAccessBlockExistsByName(ctx, rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
@@ -303,7 +349,7 @@ func testAccCheckBucketPublicAccessBlockDestroy(ctx context.Context) resource.Te
 
 			_, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -342,6 +388,21 @@ func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, v 
 	}
 }
 
+// testAccCheckProvisionedConcurrencyConfigExistsByName is a helper to verify a
+// public access block is in place for a given bucket.
+//
+// This variant of the test check exists function which accepts bucket name
+// directly to support skip_destroy checks where the public access block
+// resource is removed from state, but should still exist remotely.
+func testAccCheckBucketPublicAccessBlockExistsByName(ctx context.Context, rName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		_, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rName)
+		return err
+	}
+}
+
 func testAccBucketPublicAccessBlockConfig_basic(bucketName string, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -357,6 +418,33 @@ resource "aws_s3_bucket_public_access_block" "test" {
   restrict_public_buckets = %[5]t
 }
 `, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets)
+}
+
+func testAccBucketPublicAccessBlockConfig_skipDestroy(bucketName string, skipDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  skip_destroy = %[2]t
+}
+`, bucketName, skipDestroy)
+}
+
+func testAccBucketPublicAccessBlockConfig_skipDestroy_postRemoval(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, bucketName)
 }
 
 func testAccBucketPublicAccessBlockConfig_directoryBucket(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {

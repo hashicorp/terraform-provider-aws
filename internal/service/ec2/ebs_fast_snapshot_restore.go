@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +34,7 @@ func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWith
 }
 
 type ebsFastSnapshotRestoreResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ebsFastSnapshotRestoreResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
@@ -135,7 +135,7 @@ func (r *ebsFastSnapshotRestoreResource) Read(ctx context.Context, request resou
 
 	v, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, data.AvailabilityZone.ValueString(), data.SnapshotID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -184,6 +184,7 @@ func (r *ebsFastSnapshotRestoreResource) Delete(ctx context.Context, request res
 }
 
 type ebsFastSnapshotRestoreResourceModel struct {
+	framework.WithRegionModel
 	AvailabilityZone types.String   `tfsdk:"availability_zone"`
 	ID               types.String   `tfsdk:"id"`
 	SnapshotID       types.String   `tfsdk:"snapshot_id"`

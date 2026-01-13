@@ -1,4 +1,5 @@
 resource "aws_lb_trust_store" "test" {
+{{- template "region" }}
   name                             = var.rName
   ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
@@ -7,11 +8,13 @@ resource "aws_lb_trust_store" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
+{{- template "region" }}
   bucket        = var.rName
   force_destroy = true
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   rule {
@@ -20,6 +23,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
+{{- template "region" }}
   bucket = aws_s3_bucket.test.id
 
   block_public_acls       = true
@@ -29,6 +33,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_object" "test" {
+{{- template "region" }}
   bucket  = aws_s3_bucket.test.bucket
   key     = "${var.rName}.pem"
   content = <<EOT

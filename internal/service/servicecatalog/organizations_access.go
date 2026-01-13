@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKResource("aws_servicecatalog_organizations_access", name="Organizations Access")
+// @Region(global=true)
 func resourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationsAccessCreate,

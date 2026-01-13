@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch
@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -275,7 +275,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	domain, err := findDomainByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -561,7 +561,7 @@ func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.DomainStatusList)
@@ -576,8 +576,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -586,7 +585,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 	}
 
 	if output == nil || output.AvailabilityOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AvailabilityOptions, nil
@@ -600,7 +599,7 @@ func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Clie
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -615,8 +614,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -625,7 +623,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 	}
 
 	if output == nil || output.DomainEndpointOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainEndpointOptions, nil
@@ -639,7 +637,7 @@ func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, 
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -654,8 +652,7 @@ func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Cl
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -664,17 +661,17 @@ func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Cl
 	}
 
 	if output == nil || output.ScalingParameters == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ScalingParameters, nil
 }
 
-func statusDomainDeleting(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainDeleting(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -686,11 +683,11 @@ func statusDomainDeleting(ctx context.Context, conn *cloudsearch.Client, name st
 	}
 }
 
-func statusDomainProcessing(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -706,7 +703,7 @@ func waitDomainActive(ctx context.Context, conn *cloudsearch.Client, name string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusDomainProcessing(ctx, conn, name),
+		Refresh: statusDomainProcessing(conn, name),
 		Timeout: timeout,
 	}
 
@@ -723,7 +720,7 @@ func waitDomainDeleted(ctx context.Context, conn *cloudsearch.Client, name strin
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{},
-		Refresh: statusDomainDeleting(ctx, conn, name),
+		Refresh: statusDomainDeleting(conn, name),
 		Timeout: timeout,
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -23,14 +23,4 @@ type ResourceDiffer interface {
 	HasChange(string) bool
 	HasChanges(...string) bool
 	Id() string
-}
-
-// HasNonZeroValues returns true if any of the keys have non-zero values.
-func HasNonZeroValues(d ResourceDiffer, keys ...string) bool {
-	for _, key := range keys {
-		if _, ok := d.GetOk(key); ok {
-			return true
-		}
-	}
-	return false
 }

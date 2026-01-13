@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -875,6 +875,64 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSVolume_snapshotIDAndVolumeInitializationRate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Volume
+	resourceName := "aws_ebs_volume.test"
+	snapshotResourceName := "aws_ebs_snapshot.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeConfig_snapshotIdAndVolumeInitializationRate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_initialization_rate", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"final_snapshot"},
+			},
+		},
+	})
+}
+
+func TestAccEC2EBSVolume_volumeInitializationRateWithoutSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEBSVolumeConfig_volumeInitializationRateWithoutSnapshotId,
+				ExpectError: regexache.MustCompile(`'volume_initialization_rate' must not be set unless 'snapshot_id' is set`),
+			},
+		},
+	})
+}
+
 func TestAccEC2EBSVolume_finalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Volume
@@ -921,7 +979,7 @@ func testAccCheckVolumeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindEBSVolumeByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1179,8 +1237,10 @@ func testAccEBSVolumeConfig_kmsKey(rName string) string {
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -1415,6 +1475,50 @@ resource "aws_ebs_volume" "test" {
 }
 `, rName, size))
 }
+
+func testAccEBSVolumeConfig_snapshotIdAndVolumeInitializationRate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_ebs_volume" "source" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  size              = 10
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = aws_ebs_volume.source.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  snapshot_id       = aws_ebs_snapshot.test.id
+
+  volume_initialization_rate = 100
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+var testAccEBSVolumeConfig_volumeInitializationRateWithoutSnapshotId = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  type              = "gp2"
+  size              = 1
+
+  volume_initialization_rate = 100
+}
+`)
 
 func testAccEBSVolumeConfig_finalSnapshot(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`

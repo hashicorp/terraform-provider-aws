@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mq_test
@@ -22,8 +22,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -306,6 +307,34 @@ func TestNormalizeEngineVersion(t *testing.T) {
 			autoMinorVersionUpgrade: true,
 			want:                    "5.18",
 		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2.1",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
+		{
+			name:                    "ActiveMQ, auto, post 5.18, ActiveMQ 5.19 without patch version",
+			engineType:              string(types.EngineTypeActivemq),
+			engineVersion:           "5.19",
+			autoMinorVersionUpgrade: true,
+			want:                    "5.19",
+		},
+		{
+			name:                    "RabbitMQ, auto, post 3.13, RabbitMQ 4 without patch version",
+			engineType:              string(types.EngineTypeRabbitmq),
+			engineVersion:           "4.2",
+			autoMinorVersionUpgrade: true,
+			want:                    "4.2",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -471,7 +500,7 @@ func TestAccMQBroker_disappears(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmq.ResourceBroker(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmq.ResourceBroker(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1628,10 +1657,11 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "data_replication_primary_broker_arn"},
 			},
+			// nosemgrep:ci.semgrep.acctest.checks.replace-planonly-checks
 			{
 				// Preparation for destruction would require multiple configuration changes
 				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
-				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// and delete operations on the primary cluster out-of-band to ensure remaining
 				// resources will be freed for clean up.
 				PreConfig: func() {
 					// In order to delete, replicated brokers must first be unpaired by setting
@@ -1661,7 +1691,7 @@ func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1736,7 +1766,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
@@ -1760,7 +1790,7 @@ func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *
 
 func testAccDeleteBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
 	brokerID := aws.ToString(broker.BrokerId)
-	deadline := tfresource.NewDeadline(30 * time.Minute)
+	deadline := inttypes.NewDeadline(30 * time.Minute)
 	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{BrokerId: aws.String(brokerID)})
@@ -2079,6 +2109,7 @@ func testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, version string) string
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_security_group" "test" {

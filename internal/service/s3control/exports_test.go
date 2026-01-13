@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -15,6 +15,7 @@ var (
 	ResourceBucket                             = resourceBucket
 	ResourceBucketLifecycleConfiguration       = resourceBucketLifecycleConfiguration
 	ResourceBucketPolicy                       = resourceBucketPolicy
+	ResourceDirectoryBucketAccessPointScope    = newDirectoryBucketAccessPointScopeResource
 	ResourceMultiRegionAccessPoint             = resourceMultiRegionAccessPoint
 	ResourceMultiRegionAccessPointPolicy       = resourceMultiRegionAccessPointPolicy
 	ResourceObjectLambdaAccessPoint            = resourceObjectLambdaAccessPoint
@@ -22,7 +23,7 @@ var (
 	ResourceStorageLensConfiguration           = resourceStorageLensConfiguration
 
 	FindAccessGrantByTwoPartKey                            = findAccessGrantByTwoPartKey
-	FindAccessGrantsInstance                               = findAccessGrantsInstance
+	FindAccessGrantsInstanceByID                           = findAccessGrantsInstanceByID
 	FindAccessGrantsInstanceResourcePolicy                 = findAccessGrantsInstanceResourcePolicy
 	FindAccessGrantsLocationByTwoPartKey                   = findAccessGrantsLocationByTwoPartKey
 	FindAccessPointByTwoPartKey                            = findAccessPointByTwoPartKey
@@ -30,6 +31,7 @@ var (
 	FindBucketByTwoPartKey                                 = findBucketByTwoPartKey
 	FindBucketLifecycleConfigurationByTwoPartKey           = findBucketLifecycleConfigurationByTwoPartKey
 	FindBucketPolicyByTwoPartKey                           = findBucketPolicyByTwoPartKey
+	FindDirectoryAccessPointScopeByTwoPartKey              = findDirectoryAccessPointScopeByTwoPartKey
 	FindMultiRegionAccessPointByTwoPartKey                 = findMultiRegionAccessPointByTwoPartKey
 	FindMultiRegionAccessPointPolicyDocumentByTwoPartKey   = findMultiRegionAccessPointPolicyDocumentByTwoPartKey
 	FindObjectLambdaAccessPointAliasByTwoPartKey           = findObjectLambdaAccessPointAliasByTwoPartKey
@@ -37,4 +39,6 @@ var (
 	FindObjectLambdaAccessPointPolicyAndStatusByTwoPartKey = findObjectLambdaAccessPointPolicyAndStatusByTwoPartKey
 	FindPublicAccessBlockByAccountID                       = findPublicAccessBlockByAccountID
 	FindStorageLensConfigurationByAccountIDAndConfigID     = findStorageLensConfigurationByAccountIDAndConfigID
+
+	AccessPointParseResourceID = accessPointParseResourceID
 )

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Ephemeral Resource
 
@@ -46,12 +49,16 @@ import (
 )
 
 // @EphemeralResource("aws_something_example", name="Example")
-func newEphemeralExample(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
-	return &ephemeralExample{}, nil
+func newExampleEphemeralResource(_ context.Context) (ephemeral.EphemeralResourceWithConfigure, error) {
+	return &exampleEphemeralResource{}, nil
 }
 
-type ephemeralExample struct {
-	framework.EphemeralResourceWithConfigure
+type exampleEphemeralResource struct {
+	framework.EphemeralResourceWithModel[exampleEphemeralResourceModel]
+}
+
+type exampleEphemeralResourceModel {
+	// Fields corresponding to attributes in the Schema.
 }
 ```
 

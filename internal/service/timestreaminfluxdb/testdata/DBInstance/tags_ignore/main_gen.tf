@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
@@ -8,32 +8,6 @@ provider "aws" {
   ignore_tags {
     keys = var.ignore_tag_keys
   }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-data "aws_availability_zones" "available" {
-  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 1
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
@@ -49,6 +23,43 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 
   tags = var.resource_tags
 }
+
+# acctest.ConfigVPCWithSubnets(rName, 1)
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+# acctest.ConfigSubnets(rName, 1)
+
+resource "aws_subnet" "test" {
+  count = 1
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+# acctest.ConfigAvailableAZsNoOptInDefaultExclude
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = local.default_exclude_zone_ids
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+locals {
+  default_exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
 variable "rName" {
   description = "Name for resource"
   type        = string

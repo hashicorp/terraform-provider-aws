@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamquery
@@ -20,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,8 +34,8 @@ import (
 
 // @FrameworkResource("aws_timestreamquery_scheduled_query", name="Scheduled Query")
 // @Tags(identifierAttribute="arn")
-func newResourceScheduledQuery(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceScheduledQuery{}
+func newScheduledQueryResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &scheduledQueryResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -49,12 +49,12 @@ const (
 	ScheduledQueryFieldNamePrefix = "ScheduledQuery"
 )
 
-type resourceScheduledQuery struct {
-	framework.ResourceWithConfigure
+type scheduledQueryResource struct {
+	framework.ResourceWithModel[scheduledQueryResourceModel]
 	framework.WithTimeouts
 }
 
-func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *scheduledQueryResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -568,10 +568,10 @@ func (r *resourceScheduledQuery) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceScheduledQuery) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *scheduledQueryResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().TimestreamQueryClient(ctx)
 
-	var plan resourceScheduledQueryModel
+	var plan scheduledQueryResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -624,17 +624,17 @@ func (r *resourceScheduledQuery) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceScheduledQuery) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *scheduledQueryResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TimestreamQueryClient(ctx)
 
-	var state resourceScheduledQueryModel
+	var state scheduledQueryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findScheduledQueryByARN(ctx, conn, state.ARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -654,10 +654,10 @@ func (r *resourceScheduledQuery) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceScheduledQuery) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *scheduledQueryResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().TimestreamQueryClient(ctx)
 
-	var state, plan resourceScheduledQueryModel
+	var state, plan scheduledQueryResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -709,10 +709,10 @@ func (r *resourceScheduledQuery) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceScheduledQuery) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *scheduledQueryResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().TimestreamQueryClient(ctx)
 
-	var state resourceScheduledQueryModel
+	var state scheduledQueryResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -745,7 +745,7 @@ func (r *resourceScheduledQuery) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceScheduledQuery) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *scheduledQueryResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
@@ -753,7 +753,7 @@ func waitScheduledQueryCreated(ctx context.Context, conn *timestreamquery.Client
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ScheduledQueryStateEnabled),
-		Refresh:                   statusScheduledQuery(ctx, conn, id),
+		Refresh:                   statusScheduledQuery(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -771,7 +771,7 @@ func waitScheduledQueryUpdated(ctx context.Context, conn *timestreamquery.Client
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ScheduledQueryStateDisabled),
 		Target:                    enum.Slice(awstypes.ScheduledQueryStateEnabled),
-		Refresh:                   statusScheduledQuery(ctx, conn, arn),
+		Refresh:                   statusScheduledQuery(conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -789,7 +789,7 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScheduledQueryStateEnabled, awstypes.ScheduledQueryStateDisabled),
 		Target:  []string{},
-		Refresh: statusScheduledQuery(ctx, conn, arn),
+		Refresh: statusScheduledQuery(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -804,10 +804,10 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 // statusScheduledQuery is a state refresh function that queries the service
 // and returns the state of the scheduled query, not the run status of the most
 // recent run.
-func statusScheduledQuery(ctx context.Context, conn *timestreamquery.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScheduledQuery(conn *timestreamquery.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findScheduledQueryByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -828,8 +828,7 @@ func findScheduledQueryByARN(ctx context.Context, conn *timestreamquery.Client, 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+				LastError: err,
 			}
 		}
 
@@ -837,13 +836,14 @@ func findScheduledQueryByARN(ctx context.Context, conn *timestreamquery.Client, 
 	}
 
 	if out == nil || out.ScheduledQuery == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ScheduledQuery, nil
 }
 
-type resourceScheduledQueryModel struct {
+type scheduledQueryResourceModel struct {
+	framework.WithRegionModel
 	// Attributes
 	ARN                    types.String                                     `tfsdk:"arn"`
 	CreationTime           timetypes.RFC3339                                `tfsdk:"creation_time"`

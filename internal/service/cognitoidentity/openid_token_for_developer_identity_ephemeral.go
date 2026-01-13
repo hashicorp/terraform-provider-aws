@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity
@@ -26,7 +26,7 @@ func newOpenIDTokenForDeveloperIdentityEphemeralResource(context.Context) (ephem
 }
 
 type openIDTokenForDeveloperIdentityEphemeralResource struct {
-	framework.EphemeralResourceWithConfigure
+	framework.EphemeralResourceWithModel[openIDTokenForDeveloperIdentityEphemeralResourceModel]
 }
 
 func (e *openIDTokenForDeveloperIdentityEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -117,6 +117,7 @@ func (e *openIDTokenForDeveloperIdentityEphemeralResource) Open(ctx context.Cont
 }
 
 type openIDTokenForDeveloperIdentityEphemeralResourceModel struct {
+	framework.WithRegionModel
 	IdentityID     types.String        `tfsdk:"identity_id"`
 	IdentityPoolID types.String        `tfsdk:"identity_pool_id"`
 	Logins         fwtypes.MapOfString `tfsdk:"logins"`

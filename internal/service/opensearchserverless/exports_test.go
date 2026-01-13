@@ -1,15 +1,15 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
 
 // Exports for use in tests only.
 var (
-	ResourceAccessPolicy    = newResourceAccessPolicy
-	ResourceCollection      = newResourceCollection
-	ResourceLifecyclePolicy = newResourceLifecyclePolicy
-	ResourceSecurityConfig  = newResourceSecurityConfig
-	ResourceSecurityPolicy  = newResourceSecurityPolicy
+	ResourceAccessPolicy    = newAccessPolicyResource
+	ResourceCollection      = newCollectionResource
+	ResourceLifecyclePolicy = newLifecyclePolicyResource
+	ResourceSecurityConfig  = newSecurityConfigResource
+	ResourceSecurityPolicy  = newSecurityPolicyResource
 	ResourceVPCEndpoint     = newVPCEndpointResource
 
 	FindAccessPolicyByNameAndType    = findAccessPolicyByNameAndType

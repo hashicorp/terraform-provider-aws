@@ -138,6 +138,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `balancing_strategy` - (Optional) Indicates how GameLift FleetIQ balances the use of Spot Instances and On-Demand Instances.
   Valid values: `SPOT_ONLY`, `SPOT_PREFERRED`, `ON_DEMAND_ONLY`. Defaults to `SPOT_PREFERRED`.
 * `game_server_group_name` - (Required) Name of the game server group.
@@ -236,4 +237,4 @@ Using `terraform import`, import GameLift Game Server Group using the `name`. Fo
 % terraform import aws_gamelift_game_server_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-366bd6af5a933ffff5198fbc9bb42ed30d90f3b3e04f89cb1b84627bb8a40b8c -->
+<!-- cache-key: cdktf-0.20.8 input-40a7480a8609eaea88dfbf5da454d78a5926173561c17b0df4c6022c4392f7bc -->

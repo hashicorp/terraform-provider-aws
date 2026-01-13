@@ -94,6 +94,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
 * `network_interface_id` - (Required) The network interface of the gateway on which to expose the iSCSI target. Only IPv4 addresses are accepted.
 * `target_name` - (Required) The name of the iSCSI target used by initiators to connect to the target and as a suffix for the target ARN. The target name must be unique across all volumes of a gateway.
@@ -143,4 +144,4 @@ Using `terraform import`, import `aws_storagegateway_cached_iscsi_volume` using 
 % terraform import aws_storagegateway_cached_iscsi_volume.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678/volume/vol-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fbd53663d449fd1b382a8d59bc64c857ce61a3216c6189065bd24cb002807e26 -->
+<!-- cache-key: cdktf-0.20.8 input-201372216848e72c4d51fbc5cbf2f0d088b9a26c50660ffe606a920a61fd5714 -->

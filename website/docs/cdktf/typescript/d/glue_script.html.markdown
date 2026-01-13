@@ -222,6 +222,7 @@ output "scala_code" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dagEdge` - (Required) List of the edges in the DAG. Defined below.
 * `dagNode` - (Required) List of the nodes in the DAG. Defined below.
 * `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
@@ -253,4 +254,4 @@ This data source exports the following attributes in addition to the arguments a
 * `pythonScript` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
 * `scalaCode` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.
 
-<!-- cache-key: cdktf-0.20.8 input-44d12a35fded8f7a195eda086ed25220b159c6d65cd78c456d311fde0a8d4780 -->
+<!-- cache-key: cdktf-0.20.8 input-722be06a94f9871cc019a3dc0e3bb3585b206d30f6de5b998e21aeca0e39f5db -->

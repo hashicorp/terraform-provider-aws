@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -85,7 +85,7 @@ func TestAccLambdaRuntimeManagementConfig_disappears_Function(t *testing.T) {
 				Config: testAccRuntimeManagementConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuntimeManagementConfigExists(ctx, resourceName, &cfg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourceFunction(), functionResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), functionResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -230,7 +230,7 @@ data "aws_region" "current" {}
 resource "aws_lambda_runtime_management_config" "test" {
   function_name       = aws_lambda_function.test.function_name
   update_runtime_on   = "Manual"
-  runtime_version_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}::runtime:%[1]s"
+  runtime_version_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}::runtime:%[1]s"
 }
 `, runtimeVersion))
 }

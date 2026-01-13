@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -16,17 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,12 +38,8 @@ func newAccountSettingsResource(_ context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-const (
-	ResNameAccountSettings = "Account Settings"
-)
-
 type accountSettingsResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSettingsResourceModel]
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
@@ -54,25 +47,8 @@ type accountSettingsResource struct {
 func (r *accountSettingsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Validators: []validator.String{
-					fwvalidators.AWSAccountID(),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"default_namespace": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString("default"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			"default_namespace":    quicksightschema.NamespaceAttribute(),
 			"termination_protection_enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -94,7 +70,9 @@ func (r *accountSettingsResource) Create(ctx context.Context, request resource.C
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
+	}
 
 	conn := r.Meta().QuickSightClient(ctx)
 
@@ -126,7 +104,7 @@ func (r *accountSettingsResource) Read(ctx context.Context, request resource.Rea
 
 	output, err := findAccountSettingsByID(ctx, conn, data.AWSAccountID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -183,8 +161,8 @@ func (r *accountSettingsResource) ImportState(ctx context.Context, request resou
 }
 
 func updateAccountSettings(ctx context.Context, conn *quicksight.Client, input *quicksight.UpdateAccountSettingsInput, timeout time.Duration) (*awstypes.AccountSettings, error) {
-	return tfresource.RetryGWhen(ctx, timeout,
-		func() (*awstypes.AccountSettings, error) {
+	return tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (*awstypes.AccountSettings, error) {
 			_, err := conn.UpdateAccountSettings(ctx, input)
 
 			if err != nil {
@@ -224,7 +202,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 	output, err := conn.DescribeAccountSettings(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: &input,
 		}
@@ -235,13 +213,14 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 	}
 
 	if output == nil || output.AccountSettings == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountSettings, nil
 }
 
 type accountSettingsResourceModel struct {
+	framework.WithRegionModel
 	AWSAccountID                 types.String   `tfsdk:"aws_account_id"`
 	DefaultNamespace             types.String   `tfsdk:"default_namespace"`
 	TerminationProtectionEnabled types.Bool     `tfsdk:"termination_protection_enabled"`

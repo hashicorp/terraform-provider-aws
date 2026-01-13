@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -22,7 +22,7 @@ func newTablesDataSource(context.Context) (datasource.DataSourceWithConfigure, e
 }
 
 type tablesDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[tablesDataSourceModel]
 }
 
 func (d *tablesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -78,5 +78,6 @@ func findTables(ctx context.Context, conn *dynamodb.Client, input *dynamodb.List
 }
 
 type tablesDataSourceModel struct {
+	framework.WithRegionModel
 	Names fwtypes.ListOfString `tfsdk:"names"`
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -19,16 +19,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearch_authorize_vpc_endpoint_access", name="Authorize VPC Endpoint Access")
-func newResourceAuthorizeVPCEndpointAccess(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAuthorizeVPCEndpointAccess{}
+func newAuthorizeVPCEndpointAccessResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &authorizeVPCEndpointAccessResource{}
 
 	return r, nil
 }
@@ -37,13 +41,12 @@ const (
 	ResNameAuthorizeVPCEndpointAccess = "Authorize Vpc Endpoint Access"
 )
 
-type resourceAuthorizeVPCEndpointAccess struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type authorizeVPCEndpointAccessResource struct {
+	framework.ResourceWithModel[authorizeVPCEndpointAccessResourceModel]
 	framework.WithNoUpdate
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *authorizeVPCEndpointAccessResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account": schema.StringAttribute{
@@ -65,10 +68,10 @@ func (r *resourceAuthorizeVPCEndpointAccess) Schema(ctx context.Context, req res
 	}
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *authorizeVPCEndpointAccessResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var plan resourceAuthorizeVPCEndpointAccessData
+	var plan authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -79,7 +82,7 @@ func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req res
 		DomainName: plan.DomainName.ValueStringPointer(),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -101,7 +104,7 @@ func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req res
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -109,17 +112,18 @@ func (r *resourceAuthorizeVPCEndpointAccess) Create(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *authorizeVPCEndpointAccessResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var state resourceAuthorizeVPCEndpointAccessData
+	var state authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findAuthorizeVPCEndpointAccessByName(ctx, conn, state.DomainName.ValueString())
-	if tfresource.NotFound(err) {
+	out, err := findAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, state.DomainName.ValueString(), state.Account.ValueString())
+	if retry.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -131,17 +135,17 @@ func (r *resourceAuthorizeVPCEndpointAccess) Read(ctx context.Context, req resou
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *authorizeVPCEndpointAccessResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var state resourceAuthorizeVPCEndpointAccessData
+	var state authorizeVPCEndpointAccessResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -165,20 +169,37 @@ func (r *resourceAuthorizeVPCEndpointAccess) Delete(ctx context.Context, req res
 	}
 }
 
-func (r *resourceAuthorizeVPCEndpointAccess) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
+func (r *authorizeVPCEndpointAccessResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		authorizeVPCEndpointAccessImportIDParts = 2
+	)
+	parts, err := intflex.ExpandResourceId(request.ID, authorizeVPCEndpointAccessImportIDParts, true)
+
+	if err != nil {
+		response.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("account"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrDomainName), parts[0])...)
 }
 
-func findAuthorizeVPCEndpointAccessByName(ctx context.Context, conn *opensearch.Client, domainName string) (*awstypes.AuthorizedPrincipal, error) {
-	in := &opensearch.ListVpcEndpointAccessInput{
+func findAuthorizeVPCEndpointAccessByTwoPartKey(ctx context.Context, conn *opensearch.Client, domainName, account string) (*awstypes.AuthorizedPrincipal, error) {
+	input := opensearch.ListVpcEndpointAccessInput{
 		DomainName: aws.String(domainName),
 	}
 
-	return findAuthorizeVPCEndpointAccess(ctx, conn, in)
+	return findAuthorizeVPCEndpointAccess(ctx, conn, &input, func(ap *awstypes.AuthorizedPrincipal) bool {
+		// AWS API documentation, and the SDK for Go following it, seems to be wrong for the possible values for PrincipalType.
+		// It states it can be "AWS_ACCOUNT" or "AWS_SERVICE", but in practice for accounts the value is "AWS Account".
+		// Hence, not using the constant awstypes.PrincipalTypeAwsAccount from the SDK.
+		return ap.PrincipalType == "AWS Account" && aws.ToString(ap.Principal) == account
+	})
 }
 
-func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) (*awstypes.AuthorizedPrincipal, error) {
-	output, err := findAuthorizeVPCEndpointAccesses(ctx, conn, input)
+func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput, filter tfslices.Predicate[*awstypes.AuthorizedPrincipal]) (*awstypes.AuthorizedPrincipal, error) {
+	output, err := findAuthorizeVPCEndpointAccesses(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -187,7 +208,7 @@ func findAuthorizeVPCEndpointAccess(ctx context.Context, conn *opensearch.Client
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) ([]awstypes.AuthorizedPrincipal, error) {
+func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput, filter tfslices.Predicate[*awstypes.AuthorizedPrincipal]) ([]awstypes.AuthorizedPrincipal, error) {
 	var output []awstypes.AuthorizedPrincipal
 
 	err := listVPCEndpointAccessPages(ctx, conn, input, func(page *opensearch.ListVpcEndpointAccessOutput, lastPage bool) bool {
@@ -195,7 +216,11 @@ func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Clie
 			return !lastPage
 		}
 
-		output = append(output, page.AuthorizedPrincipalList...)
+		for _, v := range page.AuthorizedPrincipalList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
@@ -207,7 +232,8 @@ func findAuthorizeVPCEndpointAccesses(ctx context.Context, conn *opensearch.Clie
 	return output, nil
 }
 
-type resourceAuthorizeVPCEndpointAccessData struct {
+type authorizeVPCEndpointAccessResourceModel struct {
+	framework.WithRegionModel
 	Account             types.String                                             `tfsdk:"account"`
 	DomainName          types.String                                             `tfsdk:"domain_name"`
 	AuthorizedPrincipal fwtypes.ListNestedObjectValueOf[authorizedPrincipalData] `tfsdk:"authorized_principal"`

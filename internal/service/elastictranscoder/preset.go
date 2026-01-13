@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elastictranscoder
@@ -30,6 +30,8 @@ func ResourcePreset() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		DeprecationMessage: "This resource is deprecated. Use AWS Elemental MediaConvert instead.",
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {

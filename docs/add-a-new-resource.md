@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Resource
 
@@ -48,12 +51,16 @@ Resources use a self-registration process that adds them to the provider using t
     )
 
     // @FrameworkResource("aws_something_example", name="Example")
-    func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
+    func newExampleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
     	return &resourceExample{}, nil
     }
 
-    type resourceExample struct {
-    	framework.ResourceWithConfigure
+    type exampleResource struct {
+    	framework.ResourceWithModel[exampleResourceModel]
+    }
+
+    type exampleResourceModel struct {
+    	// Fields corresponding to attributes in the Schema.
     }
     ```
 

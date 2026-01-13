@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -19,10 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,7 +40,7 @@ func newDRTAccessLogBucketAssociationResource(context.Context) (resource.Resourc
 }
 
 type drtAccessLogBucketAssociationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[drtAccessLogBucketAssociationResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
@@ -100,7 +101,7 @@ func (r *drtAccessLogBucketAssociationResource) Create(ctx context.Context, requ
 	// Set values for unknowns.
 	data.setID()
 
-	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 
@@ -131,7 +132,7 @@ func (r *drtAccessLogBucketAssociationResource) Read(ctx context.Context, reques
 	logBucket := data.ID.ValueString()
 	_, err := findDRTLogBucketAssociation(ctx, conn, logBucket)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -173,7 +174,7 @@ func (r *drtAccessLogBucketAssociationResource) Delete(ctx context.Context, requ
 		return
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (any, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
 		return findDRTLogBucketAssociation(ctx, conn, logBucket)
 	})
 
@@ -202,7 +203,7 @@ func findDRTAccess(ctx context.Context, conn *shield.Client) (*shield.DescribeDR
 	output, err := conn.DescribeDRTAccess(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -213,7 +214,7 @@ func findDRTAccess(ctx context.Context, conn *shield.Client) (*shield.DescribeDR
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

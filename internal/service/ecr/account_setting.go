@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -32,7 +33,7 @@ func newAccountSettingResource(_ context.Context) (resource.ResourceWithConfigur
 }
 
 type accountSettingResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[accountSettingResourceModel]
 	framework.WithNoOpDelete
 }
 
@@ -96,7 +97,7 @@ func (r *accountSettingResource) Read(ctx context.Context, request resource.Read
 	name := data.Name.ValueString()
 	output, err := findAccountSettingByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -149,6 +150,7 @@ func (r *accountSettingResource) ImportState(ctx context.Context, request resour
 }
 
 type accountSettingResourceModel struct {
+	framework.WithRegionModel
 	Name  types.String `tfsdk:"name"`
 	Value types.String `tfsdk:"value"`
 }
@@ -165,7 +167,7 @@ func findAccountSettingByName(ctx context.Context, conn *ecr.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

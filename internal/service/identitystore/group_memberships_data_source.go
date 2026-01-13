@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
@@ -29,7 +29,7 @@ const (
 )
 
 type groupMembershipsDataSource struct {
-	framework.DataSourceWithConfigure
+	framework.DataSourceWithModel[groupMembershipsDataSourceModel]
 }
 
 func (d *groupMembershipsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -97,6 +97,7 @@ func findGroupMemberships(ctx context.Context, conn *identitystore.Client, input
 }
 
 type groupMembershipsDataSourceModel struct {
+	framework.WithRegionModel
 	GroupID          types.String                                          `tfsdk:"group_id"`
 	GroupMemberships fwtypes.ListNestedObjectValueOf[groupMembershipModel] `tfsdk:"group_memberships"`
 	IdentityStoreID  types.String                                          `tfsdk:"identity_store_id"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,22 +25,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_maintenance_window_task", name="Maintenance Window Task")
+// @IdentityAttribute("window_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("maintenanceWindowTaskImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowTaskOutput")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(importStateIdFunc="testAccMaintenanceWindowTaskImportStateIdFunc")
 func resourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
 		ReadWithoutTimeout:   resourceMaintenanceWindowTaskRead,
 		UpdateWithoutTimeout: resourceMaintenanceWindowTaskUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTaskDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceMaintenanceWindowTaskImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -385,7 +389,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 
 	output, err := findMaintenanceWindowTaskByTwoPartKey(ctx, conn, d.Get("window_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Task %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -504,21 +508,6 @@ func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <window-id>/<window-task-id>", d.Id())
-	}
-
-	windowID := idParts[0]
-	windowTaskID := idParts[1]
-
-	d.Set("window_id", windowID)
-	d.SetId(windowTaskID)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client, windowID, windowTaskID string) (*ssm.GetMaintenanceWindowTaskOutput, error) {
 	input := &ssm.GetMaintenanceWindowTaskInput{
 		WindowId:     aws.String(windowID),
@@ -528,7 +517,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	output, err := conn.GetMaintenanceWindowTask(ctx, input)
 
 	if errs.IsA[*awstypes.DoesNotExistException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -539,7 +528,7 @@ func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -868,4 +857,27 @@ func flattenTaskInvocationCommonParameters(apiObject map[string][]string) []any 
 	}
 
 	return tfList
+}
+
+var _ inttypes.SDKv2ImportID = maintenanceWindowTaskImportID{}
+
+type maintenanceWindowTaskImportID struct{}
+
+func (maintenanceWindowTaskImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (maintenanceWindowTaskImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 {
+		return id, nil, fmt.Errorf("maintenance_window_task id must be of the form <window_id>/<task_id>")
+	}
+
+	windowID := parts[0]
+	taskID := parts[1]
+
+	result := map[string]string{
+		"window_id": windowID,
+	}
+	return taskID, result, nil
 }

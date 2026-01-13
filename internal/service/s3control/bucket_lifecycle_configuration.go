@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -15,11 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -178,7 +179,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	output, err := findBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -268,7 +269,7 @@ func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3c
 	output, err := conn.GetBucketLifecycleConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeNoSuchOutpost) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -279,7 +280,7 @@ func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3c
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -417,11 +418,11 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []any) *types.Lifecyc
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = &tagsS3(tftags.New(ctx, v))[0]
+			apiObject.Tag = &svcS3Tags(tftags.New(ctx, v))[0]
 		} else {
 			apiObject.And = &types.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   tagsS3(tftags.New(ctx, v)),
+				Tags:   svcS3Tags(tftags.New(ctx, v)),
 			}
 			apiObject.Prefix = nil
 		}
@@ -506,7 +507,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap[names.AttrTags] = keyValueTagsS3(ctx, v).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsFromS3Tags(ctx, v).IgnoreAWS().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
@@ -514,7 +515,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap[names.AttrTags] = keyValueTagsS3(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsFromS3Tags(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
 		}
 	}
 

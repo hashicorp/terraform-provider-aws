@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -280,6 +280,7 @@ func testAccSecurityConfigurationConfig_cloudWatchEncryptionModeSSEKMS(rName str
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_glue_security_configuration" "test" {
@@ -307,6 +308,7 @@ func testAccSecurityConfigurationConfig_jobBookmarksEncryptionModeCSEKMS(rName s
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_glue_security_configuration" "test" {
@@ -334,6 +336,7 @@ func testAccSecurityConfigurationConfig_s3EncryptionModeSSEKMS(rName string) str
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_glue_security_configuration" "test" {
