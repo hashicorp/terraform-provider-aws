@@ -207,7 +207,7 @@ func findDomainSAMLOptionByDomainName(ctx context.Context, conn *elasticsearch.C
 	}
 
 	if output.AdvancedSecurityOptions == nil || output.AdvancedSecurityOptions.SAMLOptions == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AdvancedSecurityOptions.SAMLOptions, nil

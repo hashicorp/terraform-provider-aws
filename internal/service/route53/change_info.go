@@ -36,7 +36,7 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	}
 
 	if output == nil || output.ChangeInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ChangeInfo, nil

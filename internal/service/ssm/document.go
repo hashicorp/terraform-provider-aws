@@ -560,7 +560,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	}
 
 	if output == nil || output.Document == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Document, nil

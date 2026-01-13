@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -35,6 +34,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetDomainNameOutput")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -566,9 +567,8 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	output, err := conn.GetDomainName(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -577,14 +577,14 @@ func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, do
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainName(conn *apigateway.Client, domainName, domainNameID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 		if retry.NotFound(err) {
@@ -600,10 +600,10 @@ func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, 
 }
 
 func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string, timeout time.Duration) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.DomainNameStatusUpdating),
 		Target:     enum.Slice(types.DomainNameStatusAvailable),
-		Refresh:    statusDomainName(ctx, conn, domainName, domainNameID),
+		Refresh:    statusDomainName(conn, domainName, domainNameID),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,

@@ -180,7 +180,7 @@ func findReadinessCheckByName(ctx context.Context, conn *route53recoveryreadines
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

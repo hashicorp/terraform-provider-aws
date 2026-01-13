@@ -310,7 +310,7 @@ func findVaultByName(ctx context.Context, conn *glacier.Client, name string) (*g
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -335,7 +335,7 @@ func findVaultAccessPolicyByName(ctx context.Context, conn *glacier.Client, name
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -360,7 +360,7 @@ func findVaultNotificationsByName(ctx context.Context, conn *glacier.Client, nam
 	}
 
 	if output == nil || output.VaultNotificationConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VaultNotificationConfig, nil

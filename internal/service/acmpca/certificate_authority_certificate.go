@@ -123,7 +123,7 @@ func findCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

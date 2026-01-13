@@ -1027,7 +1027,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

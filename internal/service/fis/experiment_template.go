@@ -550,7 +550,7 @@ func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string
 	}
 
 	if output == nil || output.ExperimentTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExperimentTemplate, nil

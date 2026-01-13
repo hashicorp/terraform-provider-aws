@@ -256,7 +256,7 @@ func findIdentityProviderByTwoPartKey(ctx context.Context, conn *cognitoidentity
 	}
 
 	if output == nil || output.IdentityProvider == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IdentityProvider, nil

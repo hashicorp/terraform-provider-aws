@@ -282,7 +282,7 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

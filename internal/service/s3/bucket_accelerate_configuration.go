@@ -227,7 +227,7 @@ func findBucketAccelerateConfiguration(ctx context.Context, conn *s3.Client, buc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

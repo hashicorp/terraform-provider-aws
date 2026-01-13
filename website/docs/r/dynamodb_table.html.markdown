@@ -79,6 +79,83 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 }
 ```
 
+### Basic Example containing Global Secondary Indexs using Multi-attribute keys pattern
+
+The following dynamodb table description models the table and GSIs shown in the [AWS SDK example documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
+
+```terraform
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name           = "TournamentMatches"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 20
+  write_capacity = 20
+  hash_key       = "matchId"
+
+  attribute {
+    name = "matchId"
+    type = "S"
+  }
+
+  attribute {
+    name = "tournamentId"
+    type = "S"
+  }
+
+  attribute {
+    name = "region"
+    type = "S"
+  }
+
+  attribute {
+    name = "round"
+    type = "S"
+  }
+
+  attribute {
+    name = "bracket"
+    type = "S"
+  }
+
+  attribute {
+    name = "playerId"
+    type = N
+  }
+
+  attribute {
+    name = "matchDate"
+    type = S
+  }
+
+  ttl {
+    attribute_name = "TimeToExist"
+    enabled        = true
+  }
+
+  global_secondary_index {
+    name            = "TournamentRegionIndex"
+    hash_keys       = ["tournamentId", "region"]
+    range_keys      = ["round", "bracket", "matchId"]
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name            = "PlayerMatchHistoryIndex"
+    hash_key        = "playerId"
+    range_keys      = ["matchDate", "round"]
+    write_capacity  = 10
+    read_capacity   = 10
+    projection_type = "ALL"
+  }
+
+  tags = {
+    Name        = "dynamodb-table-1"
+    Environment = "production"
+  }
+}
+```
+
 ### Global Tables
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
@@ -260,7 +337,9 @@ The following arguments are optional:
 * `restore_to_latest_time` - (Optional) If set, restores table to the most recent point-in-time recovery point.
 * `server_side_encryption` - (Optional) Encryption at rest options. AWS DynamoDB tables are automatically encrypted at rest with an AWS-owned Customer Master Key if this argument isn't specified. Must be supplied for cross-region restores. See below.
 * `stream_enabled` - (Optional) Whether Streams are enabled.
-* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream. Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+* `stream_view_type` - (Optional) When an item in the table is modified, StreamViewType determines what information is written to the table's stream.
+  Valid values are `KEYS_ONLY`, `NEW_IMAGE`, `OLD_IMAGE`, `NEW_AND_OLD_IMAGES`.
+  Only valid when `stream_enabled` is true.
 * `table_class` - (Optional) Storage class of the table.
   Valid values are `STANDARD` and `STANDARD_INFREQUENT_ACCESS`.
   Default value is `STANDARD`.
@@ -300,12 +379,16 @@ The following arguments are optional:
 
 ### `global_secondary_index`
 
-* `hash_key` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
+* `hash_key` and `hash_keys` are `mutually exclusive`, but one is `required`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
+    * `hash_key` - (Optional) Name of the hash key in the index; must be defined as an attribute in the resource.
+    * `hash_keys` - (Optional) List of the hash keys in the index; each must be defined as an attribute in the resource; max of 4.
 * `name` - (Required) Name of the index.
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand index. See below.
 * `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
-* `range_key` - (Optional) Name of the range key; must be defined
+* `range_key` and `range_keys` are `mutually exclusive`, but are both `optional`. Refer to [AWS SDK Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.DesignPattern.MultiAttributeKeys.html)
+    * `range_key` - (Optional) Name of the range key; must be defined.
+    * `range_keys` - (Optional) List of the range keys in the index; each must be defined as an attribute in the resource; max of 4.
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
 * `warm_throughput` - (Optional) Sets the number of warm read and write units for this index. See below.
 * `write_capacity` - (Optional) Number of write units for this index. Must be set if billing_mode is set to PROVISIONED.

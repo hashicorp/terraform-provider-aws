@@ -311,7 +311,7 @@ func findListenerByTwoPartKey(ctx context.Context, conn *vpclattice.Client, serv
 	}
 
 	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -332,7 +332,7 @@ func findListener(ctx context.Context, conn *vpclattice.Client, input *vpclattic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

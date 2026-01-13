@@ -339,7 +339,7 @@ func FindKxDataviewById(ctx context.Context, conn *finspace.Client, id string) (
 	}
 
 	if out == nil || out.DataviewName == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out, nil
 }

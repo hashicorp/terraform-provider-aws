@@ -280,7 +280,7 @@ func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3c
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

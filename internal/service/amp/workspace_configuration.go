@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -238,9 +237,8 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	output, err := conn.DescribeWorkspaceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -249,14 +247,14 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.WorkspaceConfiguration == nil || output.WorkspaceConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WorkspaceConfiguration, nil
 }
 
-func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspaceConfiguration(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -272,10 +270,10 @@ func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id stri
 }
 
 func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.WorkspaceConfigurationDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
-		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
+		Refresh: statusWorkspaceConfiguration(conn, id),
 		Timeout: timeout,
 	}
 

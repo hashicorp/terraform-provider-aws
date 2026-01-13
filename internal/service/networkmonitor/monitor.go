@@ -251,7 +251,7 @@ func findMonitorByName(ctx context.Context, conn *networkmonitor.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

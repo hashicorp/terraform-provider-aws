@@ -386,7 +386,7 @@ func findRestoreTestingSelection(ctx context.Context, conn *backup.Client, input
 	}
 
 	if output == nil || output.RestoreTestingSelection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RestoreTestingSelection, nil

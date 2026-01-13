@@ -510,7 +510,7 @@ func findDetectorByID(ctx context.Context, conn *guardduty.Client, id string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

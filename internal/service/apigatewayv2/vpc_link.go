@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +29,8 @@ import (
 // @SDKResource("aws_apigatewayv2_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetVpcLinkOutput")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
@@ -179,9 +180,8 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatew
 	output, err := conn.GetVpcLink(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -190,14 +190,14 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatew
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusVPCLink(ctx context.Context, conn *apigatewayv2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVPCLink(conn *apigatewayv2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCLinkByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -216,10 +216,10 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.Client, id str
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcLinkStatusPending),
 		Target:  enum.Slice(awstypes.VpcLinkStatusAvailable),
-		Refresh: statusVPCLink(ctx, conn, id),
+		Refresh: statusVPCLink(conn, id),
 		Timeout: timeout,
 	}
 
@@ -238,10 +238,10 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.Client, vpcLinkI
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcLinkStatusDeleting),
 		Target:  []string{},
-		Refresh: statusVPCLink(ctx, conn, vpcLinkId),
+		Refresh: statusVPCLink(conn, vpcLinkId),
 		Timeout: timeout,
 	}
 

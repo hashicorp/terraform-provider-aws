@@ -475,7 +475,7 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	}
 
 	if output == nil || output.Workspace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil

@@ -370,7 +370,7 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

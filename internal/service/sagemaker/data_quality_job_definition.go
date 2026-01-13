@@ -602,7 +602,7 @@ func findDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

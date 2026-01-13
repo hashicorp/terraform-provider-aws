@@ -273,7 +273,7 @@ func findInputSecurityGroupByID(ctx context.Context, conn *medialive.Client, id 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -127,7 +127,7 @@ func findDataProtectionPolicyByARN(ctx context.Context, conn *sns.Client, arn st
 	}
 
 	if output == nil || aws.ToString(output.DataProtectionPolicy) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataProtectionPolicy, nil

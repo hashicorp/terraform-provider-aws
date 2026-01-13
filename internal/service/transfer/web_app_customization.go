@@ -229,7 +229,7 @@ func findWebAppCustomization(ctx context.Context, conn *transfer.Client, input *
 	}
 
 	if out == nil || out.WebAppCustomization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.WebAppCustomization, nil

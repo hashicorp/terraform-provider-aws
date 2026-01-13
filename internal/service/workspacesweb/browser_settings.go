@@ -240,7 +240,7 @@ func findBrowserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 	}
 
 	if output == nil || output.BrowserSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BrowserSettings, nil

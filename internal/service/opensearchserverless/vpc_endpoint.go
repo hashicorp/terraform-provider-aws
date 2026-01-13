@@ -390,7 +390,7 @@ func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VpcEndpointDetails, nil

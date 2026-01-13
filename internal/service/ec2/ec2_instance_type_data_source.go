@@ -445,7 +445,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	v, err := findInstanceTypeByName(ctx, conn, name)
 
 	if err == nil && (v.EbsInfo == nil || v.NetworkInfo == nil || v.PlacementGroupInfo == nil || v.ProcessorInfo == nil || v.VCpuInfo == nil) {
-		err = tfresource.NewEmptyResultError(name)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

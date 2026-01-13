@@ -274,7 +274,7 @@ func findPipelineByName(ctx context.Context, conn *sagemaker.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

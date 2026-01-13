@@ -877,7 +877,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

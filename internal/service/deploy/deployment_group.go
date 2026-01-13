@@ -785,7 +785,7 @@ func findDeploymentGroupByTwoPartKey(ctx context.Context, conn *codedeploy.Clien
 	}
 
 	if output == nil || output.DeploymentGroupInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeploymentGroupInfo, nil

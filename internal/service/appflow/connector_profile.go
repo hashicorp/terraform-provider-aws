@@ -1562,7 +1562,7 @@ func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name 
 	}
 
 	if output == nil || len(output.ConnectorProfileDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)

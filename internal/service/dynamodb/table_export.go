@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +29,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;awstypes;awstypes.ExportDescription")
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
@@ -322,21 +322,20 @@ func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string
 	output, err := conn.DescribeExport(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if output == nil || output.ExportDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExportDescription, nil
 }
 
-func statusTableExport(ctx context.Context, conn *dynamodb.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTableExport(conn *dynamodb.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableExportByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -355,10 +354,10 @@ func waitTableExportCreated(ctx context.Context, conn *dynamodb.Client, id strin
 	const (
 		maxTimeout = 60 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ExportStatusInProgress),
 		Target:  enum.Slice(awstypes.ExportStatusCompleted, awstypes.ExportStatusFailed),
-		Refresh: statusTableExport(ctx, conn, id),
+		Refresh: statusTableExport(conn, id),
 		Timeout: max(maxTimeout, timeout),
 	}
 

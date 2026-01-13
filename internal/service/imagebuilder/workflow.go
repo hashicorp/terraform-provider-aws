@@ -229,7 +229,7 @@ func findWorkflowByARN(ctx context.Context, conn *imagebuilder.Client, arn strin
 	}
 
 	if output == nil || output.Workflow == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workflow, nil

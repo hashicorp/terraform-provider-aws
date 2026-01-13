@@ -189,7 +189,7 @@ func findAPNSChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, 
 	}
 
 	if output == nil || output.APNSChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.APNSChannelResponse, nil

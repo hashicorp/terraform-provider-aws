@@ -251,7 +251,7 @@ func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vect
 	}
 
 	if output == nil || output.VectorBucket == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VectorBucket, nil

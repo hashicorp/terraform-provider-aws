@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,18 +23,18 @@ func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -51,7 +49,7 @@ func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_httpNoAuthenticationSources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -73,18 +71,18 @@ func TestAccAPIGatewayV2Authorizer_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -100,18 +98,18 @@ func TestAccAPIGatewayV2Authorizer_credentials(t *testing.T) {
 	resourceName := "aws_apigatewayv2_authorizer.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_credentials(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -133,7 +131,7 @@ func TestAccAPIGatewayV2Authorizer_credentials(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_credentialsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
@@ -150,7 +148,7 @@ func TestAccAPIGatewayV2Authorizer_credentials(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
@@ -171,18 +169,18 @@ func TestAccAPIGatewayV2Authorizer_jwt(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_jwt(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -206,7 +204,7 @@ func TestAccAPIGatewayV2Authorizer_jwt(t *testing.T) {
 			{
 				Config: testAccAuthorizerConfig_jwtUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -232,18 +230,18 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_httpAPILambdaRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "2.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "300"),
@@ -265,7 +263,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 			{
 				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 3600),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "3600"),
@@ -282,7 +280,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 			{
 				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -306,18 +304,18 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 	var v apigatewayv2.GetAuthorizerOutput
 	resourceName := "aws_apigatewayv2_authorizer.test"
 	lambdaResourceName := "aws_lambda_function.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
@@ -340,7 +338,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 			{
 				Config: testAccAuthorizerConfig_httpAPILambdaRequestUpdated(rName, 600),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAuthorizerExists(ctx, t, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_credentials_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_payload_format_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "600"),
@@ -358,9 +356,9 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 	})
 }
 
-func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAuthorizerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_authorizer" {
@@ -384,14 +382,14 @@ func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAuthorizerExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetAuthorizerOutput) resource.TestCheckFunc {
+func testAccCheckAuthorizerExists(ctx context.Context, t *testing.T, n string, apiID *string, v *apigatewayv2.GetAuthorizerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindAuthorizerByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 

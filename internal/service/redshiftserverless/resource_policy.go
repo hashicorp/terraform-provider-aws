@@ -179,7 +179,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourcePolicy, nil

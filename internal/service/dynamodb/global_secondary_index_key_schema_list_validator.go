@@ -33,7 +33,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			fmt.Sprintf(`must contain at least %d and at most %d elements with a "key_type" of %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
+			fmt.Sprintf(`must contain at least %d and at most %d elements with "key_type" %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
 			"0",
 		))
 		return
@@ -49,7 +49,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			elementPath,
 			"Invalid Attribute Value",
-			fmt.Sprintf(`The first element of %s must have a "key_type" of "`+string(awstypes.KeyTypeHash)+`", got %q`, request.Path, keySchemas[0].KeyType.ValueEnum()),
+			fmt.Sprintf(`The first element of %s must have "key_type" "`+string(awstypes.KeyTypeHash)+`", got %q`, request.Path, keySchemas[0].KeyType.ValueEnum()),
 		))
 		return
 	}
@@ -64,7 +64,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 				response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 					elementPath,
 					"Invalid Attribute Value",
-					fmt.Sprintf(`All elements of %s with "key_type" of "`+string(awstypes.KeyTypeHash)+`" must be before elements with "key_type" of "`+string(awstypes.KeyTypeRange)+`"`, request.Path),
+					fmt.Sprintf(`All elements of %s with "key_type" "`+string(awstypes.KeyTypeHash)+`" must be before elements with "key_type" "`+string(awstypes.KeyTypeRange)+`"`, request.Path),
 				))
 			}
 			hashCount++
@@ -78,7 +78,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	if hashCount < minNumberOfHashes || hashCount > maxNumberOfHashes {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			fmt.Sprintf(`must contain at least %d and at most %d elements with a "key_type" of %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
+			fmt.Sprintf(`must contain at least %d and at most %d elements with "key_type" %q`, minNumberOfHashes, maxNumberOfHashes, awstypes.KeyTypeHash),
 			strconv.Itoa(hashCount),
 		))
 	}
@@ -86,7 +86,7 @@ func (v globalSecondaryIndexKeySchemaListValidator) ValidateList(ctx context.Con
 	if rangeCount > maxNumberOfRanges {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
-			fmt.Sprintf(`must contain at most %d elements with a "key_type" of %q`, maxNumberOfRanges, awstypes.KeyTypeRange),
+			fmt.Sprintf(`must contain at most %d elements with "key_type" %q`, maxNumberOfRanges, awstypes.KeyTypeRange),
 			strconv.Itoa(rangeCount),
 		))
 	}

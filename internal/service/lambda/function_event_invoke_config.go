@@ -325,7 +325,7 @@ func findFunctionEventInvokeConfig(ctx context.Context, conn *lambda.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

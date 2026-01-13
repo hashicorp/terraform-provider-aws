@@ -141,7 +141,7 @@ func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, i
 	}
 
 	if output == nil || output.VerificationAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VerificationAttributes, nil

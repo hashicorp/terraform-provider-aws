@@ -336,7 +336,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil

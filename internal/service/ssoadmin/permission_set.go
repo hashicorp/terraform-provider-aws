@@ -282,7 +282,7 @@ func findPermissionSetByTwoPartKey(ctx context.Context, conn *ssoadmin.Client, p
 	}
 
 	if output == nil || output.PermissionSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionSet, nil
@@ -328,7 +328,7 @@ func findPermissionSetProvisioningStatus(ctx context.Context, conn *ssoadmin.Cli
 	}
 
 	if output == nil || output.PermissionSetProvisioningStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PermissionSetProvisioningStatus, nil

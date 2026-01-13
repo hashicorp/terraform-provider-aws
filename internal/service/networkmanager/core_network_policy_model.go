@@ -120,6 +120,7 @@ type coreNetworkPolicySegmentAction struct {
 	Mode                    string                                                 `json:"mode,omitempty"`
 	ShareWith               any                                                    `json:"share-with,omitempty"`
 	ShareWithExcept         any                                                    `json:",omitempty"`
+	RoutingPolicyNames      any                                                    `json:"routing-policy-names,omitempty"`
 	DestinationCidrBlocks   any                                                    `json:"destination-cidr-blocks,omitempty"`
 	Destinations            any                                                    `json:"destinations,omitempty"`
 	Description             string                                                 `json:"description,omitempty"`
@@ -223,6 +224,7 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		DestinationCidrBlocks:   c.DestinationCidrBlocks,
 		Segment:                 c.Segment,
 		ShareWith:               share,
+		RoutingPolicyNames:      c.RoutingPolicyNames,
 		Via:                     c.Via,
 		WhenSentTo:              whenSentTo,
 		Description:             c.Description,

@@ -178,7 +178,7 @@ func findActivityByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.
 	}
 
 	if output == nil || output.CreationDate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -349,7 +349,7 @@ func findOrganizationCustomPolicyRuleByName(ctx context.Context, conn *configser
 	}
 
 	if output.OrganizationCustomPolicyRuleMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -374,7 +374,7 @@ func findOrganizationCustomRulePolicyByName(ctx context.Context, conn *configser
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PolicyText, nil

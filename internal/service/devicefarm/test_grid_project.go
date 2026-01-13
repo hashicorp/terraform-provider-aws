@@ -209,7 +209,7 @@ func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	}
 
 	if output == nil || output.TestGridProject == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TestGridProject, nil

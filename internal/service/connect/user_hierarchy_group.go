@@ -270,7 +270,7 @@ func findUserHierarchyGroup(ctx context.Context, conn *connect.Client, input *co
 	}
 
 	if output == nil || output.HierarchyGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HierarchyGroup, nil

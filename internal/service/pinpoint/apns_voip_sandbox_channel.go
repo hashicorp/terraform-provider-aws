@@ -189,7 +189,7 @@ func findAPNSVoIPSandboxChannelByApplicationId(ctx context.Context, conn *pinpoi
 	}
 
 	if output == nil || output.APNSVoipSandboxChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.APNSVoipSandboxChannelResponse, nil

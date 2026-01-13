@@ -65,7 +65,7 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	if value == nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.NewEmptyResultError(name))
+		return sdkdiag.AppendFromErr(diags, tfresource.NewEmptyResultError())
 	}
 
 	d.SetId(fmt.Sprintf("cloudformation-exports-%s-%s", meta.(*conns.AWSClient).Region(ctx), name))

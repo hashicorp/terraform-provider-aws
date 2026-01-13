@@ -317,7 +317,7 @@ func findVirtualService(ctx context.Context, conn *appmesh.Client, input *appmes
 	}
 
 	if output == nil || output.VirtualService == nil || output.VirtualService.Metadata == nil || output.VirtualService.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualService, nil

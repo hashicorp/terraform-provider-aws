@@ -255,7 +255,7 @@ func findMesh(ctx context.Context, conn *appmesh.Client, input *appmesh.Describe
 	}
 
 	if output == nil || output.Mesh == nil || output.Mesh.Metadata == nil || output.Mesh.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Mesh, nil

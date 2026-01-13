@@ -222,7 +222,7 @@ func findUserAccessLoggingSettingsByARN(ctx context.Context, conn *workspacesweb
 	}
 
 	if output == nil || output.UserAccessLoggingSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserAccessLoggingSettings, nil

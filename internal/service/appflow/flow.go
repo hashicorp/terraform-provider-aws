@@ -1518,7 +1518,7 @@ func findFlowByName(ctx context.Context, conn *appflow.Client, name string) (*ap
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.FlowStatus; status == types.FlowStatusDeleted {

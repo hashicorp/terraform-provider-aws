@@ -689,7 +689,7 @@ func findGatewayRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.
 	}
 
 	if output == nil || output.GatewayRoute == nil || output.GatewayRoute.Metadata == nil || output.GatewayRoute.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GatewayRoute, nil

@@ -7,6 +7,8 @@ package cleanrooms
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -45,7 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCollaboration,
+			Factory:  resourceCollaboration,
 			TypeName: "aws_cleanrooms_collaboration",
 			Name:     "Collaboration",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -58,7 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceConfiguredTable,
+			Factory:  resourceConfiguredTable,
 			TypeName: "aws_cleanrooms_configured_table",
 			Name:     "Configured Table",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -71,6 +73,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newCollaborationResourceAsListResource,
+			TypeName: "aws_cleanrooms_collaboration",
+			Name:     "Collaboration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrID),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

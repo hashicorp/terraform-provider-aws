@@ -207,7 +207,7 @@ func findRolePolicyByTwoPartKey(ctx context.Context, conn *iam.Client, roleName,
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.PolicyDocument), nil

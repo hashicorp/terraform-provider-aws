@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -188,9 +187,8 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	output, err := conn.GetDeployment(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -199,14 +197,14 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDeployment(conn *apigatewayv2.Client, apiID, deploymentID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
 		if retry.NotFound(err) {
@@ -225,10 +223,10 @@ func waitDeploymentDeployed(ctx context.Context, conn *apigatewayv2.Client, apiI
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DeploymentStatusPending),
 		Target:  enum.Slice(awstypes.DeploymentStatusDeployed),
-		Refresh: statusDeployment(ctx, conn, apiID, deploymentID),
+		Refresh: statusDeployment(conn, apiID, deploymentID),
 		Timeout: timeout,
 	}
 

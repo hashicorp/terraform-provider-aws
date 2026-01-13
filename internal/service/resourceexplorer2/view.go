@@ -396,7 +396,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	}
 
 	if output == nil || output.View == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

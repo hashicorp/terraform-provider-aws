@@ -247,7 +247,7 @@ func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client
 	}
 
 	if output == nil || len(output.AnomalySubscriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.AnomalySubscriptions[0], nil
