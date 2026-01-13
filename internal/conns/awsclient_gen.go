@@ -222,6 +222,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/s3vectors"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/savingsplans"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -1184,6 +1185,10 @@ func (c *AWSClient) SWFClient(ctx context.Context) *swf.Client {
 
 func (c *AWSClient) SageMakerClient(ctx context.Context) *sagemaker.Client {
 	return errs.Must(client[*sagemaker.Client](ctx, c, names.SageMaker, make(map[string]any)))
+}
+
+func (c *AWSClient) SavingsPlansClient(ctx context.Context) *savingsplans.Client {
+	return errs.Must(client[*savingsplans.Client](ctx, c, names.SavingsPlans, make(map[string]any)))
 }
 
 func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler.Client {

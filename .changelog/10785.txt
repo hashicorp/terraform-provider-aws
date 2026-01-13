@@ -1,0 +1,4 @@
+```markdown
+## New Resource
+* aws_savingsplans_plan
+```

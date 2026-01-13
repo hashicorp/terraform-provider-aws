@@ -7765,6 +7765,10 @@ service "savingsplans" {
     human_friendly      = "Savings Plans"
   }
 
+  endpoint_info {
+    endpoint_api_call = "DescribeSavingsPlans"
+  }
+
   resource_prefix {
     correct = "aws_savingsplans_"
   }
@@ -7772,7 +7776,6 @@ service "savingsplans" {
   provider_package_correct = "savingsplans"
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "simpledb" {
