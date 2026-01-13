@@ -110,7 +110,7 @@ make build
 To verify tests compile:
 
 ```sh
-go test -c ./internal/service/<service-name>
+go test ./internal/service/<service-name>
 ```
 
 #### Acceptance Tests
