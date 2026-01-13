@@ -46,7 +46,9 @@ skaff list -c -p -n <resource name>
 
 Use the AWS API documentation to resolve the appropriate types the be able to list the resource. This is typically done using `Describe` or `List` API calls.
 
-For `@SdkResource()` resources, the primary identifier is set using `d.SetId()`. Sometimes additional identifiers are needed. These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute_name>", value)`.
+For `@SdkResource()` resources, the primary identifier is set using `d.SetId()`. Sometimes additional identifiers are needed and can be found in the annotation `@IdentityAttribute(<attribute>)`. These can be found by referencing the target resource. If additional identifiers are found, set them using `d.Set("<attribute>", value)`.
+
+For `@FrameworkResource()` resources, `flex.Flatten` will be used to set all attributes. If an attribute is not set correctly, use the `flex` functions to set values.
 
 ### Implement acceptance tests
 
@@ -88,6 +90,10 @@ Once code changes are made, do some basic verification to ensure the provider an
 To verify the provider compiles:
 
 ```sh
+make fmt
+```
+
+```sh
 make build
 ```
 
@@ -121,6 +127,6 @@ go generate internal/service/<service>/generate.go
 
 ### Test Configuration Issues
 
-- **Minimal Generated Config**: Generated test configurations are basic and need substantial updates with all required resource dependencies
-- **PreCheck Functions**: Remove custom precheck functions unless they exist - use standard `acctest.PreCheck(ctx, t)`
-- **Complex Dependencies**: Some services (like AppFlow) require extensive setup (S3 buckets, policies, test fixtures)
+- **Minimal Generated Config**: Generated test configurations are basic and need substantial updates with all required resource dependencies.
+- **PreCheck Functions**: Remove custom precheck functions unless they exist - use standard `acctest.PreCheck(ctx, t)`.
+- **ARN Validation***: ARNs have multiple forms and may cause the test check to fail. Find the correct format for the <resource> and update the validation.
