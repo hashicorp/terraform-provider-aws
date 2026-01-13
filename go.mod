@@ -247,7 +247,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/shield v1.34.17
 	github.com/aws/aws-sdk-go-v2/service/signer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.11
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.20
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.21
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.7
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.31.9
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.39.15
