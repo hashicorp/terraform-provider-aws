@@ -49,7 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/billing v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.42.4
-	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.16
+	github.com/aws/aws-sdk-go-v2/service/chatbot v1.14.17
 	github.com/aws/aws-sdk-go-v2/service/chime v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.26.16
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.28.8
