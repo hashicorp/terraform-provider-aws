@@ -12,8 +12,7 @@ import (
 func TestCanonicalRegionPatterns(t *testing.T) {
 	t.Parallel()
 
-	// Test regions
-	testRegions := []struct {
+	testCases := []struct {
 		region string
 		valid  bool
 	}{
@@ -40,23 +39,13 @@ func TestCanonicalRegionPatterns(t *testing.T) {
 		{"us-east-1a", false},
 	}
 
-	patterns := map[string]string{
-		"Canonical":           CanonicalRegionPatternNoAnchors,
-		"Lambda functionName": CanonicalRegionPatternNoAnchors,    // Now uses canonical pattern
-		"Lambda permission":   `[a-z]{2,4}-(?:[a-z]+-){1,2}\d{1}`, // Already worked
-	}
+	regex := regexache.MustCompile(CanonicalRegionPattern)
 
-	for patternName, pattern := range patterns {
-		t.Run(patternName, func(t *testing.T) {
-			t.Parallel()
-			regex := regexache.MustCompile("^" + pattern + "$")
-
-			for _, test := range testRegions {
-				result := regex.MatchString(test.region)
-				if result != test.valid {
-					t.Errorf("Pattern %s: region %s expected %t, got %t",
-						patternName, test.region, test.valid, result)
-				}
+	for _, tc := range testCases {
+		t.Run(tc.region, func(t *testing.T) {
+			result := regex.MatchString(tc.region)
+			if result != tc.valid {
+				t.Errorf("region %s: expected %t, got %t", tc.region, tc.valid, result)
 			}
 		})
 	}

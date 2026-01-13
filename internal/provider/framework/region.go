@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/listresourceattribute"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/resourceattribute"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -328,7 +329,7 @@ func (r resourceImportRegionInterceptor) importState(ctx context.Context, opts i
 	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// Import ID optionally ends with "@<region>".
-		if matches := regexache.MustCompile(`^(.+)@([a-z]{2,4}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+		if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(request.ID); len(matches) == 3 {
 			request.ID = matches[1]
 			opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
 			if opts.response.Diagnostics.HasError() {
@@ -354,7 +355,7 @@ func (r resourceImportRegionNoDefaultInterceptor) importState(ctx context.Contex
 	switch request, response, when := opts.request, opts.response, opts.when; when {
 	case Before:
 		// Import ID optionally ends with "@<region>".
-		if matches := regexache.MustCompile(`^(.+)@([a-z]{2,4}(?:-[a-z]+)+-\d{1,2})$`).FindStringSubmatch(request.ID); len(matches) == 3 {
+		if matches := regexache.MustCompile(`^(.+)@(` + inttypes.CanonicalRegionPatternNoAnchors + `)$`).FindStringSubmatch(request.ID); len(matches) == 3 {
 			request.ID = matches[1]
 			opts.response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrRegion), matches[2])...)
 			if opts.response.Diagnostics.HasError() {
