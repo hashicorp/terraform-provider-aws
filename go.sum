@@ -449,8 +449,8 @@ github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.16 h1:KBce7uI5OhjwSncMnZN
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.16/go.mod h1:RIdvY/T8rC+99zbjQM//2CH6hU2j/MbKgf4LwxKLypo=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.35.9 h1:XCxDrRyKYyyUjta10iGwsZni/3Pmr+WHXWsL2qoNeZo=
 github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.35.9/go.mod h1:f4SeZHrjnGyYdS9dHAdWRSN/SlS6tDOlQuiWJ6S6zb4=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.10 h1:r9dGX/bm0p6cByQak75sdAOCgBXK3ITyK2efGKCFaFc=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.10/go.mod h1:0slLCSaOs8gEhGhY2Y4qKG0EScJF+8Ep04axwz68U/Q=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.11 h1:r9jqKUxW+f9ukVnksKPlqXUImklZKwk0QOYIsbCowMc=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.11/go.mod h1:7G3lb7vgKkUSuANBMdNxsddvsZYETAidugkD/Mvonno=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.19 h1:G+7tfHJ+hc/2JZgn6gPb97yBZCQ7BRjo0DKlAZ8C7Ew=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.19/go.mod h1:KuK/OdZTcEVXeGjxevJsbCcYpP748FvuYFZaV9kfzA4=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.31.5 h1:0jwTqyyPsbn4UysC6ltj/AuntNBWBeU++kNJQtShtg0=
