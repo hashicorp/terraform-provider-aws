@@ -680,7 +680,7 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.TableStatusDeleted {

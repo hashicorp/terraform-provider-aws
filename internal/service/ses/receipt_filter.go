@@ -170,7 +170,7 @@ func findReceiptFilters(ctx context.Context, conn *ses.Client, input *ses.ListRe
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Filters, tfslices.PredicateValue(filter)), nil

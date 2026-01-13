@@ -152,7 +152,7 @@ func testAccCheckNotificationExists(ctx context.Context, n string, groups []stri
 		output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 		if err == nil && len(output) == 0 {
-			err = tfresource.NewEmptyResultError(nil)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		return err
@@ -171,7 +171,7 @@ func testAccCheckNotificationDestroy(ctx context.Context, groups []string) resou
 			output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 			if err == nil && len(output) == 0 {
-				err = tfresource.NewEmptyResultError(nil)
+				err = tfresource.NewEmptyResultError()
 			}
 
 			if retry.NotFound(err) {

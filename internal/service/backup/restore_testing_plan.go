@@ -325,7 +325,7 @@ func findRestoreTestingPlan(ctx context.Context, conn *backup.Client, input *bac
 	}
 
 	if output == nil || output.RestoreTestingPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RestoreTestingPlan, nil

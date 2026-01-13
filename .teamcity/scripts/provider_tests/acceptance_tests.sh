@@ -41,6 +41,7 @@ TF_ACC=1 go test \
     ./internal/backoff/... \
     ./internal/conns/... \
     ./internal/create/... \
+    ./internal/cty/... \
     ./internal/dns/... \
     ./internal/enum/... \
     ./internal/envvar/... \

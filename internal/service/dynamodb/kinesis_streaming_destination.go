@@ -219,7 +219,7 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.KinesisDataStreamDestinations, filter), nil
@@ -258,7 +258,7 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}
@@ -280,7 +280,7 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
 
 		return output, err
 	}

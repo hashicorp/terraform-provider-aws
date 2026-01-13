@@ -324,7 +324,7 @@ func findTheme(ctx context.Context, conn *quicksight.Client, input *quicksight.D
 	}
 
 	if output == nil || output.Theme == nil || output.Theme.Version == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Theme, nil
@@ -354,7 +354,7 @@ func findThemePermissions(ctx context.Context, conn *quicksight.Client, input *q
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -388,7 +388,7 @@ func waitThemeCreated(ctx context.Context, conn *quicksight.Client, awsAccountID
 
 	if output, ok := outputRaw.(*awstypes.Theme); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, themeError(apiErrors))
+			retry.SetLastError(err, themeError(apiErrors))
 		}
 
 		return output, err
@@ -409,7 +409,7 @@ func waitThemeUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID
 
 	if output, ok := outputRaw.(*awstypes.Theme); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, themeError(apiErrors))
+			retry.SetLastError(err, themeError(apiErrors))
 		}
 
 		return output, err

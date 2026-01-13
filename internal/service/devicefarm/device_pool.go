@@ -246,7 +246,7 @@ func findDevicePoolByARN(ctx context.Context, conn *devicefarm.Client, arn strin
 	}
 
 	if output == nil || output.DevicePool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DevicePool, nil

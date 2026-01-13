@@ -422,7 +422,7 @@ func findQueue(ctx context.Context, conn *connect.Client, input *connect.Describ
 	}
 
 	if output == nil || output.Queue == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Queue, nil

@@ -509,7 +509,7 @@ func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn 
 	}
 
 	if output == nil || output.ImagePipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImagePipeline, nil

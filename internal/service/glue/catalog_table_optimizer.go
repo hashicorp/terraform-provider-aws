@@ -473,7 +473,7 @@ func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -247,7 +247,7 @@ func findOpenIDConnectProvider(ctx context.Context, conn *iam.Client, input *iam
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

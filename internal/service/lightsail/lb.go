@@ -239,7 +239,7 @@ func FindLoadBalancerById(ctx context.Context, conn *lightsail.Client, name stri
 	}
 
 	if out == nil || out.LoadBalancer == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	lb := out.LoadBalancer

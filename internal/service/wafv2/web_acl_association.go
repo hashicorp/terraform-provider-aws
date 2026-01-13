@@ -164,7 +164,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string
 	}
 
 	if output == nil || output.WebACL == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACL, nil

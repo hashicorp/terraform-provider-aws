@@ -272,7 +272,7 @@ func FindKeyPairById(ctx context.Context, conn *lightsail.Client, id string) (*t
 	}
 
 	if out == nil || out.KeyPair == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.KeyPair, nil

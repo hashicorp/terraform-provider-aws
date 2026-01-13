@@ -280,7 +280,7 @@ func findPlatformApplicationAttributesByARN(ctx context.Context, conn *sns.Clien
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

@@ -1146,7 +1146,7 @@ func findChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Channel can still be found with a state of DELETED.

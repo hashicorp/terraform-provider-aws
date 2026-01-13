@@ -569,7 +569,7 @@ func waitFleetActive(ctx context.Context, conn *gamelift.Client, id string, star
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err
@@ -595,7 +595,7 @@ func waitFleetTerminated(ctx context.Context, conn *gamelift.Client, id string, 
 
 	if output, ok := outputRaw.(*awstypes.FleetAttributes); ok {
 		if events, errFFF := findFleetFailuresByID(ctx, conn, id); errFFF == nil {
-			tfresource.SetLastError(err, fleetFailuresError(events, startTime))
+			retry.SetLastError(err, fleetFailuresError(events, startTime))
 		}
 
 		return output, err

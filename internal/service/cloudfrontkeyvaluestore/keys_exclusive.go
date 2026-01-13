@@ -276,7 +276,7 @@ func FindKeyValueStoreByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.C
 	}
 
 	if output == nil || output.KvsARN == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

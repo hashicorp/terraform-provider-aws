@@ -196,7 +196,7 @@ func findSIPMediaApplicationByID(ctx context.Context, conn *chimesdkvoice.Client
 	}
 
 	if resp == nil || resp.SipMediaApplication == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

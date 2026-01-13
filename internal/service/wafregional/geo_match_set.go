@@ -177,7 +177,7 @@ func findGeoMatchSetByID(ctx context.Context, conn *wafregional.Client, id strin
 	}
 
 	if output == nil || output.GeoMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GeoMatchSet, nil

@@ -199,7 +199,7 @@ func findDedicatedIP(ctx context.Context, conn *sesv2.Client, input *sesv2.GetDe
 	}
 
 	if output == nil || output.DedicatedIp == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DedicatedIp, nil

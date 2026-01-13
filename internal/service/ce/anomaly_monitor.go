@@ -231,7 +231,7 @@ func findAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.Client, arn
 	}
 
 	if output == nil || len(output.AnomalyMonitors) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.AnomalyMonitors[0], nil

@@ -154,7 +154,7 @@ func findNamedQueryByID(ctx context.Context, conn *athena.Client, id string) (*t
 	}
 
 	if output == nil || output.NamedQuery == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NamedQuery, nil

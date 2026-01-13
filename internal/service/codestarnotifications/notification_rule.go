@@ -243,7 +243,7 @@ func findNotificationRuleByARN(ctx context.Context, conn *codestarnotifications.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

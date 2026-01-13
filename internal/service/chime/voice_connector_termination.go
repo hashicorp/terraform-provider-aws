@@ -227,7 +227,7 @@ func findVoiceConnectorTerminationByID(ctx context.Context, conn *chimesdkvoice.
 	}
 
 	if resp == nil || resp.Termination == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

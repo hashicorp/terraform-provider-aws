@@ -206,7 +206,7 @@ func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*ty
 	}
 
 	if out == nil || len(out.Buckets) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &out.Buckets[0], nil

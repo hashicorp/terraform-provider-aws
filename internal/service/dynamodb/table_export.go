@@ -329,7 +329,7 @@ func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string
 	}
 
 	if output == nil || output.ExportDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExportDescription, nil

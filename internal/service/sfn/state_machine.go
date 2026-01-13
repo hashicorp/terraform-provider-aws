@@ -432,7 +432,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

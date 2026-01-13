@@ -320,7 +320,7 @@ func findCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 	}
 
 	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

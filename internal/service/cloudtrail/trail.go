@@ -593,7 +593,7 @@ func findTrails(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrailList, nil

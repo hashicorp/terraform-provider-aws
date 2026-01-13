@@ -385,7 +385,7 @@ func findCentralizationRuleForOrganization(ctx context.Context, conn *observabil
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -418,7 +418,7 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(out.FailureReason)))
+		retry.SetLastError(err, errors.New(string(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 

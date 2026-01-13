@@ -422,7 +422,7 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -441,7 +441,7 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -460,7 +460,7 @@ func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}

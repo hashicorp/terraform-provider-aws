@@ -418,7 +418,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil
@@ -454,7 +454,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 
 	if output, ok := outputRaw.(*awstypes.AssociationDescription); ok {
 		if status := awstypes.AssociationStatusName(aws.ToString(output.Overview.Status)); status == awstypes.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
 		}
 
 		return output, err

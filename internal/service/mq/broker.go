@@ -711,7 +711,7 @@ func findBrokerByID(ctx context.Context, conn *mq.Client, id string) (*mq.Descri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

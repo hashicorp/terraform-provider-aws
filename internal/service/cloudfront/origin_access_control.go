@@ -194,7 +194,7 @@ func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, i
 	}
 
 	if output == nil || output.OriginAccessControl == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

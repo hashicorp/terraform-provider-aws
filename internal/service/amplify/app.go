@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,6 +30,8 @@ import (
 // @SDKResource("aws_amplify_app", name="App")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.App", serialize=true, serializeDelay=true)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
@@ -660,9 +661,8 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	output, err := conn.GetApp(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: &input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -671,7 +671,7 @@ func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.A
 	}
 
 	if output == nil || output.App == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.App, nil

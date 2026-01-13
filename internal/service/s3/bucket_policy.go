@@ -169,7 +169,7 @@ func findBucketPolicy(ctx context.Context, conn *s3.Client, bucket string) (stri
 	}
 
 	if output == nil || output.Policy == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.Policy), nil

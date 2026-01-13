@@ -235,7 +235,7 @@ func findDeployment(ctx context.Context, conn *appconfig.Client, input *appconfi
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

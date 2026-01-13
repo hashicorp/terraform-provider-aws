@@ -344,7 +344,7 @@ func findCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelera
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Accelerator, nil
@@ -369,7 +369,7 @@ func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *glob
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AcceleratorAttributes, nil

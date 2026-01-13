@@ -1237,11 +1237,12 @@ func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyCon
 }
 
 func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
+	return append(diags, errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`))
 }
 
 const (
@@ -1249,12 +1250,13 @@ const (
 )
 
 func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewErrorDiagnostic(
+	return append(diags, errs.NewErrorDiagnostic(
 		summaryInvalidEnvironmentVariableValue,
 		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
-	)}
+	))
 }

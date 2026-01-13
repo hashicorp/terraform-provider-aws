@@ -287,7 +287,7 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	}
 
 	if output == nil || output.ReplicationSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReplicationSet, nil

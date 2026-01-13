@@ -488,7 +488,7 @@ func findSecret(ctx context.Context, conn *secretsmanager.Client, input *secrets
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

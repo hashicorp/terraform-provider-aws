@@ -71,11 +71,6 @@ rules:
   - id: return-diags-not-nil
     languages: [go]
     message: Return diags instead of nil
-    paths:
-      include:
-        - "/internal/service"
-      exclude:
-        - "/internal/service/o*"
     patterns:
       - pattern: return nil
       - pattern-not-inside: |

@@ -367,7 +367,7 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	}
 
 	if out == nil || out.BillingView.Arn == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.BillingView, nil

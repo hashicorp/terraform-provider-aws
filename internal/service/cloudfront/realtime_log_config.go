@@ -232,7 +232,7 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 	}
 
 	if output == nil || output.RealtimeLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RealtimeLogConfig, nil

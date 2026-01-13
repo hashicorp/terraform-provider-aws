@@ -424,7 +424,7 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 	}
 
 	if inttypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

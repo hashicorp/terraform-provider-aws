@@ -254,7 +254,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	}
 
 	if output.ApplicationLayerAutomaticResponseConfiguration == nil || output.ApplicationLayerAutomaticResponseConfiguration.Action == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {

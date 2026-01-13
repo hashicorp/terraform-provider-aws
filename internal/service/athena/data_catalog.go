@@ -221,7 +221,7 @@ func findDataCatalogByName(ctx context.Context, conn *athena.Client, name string
 	}
 
 	if output == nil || output.DataCatalog == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataCatalog, nil

@@ -308,7 +308,7 @@ func findContactFlow(ctx context.Context, conn *connect.Client, input *connect.D
 	}
 
 	if output == nil || output.ContactFlow == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactFlow, nil

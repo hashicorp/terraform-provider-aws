@@ -216,7 +216,7 @@ func findAlias(ctx context.Context, conn *lambda.Client, input *lambda.GetAliasI
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

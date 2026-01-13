@@ -19,3 +19,12 @@ rules:
     fix: |
       retry.TimedOut($ERR)
     severity: ERROR
+
+  - id: internal-retry-setlasterror
+    languages: [go]
+    message: "Prefer retry.SetLastError to tfresource.SetLastError"
+    severity: WARNING
+    pattern: |
+      tfresource.SetLastError($ERR, $LASTERR)
+    fix: |
+      retry.SetLastError($ERR, $LASTERR)

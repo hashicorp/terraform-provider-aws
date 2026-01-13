@@ -45,7 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCollaboration,
+			Factory:  resourceCollaboration,
 			TypeName: "aws_cleanrooms_collaboration",
 			Name:     "Collaboration",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
@@ -58,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			},
 		},
 		{
-			Factory:  ResourceConfiguredTable,
+			Factory:  resourceConfiguredTable,
 			TypeName: "aws_cleanrooms_configured_table",
 			Name:     "Configured Table",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

@@ -674,7 +674,7 @@ func findUser(ctx context.Context, conn *identitystore.Client, input *identityst
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

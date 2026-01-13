@@ -306,7 +306,7 @@ func findBucketACL(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

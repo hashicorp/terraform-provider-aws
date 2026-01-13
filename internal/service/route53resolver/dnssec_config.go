@@ -173,7 +173,7 @@ func findResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {

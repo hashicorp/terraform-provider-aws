@@ -14,10 +14,6 @@ import (
 )
 
 func testAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
@@ -52,10 +48,6 @@ func testAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 }
 
 func testAccObservabilityAccessManagerLinkDataSource_logGroupConfiguration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
@@ -95,10 +87,6 @@ func testAccObservabilityAccessManagerLinkDataSource_logGroupConfiguration(t *te
 }
 
 func testAccObservabilityAccessManagerLinkDataSource_metricConfiguration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"

@@ -11,15 +11,17 @@ import (
 )
 
 func ValidateRFC3339Duration(i any, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
-		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
+		return append(diags, errs.NewIncorrectValueTypeAttributeError(path, "string"))
 	}
 
 	_, err := duration.Parse(v)
 	if err != nil {
-		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as an RFC 3339 duration: %s", err)}
+		return append(diags, errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as an RFC 3339 duration: %s", err))
 	}
 
-	return nil
+	return diags
 }

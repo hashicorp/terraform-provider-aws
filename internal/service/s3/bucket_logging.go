@@ -338,7 +338,7 @@ func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expect
 	}
 
 	if output == nil || output.LoggingEnabled == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingEnabled, nil

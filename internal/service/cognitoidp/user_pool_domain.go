@@ -258,7 +258,7 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	// 	"DomainDescription": {}
 	// }
 	if output == nil || output.DomainDescription == nil || output.DomainDescription.Status == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainDescription, nil

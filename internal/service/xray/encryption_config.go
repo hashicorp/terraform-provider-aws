@@ -110,7 +110,7 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	}
 
 	if output == nil || output.EncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfig, nil

@@ -201,7 +201,7 @@ func findCustomRoutingListenerByARN(ctx context.Context, conn *globalaccelerator
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Listener, nil

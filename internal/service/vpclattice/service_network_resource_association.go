@@ -222,7 +222,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -256,7 +256,7 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -275,7 +275,7 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

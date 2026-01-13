@@ -218,7 +218,7 @@ func findIdentityPolicies(ctx context.Context, conn *ses.Client, input *ses.GetI
 	}
 
 	if output == nil || output.Policies == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policies, nil
