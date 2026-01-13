@@ -296,7 +296,11 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
+	flattenedReferencedGroupID := flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
+	// Normalize accountId/groupId to groupId when account matches to prevent false diffs.
+	// The ModifySecurityGroupRules API doesn't accept UserId format, so after updates
+	// we may have accountId/groupId in state but groupId from API, which are equivalent.
+	data.ReferencedSecurityGroupID = normalizeReferencedSecurityGroupID(ctx, flattenedReferencedGroupID, data.ReferencedSecurityGroupID, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -428,6 +432,39 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 	return types.StringValue(strings.Join([]string{aws.ToString(apiObject.UserId), aws.ToString(apiObject.GroupId)}, "/"))
 }
 
+// normalizeReferencedSecurityGroupID normalizes accountId/groupId to groupId when the accountId
+// matches the current account to prevent false diffs. This is needed because ModifySecurityGroupRules
+// API doesn't accept UserId format in ReferencedGroupId field, and after updates the API may return
+// just groupId even if state had accountId/groupId format.
+func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
+	if apiValue.IsNull() || stateValue.IsNull() {
+		return apiValue
+	}
+
+	apiStr := apiValue.ValueString()
+	stateStr := stateValue.ValueString()
+
+	// If API returned just groupId and state has accountId/groupId where accountId matches,
+	// normalize to groupId to prevent false diff.
+	if parts := strings.Split(stateStr, "/"); len(parts) == 2 {
+		if parts[0] == currentAccountID && apiStr == parts[1] {
+			// State has accountId/groupId, API has groupId, accountId matches -> normalize to groupId
+			return apiValue
+		}
+	}
+
+	// If state has just groupId and API returned accountId/groupId where accountId matches,
+	// normalize to groupId.
+	if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
+		if parts[0] == currentAccountID && stateStr == parts[1] {
+			// API has accountId/groupId, state has groupId, accountId matches -> normalize to groupId
+			return types.StringValue(parts[1])
+		}
+	}
+
+	return apiValue
+}
+
 type securityGroupRuleResourceModel struct {
 	framework.WithRegionModel
 	ARN                       types.String `tfsdk:"arn"`
@@ -503,14 +540,25 @@ func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Cont
 
 func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *awstypes.SecurityGroupRuleRequest {
 	apiObject := &awstypes.SecurityGroupRuleRequest{
-		CidrIpv4:          fwflex.StringFromFramework(ctx, model.CIDRIPv4),
-		CidrIpv6:          fwflex.StringFromFramework(ctx, model.CIDRIPv6),
-		Description:       fwflex.StringFromFramework(ctx, model.Description),
-		FromPort:          fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
-		IpProtocol:        fwflex.StringFromFramework(ctx, model.IPProtocol),
-		PrefixListId:      fwflex.StringFromFramework(ctx, model.PrefixListID),
-		ReferencedGroupId: fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID),
-		ToPort:            fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
+		CidrIpv4:     fwflex.StringFromFramework(ctx, model.CIDRIPv4),
+		CidrIpv6:     fwflex.StringFromFramework(ctx, model.CIDRIPv6),
+		Description:  fwflex.StringFromFramework(ctx, model.Description),
+		FromPort:     fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
+		IpProtocol:   fwflex.StringFromFramework(ctx, model.IPProtocol),
+		PrefixListId: fwflex.StringFromFramework(ctx, model.PrefixListID),
+		ToPort:       fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
+	}
+
+	// ModifySecurityGroupRules API expects only GroupId in ReferencedGroupId field,
+	// not the UserId/GroupId format. Extract just the GroupId part.
+	if !model.ReferencedSecurityGroupID.IsNull() {
+		referencedGroupID := model.ReferencedSecurityGroupID.ValueString()
+		// [UserID/]GroupID.
+		if parts := strings.Split(referencedGroupID, "/"); len(parts) == 2 {
+			apiObject.ReferencedGroupId = aws.String(parts[1])
+		} else {
+			apiObject.ReferencedGroupId = fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID)
+		}
 	}
 
 	return apiObject
