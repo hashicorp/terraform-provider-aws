@@ -116,7 +116,7 @@ go generate internal/service/<service>/generate.go
 ### Prerequisites Issues
 
 - **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
-- **Branch Naming**: Use the convention `f-list-resource-<service>_<resource>` (e.g., `f-list-resource-batch_job_definition`)
+- **Branch Naming**: Use the convention `f-list-resource-<service-name>_<resource-name>` (e.g., `f-list-resource-batch_job_definition`)
 
 ### Common Implementation Issues
 
@@ -129,4 +129,4 @@ go generate internal/service/<service>/generate.go
 
 - **Minimal Generated Config**: Generated test configurations are basic and need substantial updates with all required resource dependencies.
 - **PreCheck Functions**: Remove custom precheck functions unless they exist - use standard `acctest.PreCheck(ctx, t)`.
-- **ARN Validation***: ARNs have multiple forms and may cause the test check to fail. Find the correct format for the <resource> and update the validation.
+- **ARN Validation**: ARNs have multiple forms and may cause the test check to fail. Find the correct format for the <resource> and update the validation.
