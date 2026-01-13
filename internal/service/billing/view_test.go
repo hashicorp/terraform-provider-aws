@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/billing"
@@ -491,12 +492,12 @@ resource "aws_billing_view" "test" {
 }
 
 func testAccViewConfig_dataFilterExpressionTags(rName, tagKey string, tagValues []string) string {
-	tagValuesStr := ""
+	var tagValuesStr strings.Builder
 	for i, v := range tagValues {
 		if i > 0 {
-			tagValuesStr += ", "
+			tagValuesStr.WriteString(", ")
 		}
-		tagValuesStr += fmt.Sprintf("%q", v)
+		tagValuesStr.WriteString(fmt.Sprintf("%q", v))
 	}
 	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
@@ -511,16 +512,16 @@ resource "aws_billing_view" "test" {
     }
   }
 }
-`, rName, tagKey, tagValuesStr))
+`, rName, tagKey, tagValuesStr.String()))
 }
 
 func testAccViewConfig_dataFilterExpressionDimensions(rName, dimensionKey string, dimensionValues []string) string {
-	dimensionValuesStr := ""
+	var dimensionValuesStr strings.Builder
 	for i, v := range dimensionValues {
 		if i > 0 {
-			dimensionValuesStr += ", "
+			dimensionValuesStr.WriteString(", ")
 		}
-		dimensionValuesStr += fmt.Sprintf("%q", v)
+		dimensionValuesStr.WriteString(fmt.Sprintf("%q", v))
 	}
 	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
@@ -535,5 +536,5 @@ resource "aws_billing_view" "test" {
     }
   }
 }
-`, rName, dimensionKey, dimensionValuesStr))
+`, rName, dimensionKey, dimensionValuesStr.String()))
 }
