@@ -92,6 +92,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"description":                       testAccPhoneNumber_description,
 			"prefix":                            testAccPhoneNumber_prefix,
 			"targetARN":                         testAccPhoneNumber_targetARN,
+			"multiple":                          testAccPhoneNumber_multiple,
 			"identityBasic":                     testAccConnectPhoneNumber_Identity_basic,
 			"identityExistingResource":          testAccConnectPhoneNumber_Identity_ExistingResource_basic,
 			"identityExistingResourceNoRefresh": testAccConnectPhoneNumber_Identity_ExistingResource_noRefreshNoChange,
