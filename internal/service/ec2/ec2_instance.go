@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -3367,7 +3368,12 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "decoding user_data: %s", err)
 				}
-				rd.Set("user_data", string(data))
+				if utf8.Valid(data) {
+					rd.Set("user_data", string(data))
+				} else {
+					// The user_data wasn't valid UTF-8, so we need to store it as base64 instead of as the raw string.
+					rd.Set("user_data_base64", attr.UserData.Value)
+				}
 			}
 		}
 	}
