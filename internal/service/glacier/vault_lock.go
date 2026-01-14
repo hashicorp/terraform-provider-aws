@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -170,9 +169,8 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	output, err := conn.GetVaultLock(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -187,8 +185,8 @@ func findVaultLockByName(ctx context.Context, conn *glacier.Client, name string)
 	return output, nil
 }
 
-func statusLockState(ctx context.Context, conn *glacier.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusLockState(conn *glacier.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVaultLockByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -204,10 +202,10 @@ func statusLockState(ctx context.Context, conn *glacier.Client, name string) sdk
 }
 
 func waitVaultLockLocked(ctx context.Context, conn *glacier.Client, name string) error {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{lockStateInProgress},
 		Target:  []string{lockStateLocked},
-		Refresh: statusLockState(ctx, conn, name),
+		Refresh: statusLockState(conn, name),
 		Timeout: 5 * time.Minute,
 	}
 
