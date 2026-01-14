@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -136,6 +137,12 @@ func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 	}
 
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
+}
+
+func (v SetValueOf[T]) ContainsUnknownElements() bool {
+	return tfslices.Any(v.Elements(), func(v attr.Value) bool {
+		return v.IsUnknown()
+	})
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {
