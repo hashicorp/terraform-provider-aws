@@ -6,6 +6,7 @@ package sagemaker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -258,17 +260,39 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.DeploymentConfig = expandDeploymentConfig(v.([]any))
 	}
 
-	_, err := conn.CreateEndpoint(ctx, &input)
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.CreateEndpoint(ctx, &input)
+
+		if err != nil {
+			return tfresource.NonRetryableError(fmt.Errorf("creating SageMaker AI Endpoint (%s): %w", name, err))
+		}
+
+		_, err = waitEndpointInService(ctx, conn, name)
+
+		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
+		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
+			r := resourceEndpoint()
+			d := r.Data(nil)
+			d.SetId(name)
+			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() {
+				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
+			}
+
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(fmt.Errorf("waiting for SageMaker AI Endpoint (%s) create: %w", name, err))
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(name)
-
-	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) create: %s", name, err)
-	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
