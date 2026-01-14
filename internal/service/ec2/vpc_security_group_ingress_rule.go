@@ -296,7 +296,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx), data.ReferencedSecurityGroupID)
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -415,12 +415,22 @@ func (r *securityGroupRuleResource) securityGroupRuleARN(ctx context.Context, id
 	return types.StringValue(r.Meta().RegionalARN(ctx, names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
-func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.ReferencedSecurityGroup, accountID string) types.String {
+func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.ReferencedSecurityGroup, accountID string, priorValue types.String) types.String {
 	if apiObject == nil {
 		return types.StringNull()
 	}
 
-	if apiObject.UserId == nil || aws.ToString(apiObject.UserId) == accountID {
+	// Check if the user originally specified the account ID prefix in their configuration.
+	// If so, preserve that format in state to avoid perpetual diffs.
+	// See: https://github.com/hashicorp/terraform-provider-aws/issues/30664
+	userIDInConfig := false
+	if !priorValue.IsNull() {
+		if parts := strings.Split(priorValue.ValueString(), "/"); len(parts) == 2 {
+			userIDInConfig = true
+		}
+	}
+
+	if apiObject.UserId == nil || (aws.ToString(apiObject.UserId) == accountID && !userIDInConfig) {
 		return fwflex.StringToFramework(ctx, apiObject.GroupId)
 	}
 
@@ -502,6 +512,18 @@ func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Cont
 }
 
 func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *awstypes.SecurityGroupRuleRequest {
+	// Extract only the GroupId when referenced_security_group_id contains AccountId/GroupId format.
+	// The ModifySecurityGroupRules API does not accept the AccountId prefix.
+	// See: https://github.com/hashicorp/terraform-provider-aws/issues/30664
+	var referencedGroupID *string
+	if !model.ReferencedSecurityGroupID.IsNull() {
+		if parts := strings.Split(model.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
+			referencedGroupID = aws.String(parts[1])
+		} else {
+			referencedGroupID = fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID)
+		}
+	}
+
 	apiObject := &awstypes.SecurityGroupRuleRequest{
 		CidrIpv4:          fwflex.StringFromFramework(ctx, model.CIDRIPv4),
 		CidrIpv6:          fwflex.StringFromFramework(ctx, model.CIDRIPv6),
@@ -509,7 +531,7 @@ func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx 
 		FromPort:          fwflex.Int32FromFrameworkInt64(ctx, model.FromPort),
 		IpProtocol:        fwflex.StringFromFramework(ctx, model.IPProtocol),
 		PrefixListId:      fwflex.StringFromFramework(ctx, model.PrefixListID),
-		ReferencedGroupId: fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID),
+		ReferencedGroupId: referencedGroupID,
 		ToPort:            fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
 	}
 
