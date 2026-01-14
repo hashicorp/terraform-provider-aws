@@ -790,7 +790,7 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw any) bool {
 		return c[:i]
 	}
 
-	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
+	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new)))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 
