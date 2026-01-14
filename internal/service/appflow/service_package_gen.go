@@ -69,6 +69,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newConnectorProfileResourceAsListResource,
+			TypeName: "aws_appflow_connector_profile",
+			Name:     "Connector Profile",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrName),
+		},
+		{
 			Factory:  newFlowResourceAsListResource,
 			TypeName: "aws_appflow_flow",
 			Name:     "Flow",
