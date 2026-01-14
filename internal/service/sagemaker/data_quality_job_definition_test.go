@@ -785,13 +785,13 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       capture_mode = "Output"
     }
   }
+
+  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
-
-  depends_on = [aws_iam_role.test]
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
