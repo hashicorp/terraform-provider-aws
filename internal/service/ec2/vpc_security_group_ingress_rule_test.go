@@ -554,11 +554,6 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 	})
 }
 
-// TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPCUpdate tests that updating
-// a cross-account security group rule with AccountId/sg-xxx format does not cause:
-// 1. InvalidGroupId.Malformed error from ModifySecurityGroupRules API
-// 2. Perpetual diff/plan loop
-// See: https://github.com/hashicorp/terraform-provider-aws/issues/30664
 func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPCUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.SecurityGroupRule
@@ -587,7 +582,6 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPCUpdate(
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// Update description to trigger ModifySecurityGroupRules API call
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDPeerVPCWithDescription(rName, "updated description"),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1007,65 +1001,63 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 func testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDPeerVPCWithDescription(rName, description string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), testAccVPCSecurityGroupRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "peer" {
-  provider = "awsalternate"
+	provider = "awsalternate"
 
-  cidr_block = "10.1.0.0/16"
+	cidr_block = "10.1.0.0/16"
 
-  tags = {
-    Name = %[1]q
-  }
+	tags = {
+		Name = %[1]q
+	}
 }
 
 resource "aws_security_group" "peer" {
-  provider = "awsalternate"
+	provider = "awsalternate"
 
-  vpc_id = aws_vpc.peer.id
-  name   = %[1]q
+	vpc_id = aws_vpc.peer.id
+	name   = %[1]q
 
-  tags = {
-    Name = %[1]q
-  }
+	tags = {
+		Name = %[1]q
+	}
 }
 
 data "aws_caller_identity" "peer" {
-  provider = "awsalternate"
+	provider = "awsalternate"
 }
 
-# Requester's side of the connection.
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id        = aws_vpc.test.id
-  peer_vpc_id   = aws_vpc.peer.id
-  peer_owner_id = data.aws_caller_identity.peer.account_id
-  peer_region   = %[2]q
-  auto_accept   = false
+	vpc_id        = aws_vpc.test.id
+	peer_vpc_id   = aws_vpc.peer.id
+	peer_owner_id = data.aws_caller_identity.peer.account_id
+	peer_region   = %[2]q
+	auto_accept   = false
 
-  tags = {
-    Name = %[1]q
-  }
+	tags = {
+		Name = %[1]q
+	}
 }
 
-# Accepter's side of the connection.
 resource "aws_vpc_peering_connection_accepter" "peer" {
-  provider = "awsalternate"
+	provider = "awsalternate"
 
-  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
-  auto_accept               = true
+	vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+	auto_accept               = true
 
-  tags = {
-    Name = %[1]q
-  }
+	tags = {
+		Name = %[1]q
+	}
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test" {
-  security_group_id = aws_security_group.test.id
+	security_group_id = aws_security_group.test.id
 
-  referenced_security_group_id = "${data.aws_caller_identity.peer.account_id}/${aws_security_group.peer.id}"
-  description                  = %[3]q
-  from_port                    = 80
-  ip_protocol                  = "tcp"
-  to_port                      = 8080
+	referenced_security_group_id = "${data.aws_caller_identity.peer.account_id}/${aws_security_group.peer.id}"
+	description                  = %[3]q
+	from_port                    = 80
+	ip_protocol                  = "tcp"
+	to_port                      = 8080
 
-  depends_on = [aws_vpc_peering_connection_accepter.peer]
+	depends_on = [aws_vpc_peering_connection_accepter.peer]
 }
 `, rName, acctest.Region(), description))
 }

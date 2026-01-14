@@ -420,17 +420,9 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 		return types.StringNull()
 	}
 
-	// Check if the user originally specified the account ID prefix in their configuration.
-	// If so, preserve that format in state to avoid perpetual diffs.
-	// See: https://github.com/hashicorp/terraform-provider-aws/issues/30664
-	userIDInConfig := false
-	if !priorValue.IsNull() {
-		if parts := strings.Split(priorValue.ValueString(), "/"); len(parts) == 2 {
-			userIDInConfig = true
-		}
-	}
+	priorHasUserID := !priorValue.IsNull() && strings.Contains(priorValue.ValueString(), "/")
 
-	if apiObject.UserId == nil || (aws.ToString(apiObject.UserId) == accountID && !userIDInConfig) {
+	if apiObject.UserId == nil || (aws.ToString(apiObject.UserId) == accountID && !priorHasUserID) {
 		return fwflex.StringToFramework(ctx, apiObject.GroupId)
 	}
 
@@ -512,13 +504,11 @@ func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Cont
 }
 
 func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *awstypes.SecurityGroupRuleRequest {
-	// Extract only the GroupId when referenced_security_group_id contains AccountId/GroupId format.
-	// The ModifySecurityGroupRules API does not accept the AccountId prefix.
-	// See: https://github.com/hashicorp/terraform-provider-aws/issues/30664
 	var referencedGroupID *string
 	if !model.ReferencedSecurityGroupID.IsNull() {
-		if parts := strings.Split(model.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
-			referencedGroupID = aws.String(parts[1])
+		v := model.ReferencedSecurityGroupID.ValueString()
+		if _, groupID, ok := strings.Cut(v, "/"); ok {
+			referencedGroupID = aws.String(groupID)
 		} else {
 			referencedGroupID = fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID)
 		}
