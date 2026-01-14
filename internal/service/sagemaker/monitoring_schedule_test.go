@@ -159,7 +159,7 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"schedule_expression": tfknownvalue.StringExact("cron(0 * ? * * *)"),
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 * ? * * *)"),
 						})}),
 					})})),
 				},
@@ -182,7 +182,7 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"schedule_expression": tfknownvalue.StringExact("cron(0 0 ? * * *)"),
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 0 ? * * *)"),
 						})}),
 					})})),
 				},
@@ -200,7 +200,7 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"schedule_expression": tfknownvalue.StringExact("cron(0 * ? * * *)"),
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 * ? * * *)"),
 						})}),
 					})})),
 				},

@@ -146,7 +146,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"kms_key_id": {
+												names.AttrKMSKeyID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -358,12 +358,12 @@ func resourceMonitoringSchedule() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"instance_count": {
+															names.AttrInstanceCount: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntBetween(1, 100),
 															},
-															"instance_type": {
+															names.AttrInstanceType: {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -397,18 +397,18 @@ func resourceMonitoringSchedule() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
-												"vpc_config": {
+												names.AttrVPCConfig: {
 													Type:     schema.TypeList,
 													MaxItems: 1,
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"security_group_ids": {
+															names.AttrSecurityGroupIDs: {
 																Type:     schema.TypeSet,
 																Required: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
-															"subnets": {
+															names.AttrSubnets: {
 																Type:     schema.TypeSet,
 																Required: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
@@ -419,7 +419,7 @@ func resourceMonitoringSchedule() *schema.Resource {
 											},
 										},
 									},
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -746,7 +746,7 @@ func expandMonitoringJobDefinition(tfList []any) *awstypes.MonitoringJobDefiniti
 		apiObject.NetworkConfig = expandNetworkConfig(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -848,7 +848,7 @@ func expandNetworkConfig(tfList []any) *awstypes.NetworkConfig {
 		apiObject.EnableNetworkIsolation = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["vpc_config"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrVPCConfig].([]any); ok && len(v) > 0 {
 		apiObject.VpcConfig = expandVPCConfig(v)
 	}
 
@@ -930,7 +930,7 @@ func flattenMonitoringJobDefinition(apiObject *awstypes.MonitoringJobDefinition)
 	}
 
 	if apiObject.RoleArn != nil {
-		tfMap["role_arn"] = aws.ToString(apiObject.RoleArn)
+		tfMap[names.AttrRoleARN] = aws.ToString(apiObject.RoleArn)
 	}
 
 	if apiObject.StoppingCondition != nil {
@@ -1023,7 +1023,7 @@ func flattenNetworkConfig(apiObject *awstypes.NetworkConfig) []any {
 	}
 
 	if apiObject.VpcConfig != nil {
-		tfMap["vpc_config"] = flattenVPCConfig(apiObject.VpcConfig)
+		tfMap[names.AttrVPCConfig] = flattenVPCConfig(apiObject.VpcConfig)
 	}
 
 	return []any{tfMap}
