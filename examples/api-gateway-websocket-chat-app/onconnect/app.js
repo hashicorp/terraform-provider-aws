@@ -11,18 +11,18 @@ const client = new DynamoDBClient({});
 const ddb = DynamoDBDocumentClient.from(client);
 
 exports.handler = async event => {
-	const putParams = {
-		TableName: process.env.TABLE_NAME,
-		Item: {
-			connectionId: event.requestContext.connectionId
-		}
-	};
+    const putParams = {
+        TableName: process.env.TABLE_NAME,
+        Item: {
+            connectionId: event.requestContext.connectionId
+        }
+    };
 
-	try {
-		await ddb.send(new PutCommand(putParams));
-	} catch (err) {
-		return { statusCode: 500, body: 'Failed to connect: ' + JSON.stringify(err) };
-	}
+    try {
+        await ddb.send(new PutCommand(putParams));
+    } catch (err) {
+        return { statusCode: 500, body: 'Failed to connect: ' + JSON.stringify(err) };
+    }
 
-	return { statusCode: 200, body: 'Connected.' };
+    return { statusCode: 200, body: 'Connected.' };
 };
