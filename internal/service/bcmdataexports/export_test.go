@@ -497,6 +497,9 @@ func testAccExportConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -508,6 +511,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -537,6 +541,9 @@ func testAccExportConfig_update(rName, overwrite string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -548,6 +555,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -577,6 +585,9 @@ func testAccExportConfig_updateTableConfigs(rName, queryStatement string) string
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -588,6 +599,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -617,6 +629,9 @@ func testAccExportConfig_curSubset(rName, query string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
@@ -628,6 +643,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "TRUE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
