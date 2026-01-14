@@ -5,7 +5,7 @@ package acm
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	"encoding/hex"
 	"errors"
 	"fmt"

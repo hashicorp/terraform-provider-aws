@@ -5,7 +5,7 @@ package autoscaling
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- AWS AutoScaling API uses SHA1 for user_data hashing, must match AWS behavior
 	"encoding/hex"
 	"fmt"
 	"log"

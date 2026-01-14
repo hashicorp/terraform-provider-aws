@@ -6,7 +6,7 @@ package ec2
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- AWS EC2 API uses SHA1 for user_data hashing, must match AWS behavior
 	"encoding/hex"
 	"errors"
 	"fmt"

@@ -5,7 +5,7 @@ package iam
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for backward compatibility with provider v3.0.0 state normalization, not cryptographic security
 	"encoding/hex"
 	"log"
 	"strings"
