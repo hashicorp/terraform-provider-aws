@@ -103,6 +103,8 @@ func TestInvocationResourceIDCreation(t *testing.T) {
 // TestBuildInputPanic verifies the fix for panic: assignment to entry in nil map
 // This happens when input is empty and lifecycle_scope is CRUD
 func TestBuildInputPanic(t *testing.T) {
+	t.Parallel()
+
 	// Create ResourceData with empty input and CRUD lifecycle scope
 	resourceSchema := tflambda.ResourceInvocation().Schema
 	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
