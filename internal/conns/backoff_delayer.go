@@ -50,7 +50,11 @@ func (c *v1CompatibleBackoff) BackoffDelay(attempt int, err error) (time.Duratio
 }
 
 func getJitterDelay(duration time.Duration) time.Duration {
-	n, _ := rand.Int(rand.Reader, big.NewInt(int64(duration)))
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(duration)))
+	if err != nil {
+		// Fallback to maximum jitter if crypto/rand fails
+		n = big.NewInt(int64(duration))
+	}
 	return time.Duration(n.Int64() + int64(duration))
 }
 

@@ -191,7 +191,11 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		n, _ := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		n, err := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		if err != nil {
+			// Fallback to maximum delay if crypto/rand fails
+			n = big.NewInt(delayRand.Milliseconds())
+		}
 		o.Delay = time.Duration(n.Int64()) * time.Millisecond
 	}
 }
