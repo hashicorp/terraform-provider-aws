@@ -274,7 +274,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			r := resourceEndpoint()
 			d := r.Data(nil)
 			d.SetId(name)
-			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() {
+			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() { // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
 			}
 
