@@ -121,14 +121,12 @@ This resource supports the following arguments:
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
 * `ipv6_native` - (Optional) Indicates whether to create an IPv6-only subnet. Default: `false`.
-* `ipv4_ipam_pool_id` - (Optional) ID of an IPv4 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet. 
-* `ipv4_netmask_length` - (Optional) Netmask. Requires specifying a `ipv4_ipam_pool_id`
+* `ipv4_ipam_pool_id` - (Optional) ID of an IPv4 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet.
+* `ipv4_netmask_length` - (Optional) Netmask. Requires specifying a `ipv4_ipam_pool_id`.
 * `ipv6_ipam_pool_id` - (Optional) ID of an IPv6 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet.
 * `ipv6_netmask_length` - (Optional) Netmask. Requires specifying a `ipv6_ipam_pool_id`. Valid values are from 44 to 64 in increments of 4.
 * `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
-* `map_public_ip_on_launch` -  (Optional) Specify true to indicate
-    that instances launched into the subnet should be assigned
-    a public IP address. Default is `false`.
+* `map_public_ip_on_launch` -  (Optional) Specify true to indicate that instances launched into the subnet should be assigned a public IP address. Default is `false`.
 * `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
 * `private_dns_hostname_type_on_launch` - (Optional) The type of hostnames to assign to instances in the subnet at launch. For IPv6-only subnets, an instance DNS name must be based on the instance ID. For dual-stack and IPv4-only subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name`, `resource-name`.
 * `vpc_id` - (Required) The VPC ID.

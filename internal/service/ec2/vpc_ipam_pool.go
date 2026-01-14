@@ -260,7 +260,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		resourceConn := conn
 		if resourceRegion != meta.(*conns.AWSClient).Region(ctx) {
-			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "IPAM Pool","aws_vpc_ipam_pool", resourceRegion)
+			resourceCtx := conns.NewResourceContext(ctx, names.EC2ServiceID, "IPAM Pool", "aws_vpc_ipam_pool", resourceRegion)
 			resourceConn = meta.(*conns.AWSClient).EC2Client(resourceCtx)
 		}
 
