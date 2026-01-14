@@ -10,7 +10,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"math/rand" // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-weak-prng -- Deterministic PRNG required for VCR test reproducibility
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- Deterministic PRNG required for VCR test reproducibility
 	"net/http"
 	"os"
 	"path/filepath"
