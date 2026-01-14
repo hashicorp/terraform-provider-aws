@@ -144,33 +144,25 @@ type autoshiftObserverNotificationStatusResource struct {
 func (r *autoshiftObserverNotificationStatusResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
-			},
 			// TIP: ==== "ID" ATTRIBUTE ====
 			// When using the Terraform Plugin Framework, there is no required "id" attribute.
 			// This is different from the Terraform Plugin SDK.
 			//
 			// Only include an "id" attribute if the AWS API has an "Id" field, such as "AutoshiftObserverNotificationStatusId"
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
-				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+			// 	// TIP: ==== PLAN MODIFIERS ====
+			// 	// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
+			// 	// for adjusting planned changes prior to apply. The planmodifier subpackage
+			// 	// provides built-in modifiers for many common use cases such as
+			// 	// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
+			// 	// resources).
+			// 	//
+			// 	// See more:
+			// 	// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
+			"status".scheam.StringAttribute{
+				required: true,
+				validators: []validator.String{
+					stringvalidator.OneOf("ENABLED", "DISABLED")
 				},
-			},
-			"type": schema.StringAttribute{
-				Required: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
