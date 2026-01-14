@@ -297,9 +297,6 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
 	flattenedReferencedGroupID := flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
-	// Normalize accountId/groupId to groupId when account matches to prevent false diffs.
-	// The ModifySecurityGroupRules API doesn't accept UserId format, so after updates
-	// we may have accountId/groupId in state but groupId from API, which are equivalent.
 	data.ReferencedSecurityGroupID = normalizeReferencedSecurityGroupID(ctx, flattenedReferencedGroupID, data.ReferencedSecurityGroupID, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
@@ -432,18 +429,9 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 	return types.StringValue(strings.Join([]string{aws.ToString(apiObject.UserId), aws.ToString(apiObject.GroupId)}, "/"))
 }
 
-// normalizeReferencedSecurityGroupID normalizes accountId/groupId to groupId when the accountId
-// matches the current account to prevent false diffs. This is needed because ModifySecurityGroupRules
-// API doesn't accept UserId format in ReferencedGroupId field, and after updates the API may return
-// just groupId even if state had accountId/groupId format.
-//
-// However, if the state already has accountId/groupId format (from user config), we preserve that
-// format to match what the user configured, preventing false diffs. This applies to both same-account
-// and cross-account cases.
-//
-// During import (when stateValue is null), if the API returns just groupId for a same-account reference,
-// we format it as accountId/groupId to match what users typically configure, ensuring consistency.
-// However, if the API already returns accountId/groupId format, we preserve that.
+// normalizeReferencedSecurityGroupID normalizes accountId/groupId format to prevent false diffs.
+// If state has accountId/groupId format, preserve it. During import, format same-account
+// references as accountId/groupId.
 func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
 	if apiValue.IsNull() {
 		return apiValue
@@ -451,14 +439,11 @@ func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValu
 
 	apiStr := apiValue.ValueString()
 
-	// During import, stateValue is null. Format same-account references as accountId/groupId
-	// to match what users typically configure, ensuring imported resources are consistent.
 	if stateValue.IsNull() {
-		// If API value is already in accountId/groupId format, return as-is
+		// During import: format same-account references as accountId/groupId
 		if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
 			return apiValue
 		}
-		// If API value is just groupId (same-account reference), format as accountId/groupId
 		if strings.HasPrefix(apiStr, "sg-") {
 			return types.StringValue(strings.Join([]string{currentAccountID, apiStr}, "/"))
 		}
@@ -467,23 +452,16 @@ func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValu
 
 	stateStr := stateValue.ValueString()
 
-	// If state has accountId/groupId format, preserve it to match user's config.
-	// This prevents false diffs when:
-	// 1. Same account: state has accountId/groupId, API returns groupId
-	// 2. Cross account: state has otherAccountId/groupId, API returns groupId (after ModifySecurityGroupRules)
+	// Preserve state format if it has accountId/groupId
 	if parts := strings.Split(stateStr, "/"); len(parts) == 2 {
 		if apiStr == parts[1] {
-			// State has accountId/groupId, API has groupId (matches the groupId part)
-			// Preserve state format to match user config, regardless of accountId
 			return stateValue
 		}
 	}
 
-	// If state has just groupId and API returned accountId/groupId where accountId matches,
-	// normalize to groupId (preserve the simpler format).
+	// Normalize to groupId if API has accountId/groupId where accountId matches
 	if parts := strings.Split(apiStr, "/"); len(parts) == 2 {
 		if parts[0] == currentAccountID && stateStr == parts[1] {
-			// API has accountId/groupId, state has groupId, accountId matches -> keep groupId
 			return types.StringValue(parts[1])
 		}
 	}
@@ -575,8 +553,6 @@ func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx 
 		ToPort:       fwflex.Int32FromFrameworkInt64(ctx, model.ToPort),
 	}
 
-	// ModifySecurityGroupRules API expects only GroupId in ReferencedGroupId field,
-	// not the UserId/GroupId format. Extract just the GroupId part.
 	if !model.ReferencedSecurityGroupID.IsNull() {
 		referencedGroupID := model.ReferencedSecurityGroupID.ValueString()
 		// [UserID/]GroupID.
