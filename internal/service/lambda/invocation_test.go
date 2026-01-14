@@ -105,7 +105,7 @@ func TestInvocationResourceIDCreation(t *testing.T) {
 func TestBuildInputPanic(t *testing.T) {
 	// Create ResourceData with empty input and CRUD lifecycle scope
 	resourceSchema := tflambda.ResourceInvocation().Schema
-	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]interface{}{
+	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
 		"function_name":   "test-function",
 		"input":           "", // Empty input causes getObjectFromJSONString to return nil
 		"lifecycle_scope": "CRUD",
@@ -875,60 +875,4 @@ resource "aws_lambda_invocation" "test" {
   input = %[1]s
 }
 `, strconv.Quote(inputJSON), tenantID)
-}
-
-// TestAccLambdaInvocation_emptyInputPanic reproduces the panic during replacement
-// by forcing replacement via function_name change in CRUD lifecycle scope
-func TestAccLambdaInvocation_emptyInputPanic(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_lambda_invocation.test"
-	fName1 := "lambda_invocation_crud_1"
-	fName2 := "lambda_invocation_crud_2"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: acctest.ConfigCompose(
-					testAccInvocationConfig_function(fName1, rName, ""),
-					testAccInvocationConfig_invocation(`{}`, `lifecycle_scope = "CRUD"`),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "input", `{}`),
-				),
-			},
-			// Force replacement by changing function name - this should trigger the panic
-			// during the delete operation when buildInput is called with empty input
-			{
-				Config: acctest.ConfigCompose(
-					testAccInvocationConfig_function(fName1, rName, ""),
-					testAccInvocationConfig_function_additional(fName2, rName),
-					`resource "aws_lambda_invocation" "test" {
-					  function_name = aws_lambda_function.test2.function_name
-					  input = "{}"
-					  lifecycle_scope = "CRUD"
-					}`,
-				),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "input", `{}`),
-				),
-			},
-		},
-	})
-}
-
-func testAccInvocationConfig_function_additional(fName, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_lambda_function" "test2" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.test.arn
-  handler       = "exports.example"
-  runtime       = "nodejs18.x"
-}
-`, fName)
 }
