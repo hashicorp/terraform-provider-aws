@@ -5,7 +5,7 @@ package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -79,7 +79,7 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, `invoking Lambda Function (%s): %s`, functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, sha256.Sum256(payload)))
 	d.Set("result", string(output.Payload))
 
 	return diags
