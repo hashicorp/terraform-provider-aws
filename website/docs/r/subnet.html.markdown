@@ -121,10 +121,10 @@ This resource supports the following arguments:
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
 * `ipv6_native` - (Optional) Indicates whether to create an IPv6-only subnet. Default: `false`.
-* `ipv4_ipam_pool_id` - (Optional) The ID of an IPv4 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet. 
-* `ipv4_netmask_length` - (Optional) The netmask. Requires specifying a `ipv4_ipam_pool_id`
-* `ipv6_ipam_pool_id` - (Optional) The ID of an IPv6 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet.
-* `ipv6_netmask_length` - (Optional) . Requires specifying a `ipv6_ipam_pool_id`. Valid values are from 44 to 64 in increments of 4.
+* `ipv4_ipam_pool_id` - (Optional) ID of an IPv4 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet. 
+* `ipv4_netmask_length` - (Optional) Netmask. Requires specifying a `ipv4_ipam_pool_id`
+* `ipv6_ipam_pool_id` - (Optional) ID of an IPv6 VPC Resource Planning IPAM Pool. The CIDR of this pool is used to allocate the CIDR for the subnet.
+* `ipv6_netmask_length` - (Optional) Netmask. Requires specifying a `ipv6_ipam_pool_id`. Valid values are from 44 to 64 in increments of 4.
 * `map_customer_owned_ip_on_launch` -  (Optional) Specify `true` to indicate that network interfaces created in the subnet should be assigned a customer owned IP address. The `customer_owned_ipv4_pool` and `outpost_arn` arguments must be specified when set to `true`. Default is `false`.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned

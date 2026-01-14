@@ -130,15 +130,15 @@ within the CIDR range in the pool.
 * `publicly_advertisable` - (Optional) Defines whether or not IPv6 pool space is publicly advertisable over the internet. This argument is required if `address_family = "ipv6"` and `public_ip_source = "byoip"`, default is `false`. This option is not available for IPv4 pool space or if `public_ip_source = "amazon"`. Setting this argument to `true` when it is not available may result in erroneous differences being reported.
 * `public_ip_source` - (Optional) The IP address source for pools in the public scope. Only used for provisioning IP address CIDRs to pools in the public scope. Valid values are `byoip` or `amazon`. Default is `byoip`.
 * `source_ipam_pool_id` - (Optional) The ID of the source IPAM pool. Use this argument to create a child pool within an existing pool.
-* `source_resource` - (Optional) The resource to use to use to configure a resource planning IPAM Pool. If configured, the `locale` of the parent pool must match the region that the vpc resides in.
+* `source_resource` - (Optional) Resource to use to use to configure a resource planning IPAM Pool. If configured, the `locale` of the parent pool must match the region that the vpc resides in.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### source_resource
 
-* `resource_id` - (Required) The ID of the resource.
-* `resource_owner` - (Required) The owner of the resource.
-* `resource_region` - (Required) The region where the resource exists. Must match the `locale` of the parent IPAM Pool.
-* `resource_type` - (Required) The type of the resource. (`vpc`)
+* `resource_id` - (Required) ID of the resource.
+* `resource_owner` - (Required) Owner of the resource.
+* `resource_region` - (Required) Region where the resource exists. Must match the `locale` of the parent IPAM Pool.
+* `resource_type` - (Required) Type of the resource. (`vpc`)
 
 ## Attribute Reference
 
