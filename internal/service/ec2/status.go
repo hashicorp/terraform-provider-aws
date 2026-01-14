@@ -1245,17 +1245,7 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) sdkretry.
 
 func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		input := ec2.GetIpamResourceCidrsInput{
-			IpamScopeId: aws.String(scopeID),
-			Filters: []awstypes.Filter{
-				{
-					Name:   aws.String("resource-id"),
-					Values: []string{resourceID},
-				},
-			},
-		}
-
-		resources, err := findIPAMResourceCIDRs(ctx, conn, &input)
+		output, err := findIPAMResourceCIDRByTwoPartKey(ctx, conn, scopeID, resourceID)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1265,13 +1255,7 @@ func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, reso
 			return nil, "", err
 		}
 
-		// Filter for the specific resource (API returns list)
-		if len(resources) == 0 {
-			return nil, "", nil
-		}
-
-		// Return the management state from AWS
-		return resources[0], string(resources[0].ManagementState), nil
+		return output, string(output.ManagementState), nil
 	}
 }
 

@@ -4514,19 +4514,31 @@ func findIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Cli
 	return output, nil
 }
 
+func findIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamResourceCidrsInput) (*awstypes.IpamResourceCidr, error) {
+	output, err := findIPAMResourceCIDRs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamResourceCidrsInput) ([]awstypes.IpamResourceCidr, error) {
 	var output []awstypes.IpamResourceCidr
 
 	pages := ec2.NewGetIpamResourceCidrsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
-				return nil, &sdkretry.NotFoundError{
-					LastError:   err,
-					LastRequest: input,
-				}
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMScopeIdNotFound) {
+			return nil, &sdkretry.NotFoundError{
+				LastError:   err,
+				LastRequest: &input,
 			}
+		}
+
+		if err != nil {
 			return nil, err
 		}
 
@@ -4534,6 +4546,20 @@ func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.Get
 	}
 
 	return output, nil
+}
+
+func findIPAMResourceCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, scopeID, resourceID string) (*awstypes.IpamResourceCidr, error) {
+	input := ec2.GetIpamResourceCidrsInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []string{resourceID},
+			},
+		},
+		IpamScopeId: aws.String(scopeID),
+	}
+
+	return findIPAMResourceCIDR(ctx, conn, &input)
 }
 
 func findIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) (*awstypes.IpamScope, error) {
