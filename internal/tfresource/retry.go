@@ -5,8 +5,9 @@ package tfresource
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -190,7 +191,8 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
+		n, _ := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		o.Delay = time.Duration(n.Int64()) * time.Millisecond
 	}
 }
 
