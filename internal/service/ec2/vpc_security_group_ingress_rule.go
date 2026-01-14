@@ -297,7 +297,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
 	flattenedReferencedGroupID := flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
-	data.ReferencedSecurityGroupID = normalizeReferencedSecurityGroupID(ctx, flattenedReferencedGroupID, data.ReferencedSecurityGroupID, r.Meta().AccountID(ctx))
+	data.ReferencedSecurityGroupID = normalizeReferencedSecurityGroupID(flattenedReferencedGroupID, data.ReferencedSecurityGroupID, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -432,7 +432,7 @@ func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.Ref
 // normalizeReferencedSecurityGroupID normalizes accountId/groupId format to prevent false diffs.
 // If state has accountId/groupId format, preserve it. During import, format same-account
 // references as accountId/groupId.
-func normalizeReferencedSecurityGroupID(ctx context.Context, apiValue, stateValue types.String, currentAccountID string) types.String {
+func normalizeReferencedSecurityGroupID(apiValue, stateValue types.String, currentAccountID string) types.String {
 	if apiValue.IsNull() {
 		return apiValue
 	}
