@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/YakDriver/regexache"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
