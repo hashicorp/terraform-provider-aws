@@ -187,11 +187,11 @@ func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findOrganizationalUnitByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.OrganizationalUnit, error) {
-	input := &organizations.DescribeOrganizationalUnitInput{
+	input := organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(id),
 	}
 
-	return findOrganizationalUnit(ctx, conn, input)
+	return findOrganizationalUnit(ctx, conn, &input)
 }
 
 func findOrganizationalUnit(ctx context.Context, conn *organizations.Client, input *organizations.DescribeOrganizationalUnitInput) (*awstypes.OrganizationalUnit, error) {

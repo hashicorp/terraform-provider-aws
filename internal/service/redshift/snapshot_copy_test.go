@@ -10,14 +10,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,23 +27,23 @@ func TestAccRedshiftSnapshotCopy_basic(t *testing.T) {
 	}
 
 	var snap types.ClusterSnapshotCopyStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_copy.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
+					testAccCheckSnapshotCopyExists(ctx, t, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
@@ -67,22 +65,22 @@ func TestAccRedshiftSnapshotCopy_disappears(t *testing.T) {
 	}
 
 	var snap types.ClusterSnapshotCopyStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_copy.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
+					testAccCheckSnapshotCopyExists(ctx, t, resourceName, &snap),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfredshift.ResourceSnapshotCopy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,23 +96,23 @@ func TestAccRedshiftSnapshotCopy_disappears_Cluster(t *testing.T) {
 	}
 
 	var snap types.ClusterSnapshotCopyStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_copy.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
+					testAccCheckSnapshotCopyExists(ctx, t, resourceName, &snap),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -130,23 +128,23 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 	}
 
 	var snap types.ClusterSnapshotCopyStatus
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_redshift_snapshot_copy.test"
 	clusterResourceName := "aws_redshift_cluster.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.RedshiftEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_retentionPeriod(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
+					testAccCheckSnapshotCopyExists(ctx, t, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "10"),
@@ -160,7 +158,7 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyConfig_retentionPeriod(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
+					testAccCheckSnapshotCopyExists(ctx, t, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "20"),
@@ -170,9 +168,9 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_snapshot_copy" {
@@ -180,7 +178,7 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			_, err := tfredshift.FindSnapshotCopyByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*sdkretry.NotFoundError](err) {
+			if errs.IsA[*retry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {
@@ -194,7 +192,7 @@ func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckSnapshotCopyExists(ctx context.Context, name string, snap *types.ClusterSnapshotCopyStatus) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(ctx context.Context, t *testing.T, name string, snap *types.ClusterSnapshotCopyStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -205,7 +203,7 @@ func testAccCheckSnapshotCopyExists(ctx context.Context, name string, snap *type
 			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameSnapshotCopy, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).RedshiftClient(ctx)
 		out, err := tfredshift.FindSnapshotCopyByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.Redshift, create.ErrActionCheckingExistence, tfredshift.ResNameSnapshotCopy, rs.Primary.ID, err)

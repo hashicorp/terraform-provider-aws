@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bcmdataexports_export: Fix `Provider produced inconsistent result after apply` error when querying `CARBON_EMISSIONS` table without `table_configurations`
+```

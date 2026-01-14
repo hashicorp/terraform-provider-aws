@@ -1,2 +1,3 @@
-```release-note:enhancement
-data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization.
+```release-note:bug
+data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization
+```

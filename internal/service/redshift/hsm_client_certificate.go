@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_redshift_hsm_client_certificate", name="HSM Client Certificate")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceHSMClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMClientCertificateCreate,

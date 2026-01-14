@@ -27,9 +27,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// kafkaOrARNPattern validates Kafka URLs or ARNs for Lambda event source mappings. It's broken--allowing anything. Here is context:
+//
+// Original pattern (before ESC support, Jan 2026): $|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1})?:(\d{12})?:(.*)
+//
+// The intent of the original pattern appears to be to match:
+// 1. Empty string ($)
+// 2. OR kafka URL
+// 3. OR ARN
+//
+// However, the problem is that `.*` at the end consumes anything and the entire regex becomes meaningless.
+// See TestKafkaOrARNPattern test.
+//
+// This should be fixed but for backwards compatibility, not doing that ATM.
+//
+// Updating the broken, allows-anything regex to use canonical region pattern to support ESC regions like eusc-de-east-1.
+var kafkaOrARNPattern = `$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:(` + inttypes.CanonicalRegionPatternNoAnchors + `)?:(\d{12})?:(.*)`
 
 // @SDKResource("aws_lambda_event_source_mapping", name="Event Source Mapping")
 // @Tags(identifierAttribute="arn")
@@ -127,7 +145,7 @@ func resourceEventSourceMapping() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.Any(
 												verify.ValidARN,
-												validation.StringMatch(regexache.MustCompile(`$|kafka://([^.]([a-zA-Z0-9\-_.]{0,248}))|arn:(aws[a-zA-Z0-9-]*):([a-zA-Z0-9\-])+:([a-z]{2}((-gov)|(-iso([a-z]?)))?-[a-z]+-\d{1})?:(\d{12})?:(.*)`), "must be a valid ARN or kafka://broker/topic format"),
+												validation.StringMatch(regexache.MustCompile(kafkaOrARNPattern), "must be a valid ARN or kafka://broker/topic format"),
 											),
 										},
 									},
