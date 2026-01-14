@@ -295,7 +295,7 @@ func TestAccBillingView_dataFilterExpressionDimensions(t *testing.T) {
 		CheckDestroy:             testAccCheckViewDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{"123456789012"}),
+				Config: testAccViewConfig_dataFilterExpressionDimensions(rName, "LINKED_ACCOUNT", []string{acctest.Ct12Digit}),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &view1),
 					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
@@ -473,7 +473,7 @@ func testAccViewConfig_dataFilterExpressionTags(rName, tagKey string, tagValues 
 		if i > 0 {
 			tagValuesStr.WriteString(", ")
 		}
-		tagValuesStr.WriteString(fmt.Sprintf("%q", v))
+		fmt.Fprintf(&tagValuesStr, "%q", v)
 	}
 	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
@@ -496,7 +496,7 @@ func testAccViewConfig_dataFilterExpressionDimensions(rName, dimensionKey string
 		if i > 0 {
 			dimensionValuesStr.WriteString(", ")
 		}
-		dimensionValuesStr.WriteString(fmt.Sprintf("%q", v))
+		fmt.Fprintf(&dimensionValuesStr, "%q", v)
 	}
 	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
 resource "aws_billing_view" "test" {
