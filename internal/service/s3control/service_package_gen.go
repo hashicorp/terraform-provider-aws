@@ -37,6 +37,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Access Points",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newMultiRegionAccessPointsDataSource,
+			TypeName: "aws_s3control_multi_region_access_points",
+			Name:     "Multi Region Access Points",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
