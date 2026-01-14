@@ -6,7 +6,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
+	"github.com/YakDriver/regexache"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -107,7 +107,7 @@ func TestAccVPCSecurityGroupEgressRule_referencedSecurityGroupID_accountIDFormat
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -131,7 +131,7 @@ func TestAccVPCSecurityGroupEgressRule_referencedSecurityGroupID_accountIDFormat
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -168,7 +168,7 @@ func TestAccVPCSecurityGroupEgressRule_referencedSecurityGroupID_crossAccount_up
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -192,7 +192,7 @@ func TestAccVPCSecurityGroupEgressRule_referencedSecurityGroupID_crossAccount_up
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
