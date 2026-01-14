@@ -3003,7 +3003,7 @@ func userDataHashSum(userData string) string {
 		v = []byte(userData)
 	}
 
-	hash := sha1.Sum(v)
+	hash := sha1.Sum(v) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- AWS EC2 API uses SHA1 for user_data hashing, must match AWS behavior
 	return hex.EncodeToString(hash[:])
 }
 
