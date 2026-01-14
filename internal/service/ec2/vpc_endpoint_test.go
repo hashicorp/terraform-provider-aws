@@ -1201,6 +1201,36 @@ func TestAccVPCEndpoint_serviceNetwork(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_serviceNetworkWithExplicitIPAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_serviceNetworkWithIPAddressType(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint/vpce-.+`)),
+					// AWS API returns ip_address_type as uppercase
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpoint_serviceNetworkPrivateDNSOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
@@ -2679,6 +2709,48 @@ resource "aws_vpc_endpoint" "test" {
   subnet_ids          = [aws_subnet.test.id]
   vpc_endpoint_type   = "ServiceNetwork"
   vpc_id              = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCEndpointConfig_serviceNetworkWithIPAddressType(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.0.1.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpclattice_service_network" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  service_network_arn = aws_vpclattice_service_network.test.arn
+  subnet_ids          = [aws_subnet.test.id]
+  vpc_endpoint_type   = "ServiceNetwork"
+  vpc_id              = aws_vpc.test.id
+  ip_address_type     = "ipv4"
 
   tags = {
     Name = %[1]q
