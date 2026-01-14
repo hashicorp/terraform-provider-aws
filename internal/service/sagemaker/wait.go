@@ -43,6 +43,7 @@ const (
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
 	mlflowTrackingServerTimeout        = 45 * time.Minute
+	mlflowAppTimeout                   = 5 * time.Minute
 	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
@@ -745,4 +746,48 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 	}
 
 	return nil, err
+}
+func waitMlflowAppCreated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{"Creating"},
+		Target:  []string{"Created"},
+		Refresh: statusMlflowApp(ctx, conn, arn),
+		Timeout: mlflowAppTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+func waitMlflowAppUpdated(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeMlflowAppOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{"Updating"},
+		Target:  []string{"Updated"},
+		Refresh: statusMlflowApp(ctx, conn, arn),
+		Timeout: mlflowAppTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowAppOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+func waitMlflowAppDeleted(ctx context.Context, conn *sagemaker.Client, arn string) error {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: []string{"Created", "Deleting"},
+		Target:  []string{"Deleted"},
+		Refresh: statusMlflowApp(ctx, conn, arn),
+		Timeout: mlflowAppTimeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
 }

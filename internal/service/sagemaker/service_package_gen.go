@@ -174,6 +174,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  resourceMlflowApp,
+			TypeName: "aws_sagemaker_mlflow_app",
+			Name:     "Mlflow App",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceMlflowTrackingServer,
 			TypeName: "aws_sagemaker_mlflow_tracking_server",
 			Name:     "Mlflow Tracking Server",

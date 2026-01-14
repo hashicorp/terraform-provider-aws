@@ -20,6 +20,7 @@ var (
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
 	ResourceImageVersion                           = resourceImageVersion
+	ResourceMlflowApp                              = resourceMlflowApp
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
@@ -50,6 +51,7 @@ var (
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
+	FindMlflowAppByARN                        = findMlflowAppByARN
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
 	FindModelPackageGroupByName               = findModelPackageGroupByName
