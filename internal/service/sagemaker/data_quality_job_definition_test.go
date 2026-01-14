@@ -609,6 +609,7 @@ func testAccCheckDataQualityJobDefinitionDestroy(ctx context.Context) resource.T
 
 			return fmt.Errorf("SageMaker AI Data Quality Job Definition (%s) still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -617,14 +618,11 @@ func testAccCheckDataQualityJobDefinitionExists(ctx context.Context, n string) r
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker AI Data Quality Job Definition ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+
 		_, err := tfsagemaker.FindDataQualityJobDefinitionByName(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -792,6 +790,8 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
+
+  depends_on = [aws_iam_role.test.arn]
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
