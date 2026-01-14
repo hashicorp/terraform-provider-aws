@@ -26,10 +26,6 @@ func newDataSourceAccessPoints(context.Context) (datasource.DataSourceWithConfig
 	return &dataSourceAccessPoints{}, nil
 }
 
-const (
-	DSNameAccessPoints = "Access Points Data Source"
-)
-
 type dataSourceAccessPoints struct {
 	framework.DataSourceWithModel[dataSourceAccessPointsModel]
 }
