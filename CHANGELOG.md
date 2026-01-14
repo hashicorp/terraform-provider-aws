@@ -21,12 +21,20 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization ([#45909](https://github.com/hashicorp/terraform-provider-aws/issues/45909))
+* provider: When importing resources with `region` defined, in AWS European Sovereign Cloud, prevent failing due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_cloudfront_distribution: Fix `runtime error: invalid memory address or nil pointer dereference` panic when mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
 * resource/aws_cloudfront_distribution: Prevent mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_cloudwatch_event_rule: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_datazone_environment_profile: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
+* resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_lambda_event_source_mapping: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_pipes_pipe: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
+* resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs ([#45958](https://github.com/hashicorp/terraform-provider-aws/issues/45958))
 * resource/aws_route53recoverycontrolconfig_control_panel: Fix crash when create returns an error ([#45954](https://github.com/hashicorp/terraform-provider-aws/issues/45954))
 
 ## 6.28.0 (January 7, 2026)
