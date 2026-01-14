@@ -5,7 +5,7 @@ package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic resource ID generation only
 	"encoding/json"
 	"errors"
 	"fmt"
