@@ -277,8 +277,15 @@ The `transformation_lambda_configuration` block supports the following arguments
 
 The `parsing_configuration` configuration block supports the following arguments:
 
-* `parsing_strategy` - (Required) Currently only `BEDROCK_FOUNDATION_MODEL` is supported
+* `parsing_strategy` - (Required) The parsing strategy to use. Valid values: `BEDROCK_FOUNDATION_MODEL`, `BEDROCK_DATA_AUTOMATION`.
+* `bedrock_data_automation_configuration` - (Optional) Settings for using Amazon Bedrock Data Automation to parse documents. See [`bedrock_data_automation_configuration` block](#bedrock_data_automation_configuration-block) for details.
 * `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` block](#bedrock_foundation_model_configuration-block) for details.
+
+### `bedrock_data_automation_configuration` block
+
+The `bedrock_data_automation_configuration` configuration block supports the following arguments:
+
+* `parsing_modality` - (Optional, Forces new resource) Specifies whether to enable parsing of multimodal data, including both text and images. Valid value: `MULTIMODAL`.
 
 ### `bedrock_foundation_model_configuration` block
 
