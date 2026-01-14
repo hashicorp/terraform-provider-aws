@@ -264,13 +264,15 @@ func TestAccSageMakerMonitoringSchedule_monitoringAppSpecification(t *testing.T)
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
 						"monitoring_job_definition": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"monitoring_app_specification": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
-								"container_arguments":                 knownvalue.ListSizeExact(0),
-								"container_entrypoint":                knownvalue.ListSizeExact(0),
-								"image_uri":                           knownvalue.NotNull(),
-								"post_analytics_processor_source_uri": knownvalue.StringExact(""),
-								"record_preprocessor_source_uri":      knownvalue.StringExact(""),
-							})}),
+							"baseline":                     knownvalue.ListSizeExact(0),
+							names.AttrEnvironment:          knownvalue.Null(),
+							"monitoring_app_specification": knownvalue.ListSizeExact(1),
+							"monitoring_inputs":            knownvalue.ListSizeExact(1),
+							"monitoring_output_config":     knownvalue.ListSizeExact(1),
+							"monitoring_resources":         knownvalue.ListSizeExact(1),
+							"network_config":               knownvalue.ListSizeExact(0),
+							names.AttrRoleARN:              knownvalue.NotNull(),
+							"stopping_condition":           knownvalue.ListSizeExact(1),
 						})}),
 					})})),
 				},
@@ -417,6 +419,153 @@ resource "aws_sagemaker_data_quality_job_definition" "test" {
 `, rName)
 }
 
+func testAccMonitoringScheduleConfig_endpointBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "s3:GetObject",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.access.json
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "model.tar.gz"
+  source = "test-fixtures/sagemaker-tensorflow-serving-test-model.tar.gz"
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "sagemaker-tensorflow-serving"
+  image_tag       = "1.12-cpu"
+}
+
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    initial_instance_count = 1
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = "variant-1"
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 100
+
+    destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
+
+    capture_options {
+      capture_mode = "Input"
+    }
+    capture_options {
+      capture_mode = "Output"
+    }
+  }
+}
+
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
+  repository_name = "sagemaker-model-monitor-analyzer"
+  image_tag       = "latest"
+}
+
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name = %[1]q
+
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+
+  job_resources {
+    cluster_config {
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+
+  role_arn = aws_iam_role.test.arn
+}
+`, rName)
+}
+
 func testAccMonitoringScheduleConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_monitoring_schedule" "test" {
@@ -500,18 +649,43 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 }
 
 func testAccMonitoringScheduleConfig_monitoringAppSpecificationBasic(rName string) string {
-	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_endpointBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_monitoring_schedule" "test" {
   name = %[1]q
 
   monitoring_schedule_config {
-    monitoring_job_definition_name = aws_sagemaker_data_quality_job_definition.test.name
-    monitoring_type                = "DataQuality"
+    monitoring_type = "DataQuality"
 
     monitoring_job_definition {
       monitoring_app_specification {
         image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
       }
+
+      monitoring_inputs {
+        endpoint_input {
+          local_path    = "/opt/ml/processing/input"
+          endpoint_name = aws_sagemaker_endpoint.test.name
+        }
+      }
+
+      monitoring_output_config {
+        monitoring_outputs {
+          s3_output {
+            local_path = "/opt/ml/processing/output"
+            s3_uri     = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+          }
+        }
+      }
+
+      monitoring_resources {
+        cluster_config {
+          instance_count    = 1
+          instance_type     = "ml.t3.medium"
+          volume_size_in_gb = 20
+        }
+      }
+
+      role_arn = aws_iam_role.test.arn
     }
   }
 }

@@ -37,7 +37,7 @@ This resource supports the following arguments:
 ### monitoring_schedule_config
 
 * `monitoring_job_definition` - (Optional) Defines the monitoring job. Fields are documented below.
-* `monitoring_job_definition_name` - (Required) The name of the monitoring job definition to schedule.
+* `monitoring_job_definition_name` - (Optional) The name of the monitoring job definition to schedule.
 * `monitoring_type` - (Required) The type of the monitoring job definition to schedule. Valid values are `DataQuality`, `ModelQuality`, `ModelBias` or `ModelExplainability`
 * `schedule_config` - (Optional) Configures the monitoring schedule. Fields are documented below.
 
@@ -46,12 +46,12 @@ This resource supports the following arguments:
 * `baseline` - (Optional) Baseline configuration used to validate that the data conforms to the specified constraints and statistics. Fields are documented below.
 * `environment` - (Optional) Map of environment variables in the Docker container.
 * `monitoring_app_specification` - (Required) Configures the monitoring job to run a specified Docker container image. Fields are documented below.
-* `monitoring_input` - (Required) Inputs for the monitoring job. Fields are documented below.
+* `monitoring_inputs` - (Required) Inputs for the monitoring job. Fields are documented below.
 * `monitoring_output_config` - (Required) Outputs from the monitoring job to be uploaded to Amazon S3. Fields are documented below.
 * `monitoring_resources` - (Required) Identifies the resources, ML compute instances, and ML storage volumes to deploy for a monitoring job. Fields are documented below.
 * `network_config` - (Optional) Networking options for the monitoring job. Fields are documented below.
 * `role_arn` - (Required) ARN of an IAM role that Amazon SageMaker AI can assume to perform tasks on your behalf.
-* `stopping_condition` - (Optional) Networking options for the monitoring job. Fields are documented below.
+* `stopping_condition` - (Optional) How long the monitoring job is allowed to run. Fields are documented below.
 
 ### monitoring_app_specification
 
@@ -61,7 +61,7 @@ This resource supports the following arguments:
 * `post_analytics_processor_source_uri` - (Optional) Script that is called after analysis has been performed.
 * `record_preprocessor_source_uri` - (Optional) Script that is called per row prior to running analysis.
 
-### monitoring_input
+### monitoring_inputs
 
 * `batch_transform_input` - (Optional) Input object for the batch transform job. Fields are documented below.
 * `endpoint_input` - (Optional) Endpoint for a monitoring job. Fields are documented below.
@@ -111,9 +111,9 @@ This resource supports the following arguments:
 ### monitoring_output_config
 
 * `kms_key_id` - (Optional) AWS KMS key that Amazon SageMaker AI uses to encrypt the model artifacts at rest using Amazon S3 server-side encryption.
-* `monitoring_output` - (Required) Monitoring outputs for monitoring jobs. Fields are documented below.
+* `monitoring_outputs` - (Required) Monitoring outputs for monitoring jobs. Fields are documented below.
 
-### monitoring_output
+### monitoring_outputs
 
 * `s3_output` - (Required) Amazon S3 storage location where the results of a monitoring job are saved. Fields are documented below.
 
@@ -147,7 +147,7 @@ This resource supports the following arguments:
 
 ### stopping_condition
 
-* `max_runtime_in_seconds` - (Required) Maximum runtime allowed in seconds.
+* `max_runtime_in_seconds` - (Optional) Maximum runtime allowed in seconds.
 
 #### schedule_config
 

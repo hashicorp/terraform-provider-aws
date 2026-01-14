@@ -3,5 +3,9 @@ resource/aws_sagemaker_monitoring_schedule: Add `monitoring_schedule_config.moni
 ```
 
 ```release-note:enhancement
+resource/aws_sagemaker_monitoring_schedule: Make `monitoring_schedule_config.monitoring_job_definition_name` argument optional
+```
+
+```release-note:enhancement
 resource/aws_sagemaker_endpoint: Retry IAM eventual consistency errors on Create
 ```
