@@ -238,7 +238,10 @@ func TestAccRAMResourceShareAssociationExclusive_servicePrincipalWithSources(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareAssociationExclusiveDestroy(ctx),
@@ -336,6 +339,36 @@ func testAccCheckResourceShareAssociationExclusiveDestroy(ctx context.Context) r
 					return fmt.Errorf("RAM Resource Share Association Exclusive resources still exist for %s", resourceShareARN)
 				}
 			}
+		}
+
+		return nil
+	}
+}
+
+// testAccCaptureResourceShareARN captures the resource share ARN from terraform state for use in PreConfig.
+func testAccCaptureResourceShareARN(resourceName string, target *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+		*target = rs.Primary.Attributes["resource_share_arn"]
+		return nil
+	}
+}
+
+// testAccCheckResourceShareAssociationExclusiveResourceCount verifies the number of resource associations in AWS.
+func testAccCheckResourceShareAssociationExclusiveResourceCount(ctx context.Context, resourceShareARN *string, expectedCount int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+
+		_, resources, err := tfram.FindAssociationsForResourceShare(ctx, conn, *resourceShareARN)
+		if err != nil {
+			return err
+		}
+
+		if len(resources) != expectedCount {
+			return fmt.Errorf("expected %d resource associations, got %d", expectedCount, len(resources))
 		}
 
 		return nil
@@ -450,36 +483,6 @@ resource "aws_ram_resource_share_association_exclusive" "test" {
   resource_arns      = [aws_ec2_managed_prefix_list.test.arn, aws_ec2_managed_prefix_list.test2.arn]
 }
 `, rName))
-}
-
-// testAccCaptureResourceShareARN captures the resource share ARN from terraform state for use in PreConfig.
-func testAccCaptureResourceShareARN(resourceName string, target *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-		*target = rs.Primary.Attributes["resource_share_arn"]
-		return nil
-	}
-}
-
-// testAccCheckResourceShareAssociationExclusiveResourceCount verifies the number of resource associations in AWS.
-func testAccCheckResourceShareAssociationExclusiveResourceCount(ctx context.Context, resourceShareARN *string, expectedCount int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
-
-		_, resources, err := tfram.FindAssociationsForResourceShare(ctx, conn, *resourceShareARN)
-		if err != nil {
-			return err
-		}
-
-		if len(resources) != expectedCount {
-			return fmt.Errorf("expected %d resource associations, got %d", expectedCount, len(resources))
-		}
-
-		return nil
-	}
 }
 
 func testAccResourceShareAssociationExclusiveConfig_servicePrincipalWithSources(rName string) string {
