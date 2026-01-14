@@ -39,6 +39,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Catalog Table Optimizer",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newInboundIntegrationResource,
+			TypeName: "aws_glue_inbound_integration",
+			Name:     "Inbound Integration",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
+			Factory:  newIntegrationTablePropertiesResource,
+			TypeName: "aws_glue_integration_table_properties",
+			Name:     "Integration Table Properties",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 
