@@ -4,8 +4,9 @@
 package conns
 
 import (
+	"crypto/rand"
 	"math"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -49,38 +50,12 @@ func (c *v1CompatibleBackoff) BackoffDelay(attempt int, err error) (time.Duratio
 }
 
 func getJitterDelay(duration time.Duration) time.Duration {
-	return time.Duration(seededRand.Int63n(int64(duration)) + int64(duration))
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(duration)))
+	if err != nil {
+		// Fallback to maximum jitter if crypto/rand fails
+		n = big.NewInt(int64(duration))
+	}
+	return time.Duration(n.Int64() + int64(duration))
 }
 
-// lockedSource is a thread-safe implementation of rand.Source.
-type lockedSource struct {
-	src rand.Source
-}
-
-func (r *lockedSource) Int63() (n int64) {
-	r.lock()
-	n = r.src.Int63()
-	r.unlock()
-	return
-}
-
-func (r *lockedSource) Seed(seed int64) {
-	r.lock()
-	r.src.Seed(seed)
-	r.unlock()
-}
-
-func (r *lockedSource) key() string {
-	return "backoff-rand-source"
-}
-
-func (r *lockedSource) lock() {
-	GlobalMutexKV.Lock(r.key())
-}
-
-func (r *lockedSource) unlock() {
-	GlobalMutexKV.Unlock(r.key())
-}
-
-// seededRand is a new RNG using a thread safe implementation of rand.Source.
-var seededRand = rand.New(&lockedSource{src: rand.NewSource(time.Now().UnixNano())})
+// Removed lockedSource and seededRand - no longer needed with crypto/rand
