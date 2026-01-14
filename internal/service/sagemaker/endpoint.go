@@ -354,11 +354,11 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
-	input := &sagemaker.DescribeEndpointInput{
+	input := sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(name),
 	}
 
-	output, err := findEndpoint(ctx, conn, input)
+	output, err := findEndpoint(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

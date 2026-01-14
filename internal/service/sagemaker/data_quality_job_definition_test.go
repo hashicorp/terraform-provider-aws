@@ -785,8 +785,6 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       capture_mode = "Output"
     }
   }
-
-  depends_on = [aws_iam_role_policy.test]
 }
 
 resource "aws_sagemaker_endpoint" "test" {
