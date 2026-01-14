@@ -216,7 +216,7 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
 		if syntaxErr, ok := errs.As[*json.SyntaxError](err); ok {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: syntax error at byte offset %d", k, syntaxErr.Offset))
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
 		} else {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
 		}
