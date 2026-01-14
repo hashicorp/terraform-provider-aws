@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_ram_resource_association_exclusive
+aws_ram_resource_associations_exclusive
 ```

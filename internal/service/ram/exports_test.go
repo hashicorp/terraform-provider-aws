@@ -5,12 +5,12 @@ package ram
 
 // Exports for use in tests only.
 var (
-	ResourcePrincipalAssociation              = resourcePrincipalAssociation
-	ResourceResourceAssociation               = resourceResourceAssociation
-	ResourceResourceShare                     = resourceResourceShare
-	ResourceResourceShareAccepter             = resourceResourceShareAccepter
-	ResourceResourceShareAssociationExclusive = newResourceShareAssociationExclusiveResource
-	ResourceSharingWithOrganization           = resourceSharingWithOrganization
+	ResourcePrincipalAssociation               = resourcePrincipalAssociation
+	ResourceResourceAssociation                = resourceResourceAssociation
+	ResourceResourceShare                      = resourceResourceShare
+	ResourceResourceShareAccepter              = resourceResourceShareAccepter
+	ResourceResourceShareAssociationsExclusive = newResourceShareAssociationsExclusiveResource
+	ResourceSharingWithOrganization            = resourceSharingWithOrganization
 
 	FindAssociationsForResourceShare         = findAssociationsForResourceShare
 	FindPrincipalAssociationByTwoPartKey     = findPrincipalAssociationByTwoPartKey

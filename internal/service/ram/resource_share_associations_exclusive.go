@@ -29,18 +29,18 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// @FrameworkResource("aws_ram_resource_share_association_exclusive", name="Resource Share Association Exclusive")
+// @FrameworkResource("aws_ram_resource_share_associations_exclusive", name="Resource Share Associations Exclusive")
 // @ArnIdentity("resource_share_arn")
-func newResourceShareAssociationExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceShareAssociationExclusiveResource{}, nil
+func newResourceShareAssociationsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceShareAssociationsExclusiveResource{}, nil
 }
 
-type resourceShareAssociationExclusiveResource struct {
-	framework.ResourceWithModel[resourceShareAssociationExclusiveResourceModel]
+type resourceShareAssociationsExclusiveResource struct {
+	framework.ResourceWithModel[resourceShareAssociationsExclusiveResourceModel]
 	framework.WithImportByIdentity
 }
 
-func (r *resourceShareAssociationExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceShareAssociationsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"principals": schema.SetAttribute{
@@ -87,8 +87,8 @@ func (r *resourceShareAssociationExclusiveResource) Schema(ctx context.Context, 
 // ValidateConfig validates the resource configuration.
 // - Service principals cannot be mixed with other principal types (account IDs, ARNs)
 // - Sources can only be specified when principals contains only service principals
-func (r *resourceShareAssociationExclusiveResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var config resourceShareAssociationExclusiveResourceModel
+func (r *resourceShareAssociationsExclusiveResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config resourceShareAssociationsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -163,8 +163,8 @@ func (r *resourceShareAssociationExclusiveResource) ValidateConfig(ctx context.C
 	}
 }
 
-func (r *resourceShareAssociationExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceShareAssociationExclusiveResourceModel
+func (r *resourceShareAssociationsExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceShareAssociationsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -199,8 +199,8 @@ func (r *resourceShareAssociationExclusiveResource) Create(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceShareAssociationExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceShareAssociationExclusiveResourceModel
+func (r *resourceShareAssociationsExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceShareAssociationsExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -235,8 +235,8 @@ func (r *resourceShareAssociationExclusiveResource) Read(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceShareAssociationExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceShareAssociationExclusiveResourceModel
+func (r *resourceShareAssociationsExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceShareAssociationsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -265,8 +265,8 @@ func (r *resourceShareAssociationExclusiveResource) Update(ctx context.Context, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceShareAssociationExclusiveResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceShareAssociationExclusiveResourceModel
+func (r *resourceShareAssociationsExclusiveResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceShareAssociationsExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -281,7 +281,7 @@ func (r *resourceShareAssociationExclusiveResource) Delete(ctx context.Context, 
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("reading RAM Resource Share (%s) associations", resourceShareARN), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("reading RAM Resource Share (%s) Associations", resourceShareARN), err.Error())
 		return
 	}
 
@@ -303,7 +303,7 @@ func (r *resourceShareAssociationExclusiveResource) Delete(ctx context.Context, 
 }
 
 // syncAssociations synchronizes the configured principals and resources with AWS.
-func (r *resourceShareAssociationExclusiveResource) syncAssociations(ctx context.Context, conn *ram.Client, resourceShareARN string, currentPrincipals, currentResources, wantPrincipals, wantResources, wantSources []string) diag.Diagnostics {
+func (r *resourceShareAssociationsExclusiveResource) syncAssociations(ctx context.Context, conn *ram.Client, resourceShareARN string, currentPrincipals, currentResources, wantPrincipals, wantResources, wantSources []string) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Calculate differences
@@ -383,7 +383,7 @@ func findAssociationsForResourceShare(ctx context.Context, conn *ram.Client, res
 	return principals, resources, nil
 }
 
-type resourceShareAssociationExclusiveResourceModel struct {
+type resourceShareAssociationsExclusiveResourceModel struct {
 	framework.WithRegionModel
 	Principals       fwtypes.SetOfString `tfsdk:"principals"`
 	ResourceARNs     fwtypes.SetOfString `tfsdk:"resource_arns"`

@@ -27,9 +27,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceShareAssociationExclusiveResource,
-			TypeName: "aws_ram_resource_share_association_exclusive",
-			Name:     "Resource Share Association Exclusive",
+			Factory:  newResourceShareAssociationsExclusiveResource,
+			TypeName: "aws_ram_resource_share_associations_exclusive",
+			Name:     "Resource Share Associations Exclusive",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 			Identity: inttypes.RegionalARNIdentityNamed("resource_share_arn"),
 			Import: inttypes.FrameworkImport{

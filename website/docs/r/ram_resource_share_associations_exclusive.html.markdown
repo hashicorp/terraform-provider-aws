@@ -1,12 +1,12 @@
 ---
 subcategory: "RAM (Resource Access Manager)"
 layout: "aws"
-page_title: "AWS: aws_ram_resource_share_association_exclusive"
+page_title: "AWS: aws_ram_resource_share_associations_exclusive"
 description: |-
   Terraform resource for maintaining exclusive management of principal and resource associations for an AWS RAM (Resource Access Manager) Resource Share.
 ---
 
-# Resource: aws_ram_resource_share_association_exclusive
+# Resource: aws_ram_resource_share_associations_exclusive
 
 Terraform resource for maintaining exclusive management of principal and resource associations for an AWS RAM (Resource Access Manager) Resource Share.
 
@@ -35,7 +35,7 @@ resource "aws_subnet" "example" {
   cidr_block = "10.0.1.0/24"
 }
 
-resource "aws_ram_resource_share_association_exclusive" "example" {
+resource "aws_ram_resource_share_associations_exclusive" "example" {
   resource_share_arn = aws_ram_resource_share.example.arn
 
   principals = [
@@ -66,7 +66,7 @@ resource "aws_subnet" "example" {
   cidr_block = cidrsubnet(aws_vpc.example.cidr_block, 8, count.index)
 }
 
-resource "aws_ram_resource_share_association_exclusive" "example" {
+resource "aws_ram_resource_share_associations_exclusive" "example" {
   resource_share_arn = aws_ram_resource_share.example.arn
 
   principals = [
@@ -102,7 +102,7 @@ resource "aws_acmpca_certificate_authority" "example" {
   }
 }
 
-resource "aws_ram_resource_share_association_exclusive" "example" {
+resource "aws_ram_resource_share_associations_exclusive" "example" {
   resource_share_arn = aws_ram_resource_share.example.arn
 
   principals = [
@@ -127,7 +127,7 @@ To automatically remove any configured associations, omit the `principals` and `
 ~> This will not **prevent** associations from being created via Terraform (or any other interface). This resource enables bringing associations into a configured state, however, this reconciliation happens only when `apply` is proactively run.
 
 ```terraform
-resource "aws_ram_resource_share_association_exclusive" "example" {
+resource "aws_ram_resource_share_associations_exclusive" "example" {
   resource_share_arn = aws_ram_resource_share.example.arn
 }
 ```
@@ -150,9 +150,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - The Amazon Resource Name (ARN) of the resource share (same as `resource_share_arn`).
+This resource exports no additional attributes.
 
 ## Import
 
@@ -160,7 +158,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_ram_resource_share_association_exclusive.example
+  to = aws_ram_resource_share_associations_exclusive.example
   id = "arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12"
 }
 ```
@@ -168,5 +166,5 @@ import {
 Using `terraform import`, import RAM Resource Share Association Exclusive using the `resource_share_arn`. For example:
 
 ```console
-% terraform import aws_ram_resource_share_association_exclusive.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12
+% terraform import aws_ram_resource_share_associations_exclusive.example arn:aws:ram:eu-west-1:123456789012:resource-share/73da1ab9-b94a-4ba3-8eb4-45917f7f4b12
 ```
