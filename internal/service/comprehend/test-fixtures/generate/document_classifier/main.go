@@ -9,7 +9,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/rand" // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-weak-prng -- Deterministic PRNG required for reproducible test fixture generation
 	"os"
 
 	"github.com/jaswdr/faker/v2"
