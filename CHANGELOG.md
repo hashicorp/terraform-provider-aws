@@ -2,17 +2,42 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_organizations_entity_path` ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
+* **New Data Source:** `aws_s3control_access_points` ([#45949](https://github.com/hashicorp/terraform-provider-aws/issues/45949))
 * **New Data Source:** `aws_wafv2_managed_rule_group` ([#45899](https://github.com/hashicorp/terraform-provider-aws/issues/45899))
+* **New List Resource:** `aws_cleanrooms_collaboration` ([#45953](https://github.com/hashicorp/terraform-provider-aws/issues/45953))
+* **New List Resource:** `aws_cleanrooms_configured_table` ([#45956](https://github.com/hashicorp/terraform-provider-aws/issues/45956))
+* **New List Resource:** `aws_cloudfront_key_value_store` ([#45957](https://github.com/hashicorp/terraform-provider-aws/issues/45957))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
+
+ENHANCEMENTS:
+
+* data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
+* resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
+* resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
+* resource/aws_osis_pipeline: Updates `pipeline_configuration_body` maximum length validation to 2,621,440 bytes to align with AWS API specification. ([#44881](https://github.com/hashicorp/terraform-provider-aws/issues/44881))
+* resource/aws_vpc_ipam_resource_discovery: Add `organizational_unit_exclusion` argument ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
 
 BUG FIXES:
 
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization ([#45909](https://github.com/hashicorp/terraform-provider-aws/issues/45909))
+* provider: When importing resources with `region` defined, in AWS European Sovereign Cloud, prevent failing due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_bcmdataexports_export: Fix `Provider produced inconsistent result after apply` error when querying `CARBON_EMISSIONS` table without `table_configurations` ([#45972](https://github.com/hashicorp/terraform-provider-aws/issues/45972))
 * resource/aws_cloudfront_distribution: Fix `runtime error: invalid memory address or nil pointer dereference` panic when mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
 * resource/aws_cloudfront_distribution: Prevent mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_cloudwatch_event_rule: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_datazone_environment_profile: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
+* resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_lambda_event_source_mapping: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_lambda_invocation: Fix panic when deleting or replacing resource with empty input in CRUD lifecycle scope ([#45967](https://github.com/hashicorp/terraform-provider-aws/issues/45967))
+* resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
+* resource/aws_pipes_pipe: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
+* resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs ([#45958](https://github.com/hashicorp/terraform-provider-aws/issues/45958))
+* resource/aws_route53recoverycontrolconfig_control_panel: Fix crash when create returns an error ([#45954](https://github.com/hashicorp/terraform-provider-aws/issues/45954))
 
 ## 6.28.0 (January 7, 2026)
 

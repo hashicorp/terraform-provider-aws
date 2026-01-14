@@ -14,6 +14,7 @@ resource "aws_bcmdataexports_export" "test" {
           "INCLUDE_RESOURCES"                     = "FALSE",
           "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
           "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+          "BILLING_VIEW_ARN"                      = "arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"
         }
       }
     }
@@ -41,6 +42,9 @@ resource "aws_bcmdataexports_export" "test" {
 }
 
 # testAccExportConfigBase
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_s3_bucket_policy" "bucket" {
   bucket = aws_s3_bucket.test.bucket

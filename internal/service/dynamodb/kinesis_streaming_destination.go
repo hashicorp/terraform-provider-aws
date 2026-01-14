@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -188,7 +187,7 @@ func findKinesisDataStreamDestinationByTwoPartKey(ctx context.Context, conn *dyn
 	}
 
 	if output.DestinationStatus == awstypes.DestinationStatusDisabled {
-		return nil, &sdkretry.NotFoundError{}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -208,9 +207,8 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 	output, err := conn.DescribeKinesisStreamingDestination(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -225,8 +223,8 @@ func findKinesisDataStreamDestinations(ctx context.Context, conn *dynamodb.Clien
 	return tfslices.Filter(output.KinesisDataStreamDestinations, filter), nil
 }
 
-func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Client, streamARN, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusKinesisStreamingDestination(conn *dynamodb.Client, streamARN, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := &dynamodb.DescribeKinesisStreamingDestinationInput{
 			TableName: aws.String(tableName),
 		}
@@ -248,11 +246,11 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DestinationStatusDisabled, awstypes.DestinationStatusEnabling),
 		Target:  enum.Slice(awstypes.DestinationStatusActive),
 		Timeout: timeout,
-		Refresh: statusKinesisStreamingDestination(ctx, conn, streamARN, tableName),
+		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -270,11 +268,11 @@ func waitKinesisStreamingDestinationDisabled(ctx context.Context, conn *dynamodb
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DestinationStatusActive, awstypes.DestinationStatusDisabling),
 		Target:  enum.Slice(awstypes.DestinationStatusDisabled),
 		Timeout: timeout,
-		Refresh: statusKinesisStreamingDestination(ctx, conn, streamARN, tableName),
+		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

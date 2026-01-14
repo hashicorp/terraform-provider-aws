@@ -158,6 +158,9 @@ func buildInput(d *schema.ResourceData, action invocationAction) ([]byte, error)
 		return nil, err
 	}
 
+	if newInputMap == nil {
+		newInputMap = make(map[string]any)
+	}
 	newInputMap[d.Get("terraform_key").(string)] = map[string]any{
 		names.AttrAction: action,
 		"prev_input":     oldInputMap,

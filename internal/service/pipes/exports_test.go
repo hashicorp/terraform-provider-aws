@@ -7,5 +7,7 @@ package pipes
 var (
 	ResourcePipe = resourcePipe
 
-	FindPipeByName = findPipeByName
+	FindPipeByName           = findPipeByName
+	SMKOrARNPattern          = smkOrARNPattern
+	SecretsManagerARNPattern = secretsManagerARNPattern
 )
