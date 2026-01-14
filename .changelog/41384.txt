@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `bedrock_data_automation_configuration` block with `parsing_modality` attribute to `parsing_configuration`
+```
