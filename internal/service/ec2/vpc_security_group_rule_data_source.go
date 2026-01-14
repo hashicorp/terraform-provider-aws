@@ -118,7 +118,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.IPProtocol = fwflex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = fwflex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID(ctx))
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID(ctx), types.StringNull())
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = tftags.FlattenStringValueMap(ctx, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
