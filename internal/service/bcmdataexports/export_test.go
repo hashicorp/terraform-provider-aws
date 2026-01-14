@@ -78,6 +78,40 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	})
 }
 
+func TestAccBCMDataExportsExport_carbonEmissions(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var export bcmdataexports.GetExportOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bcmdataexports_export.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExportDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExportConfig_carbonEmissions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT usage_account_id FROM CARBON_EMISSIONS"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBCMDataExportsExport_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -618,4 +652,36 @@ resource "aws_bcmdataexports_export" "test" {
   }
 }
 `, rName, query))
+}
+
+func testAccExportConfig_carbonEmissions(rName string) string {
+	return acctest.ConfigCompose(
+		testAccExportConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_bcmdataexports_export" "test" {
+  export {
+    name = %[1]q
+    data_query {
+      query_statement = "SELECT usage_account_id FROM CARBON_EMISSIONS"
+    }
+    destination_configurations {
+      s3_destination {
+        s3_bucket = aws_s3_bucket.test.bucket
+        s3_prefix = aws_s3_bucket.test.bucket_prefix
+        s3_region = aws_s3_bucket.test.region
+        s3_output_configurations {
+          overwrite   = "OVERWRITE_REPORT"
+          format      = "PARQUET"
+          compression = "GZIP"
+          output_type = "CUSTOM"
+        }
+      }
+    }
+
+    refresh_cadence {
+      frequency = "SYNCHRONOUS"
+    }
+  }
+}
+`, rName))
 }

@@ -498,7 +498,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
 }
 
 type s3OutputConfigurations struct {
