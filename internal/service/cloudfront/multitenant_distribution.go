@@ -524,7 +524,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
 					},
