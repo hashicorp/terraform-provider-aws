@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -152,7 +152,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
-	if !d.IsNewResource() && intretry.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool CIDR (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -180,7 +180,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	ipamPool, err := findIPAMPoolByID(ctx, conn, poolID)
-	if intretry.NotFound(err) {
+	if retry.NotFound(err) {
 		log.Printf("[DEBUG] IPAM Pool (%s) not found, skipping IPAM Pool CIDR (%s) delete", poolID, d.Id())
 		return diags
 	} else if err != nil {

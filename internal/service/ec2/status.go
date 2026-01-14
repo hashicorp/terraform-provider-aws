@@ -14,7 +14,7 @@ import (
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -1299,7 +1299,7 @@ func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client
 		for _, allocation := range allocations {
 			allocationCIDR := aws.ToString(allocation.Cidr)
 
-			if types.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
+			if inttypes.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
 				return allocation, ipamPoolCIDRAllocationsExist, nil
 			}
 		}
