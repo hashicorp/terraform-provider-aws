@@ -619,8 +619,8 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   tenant_config {}
 
   origin {
-    id                       = "${aws_s3_bucket.test.bucket}.s3.us-east-1.amazonaws.com"
-    domain_name              = "${aws_s3_bucket.test.bucket}.s3.us-east-1.amazonaws.com"
+    id                       = aws_s3_bucket.test.bucket_regional_domain_name
+    domain_name              = aws_s3_bucket.test.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.test.id
 
     connection_attempts         = 3
@@ -629,7 +629,7 @@ resource "aws_cloudfront_multitenant_distribution" "test" {
   }
 
   default_cache_behavior {
-    target_origin_id       = "${aws_s3_bucket.test.bucket}.s3.us-east-1.amazonaws.com"
+    target_origin_id       = aws_s3_bucket.test.bucket_regional_domain_name
     viewer_protocol_policy = "redirect-to-https"
     cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     compress               = true
