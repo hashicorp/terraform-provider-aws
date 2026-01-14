@@ -46,7 +46,7 @@ func resourceMlflowTrackingServer() *schema.Resource {
 			"artifact_store_uri": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validModelDataURL,
+				ValidateFunc: validHTTPSOrS3URI,
 			},
 			"automatic_model_registration": {
 				Type:     schema.TypeBool,
