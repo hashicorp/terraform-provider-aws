@@ -524,7 +524,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"origin_id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -1088,7 +1088,7 @@ type vpcOriginConfigModel struct {
 type originGroupModel struct {
 	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
 	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
-	OriginID         types.String                                           `tfsdk:"origin_id"`
+	ID               types.String                                           `tfsdk:"id"`
 }
 
 type failoverCriteriaModel struct {
