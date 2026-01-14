@@ -5,7 +5,7 @@ package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic ID generation only
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
