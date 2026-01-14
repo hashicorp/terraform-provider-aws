@@ -18,6 +18,9 @@ ENHANCEMENTS:
 * resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
 * resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
 * resource/aws_osis_pipeline: Updates `pipeline_configuration_body` maximum length validation to 2,621,440 bytes to align with AWS API specification. ([#44881](https://github.com/hashicorp/terraform-provider-aws/issues/44881))
+* resource/aws_sagemaker_endpoint: Retry IAM eventual consistency errors on Create ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
+* resource/aws_sagemaker_monitoring_schedule: Add `monitoring_schedule_config.monitoring_job_definition` argument ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
+* resource/aws_sagemaker_monitoring_schedule: Make `monitoring_schedule_config.monitoring_job_definition_name` argument optional ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
 * resource/aws_vpc_ipam_resource_discovery: Add `organizational_unit_exclusion` argument ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
 
 BUG FIXES:
