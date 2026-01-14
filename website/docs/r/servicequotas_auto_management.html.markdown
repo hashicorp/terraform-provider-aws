@@ -11,8 +11,8 @@ Manages AWS Service Quotas Automatic Management.
 
 ~> **Note:** Due to AWS API limitations, the `notification_arn` attribute cannot be removed once set without recreating the resource. Removing this value from your configuration will trigger resource replacement.
 
-
 ## Example Usage
+
 ```terraform
 resource "aws_servicequotas_auto_management" "example" {
   opt_in_type = "NotifyOnly"

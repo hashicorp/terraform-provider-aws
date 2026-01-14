@@ -225,7 +225,7 @@ func getAutoManagementConfiguration(ctx context.Context, conn *servicequotas.Cli
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil
@@ -239,7 +239,7 @@ type resourceAutoManagementModel struct {
 	OptInType       types.String                             `tfsdk:"opt_in_type"`
 }
 
-func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.ListOfString], diags *diag.Diagnostics) map[string][]string {
+func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.ListOfString], diags *diag.Diagnostics) map[string][]string { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	if tfMap.IsNull() || tfMap.IsUnknown() {
 		// Return an empty map to clear a configured exclusion list in the API; nil would leave it unchanged
 		return make(map[string][]string, 0)
@@ -252,7 +252,7 @@ func expandExclusionList(ctx context.Context, tfMap fwtypes.MapValueOf[fwtypes.L
 	return apiMap
 }
 
-func flattenExclusionList(ctx context.Context, apiMap map[string][]sqtypes.QuotaInfo) fwtypes.MapValueOf[fwtypes.ListOfString] {
+func flattenExclusionList(ctx context.Context, apiMap map[string][]sqtypes.QuotaInfo) fwtypes.MapValueOf[fwtypes.ListOfString] { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	if len(apiMap) == 0 {
 		return fwtypes.NewMapValueOfNull[fwtypes.ListOfString](ctx)
 	}
