@@ -784,6 +784,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  dataSourceVPCEndpoints,
+			TypeName: "aws_vpc_endpoints",
+			Name:     "Endpoints",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  dataSourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
