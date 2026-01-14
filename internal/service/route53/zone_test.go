@@ -573,6 +573,12 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
+				ResourceName:            resourceName2,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
 				// Disable accelerated recovery
 				Config: testAccZoneConfig_enableAcceleratedRecovery(zoneName1, zoneName2, false),
 				Check: resource.ComposeTestCheckFunc(
@@ -591,6 +597,39 @@ func TestAccRoute53Zone_enableAcceleratedRecovery(t *testing.T) {
 					testAccCheckZoneExists(ctx, resourceName2, &zone2),
 					resource.TestCheckResourceAttr(resourceName1, "enable_accelerated_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName2, "enable_accelerated_recovery", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Zone_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone1, zone2 route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	zoneName1 := acctest.RandomDomainName()
+	zoneName2 := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName1),
+				),
+			},
+			{
+				Config: testAccZoneConfig_basic(zoneName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName2),
+					// Verify that a new zone was created (different zone ID)
+					testAccCheckZoneRecreated(&zone1, &zone2),
 				),
 			},
 		},
@@ -718,6 +757,20 @@ func testAccCheckDomainName(zone *route53.GetHostedZoneOutput, domain string) re
 		}
 
 		return fmt.Errorf("Invalid domain name. Expected %s is %s", domain, *zone.HostedZone.Name)
+	}
+}
+
+func testAccCheckZoneRecreated(before, after *route53.GetHostedZoneOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before.HostedZone.Id == nil || after.HostedZone.Id == nil {
+			return fmt.Errorf("Missing hosted zone ID")
+		}
+
+		if aws.ToString(before.HostedZone.Id) == aws.ToString(after.HostedZone.Id) {
+			return fmt.Errorf("Expected zone to be recreated, but zone ID remained the same: %s", aws.ToString(before.HostedZone.Id))
+		}
+
+		return nil
 	}
 }
 
