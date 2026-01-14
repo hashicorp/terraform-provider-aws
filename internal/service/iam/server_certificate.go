@@ -325,7 +325,7 @@ func normalizeCert(cert any) string {
 		return ""
 	}
 
-	cleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(rawCert))))
+	cleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(rawCert)))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- SHA1 used for backward compatibility with provider v3.0.0 state normalization, not cryptographic security
 	return hex.EncodeToString(cleanVal[:])
 }
 
