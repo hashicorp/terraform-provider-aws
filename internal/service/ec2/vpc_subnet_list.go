@@ -189,7 +189,9 @@ func listSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubne
 			}
 
 			for _, subnet := range page.Subnets {
-				yield(subnet, nil)
+				if !yield(subnet, nil) {
+					return
+				}
 			}
 		}
 	}
