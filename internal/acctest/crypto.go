@@ -9,7 +9,7 @@ import (
 	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- Test code generating public key fingerprints for acceptance tests
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/hex"
@@ -258,7 +258,7 @@ func TLSRSAX509SelfSignedCACertificatePEM(t *testing.T, keyPem string) string {
 		t.Fatal(err)
 	}
 
-	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
+	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes) // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
@@ -317,7 +317,7 @@ func TLSRSAX509SelfSignedCACertificateForRolesAnywhereTrustAnchorPEM(t *testing.
 		t.Fatal(err)
 	}
 
-	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes)
+	publicKeyBytesSha1 := sha1.Sum(publicKeyBytes) // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for X.509 SubjectKeyId in test certificates, standard practice
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
