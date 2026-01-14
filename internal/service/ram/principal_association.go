@@ -143,11 +143,14 @@ func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) error {
+func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.AssociateResourceShareInput{
 		ClientToken:      aws.String(sdkid.UniqueId()),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
+	}
+	if len(sources) > 0 {
+		input.Sources = sources
 	}
 	_, err := conn.AssociateResourceShare(ctx, &input)
 
@@ -167,11 +170,14 @@ func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Clie
 	return nil
 }
 
-func deleteResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string) error {
+func deleteResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.DisassociateResourceShareInput{
 		ClientToken:      aws.String(sdkid.UniqueId()),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
+	}
+	if len(sources) > 0 {
+		input.Sources = sources
 	}
 	_, err := conn.DisassociateResourceShare(ctx, &input)
 
