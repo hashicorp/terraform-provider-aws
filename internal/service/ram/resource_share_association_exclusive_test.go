@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
-	nftypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
+	networkfirewalltypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -46,9 +46,11 @@ func TestAccRAMResourceShareAssociationExclusive_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_share_arn"),
+				ImportStateVerifyIdentifierAttribute: "resource_share_arn",
 			},
 		},
 	})
@@ -101,8 +103,8 @@ func TestAccRAMResourceShareAssociationExclusive_exclusiveManagement(t *testing.
 			}
 			// Clean up the injected firewall policy
 			if injectedFirewallPolicyARN != "" {
-				nfConn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
-				_, _ = nfConn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
+				conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+				_, _ = conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 					FirewallPolicyArn: aws.String(injectedFirewallPolicyARN),
 				})
 			}
@@ -120,9 +122,11 @@ func TestAccRAMResourceShareAssociationExclusive_exclusiveManagement(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_share_arn"),
+				ImportStateVerifyIdentifierAttribute: "resource_share_arn",
 			},
 			{
 				// Inject a Network Firewall policy outside of Terraform
@@ -134,7 +138,7 @@ func TestAccRAMResourceShareAssociationExclusive_exclusiveManagement(t *testing.
 					policyName := rName + "-injected"
 					createPolicyOutput, err := nfConn.CreateFirewallPolicy(ctx, &networkfirewall.CreateFirewallPolicyInput{
 						FirewallPolicyName: aws.String(policyName),
-						FirewallPolicy: &nftypes.FirewallPolicy{
+						FirewallPolicy: &networkfirewalltypes.FirewallPolicy{
 							StatelessDefaultActions:         []string{"aws:drop"},
 							StatelessFragmentDefaultActions: []string{"aws:drop"},
 						},
@@ -198,11 +202,6 @@ func TestAccRAMResourceShareAssociationExclusive_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccResourceShareAssociationExclusiveConfig_updateResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAssociationExclusiveExists(ctx, resourceName),
@@ -211,9 +210,11 @@ func TestAccRAMResourceShareAssociationExclusive_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_share_arn"),
+				ImportStateVerifyIdentifierAttribute: "resource_share_arn",
 			},
 			{
 				Config: testAccResourceShareAssociationExclusiveConfig_updatePrincipals(rName),
@@ -224,9 +225,11 @@ func TestAccRAMResourceShareAssociationExclusive_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_share_arn"),
+				ImportStateVerifyIdentifierAttribute: "resource_share_arn",
 			},
 		},
 	})
@@ -260,10 +263,12 @@ func TestAccRAMResourceShareAssociationExclusive_servicePrincipalWithSources(t *
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"sources"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "resource_share_arn"),
+				ImportStateVerifyIdentifierAttribute: "resource_share_arn",
+				ImportStateVerifyIgnore:              []string{"sources"},
 			},
 		},
 	})
