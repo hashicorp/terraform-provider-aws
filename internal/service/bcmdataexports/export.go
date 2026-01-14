@@ -121,6 +121,7 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 				"table_configurations": schema.MapAttribute{
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
