@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_ram_resource_share_association_exclusive",
 			Name:     "Resource Share Association Exclusive",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentityNamed("resource_share_arn", inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentityNamed("resource_share_arn"),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
