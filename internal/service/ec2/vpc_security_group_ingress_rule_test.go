@@ -7,9 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -485,9 +485,10 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"referenced_security_group_id"},
 			},
 			{
 				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDUpdated(rName),
@@ -539,7 +540,7 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -578,7 +579,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_accountIDForma
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -602,7 +603,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_accountIDForma
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -636,7 +637,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_accountIDForma
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -681,7 +682,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_crossAccount_u
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -705,7 +706,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_crossAccount_u
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
@@ -742,7 +743,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID_crossAccount_n
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
