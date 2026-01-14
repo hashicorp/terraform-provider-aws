@@ -234,7 +234,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
-	resultHash := fmt.Sprintf("%x", md5.Sum(payload))
+	resultHash := fmt.Sprintf("%x", md5.Sum(payload)) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5 -- MD5 used for non-cryptographic resource ID generation only
 	id, err := flex.FlattenResourceId([]string{functionName, qualifier, resultHash}, invocationResourceIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
