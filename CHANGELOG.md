@@ -7,6 +7,7 @@ FEATURES:
 * **New Data Source:** `aws_s3control_access_points` ([#45949](https://github.com/hashicorp/terraform-provider-aws/issues/45949))
 * **New Data Source:** `aws_s3control_multi_region_access_points` ([#45974](https://github.com/hashicorp/terraform-provider-aws/issues/45974))
 * **New Data Source:** `aws_wafv2_managed_rule_group` ([#45899](https://github.com/hashicorp/terraform-provider-aws/issues/45899))
+* **New List Resource:** `aws_appflow_flow` ([#45980](https://github.com/hashicorp/terraform-provider-aws/issues/45980))
 * **New List Resource:** `aws_cleanrooms_collaboration` ([#45953](https://github.com/hashicorp/terraform-provider-aws/issues/45953))
 * **New List Resource:** `aws_cleanrooms_configured_table` ([#45956](https://github.com/hashicorp/terraform-provider-aws/issues/45956))
 * **New List Resource:** `aws_cloudfront_key_value_store` ([#45957](https://github.com/hashicorp/terraform-provider-aws/issues/45957))
