@@ -65,21 +65,6 @@ resource "aws_elasticache_user" "test" {
 }
 ```
 
-```terraform
-resource "aws_elasticache_user" "test" {
-  user_id       = "testUserId"
-  user_name     = "testUserName"
-  access_string = "on ~* +@all"
-  engine        = "redis"
-
-  authentication_mode {
-    type                 = "password"
-    passwords_wo         = var.elasticache_password
-    passwords_wo_version = 1  # Increment to trigger password update
-  }
-}
-```
-
 ## Argument Reference
 
 The following arguments are required:
@@ -102,8 +87,6 @@ The following arguments are optional:
 ### authentication_mode Configuration Block
 
 * `passwords` - (Optional) Specifies the passwords to use for authentication if `type` is set to `password`.
-* `passwords_wo` - (Optional) Write-only password if `type` is set to `password`. This argument is not stored in state. Conflicts with `passwords`. Requires Terraform 1.11+.
-* `passwords_wo_version` - (Optional) Version number for `passwords_wo`. Increment this value to trigger a password update. Required when using `passwords_wo`.
 * `type` - (Required) Specifies the authentication type. Possible options are: `password`, `no-password-required` or `iam`.
 
 ## Attribute Reference

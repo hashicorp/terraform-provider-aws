@@ -74,19 +74,6 @@ func resourceUser() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"passwords_wo": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							WriteOnly:     true,
-							Sensitive:     true,
-							ConflictsWith: []string{"authentication_mode.0.passwords"},
-							RequiredWith:  []string{"authentication_mode.0.passwords_wo_version"},
-						},
-						"passwords_wo_version": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							RequiredWith: []string{"authentication_mode.0.passwords_wo"},
-						},
 						"password_count": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -276,7 +263,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 			input.AccessString = aws.String(d.Get("access_string").(string))
 		}
 
-		if d.HasChanges("authentication_mode", "authentication_mode.0.passwords_wo_version") {
+		if d.HasChange("authentication_mode") {
 			if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.AuthenticationMode = expandAuthenticationMode(d, v.([]any)[0].(map[string]any))
 			}
@@ -470,11 +457,7 @@ func expandAuthenticationMode(d *schema.ResourceData, tfMap map[string]any) *aws
 
 	apiObject := &awstypes.AuthenticationMode{}
 
-	// Check for write-only password first
-	passwordsWO, _ := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("authentication_mode").IndexInt(0).GetAttr("passwords_wo"))
-	if passwordsWO != "" {
-		apiObject.Passwords = []string{passwordsWO}
-	} else if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Passwords = flex.ExpandStringValueSet(v)
 	}
 
