@@ -36,7 +36,7 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableOptimizerConfig_basic(rName),
+				Config: testAccCatalogTableOptimizerConfig_basic(rName, "startegy", 10, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -44,6 +44,9 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "startegy"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "10"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "50"),
 				),
 			},
 			{
@@ -72,7 +75,7 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableOptimizerConfig_update(rName, true),
+				Config: testAccCatalogTableOptimizerConfig_update(rName, true, "bundle", 15, 80),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -80,10 +83,13 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "bundle"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "15"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "80"),
 				),
 			},
 			{
-				Config: testAccCatalogTableOptimizerConfig_update(rName, false),
+				Config: testAccCatalogTableOptimizerConfig_update(rName, false, "sort", 25, 47),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
@@ -91,6 +97,9 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.strategy", "sort"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.min_input_files", "25"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.compaction_configuration.0.iceberg_configuration.0.delete_file_threshold", "47"),
 				),
 			},
 		},
@@ -112,7 +121,7 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableOptimizerConfig_basic(rName),
+				Config: testAccCatalogTableOptimizerConfig_basic(rName, "strategy", 0, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalogTableOptimizer, resourceName),
@@ -527,9 +536,10 @@ resource "aws_lakeformation_permissions" "test" {
 }`, rName)
 }
 
-func testAccCatalogTableOptimizerConfig_basic(rName string) string {
+func testAccCatalogTableOptimizerConfig_basic(rName string, strategy string, minInputFiles int, deleteFileThreshold int) string {
 	return acctest.ConfigCompose(
-		testAccCatalogTableOptimizerConfig_baseConfig(rName), `
+		testAccCatalogTableOptimizerConfig_baseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_glue_catalog_table_optimizer" "test" {
   catalog_id    = data.aws_caller_identity.current.account_id
   database_name = aws_glue_catalog_database.test.name
@@ -539,12 +549,18 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = true
+	compaction_configuration {
+      iceberg_configuration {
+        strategy              = %[1]s
+		min_input_files       = %[2]d
+		delete_file_threshold = %[3]d
+      }
+    }
   }
 }
-`,
-	)
+`, strategy, minInputFiles, deleteFileThreshold))
 }
-func testAccCatalogTableOptimizerConfig_update(rName string, enabled bool) string {
+func testAccCatalogTableOptimizerConfig_update(rName string, enabled bool, strategy string, minInputFiles int, deleteFileThreshold int) string {
 	return acctest.ConfigCompose(
 		testAccCatalogTableOptimizerConfig_baseConfig(rName),
 		fmt.Sprintf(`
@@ -557,9 +573,16 @@ resource "aws_glue_catalog_table_optimizer" "test" {
   configuration {
     role_arn = aws_iam_role.test.arn
     enabled  = %[1]t
+	compaction_configuration {
+      iceberg_configuration {
+        strategy              = %[2]s
+		min_input_files       = %[3]d
+		delete_file_threshold = %[4]d
+      }
+    }
   }
 }
-`, enabled))
+`, enabled, strategy, minInputFiles, deleteFileThreshold))
 }
 
 func testAccCatalogTableOptimizerConfig_retentionConfiguration(rName string, retentionPeriod int) string {
