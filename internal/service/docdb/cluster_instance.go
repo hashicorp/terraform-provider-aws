@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -73,9 +74,9 @@ func resourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 			"certificate_rotation_restart": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
@@ -321,7 +322,9 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("ca_cert_identifier") {
 			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-			input.CertificateRotationRestart = aws.Bool(d.Get("certificate_rotation_restart").(bool))
+			if v, null, _ := nullable.Bool(d.Get("certificate_rotation_restart").(string)).ValueBool(); !null {
+				input.CertificateRotationRestart = aws.Bool(v)
+			}
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {
