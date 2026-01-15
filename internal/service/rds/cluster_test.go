@@ -2883,7 +2883,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_snapshotIdentifier_IAMDatabaseAuthentication(t *testing.T) {
+func TestAccRDSCluster_SnapshotIdentifier_IAMDatabaseAuthentication(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2904,7 +2904,7 @@ func TestAccRDSCluster_snapshotIdentifier_IAMDatabaseAuthentication(t *testing.T
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_snapshotID_IAMDatabseAuthenticationEnabled(rName),
+				Config: testAccClusterConfig_SnapshotID_IAMDatabseAuthenticationEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
@@ -6719,7 +6719,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
-func testAccClusterConfig_snapshotID_IAMDatabseAuthenticationEnabled(rName string) string {
+func testAccClusterConfig_SnapshotID_IAMDatabseAuthenticationEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "source" {
   cluster_identifier  = "%[1]s-source"
