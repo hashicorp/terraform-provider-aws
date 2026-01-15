@@ -46,6 +46,10 @@ func (o tagOptions) OmitEmpty() bool {
 	return o.Contains("omitempty")
 }
 
+func (o tagOptions) NoExpand() bool {
+	return o.Contains("noexpand")
+}
+
 func (o tagOptions) NoFlatten() bool {
 	return o.Contains("noflatten")
 }

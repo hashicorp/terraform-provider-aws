@@ -1438,7 +1438,15 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			continue
 		}
 		toFieldName := toField.Name
+		_, toFieldOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toFieldOpts.NoExpand() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noexpand target field", map[string]any{
+				logAttrKeySourceFieldname: fromFieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
