@@ -424,7 +424,7 @@ func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine  = %[1]q
-  version = "8.0.32"
+  version = "8.4.6" # As of 2026-01-15, latest bug fix version with upgrade targets. End of support is 2026-09-30.
 }
 `, tfrds.InstanceEngineMySQL)
 }
