@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -276,6 +277,11 @@ func findModelCard(ctx context.Context, conn *sagemaker.Client, input *sagemaker
 func statusModelCard(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findModelCardByName(ctx, conn, name)
+
+		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Model card is being deleted") {
+			var zero sagemaker.DescribeModelCardOutput
+			return &zero, string(awstypes.ModelCardProcessingStatusDeleteInprogress), nil
+		}
 
 		if retry.NotFound(err) {
 			return nil, "", nil
