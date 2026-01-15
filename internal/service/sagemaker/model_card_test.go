@@ -190,7 +190,7 @@ func TestAccSageMakerModelCard_update(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "model_card_name"),
 				ImportStateVerifyIdentifierAttribute: "model_card_name",
-				ImportStateVerifyIgnore:              []string{"content"},
+				ImportStateVerifyIgnore:              []string{names.AttrContent},
 			},
 			{
 				Config: testAccModelCardConfig_content2(rName),

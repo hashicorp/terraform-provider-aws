@@ -84,7 +84,7 @@ func (r *modelCardResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"kms_key_id": schema.StringAttribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 						},
