@@ -438,12 +438,13 @@ resource "aws_docdb_cluster_instance" "test" {
 func testAccClusterInstanceConfig_modified(rName string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName), fmt.Sprintf(`
 resource "aws_docdb_cluster_instance" "test" {
-  identifier                 = %[1]q
-  cluster_identifier         = aws_docdb_cluster.test.id
-  instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
-  apply_immediately          = true
-  auto_minor_version_upgrade = false
-  promotion_tier             = 3
+  identifier                   = %[1]q
+  cluster_identifier           = aws_docdb_cluster.test.id
+  instance_class               = data.aws_docdb_orderable_db_instance.test.instance_class
+  apply_immediately            = true
+  auto_minor_version_upgrade   = false
+  certificate_rotation_restart = true
+  promotion_tier               = 3
 }
 `, rName))
 }
