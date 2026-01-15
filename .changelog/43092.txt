@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_replication_config: Fix `InvalidResourceStateFault: Replication for Replication Config: {resource_name} is in MODIFYING state and cannot start` error when modifying DMS Task config in-place.
+```

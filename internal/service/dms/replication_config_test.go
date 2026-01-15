@@ -293,6 +293,18 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_identifier", rName),
 				),
 			},
+			{
+				Config: testAccReplicationConfigConfig_updateWithRestart(rName, "cdc", 8, 64, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dms", "replication-config:{resource_identifier}"),
+					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "64"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "8"),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "start_replication", acctest.CtTrue),
+				),
+			},
 		},
 	})
 }
@@ -596,6 +608,32 @@ resource "aws_dms_replication_config" "test" {
   }
 }
 `, rName, replicationType, maxCapacity, minCapacity))
+}
+
+func testAccReplicationConfigConfig_updateWithRestart(rName, replicationType string, minCapacity, maxCapacity int, startReplication bool) string {
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_ValidDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_config" "test" {
+  replication_config_identifier = %[1]q
+  resource_identifier           = %[1]q
+  replication_type              = %[2]q
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+
+  start_replication = %[5]t
+
+  compute_config {
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "%[3]d"
+    min_capacity_units           = "%[4]d"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+
+  depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
+}
+`, rName, replicationType, maxCapacity, minCapacity, startReplication))
 }
 
 func testAccReplicationConfigConfig_startReplication(rName string, start bool) string {
