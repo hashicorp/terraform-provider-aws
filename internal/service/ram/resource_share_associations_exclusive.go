@@ -97,13 +97,8 @@ func (r *resourceShareAssociationsExclusiveResource) ValidateConfig(ctx context.
 	// Skip validation if principals is null or unknown
 	if config.Principals.IsNull() || config.Principals.IsUnknown() {
 		// If sources is specified but principals is not, that's an error
-		if !config.Sources.IsNull() && !config.Sources.IsUnknown() && !config.Sources.ContainsUnknownElements() {
-			var sources []string
-			resp.Diagnostics.Append(config.Sources.ElementsAs(ctx, &sources, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			if len(sources) > 0 {
+		if !config.Sources.IsNull() && config.Sources.IsFullyKnown() {
+			if sources := fwflex.ExpandFrameworkStringValueSet(ctx, config.Sources); len(sources) > 0 {
 				resp.Diagnostics.AddAttributeError(
 					path.Root("sources"),
 					"Invalid Configuration",
@@ -115,15 +110,11 @@ func (r *resourceShareAssociationsExclusiveResource) ValidateConfig(ctx context.
 	}
 
 	// Skip validation if any element in the set is unknown (e.g., references to other resources)
-	if config.Principals.ContainsUnknownElements() {
+	if !config.Principals.IsFullyKnown() {
 		return
 	}
 
-	var principals []string
-	resp.Diagnostics.Append(config.Principals.ElementsAs(ctx, &principals, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	principals := fwflex.ExpandFrameworkStringValueSet(ctx, config.Principals)
 
 	// Count service principals and non-service principals
 	var servicePrincipals, otherPrincipals []string
@@ -146,14 +137,8 @@ func (r *resourceShareAssociationsExclusiveResource) ValidateConfig(ctx context.
 	}
 
 	// Validate sources - only allowed when principals contains only service principals
-	if !config.Sources.IsNull() && !config.Sources.IsUnknown() && !config.Sources.ContainsUnknownElements() {
-		var sources []string
-		resp.Diagnostics.Append(config.Sources.ElementsAs(ctx, &sources, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if len(sources) > 0 && len(servicePrincipals) == 0 {
+	if !config.Sources.IsNull() && config.Sources.IsFullyKnown() {
+		if sources := fwflex.ExpandFrameworkStringValueSet(ctx, config.Sources); len(sources) > 0 && len(servicePrincipals) == 0 {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("sources"),
 				"Invalid Configuration",
