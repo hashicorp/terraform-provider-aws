@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_organizations_entity_path` ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
+* **New Data Source:** `aws_s3_bucket_object_lock_configuration` ([#45990](https://github.com/hashicorp/terraform-provider-aws/issues/45990))
 * **New Data Source:** `aws_s3_bucket_replication_configuration` ([#42662](https://github.com/hashicorp/terraform-provider-aws/issues/42662))
 * **New Data Source:** `aws_s3control_access_points` ([#45949](https://github.com/hashicorp/terraform-provider-aws/issues/45949))
 * **New Data Source:** `aws_s3control_multi_region_access_points` ([#45974](https://github.com/hashicorp/terraform-provider-aws/issues/45974))
