@@ -48,7 +48,7 @@ This resource supports the following arguments:
 
 ### security_config
 
-* `kms_key_id` - (Optional) KMS key ARN.
+* `kms_key_id` - (Required) KMS key ARN.
 
 ## Attribute Reference
 

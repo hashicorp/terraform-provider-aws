@@ -207,6 +207,39 @@ func TestAccSageMakerModelCard_update(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModelCard_securityConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model_card.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelCardDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelCardConfig_securityConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelCardExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "model_card_name"),
+				ImportStateVerifyIdentifierAttribute: "model_card_name",
+			},
+		},
+	})
+}
+
 func testAccCheckModelCardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -331,6 +364,27 @@ resource "aws_sagemaker_model_card" "test" {
   }
 }
 EOF
+}
+`, rName)
+}
+
+func testAccModelCardConfig_securityConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model_card" "test" {
+  model_card_name   = %[1]q
+  model_card_status = "Draft"
+
+  content = "{}"
+
+  security_config {
+    kms_key_id = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 `, rName)
 }

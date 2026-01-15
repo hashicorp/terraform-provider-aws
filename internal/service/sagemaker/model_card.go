@@ -90,7 +90,7 @@ func (r *modelCardResource) Schema(ctx context.Context, request resource.SchemaR
 					Attributes: map[string]schema.Attribute{
 						names.AttrKMSKeyID: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
-							Optional:   true,
+							Required:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
