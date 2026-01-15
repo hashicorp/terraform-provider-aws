@@ -441,6 +441,27 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 512),
 						},
+						"capacity_reservation_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_preference": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+									},
+									"ml_reservation_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -624,6 +645,27 @@ func resourceEndpointConfiguration() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 512),
+						},
+						"capacity_reservation_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_reservation_preference": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+									},
+									"ml_reservation_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -916,6 +958,10 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.InferenceAmiVersion = awstypes.ProductionVariantInferenceAmiVersion(v)
 		}
 
+		if v, ok := data["capacity_reservation_config"].([]any); ok && len(v) > 0 {
+			l.CapacityReservationConfig = expandCapacityReservationConfig(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -978,6 +1024,10 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 		if i.ManagedInstanceScaling != nil {
 			l["managed_instance_scaling"] = flattenManagedInstanceScaling(i.ManagedInstanceScaling)
+		}
+
+		if i.CapacityReservationConfig != nil {
+			l["capacity_reservation_config"] = flattenCapacityReservationConfig(i.CapacityReservationConfig)
 		}
 
 		result = append(result, l)
@@ -1271,6 +1321,26 @@ func expandManagedInstanceScaling(configured []any) *awstypes.ProductionVariantM
 	return c
 }
 
+func expandCapacityReservationConfig(configured []any) *awstypes.ProductionVariantCapacityReservationConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]any)
+
+	c := &awstypes.ProductionVariantCapacityReservationConfig{}
+
+	if v, ok := m["capacity_reservation_preference"].(string); ok {
+		c.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
+	}
+
+	if v, ok := m["ml_reservation_arn"].(string); ok {
+		c.MlReservationArn = aws.String(v)
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *awstypes.AsyncInferenceConfig) []map[string]any {
 	if config == nil {
 		return []map[string]any{}
@@ -1418,6 +1488,24 @@ func flattenManagedInstanceScaling(config *awstypes.ProductionVariantManagedInst
 
 	if config.MaxInstanceCount != nil {
 		cfg["max_instance_count"] = aws.ToInt32(config.MaxInstanceCount)
+	}
+
+	return []map[string]any{cfg}
+}
+
+func flattenCapacityReservationConfig(config *awstypes.ProductionVariantCapacityReservationConfig) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	cfg := map[string]any{}
+
+	if config.CapacityReservationPreference != "" {
+		cfg["capacity_reservation_preference"] = config.CapacityReservationPreference
+	}
+
+	if config.MlReservationArn != nil {
+		cfg["ml_reservation_arn"] = aws.ToString(config.MlReservationArn)
 	}
 
 	return []map[string]any{cfg}
