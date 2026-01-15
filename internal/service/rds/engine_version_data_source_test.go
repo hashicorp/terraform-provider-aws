@@ -94,17 +94,17 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferred(),
+				Config: testAccEngineVersionDataSourceConfig_preferred_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.4.7"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.4.7"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferred2(),
+				Config: testAccEngineVersionDataSourceConfig_preferred_partialVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.44"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.44"),
 				),
 			},
 		},
@@ -429,21 +429,28 @@ data "aws_rds_engine_version" "test" {
 `, tfrds.InstanceEngineMySQL)
 }
 
-func testAccEngineVersionDataSourceConfig_preferred() string {
+func testAccEngineVersionDataSourceConfig_preferred_basic() string {
+	// Versions
+	// 85.9.12: does not exist
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.4.6: End of support is 2026-09-30.
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  preferred_versions = ["85.9.12", "8.4.7", "8.4.6"]
 }
 `, tfrds.InstanceEngineMySQL)
 }
 
-func testAccEngineVersionDataSourceConfig_preferred2() string {
+func testAccEngineVersionDataSourceConfig_preferred_partialVersion() string {
+	// Versions
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.0.44: lastest 8.0.x as of 2026-01-15. End of support is 2026-07-31.
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
   version            = "8.0"
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  preferred_versions = ["8.4.7", "8.0.44"]
 }
 `, tfrds.InstanceEngineMySQL)
 }
