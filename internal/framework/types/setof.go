@@ -139,10 +139,18 @@ func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
 }
 
-func (v SetValueOf[T]) ContainsUnknownElements() bool {
-	return tfslices.Any(v.Elements(), func(v attr.Value) bool {
-		return v.IsUnknown()
-	})
+// IsFullyKnown returns true if `v` all its elements are known.
+func (v SetValueOf[T]) IsFullyKnown() bool {
+	switch {
+	case v.IsUnknown():
+		return false
+	case v.IsNull():
+		return true
+	default:
+		return tfslices.All(v.Elements(), func(v attr.Value) bool {
+			return !v.IsUnknown()
+		})
+	}
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {
