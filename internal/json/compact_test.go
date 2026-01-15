@@ -11,6 +11,8 @@ import (
 )
 
 func TestCompactString(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		testName   string
 		input      string
