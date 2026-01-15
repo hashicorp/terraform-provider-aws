@@ -225,11 +225,13 @@ func (r *resourceNetwork) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"kms_access": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
 				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
 			},
 			"sts_access": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				CustomType:  fwtypes.StringEnumType[odbtypes.Access](),
 				Description: "Specifies the configuration for Amazon S3 access from the ODB network.",
 			},
