@@ -274,7 +274,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_latest_FromPreferredVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_engine_version.test"
 
@@ -285,26 +285,42 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest(true, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
+				Config: testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(true, `"16.10", "15.15", "14.19", "13.23", "18.1", "10.17"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "15.4"),
+					// resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "18.1"),
+					// Version 16.10 was *created* after 18.1, so `latest` unfortunately picks it
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "16.10"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest(false, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
+				Config: testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(false, `"16.10", "15.15", "14.19", "13.23", "18.1", "10.17"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "13.9"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "16.10"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_latest_OfVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
+				Config: testAccEngineVersionDataSourceConfig_latest_OfVersion(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineMySQL, "8.0"),
+				Config: testAccEngineVersionDataSourceConfig_latest_OfVersion(tfrds.InstanceEngineMySQL, "8.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
@@ -534,7 +550,7 @@ data "aws_rds_engine_version" "test" {
 `, engine, engineMode)
 }
 
-func testAccEngineVersionDataSourceConfig_latest(latest bool, preferredVersions string) string {
+func testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(latest bool, preferredVersions string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
@@ -544,7 +560,7 @@ data "aws_rds_engine_version" "test" {
 `, tfrds.InstanceEngineAuroraPostgreSQL, latest, preferredVersions)
 }
 
-func testAccEngineVersionDataSourceConfig_latest2(engine, majorVersion string) string {
+func testAccEngineVersionDataSourceConfig_latest_OfVersion(engine, majorVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine  = %[1]q
