@@ -61,18 +61,13 @@ func sweepVectorBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.S
 	var input s3vectors.ListVectorBucketsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := s3vectors.NewListVectorBucketsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
+	for v, err := range listVectorBuckets(ctx, conn, &input) {
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.VectorBuckets {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newVectorBucketResource, client,
-				framework.NewAttribute("vector_bucket_arn", aws.ToString(v.VectorBucketArn))))
-		}
+		sweepResources = append(sweepResources, framework.NewSweepResource(newVectorBucketResource, client,
+			framework.NewAttribute("vector_bucket_arn", aws.ToString(v.VectorBucketArn))))
 	}
 
 	return sweepResources, nil
