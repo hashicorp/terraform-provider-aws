@@ -162,6 +162,51 @@ func TestAccSageMakerModelCard_tags(t *testing.T) {
 	})
 }
 
+func TestAccSageMakerModelCard_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model_card.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelCardDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelCardConfig_content1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelCardExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "model_card_name"),
+				ImportStateVerifyIdentifierAttribute: "model_card_name",
+				ImportStateVerifyIgnore:              []string{"content"},
+			},
+			{
+				Config: testAccModelCardConfig_content2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelCardExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckModelCardDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -242,4 +287,50 @@ resource "aws_sagemaker_model_card" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccModelCardConfig_content1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model_card" "test" {
+  model_card_name   = %[1]q
+  model_card_status = "PendingReview"
+
+  content = <<EOF
+{
+  "business_details": {
+    "business_problem": "Quality"
+  },
+  "intended_uses": {
+    "intended_uses": "Testing"
+  },
+  "additional_information": {
+    "caveats_and_recommendations": "Use this"
+  }
+}
+EOF
+}
+`, rName)
+}
+
+func testAccModelCardConfig_content2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_model_card" "test" {
+  model_card_name   = %[1]q
+  model_card_status = "Approved"
+
+  content = <<EOF
+{
+  "business_details": {
+    "business_problem": "Quality"
+  },
+  "intended_uses": {
+    "intended_uses": "Testing"
+  },
+  "additional_information": {
+    "caveats_and_recommendations": "Do not use this"
+  }
+}
+EOF
+}
+`, rName)
 }

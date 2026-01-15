@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -114,6 +115,8 @@ func (r *modelCardResource) Create(ctx context.Context, request resource.CreateR
 	}
 
 	// Additional fields.
+	content, _ := tfjson.CompactString(fwflex.StringValueFromFramework(ctx, data.Content))
+	input.Content = aws.String(content)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateModelCard(ctx, &input)
@@ -187,6 +190,10 @@ func (r *modelCardResource) Update(ctx context.Context, request resource.UpdateR
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Additional fields.
+		content, _ := tfjson.CompactString(fwflex.StringValueFromFramework(ctx, new.Content))
+		input.Content = aws.String(content)
 
 		_, err := conn.UpdateModelCard(ctx, &input)
 
@@ -314,7 +321,7 @@ func waitModelCardDeleted(ctx context.Context, conn *sagemaker.Client, name stri
 
 type modelCardResourceModel struct {
 	framework.WithRegionModel
-	Content         jsontypes.Normalized                                          `tfsdk:"content"`
+	Content         jsontypes.Normalized                                          `tfsdk:"content" autoflex:",noexpand"`
 	ModelCardARN    types.String                                                  `tfsdk:"model_card_arn"`
 	ModelCardName   types.String                                                  `tfsdk:"model_card_name"`
 	ModelCardStatus fwtypes.StringEnum[awstypes.ModelCardStatus]                  `tfsdk:"model_card_status"`
