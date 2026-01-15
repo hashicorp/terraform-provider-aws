@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway VPC Attachment.
 
@@ -72,8 +73,10 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the attachment.
 * `appliance_mode_support` - Whether Appliance Mode support is enabled.
 * `dns_support` - Whether DNS support is enabled.
+* `security_group_referencing_support` - Whether Security Group Referencing Support is enabled.
 * `id` - EC2 Transit Gateway VPC Attachment identifier
 * `ipv6_support` - Whether IPv6 support is enabled.
 * `subnet_ids` - Identifiers of EC2 Subnets.
@@ -88,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-1163f41ecbd71e0e8d7980fd48db7828f6a894bd96414a472ab369bf6fdfcc81 -->
+<!-- cache-key: cdktf-0.20.8 input-46b7856d6655a940e7efff0701abb0ee49163fafb8b4b34b15cd2332d16d6daf -->

@@ -76,6 +76,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `activeDirectoryConfiguration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `fileSystemId` - (Required) The ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) The name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.
@@ -195,4 +196,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d3b95f27ec74c5d3851ed948c98d87377e96401e8a1dfea122f7e07724736eb7 -->
+<!-- cache-key: cdktf-0.20.8 input-62226a366aa4059478844de8b20992dfb9f3e8d6f45e664a51438118c541486a -->

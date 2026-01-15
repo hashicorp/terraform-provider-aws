@@ -1,6 +1,7 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+# tflint-ignore: terraform_unused_declarations
 data "aws_acm_certificate" "test" {
   domain = aws_acm_certificate.test.domain_name
 }

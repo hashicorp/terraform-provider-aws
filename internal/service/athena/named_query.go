@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -11,16 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_athena_named_query")
+// @SDKResource("aws_athena_named_query", name="Named Query")
 func resourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamedQueryCreate,
@@ -62,7 +63,7 @@ func resourceNamedQuery() *schema.Resource {
 	}
 }
 
-func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
@@ -92,13 +93,13 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceNamedQueryRead(ctx, d, meta)...)
 }
 
-func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	namedQuery, err := findNamedQueryByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,14 +118,15 @@ func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	log.Printf("[INFO] Deleting Athena Named Query: %s", d.Id())
-	_, err := conn.DeleteNamedQuery(ctx, &athena.DeleteNamedQueryInput{
+	input := athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteNamedQuery(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Athena Named Query (%s): %s", d.Id(), err)
@@ -141,7 +143,7 @@ func findNamedQueryByID(ctx context.Context, conn *athena.Client, id string) (*t
 	output, err := conn.GetNamedQuery(ctx, input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -152,7 +154,7 @@ func findNamedQueryByID(ctx context.Context, conn *athena.Client, id string) (*t
 	}
 
 	if output == nil || output.NamedQuery == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NamedQuery, nil

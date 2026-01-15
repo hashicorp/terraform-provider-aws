@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package keyspaces
@@ -13,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,8 +45,6 @@ func resourceKeyspace() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -59,21 +59,59 @@ func resourceKeyspace() *schema.Resource {
 					"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
+			"replication_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.Rs](),
+						},
+						"region_list": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 6,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("replication_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
+		input.ReplicationSpecification = &types.ReplicationSpecification{
+			ReplicationStrategy: types.Rs(tfMap["replication_strategy"].(string)),
+		}
+
+		if v, ok := tfMap["region_list"].(*schema.Set); ok && v.Len() > 0 {
+			input.ReplicationSpecification.RegionList = flex.ExpandStringValueSet(v)
+		}
 	}
 
 	_, err := conn.CreateKeyspace(ctx, input)
@@ -84,7 +122,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findKeyspaceByName(ctx, conn, d.Id())
 	})
 
@@ -95,14 +133,13 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceKeyspaceRead(ctx, d, meta)...)
 }
 
-func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspace, err := findKeyspaceByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Keyspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -114,23 +151,26 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, keyspace.ResourceArn)
 	d.Set(names.AttrName, keyspace.KeyspaceName)
+	d.Set("replication_specification", []any{map[string]any{
+		"region_list":          keyspace.ReplicationRegions,
+		"replication_strategy": keyspace.ReplicationStrategy,
+	}})
 
 	return diags
 }
 
-func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceKeyspaceRead(ctx, d, meta)
 }
 
-func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete),
-		func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ConflictException](ctx, d.Timeout(schema.TimeoutDelete),
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteKeyspace(ctx, &keyspaces.DeleteKeyspaceInput{
 				KeyspaceName: aws.String(d.Id()),
 			})
@@ -145,7 +185,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return findKeyspaceByName(ctx, conn, d.Id())
 	})
 
@@ -165,8 +205,7 @@ func findKeyspaceByName(ctx context.Context, conn *keyspaces.Client, name string
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -175,7 +214,7 @@ func findKeyspaceByName(ctx context.Context, conn *keyspaces.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

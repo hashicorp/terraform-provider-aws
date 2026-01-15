@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `securityGroupIds` - (Optional) One or more security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint. Up to 5 security groups can be provided.
 
 ## Attribute Reference
@@ -96,4 +97,4 @@ Using `terraform import`, import OpenSearchServerless Vpc Endpointa using the `i
 % terraform import aws_opensearchserverless_vpc_endpoint.example vpce-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b9fcf6e6b2846dfbeed5befbc44e2dec7f3e97c4887cfb35c50e0ab28f293279 -->
+<!-- cache-key: cdktf-0.20.8 input-b22b2e4c1a2d036439e2ae85d248a37d3420956a49abfe831b2a25eb2b819c17 -->

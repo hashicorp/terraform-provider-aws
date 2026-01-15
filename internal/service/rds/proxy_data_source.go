@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -59,7 +59,15 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"default_auth_scheme": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"endpoint_network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,6 +91,10 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"target_connection_network_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -101,7 +113,7 @@ func dataSourceProxy() *schema.Resource {
 	}
 }
 
-func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -116,11 +128,14 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
+	d.Set("default_auth_scheme", dbProxy.DefaultAuthScheme)
 	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
+	d.Set("endpoint_network_type", dbProxy.EndpointNetworkType)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
+	d.Set("target_connection_network_type", dbProxy.TargetConnectionNetworkType)
 	d.Set(names.AttrVPCID, dbProxy.VpcId)
 	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)

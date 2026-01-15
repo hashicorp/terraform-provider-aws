@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,6 +51,10 @@ func resourceBasePathMapping() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"domain_name_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"stage_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,24 +63,32 @@ func resourceBasePathMapping() *schema.Resource {
 	}
 }
 
-func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	domainName, basePath := d.Get(names.AttrDomainName).(string), d.Get("base_path").(string)
-	id := basePathMappingCreateResourceID(domainName, basePath)
-	input := &apigateway.CreateBasePathMappingInput{
+	input := apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(domainName),
 		BasePath:   aws.String(basePath),
 		Stage:      aws.String(d.Get("stage_name").(string)),
 	}
 
+	var id string
+	if v, ok := d.GetOk("domain_name_id"); ok {
+		domainNameID := v.(string)
+		input.DomainNameId = aws.String(domainNameID)
+		id = basePathMappingCreateResourceID(domainName, basePath, domainNameID)
+	} else {
+		id = basePathMappingCreateResourceID(domainName, basePath, "")
+	}
+
 	const (
 		timeout = 30 * time.Second
 	)
-	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (interface{}, error) {
-		return conn.CreateBasePathMapping(ctx, input)
+	_, err := tfresource.RetryWhenIsA[any, *types.BadRequestException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.CreateBasePathMapping(ctx, &input)
 	})
 
 	if err != nil {
@@ -88,18 +100,18 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName, basePath, err := basePathMappingParseResourceID(d.Id())
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	mapping, err := findBasePathMappingByTwoPartKey(ctx, conn, domainName, basePath)
+	mapping, err := findBasePathMappingByThreePartKey(ctx, conn, domainName, basePath, domainNameID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Base Path Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -109,37 +121,29 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Base Path Mapping (%s): %s", d.Id(), err)
 	}
 
+	d.Set("api_id", mapping.RestApiId)
 	mappingBasePath := aws.ToString(mapping.BasePath)
 	if mappingBasePath == emptyBasePathMappingValue {
 		mappingBasePath = ""
 	}
-
-	d.Set("api_id", mapping.RestApiId)
 	d.Set("base_path", mappingBasePath)
 	d.Set(names.AttrDomainName, domainName)
+	d.Set("domain_name_id", domainNameID)
 	d.Set("stage_name", mapping.Stage)
 
 	return diags
 }
 
-func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName, basePath, err := basePathMappingParseResourceID(d.Id())
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	operations := make([]types.PatchOperation, 0)
-
-	if d.HasChange("stage_name") {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.Op("replace"),
-			Path:  aws.String("/stage"),
-			Value: aws.String(d.Get("stage_name").(string)),
-		})
-	}
 
 	if d.HasChange("api_id") {
 		operations = append(operations, types.PatchOperation{
@@ -157,10 +161,21 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 		})
 	}
 
+	if d.HasChange("stage_name") {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.Op("replace"),
+			Path:  aws.String("/stage"),
+			Value: aws.String(d.Get("stage_name").(string)),
+		})
+	}
+
 	input := apigateway.UpdateBasePathMappingInput{
 		BasePath:        aws.String(basePath),
 		DomainName:      aws.String(domainName),
 		PatchOperations: operations,
+	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
 	}
 
 	_, err = conn.UpdateBasePathMapping(ctx, &input)
@@ -170,27 +185,32 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("base_path") {
-		id := basePathMappingCreateResourceID(d.Get(names.AttrDomainName).(string), d.Get("base_path").(string))
+		id := basePathMappingCreateResourceID(d.Get(names.AttrDomainName).(string), d.Get("base_path").(string), domainNameID)
 		d.SetId(id)
 	}
 
 	return append(diags, resourceBasePathMappingRead(ctx, d, meta)...)
 }
 
-func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName, basePath, err := basePathMappingParseResourceID(d.Id())
+	domainName, basePath, domainNameID, err := basePathMappingParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting API Gateway Base Path Mapping: %s", d.Id())
-	_, err = conn.DeleteBasePathMapping(ctx, &apigateway.DeleteBasePathMappingInput{
+	input := apigateway.DeleteBasePathMappingInput{
 		DomainName: aws.String(domainName),
 		BasePath:   aws.String(basePath),
-	})
+	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
+	}
+
+	_, err = conn.DeleteBasePathMapping(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -203,18 +223,56 @@ func resourceBasePathMappingDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func findBasePathMappingByTwoPartKey(ctx context.Context, conn *apigateway.Client, domainName, basePath string) (*apigateway.GetBasePathMappingOutput, error) {
-	input := &apigateway.GetBasePathMappingInput{
+const basePathMappingResourceIDSeparator = "/"
+
+func basePathMappingCreateResourceID(domainName, basePath, domainNameID string) string {
+	var id string
+	parts := []string{domainName, basePath}
+
+	if domainNameID != "" {
+		parts = append(parts, domainNameID)
+	}
+
+	id = strings.Join(parts, basePathMappingResourceIDSeparator)
+
+	return id
+}
+
+func basePathMappingParseResourceID(id string) (string, string, string, error) {
+	switch parts := strings.SplitN(id, basePathMappingResourceIDSeparator, 3); len(parts) {
+	case 2:
+		if domainName, basePath := parts[0], parts[1]; domainName != "" {
+			if basePath == "" {
+				basePath = emptyBasePathMappingValue
+			}
+			return domainName, basePath, "", nil
+		}
+	case 3:
+		if domainName, basePath, domainNameID := parts[0], parts[1], parts[2]; domainName != "" && domainNameID != "" {
+			if basePath == "" {
+				basePath = emptyBasePathMappingValue
+			}
+			return domainName, basePath, domainNameID, nil
+		}
+	}
+
+	return "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected DOMAIN-NAME%[2]sBASEPATH or DOMAIN-NAME%[2]sBASEPATH%[2]sDOMAIN-NAME-ID", id, basePathMappingResourceIDSeparator)
+}
+
+func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Client, domainName, basePath, domainNameID string) (*apigateway.GetBasePathMappingOutput, error) {
+	input := apigateway.GetBasePathMappingInput{
 		BasePath:   aws.String(basePath),
 		DomainName: aws.String(domainName),
 	}
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
+	}
 
-	output, err := conn.GetBasePathMapping(ctx, input)
+	output, err := conn.GetBasePathMapping(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -223,39 +281,8 @@ func findBasePathMappingByTwoPartKey(ctx context.Context, conn *apigateway.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
-}
-
-const basePathMappingResourceIDSeparator = "/"
-
-func basePathMappingCreateResourceID(domainName, basePath string) string {
-	parts := []string{domainName, basePath}
-	id := strings.Join(parts, basePathMappingResourceIDSeparator)
-
-	return id
-}
-
-func basePathMappingParseResourceID(id string) (string, string, error) {
-	err := fmt.Errorf("Unexpected format of ID (%[1]s), expected DOMAIN%[2]sBASEPATH", id, basePathMappingResourceIDSeparator)
-
-	parts := strings.SplitN(id, basePathMappingResourceIDSeparator, 2)
-	if len(parts) != 2 {
-		return "", "", err
-	}
-
-	domainName := parts[0]
-	basePath := parts[1]
-
-	if domainName == "" {
-		return "", "", err
-	}
-
-	if basePath == "" {
-		basePath = emptyBasePathMappingValue
-	}
-
-	return domainName, basePath, nil
 }

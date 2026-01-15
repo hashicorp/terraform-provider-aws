@@ -28,7 +28,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         SsoadminApplicationAssignment(self, "example",
-            application_arn=Token.as_string(aws_ssoadmin_application_example.application_arn),
+            application_arn=Token.as_string(aws_ssoadmin_application_example.arn),
             principal_id=Token.as_string(aws_identitystore_user_example.user_id),
             principal_type="USER"
         )
@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         SsoadminApplicationAssignment(self, "example",
-            application_arn=Token.as_string(aws_ssoadmin_application_example.application_arn),
+            application_arn=Token.as_string(aws_ssoadmin_application_example.arn),
             principal_id=Token.as_string(aws_identitystore_group_example.group_id),
             principal_type="GROUP"
         )
@@ -57,8 +57,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_arn` - (Required) ARN of the application.
 * `principal_id` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
@@ -85,13 +86,13 @@ from imports.aws.ssoadmin_application_assignment import SsoadminApplicationAssig
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsoadminApplicationAssignment.generate_config_for_import(self, "example", "arn:aws:sso::012345678901:application/id-12345678,abcd1234,USER")
+        SsoadminApplicationAssignment.generate_config_for_import(self, "example", "arn:aws:sso::123456789012:application/id-12345678,abcd1234,USER")
 ```
 
 Using `terraform import`, import SSO Admin Application Assignment using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_assignment.example arn:aws:sso::012345678901:application/id-12345678,abcd1234,USER
+% terraform import aws_ssoadmin_application_assignment.example arn:aws:sso::123456789012:application/id-12345678,abcd1234,USER
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-da7337b5018a58007520a69e823fc2fc465c5c017370c5ce9dcee7d0009dcbc1 -->
+<!-- cache-key: cdktf-0.20.8 input-12c875223abe24efa6349917720296d6a904b7ef71f965d8d4cc1bba1249dbb4 -->

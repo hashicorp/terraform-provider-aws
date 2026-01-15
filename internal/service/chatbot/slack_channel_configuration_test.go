@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +47,8 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 
 	var slackchannelconfiguration types.SlackChannelConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := rName + "-updated"
+	resourceName := testResourceSlackChannelConfiguration
 
 	// The slack workspace must be created via the AWS Console. It cannot be created via APIs or Terraform.
 	// Once it is created, export the name of the workspace in the env variable for this test
@@ -66,7 +69,7 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_channel_id", channelID),
 					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_channel_name"),
@@ -77,9 +80,27 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 			{
 				ResourceName:                         testResourceSlackChannelConfiguration,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccSlackChannelConfigurationImportStateIDFunc(testResourceSlackChannelConfiguration),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(testResourceSlackChannelConfiguration, "chat_configuration_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "chat_configuration_arn",
+			},
+			{
+				Config: testAccSlackChannelConfigurationConfig_basic(rNameUpdated, channelID, teamID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rNameUpdated),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
+					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_channel_id", channelID),
+					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_channel_name"),
+					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_team_id", teamID),
+					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_team_name"),
+				),
 			},
 		},
 	})
@@ -109,7 +130,7 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,7 +149,7 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -167,24 +188,14 @@ func testAccCheckSlackChannelConfigurationExists(ctx context.Context, name strin
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ChatbotClient(ctx)
 
-	_, err := conn.DescribeSlackChannelConfigurations(ctx, &chatbot.DescribeSlackChannelConfigurationsInput{})
+	input := chatbot.DescribeSlackChannelConfigurationsInput{}
+	_, err := conn.DescribeSlackChannelConfigurations(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccSlackChannelConfigurationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["chat_configuration_arn"], nil
 	}
 }
 

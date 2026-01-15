@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,16 +37,16 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "level_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "level_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 				),
 			},
@@ -60,16 +60,16 @@ func testAccUserHierarchyGroup_basic(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "level_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "level_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 				),
 			},
@@ -95,9 +95,9 @@ func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_parentID(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent-group/{hierarchy_group_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "hierarchy_path.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.arn", "aws_connect_user_hierarchy_group.parent", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.id", "aws_connect_user_hierarchy_group.parent", "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_one.0.name", "aws_connect_user_hierarchy_group.parent", names.AttrName),
@@ -105,10 +105,10 @@ func testAccUserHierarchyGroup_parentGroupId(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_two.0.id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_path.0.level_two.0.name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "level_id", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "level_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_group_id", "aws_connect_user_hierarchy_group.parent", "hierarchy_group_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group Child"),
 				),
 			},
@@ -133,7 +133,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 				),
 			},
@@ -146,7 +146,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_tags(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -155,7 +155,7 @@ func testAccUserHierarchyGroup_updateTags(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_tagsUpdated(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test User Hierarchy Group"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -182,7 +182,7 @@ func testAccUserHierarchyGroup_disappears(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUserHierarchyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -222,7 +222,7 @@ func testAccCheckUserHierarchyGroupDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfconnect.FindUserHierarchyGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["hierarchy_group_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

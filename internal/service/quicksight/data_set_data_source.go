@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_data_set", name="Data Set")
+// @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataSetRead,
@@ -27,12 +28,7 @@ func dataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID:          quicksightschema.AWSAccountIDDataSourceSchema(),
 				"column_groups":                 quicksightschema.DataSetColumnGroupsSchemaDataSourceSchema(),
 				"column_level_permission_rules": quicksightschema.DataSetColumnLevelPermissionRulesSchemaDataSourceSchema(),
 				"data_set_id": {
@@ -55,25 +51,16 @@ func dataSourceDataSet() *schema.Resource {
 				"row_level_permission_data_set":          quicksightschema.DataSetRowLevelPermissionDataSetSchemaDataSourceSchema(),
 				"row_level_permission_tag_configuration": quicksightschema.DataSetRowLevelPermissionTagConfigurationSchemaDataSourceSchema(),
 				names.AttrTags:                           tftags.TagsSchemaComputed(),
-				names.AttrTagsAll: {
-					Type:       schema.TypeMap,
-					Optional:   true,
-					Computed:   true,
-					Elem:       &schema.Schema{Type: schema.TypeString},
-					Deprecated: `this attribute has been deprecated`,
-				},
 			}
 		},
 	}
 }
 
-func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -117,6 +104,9 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
 
+	// Cannot use transparent tagging because it has to handle `tags_all` as well
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
+
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
@@ -125,13 +115,8 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	permissions, err := findDataSetPermissionsByTwoPartKey(ctx, conn, awsAccountID, dataSetID)

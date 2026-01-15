@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow_test
@@ -8,26 +8,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
@@ -41,7 +35,7 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appflow", regexache.MustCompile(`connectorprofile/.+`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "appflow", "connectorprofile/{name}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),
@@ -62,10 +56,6 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 
 func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
@@ -96,12 +86,7 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 
 func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var connectorProfiles types.ConnectorProfile
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
@@ -115,7 +100,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,9 +117,9 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -142,7 +127,7 @@ func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheck
 				return err
 			}
 
-			return fmt.Errorf("AppFlow Connector Profile %s still exists", rs.Primary.ID)
+			return fmt.Errorf("AppFlow Connector Profile %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
@@ -158,7 +143,7 @@ func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-		output, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfappflow.FindConnectorProfileByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -170,18 +155,8 @@ func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.
 	}
 }
 
-func testAccConnectorProfileConfigBase(connectorProfileName string, redshiftPassword string, redshiftUsername string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccConnectorProfileConfig_base(rName string, redshiftPassword string, redshiftUsername string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -195,26 +170,14 @@ data "aws_route_table" "test" {
 }
 
 resource "aws_route" "test" {
-  route_table_id = data.aws_route_table.test.id
-
+  route_table_id         = data.aws_route_table.test.id
   destination_cidr_block = "0.0.0.0/0"
-
-  gateway_id = aws_internet_gateway.test.id
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = aws_vpc.test.cidr_block
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
+  gateway_id             = aws_internet_gateway.test.id
 }
 
 resource "aws_redshift_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test.id]
+  subnet_ids = aws_subnet.test[*].id
 }
 
 data "aws_iam_policy" "test" {
@@ -242,9 +205,12 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
-
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -268,20 +234,21 @@ resource "aws_redshift_cluster" "test" {
   master_password = %[2]q
   master_username = %[3]q
 
-  publicly_accessible = true
+  publicly_accessible = false
 
-  node_type           = "dc2.large"
+  node_type           = "ra3.large"
   skip_final_snapshot = true
+  encrypted           = true
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername))
+`, rName, redshiftPassword, redshiftUsername))
 }
 
-func testAccConnectorProfileConfig_basic(connectorProfileName string) string {
+func testAccConnectorProfileConfig_basic(rName string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfig_base(rName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -314,16 +281,15 @@ resource "aws_appflow_connector_profile" "test" {
     aws_security_group_rule.test,
   ]
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername),
-	)
+`, rName, redshiftPassword, redshiftUsername))
 }
 
-func testAccConnectorProfileConfig_update(connectorProfileName string, bucketPrefix string) string {
+func testAccConnectorProfileConfig_update(rName string, bucketPrefix string) string {
 	const redshiftPassword = "testPassword123!"
 	const redshiftUsername = "testusername"
 
 	return acctest.ConfigCompose(
-		testAccConnectorProfileConfigBase(connectorProfileName, redshiftPassword, redshiftUsername),
+		testAccConnectorProfileConfig_base(rName, redshiftPassword, redshiftUsername),
 		fmt.Sprintf(`
 resource "aws_appflow_connector_profile" "test" {
   name            = %[1]q
@@ -357,6 +323,5 @@ resource "aws_appflow_connector_profile" "test" {
     aws_security_group_rule.test,
   ]
 }
-`, connectorProfileName, redshiftPassword, redshiftUsername, bucketPrefix),
-	)
+`, rName, redshiftPassword, redshiftUsername, bucketPrefix))
 }

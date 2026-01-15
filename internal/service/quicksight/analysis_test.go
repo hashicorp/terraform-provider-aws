@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,7 +71,7 @@ func TestAccQuickSightAnalysis_disappears(t *testing.T) {
 				Config: testAccAnalysisConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceAnalysis(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceAnalysis(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +103,7 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{
@@ -238,16 +238,16 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct1,
+						"data_set_identifier": "1",
+						names.AttrExpression:  "1",
 						names.AttrName:        "test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct2,
+						"data_set_identifier": "1",
+						names.AttrExpression:  "2",
 						names.AttrName:        "test2",
 					}),
 				),
@@ -293,6 +293,41 @@ func TestAccQuickSightAnalysis_theme(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightAnalysis_pieChartVisualArcThickness(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var analysis awstypes.Analysis
+	resourceName := "aws_quicksight_analysis.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalysisConfig_pieChartVisualArcThickness(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
+					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.pie_chart_visual.0.chart_configuration.0.donut_options.0.arc_options.0.arc_thickness", string(awstypes.ArcThicknessWhole)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
@@ -304,7 +339,7 @@ func testAccCheckAnalysisDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindAnalysisByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["analysis_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -821,4 +856,58 @@ resource "aws_quicksight_analysis" "test" {
   theme_arn = %[3]q
 }
 `, rId, rName, themeArn))
+}
+
+func testAccAnalysisConfig_pieChartVisualArcThickness(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccAnalysisConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_analysis" "test" {
+  analysis_id = %[1]q
+  name        = %[2]q
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      visuals {
+        pie_chart_visual {
+          visual_id = "PieChart"
+          title {
+            format_text {
+              plain_text = "Pie Chart Test"
+            }
+          }
+          chart_configuration {
+            field_wells {
+              pie_chart_aggregated_field_wells {}
+            }
+            category_label_options {
+              sort_icon_visibility = "HIDDEN"
+              visibility           = "HIDDEN"
+            }
+            data_labels {
+              category_label_visibility = "VISIBLE"
+              label_color               = null
+              label_content             = null
+              measure_label_visibility  = "VISIBLE"
+              overlap                   = "DISABLE_OVERLAP"
+              position                  = null
+              visibility                = "VISIBLE"
+            }
+            donut_options {
+              arc_options {
+                arc_thickness = "WHOLE"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rId, rName))
 }

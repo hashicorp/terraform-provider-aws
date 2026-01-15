@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resource
@@ -14,15 +14,13 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed resource.gtpl
 var resourceTmpl string
-
-//go:embed resourcefw.gtpl
-var resourceFrameworkTmpl string
 
 //go:embed resourcetest.gtpl
 var resourceTestTmpl string
@@ -32,22 +30,23 @@ var websiteTmpl string
 
 type TemplateData struct {
 	Resource             string
+	ResourceAWS          string
 	ResourceLower        string
+	ResourceLowerCamel   string
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
 	IncludeTags          bool
+	SDKPackage           string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
-	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
 }
 
-func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -67,7 +66,9 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(resName, snakeName)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(resName)
+	}
 
 	service, err := data.LookupService(servicePackage)
 	if err != nil {
@@ -76,27 +77,24 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 
 	templateData := TemplateData{
 		Resource:             resName,
+		ResourceAWS:          capitalizeForAWS(resName),
 		ResourceLower:        strings.ToLower(resName),
+		ResourceLowerCamel:   convert.ToLowercasePrefix(resName),
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
+		SDKPackage:           service.GoV2Package(),
 		ServicePackage:       servicePackage,
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		AWSGoSDKV2:           v2,
-		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
-	tmpl := resourceTmpl
-	if pluginFramework {
-		tmpl = resourceFrameworkTmpl
-	}
 	f := fmt.Sprintf("%s.go", snakeName)
-	if err = writeTemplate("newres", f, tmpl, force, templateData); err != nil {
+	if err = writeTemplate("newres", f, resourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing resource template: %w", err)
 	}
 
@@ -151,4 +149,9 @@ func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateD
 	}
 
 	return nil
+}
+
+// AWS API structs use different capitalization than the provider standards
+func capitalizeForAWS(s string) string {
+	return strings.ReplaceAll(s, "VPC", "Vpc")
 }

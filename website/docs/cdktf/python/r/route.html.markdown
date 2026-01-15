@@ -73,6 +73,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `route_table_id` - (Required) The ID of the routing table.
 
 One of the following destination arguments must be supplied:
@@ -117,6 +118,46 @@ This resource exports the following attributes in addition to the arguments abov
 - `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_route.example
+  identity = {
+    route_table_id         = "rtb-656C65616E6F72"
+    destination_cidr_block = "10.42.0.0/16"
+
+    ### OR by IPv6 CIDR block
+    # destination_ipv6_cidr_block = "10.42.0.0/16"
+
+    ### OR by prefix list ID
+    # destination_prefix_list_id = "pl-0570a1d2d725c16be"
+  }
+}
+
+resource "aws_route" "example" {
+  route_table_id            = "rtb-656C65616E6F72"
+  destination_cidr_block    = "10.42.0.0/16"
+  vpc_peering_connection_id = "pcx-45ff3dc1"
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `route_table_id` - (String) ID of the route table.
+
+#### Optional
+
+~> Exactly one of of `destination_cidr_block`, `destination_ipv6_cidr_block`, or `destination_prefix_list_id` is required.
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `destination_cidr_block` - (String) Destination IPv4 CIDR block.
+* `destination_ipv6_cidr_block` - (String) Destination IPv6 CIDR block.
+* `destination_prefix_list_id` - (String) Destination IPv6 CIDR block.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual routes using `ROUTETABLEID_DESTINATION`. Import [local routes](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html#RouteTables) using the VPC's IPv4 or IPv6 CIDR blocks. For example:
 
@@ -191,4 +232,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-82a10ad295ce34577ba999c5af56984db204da17baee1b7f51f6c4821fa0366d -->
+<!-- cache-key: cdktf-0.20.8 input-6e597064f8322377831f0a1c1582ccc078a91a1c6cc4dba5afc38b14c68420ce -->

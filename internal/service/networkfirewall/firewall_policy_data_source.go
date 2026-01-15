@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,6 +44,39 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"policy_variables": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"rule_variables": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"ip_set": {
+														Type:     schema.TypeList,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"definition": {
+																	Type:     schema.TypeSet,
+																	Computed: true,
+																	Elem:     &schema.Schema{Type: schema.TypeString},
+																},
+															},
+														},
+													},
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"stateful_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -53,6 +87,18 @@ func dataSourceFirewallPolicy() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"flow_timeouts": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"tcp_idle_timeout_seconds": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+												},
+											},
+										},
 										"rule_order": {
 											Type:     schema.TypeString,
 											Computed: true,
@@ -69,14 +115,18 @@ func dataSourceFirewallPolicy() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"deep_threat_inspection": {
+											Type:     nullable.TypeNullableBool,
+											Computed: true,
+										},
 										"override": {
 											Type:     schema.TypeList,
-											Optional: true,
+											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													names.AttrAction: {
 														Type:     schema.TypeString,
-														Optional: true,
+														Computed: true,
 													},
 												},
 											},
@@ -92,7 +142,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 									},
 								},
 							},
-							"stateless_custom_action": sdkv2.DataSourcePropertyFromResourceProperty(customActionSchema()),
+							"stateless_custom_action": sdkv2.ComputedOnlyFromSchema(customActionSchema()),
 							"stateless_default_actions": {
 								Type:     schema.TypeSet,
 								Computed: true,
@@ -142,7 +192,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 

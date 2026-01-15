@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents_test
@@ -175,7 +175,7 @@ func testAccResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, dataSourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`response-plan/.+$`)),
 				),
 			},
 		},

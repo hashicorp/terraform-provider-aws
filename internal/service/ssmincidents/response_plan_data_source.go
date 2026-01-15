@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssmincidents_response_plan")
-func DataSourceResponsePlan() *schema.Resource {
+// @SDKDataSource("aws_ssmincidents_response_plan", name="Response Plan")
+func dataSourceResponsePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 
@@ -172,7 +172,7 @@ const (
 	DSNameResponsePlan = "Response Plan Data Source"
 )
 
-func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
@@ -193,9 +193,8 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, DSNameResponsePlan, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}

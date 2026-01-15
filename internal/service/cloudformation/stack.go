@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -102,7 +103,7 @@ func resourceStack() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringIsJSON,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -118,7 +119,7 @@ func resourceStack() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidStringIsJSONOrYAML,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					template, _ := verify.NormalizeJSONOrYAMLString(v)
 					return template
 				},
@@ -135,13 +136,12 @@ func resourceStack() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			customdiff.ComputedIf("outputs", stackHasActualChanges),
 		),
 	}
 }
 
-func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -169,7 +169,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.OnFailure = awstypes.OnFailure(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = expandParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]any))
 	}
 	if v, ok := d.GetOk("policy_body"); ok {
 		policy, err := structure.NormalizeJsonString(v)
@@ -195,7 +195,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.TimeoutInMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateStack(ctx, input)
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 
@@ -212,13 +212,13 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	stack, err := findStackByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Stack %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -265,7 +265,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("outputs", flattenOutputs(stack.Outputs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outputs: %s", err)
 	}
-	if err := d.Set(names.AttrParameters, flattenParameters(stack.Parameters, d.Get(names.AttrParameters).(map[string]interface{}))); err != nil {
+	if err := d.Set(names.AttrParameters, flattenParameters(stack.Parameters, d.Get(names.AttrParameters).(map[string]any))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	d.Set("timeout_in_minutes", stack.TimeoutInMinutes)
@@ -275,7 +275,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
@@ -298,7 +298,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = expandParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]any))
 	}
 	if d.HasChange("policy_body") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy_body"))
@@ -326,7 +326,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = tags
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.UpdateStack(ctx, input)
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 
@@ -345,16 +345,17 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Stack: %s", d.Id())
 	requestToken := id.UniqueId()
-	_, err := conn.DeleteStack(ctx, &cloudformation.DeleteStackInput{
+	input := cloudformation.DeleteStackInput{
 		ClientRequestToken: aws.String(requestToken),
 		StackName:          aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteStack(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeValidationError) {
 		return diags
@@ -383,7 +384,7 @@ func findStackByName(ctx context.Context, conn *cloudformation.Client, name stri
 	}
 
 	if status := output.StackStatus; status == awstypes.StackStatusDeleteComplete {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			Message:     string(status),
 		}
@@ -410,7 +411,7 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeValidationError, "does not exist") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -426,14 +427,14 @@ func findStacks(ctx context.Context, conn *cloudformation.Client, input *cloudfo
 	return output, nil
 }
 
-func statusStack(ctx context.Context, conn *cloudformation.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusStack(ctx context.Context, conn *cloudformation.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call FindStackByName as it maps useful status codes to NotFoundError.
 		output, err := findStack(ctx, conn, &cloudformation.DescribeStacksInput{
 			StackName: aws.String(name),
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -449,7 +450,7 @@ func waitStackCreated(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 1 * time.Second
 	)
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StackStatusCreateInProgress, awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
 		Target:     enum.Slice(awstypes.StackStatusCreateComplete, awstypes.StackStatusCreateFailed, awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed, awstypes.StackStatusRollbackComplete, awstypes.StackStatusRollbackFailed),
 		Timeout:    timeout,
@@ -507,7 +508,7 @@ func waitStackUpdated(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 5 * time.Second
 	)
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.StackStatusUpdateCompleteCleanupInProgress, awstypes.StackStatusUpdateInProgress, awstypes.StackStatusUpdateRollbackInProgress, awstypes.StackStatusUpdateRollbackCompleteCleanupInProgress),
 		Target:     enum.Slice(awstypes.StackStatusCreateComplete, awstypes.StackStatusUpdateComplete, awstypes.StackStatusUpdateRollbackComplete, awstypes.StackStatusUpdateRollbackFailed),
 		Timeout:    timeout,
@@ -548,7 +549,7 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 	const (
 		minTimeout = 5 * time.Second
 	)
-	stateConf := retry.StateChangeConf{
+	stateConf := sdkretry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
 		Target:         enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
 		Timeout:        timeout,
@@ -560,7 +561,7 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		return nil, nil
 	case err != nil:
 		return nil, err

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
-func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings", name="Data Catalog Encryption Settings")
+func dataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,
@@ -72,7 +73,7 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	}
 }
 
-func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
@@ -89,7 +90,7 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	d.SetId(catalogID)
 	d.Set(names.AttrCatalogID, d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
-		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
+		if err := d.Set("data_catalog_encryption_settings", []any{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {

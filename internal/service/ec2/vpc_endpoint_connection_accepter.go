@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +50,7 @@ func resourceVPCEndpointConnectionAccepter() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -77,7 +77,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 	return append(diags, resourceVPCEndpointConnectionAccepterRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -88,7 +88,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 
 	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Connection Accepter %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -105,7 +105,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -115,10 +115,11 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Rejecting VPC Endpoint Connection: %s", d.Id())
-	_, err = conn.RejectVpcEndpointConnections(ctx, &ec2.RejectVpcEndpointConnectionsInput{
+	input := ec2.RejectVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
 		VpcEndpointIds: []string{vpcEndpointID},
-	})
+	}
+	_, err = conn.RejectVpcEndpointConnections(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return diags

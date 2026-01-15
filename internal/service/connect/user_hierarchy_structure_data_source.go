@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -27,11 +27,11 @@ func dataSourceUserHierarchyStructure() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"level_one":   sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_two":   sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_three": sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_four":  sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
-							"level_five":  sdkv2.DataSourcePropertyFromResourceProperty(hierarchyStructureLevelSchema()),
+							"level_one":   sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_two":   sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_three": sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_four":  sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
+							"level_five":  sdkv2.ComputedOnlyFromSchema(hierarchyStructureLevelSchema()),
 						},
 					},
 				},
@@ -45,7 +45,7 @@ func dataSourceUserHierarchyStructure() *schema.Resource {
 	}
 }
 
-func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 

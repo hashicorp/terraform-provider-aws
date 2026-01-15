@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
@@ -15,13 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -59,18 +60,22 @@ const (
 	resourceAssociationResourceIDPartCount = 2
 )
 
-func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get(names.AttrResourceARN).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false))
-	_, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
+	id, err := flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	_, err = findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 	switch {
 	case err == nil:
 		return sdkdiag.AppendFromErr(diags, fmt.Errorf("RAM Resource Association (%s) already exists", id))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association: %s", err)
@@ -97,7 +102,7 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 	return append(diags, resourceResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -109,7 +114,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 
 	resourceAssociation, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RAM Resource Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -125,7 +130,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
@@ -170,7 +175,7 @@ func findResourceAssociationByTwoPartKey(ctx context.Context, conn *ram.Client, 
 	}
 
 	if status := output.Status; status == awstypes.ResourceShareAssociationStatusDisassociated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -197,7 +202,7 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -213,11 +218,11 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input 
 	return output, nil
 }
 
-func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -233,7 +238,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociating),
 		Target:  enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
 		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
@@ -243,7 +248,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *ram.Client, resou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -255,7 +260,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated, awstypes.ResourceShareAssociationStatusDisassociating),
 		Target:  []string{},
 		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
@@ -265,7 +270,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.Client, resou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

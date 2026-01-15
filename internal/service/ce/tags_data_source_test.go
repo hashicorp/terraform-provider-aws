@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ce_test
@@ -29,7 +29,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
 		},
@@ -58,7 +58,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
 		},
@@ -128,7 +128,7 @@ data "aws_ce_tags" "test" {
   filter {
     dimension {
       key           = "REGION"
-      values        = [data.aws_region.current.name]
+      values        = [data.aws_region.current.region]
       match_options = ["EQUALS"]
     }
   }

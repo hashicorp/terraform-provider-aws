@@ -29,7 +29,7 @@ resource "aws_cognito_user_pool" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool_domain" "main" {
-  domain          = "example-domain"
+  domain          = "auth.example.com"
   certificate_arn = aws_acm_certificate.cert.arn
   user_pool_id    = aws_cognito_user_pool.example.id
 }
@@ -59,9 +59,11 @@ resource "aws_route53_record" "auth-cognito-A" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+* `managed_login_version` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
 
 ## Attribute Reference
 

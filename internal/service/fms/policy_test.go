@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +27,7 @@ func testAccPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -35,15 +36,15 @@ func testAccPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, rName),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -64,7 +65,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -73,10 +74,10 @@ func testAccPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, rName),
+				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +93,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -105,7 +106,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
@@ -126,7 +127,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -139,7 +140,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
@@ -161,7 +162,7 @@ func testAccPolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -170,15 +171,19 @@ func testAccPolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName1, rName1),
+				Config: testAccPolicyConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_updated(rName2, rName1),
+				Config: testAccPolicyConfig_updated(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+				),
 			},
 		},
 	})
@@ -202,19 +207,19 @@ func testAccPolicy_policyOption(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_policyOption(rName, rName),
+				Config: testAccPolicyConfig_policyOption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.0.firewall_deployment_model", "CENTRALIZED"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.0.firewall_deployment_model", "DISTRIBUTED"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -235,7 +240,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -247,16 +252,54 @@ func testAccPolicy_resourceTags(t *testing.T) {
 				Config: testAccPolicyConfig_resourceTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_resourceTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccPolicy_resourceTagLogicalOperator(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_resourceTagLogicalOperator_default(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", ""),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_resourceTagLogicalOperator_withAnd(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "AND"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_resourceTagLogicalOperator_withOr(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "resource_tag_logical_operator", "OR"),
 				),
 			},
 		},
@@ -271,7 +314,7 @@ func testAccPolicy_alb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -285,9 +328,9 @@ func testAccPolicy_alb(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "ResourceTypeList"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_type_list.*", "AWS::ElasticLoadBalancingV2::LoadBalancer"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "WAFV2"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", names.AttrType, "WAFV2"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "defaultAction.type", "ALLOW"),
@@ -305,7 +348,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -319,7 +362,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::SecurityGroup"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", names.AttrType, "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "securityGroupAction.type", "ALLOW"),
@@ -337,7 +380,7 @@ func testAccPolicy_rscSet(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -346,11 +389,59 @@ func testAccPolicy_rscSet(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_rscSet(rName, rName),
+				Config: testAccPolicyConfig_rscSet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccPolicy_nacl(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_nacl(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Subnet"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.egress", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.from", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.0.port_range.0.to", "1234"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.egress", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.rule_action", "deny"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.from", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.first_entry.1.port_range.0.to", "2345"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_first_entries", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_acl_common_policy.0.network_acl_entry_set.0.force_remediate_for_last_entries", acctest.CtFalse),
 				),
 			},
 		},
@@ -368,7 +459,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tffms.FindPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -398,7 +489,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 	}
 }
 
-func testAccPolicyConfig_basic(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_basic(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
@@ -406,23 +497,18 @@ resource "aws_fms_policy" "test" {
   description           = "test description"
   remediation_enabled   = false
   resource_set_ids      = [aws_fms_resource_set.test.id]
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
 }
 
 resource "aws_fms_resource_set" "test" {
@@ -432,24 +518,24 @@ resource "aws_fms_resource_set" "test" {
     resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 }
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
-func testAccPolicyConfig_policyOption(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_policyOption(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
 
     policy_option {
       network_firewall_policy {
@@ -464,12 +550,7 @@ resource "aws_fms_policy" "test" {
 
   depends_on = [aws_fms_admin_account.test]
 }
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
-}
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
 func testAccPolicyConfig_cloudFrontDistribution(rName string) string {
@@ -549,35 +630,35 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
-func testAccPolicyConfig_updated(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_updated(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = true
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_set_ids      = [aws_fms_resource_set.test.id]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"ALLOW\"}, \"overrideCustomerWebACLAssociation\": false}"
-  }
-
-  lifecycle {
-    create_before_destroy = false
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
 }
 
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
+resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
+  resource_set {
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
 }
-`, policyName, ruleGroupName))
+`, policyName))
 }
 
 func testAccPolicyConfig_include(rName string) string {
@@ -586,23 +667,18 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   include_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName))
 }
@@ -613,11 +689,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tags = {
@@ -625,11 +701,6 @@ resource "aws_fms_policy" "test" {
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -640,11 +711,11 @@ resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
   name                  = %[1]q
   remediation_enabled   = false
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   resource_tags = {
@@ -654,12 +725,77 @@ resource "aws_fms_policy" "test" {
 
   depends_on = [aws_fms_admin_account.test]
 }
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[1]q
-}
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccPolicyConfig_resourceTagLogicalOperator_default(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
+
+  security_service_policy_data {
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
+  }
+
+  resource_tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccPolicyConfig_resourceTagLogicalOperator_withAnd(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
+
+  security_service_policy_data {
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
+  }
+
+  resource_tag_logical_operator = "AND"
+
+  resource_tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccPolicyConfig_resourceTagLogicalOperator_withOr(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  exclude_resource_tags = false
+  name                  = %[1]q
+  remediation_enabled   = false
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
+
+  security_service_policy_data {
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
+  }
+
+  resource_tag_logical_operator = "OR"
+
+  resource_tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_fms_admin_account.test]
+}
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccPolicyConfig_alb(rName string) string {
@@ -792,7 +928,7 @@ resource "aws_fms_policy" "test" {
 `, rName))
 }
 
-func testAccPolicyConfig_rscSet(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_rscSet(policyName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
@@ -800,23 +936,18 @@ resource "aws_fms_policy" "test" {
   description           = "test description"
   remediation_enabled   = false
   resource_set_ids      = [aws_fms_resource_set.test.id]
-  resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
+  resource_type_list    = ["AWS::EC2::SecurityGroup"]
 
   exclude_map {
     account = [data.aws_caller_identity.current.account_id]
   }
 
   security_service_policy_data {
-    type                 = "WAF"
-    managed_service_data = "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\":\"${aws_wafregional_rule_group.test.id}\", \"overrideAction\" : {\"type\": \"COUNT\"}}],\"defaultAction\": {\"type\": \"BLOCK\"}, \"overrideCustomerWebACLAssociation\": false}"
+    type                 = "SECURITY_GROUPS_USAGE_AUDIT"
+    managed_service_data = "{\"type\": \"SECURITY_GROUPS_USAGE_AUDIT\", \"deleteUnusedSecurityGroups\": true, \"coalesceRedundantSecurityGroups\": true, \"optionalDelayForUnusedInMinutes\": 60}"
   }
 
   depends_on = [aws_fms_admin_account.test]
-}
-
-resource "aws_wafregional_rule_group" "test" {
-  metric_name = "MyTest"
-  name        = %[2]q
 }
 
 resource "aws_fms_resource_set" "test" {
@@ -824,6 +955,57 @@ resource "aws_fms_resource_set" "test" {
   resource_set {
     name               = %[1]q
     resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
+}
+`, policyName))
+}
+
+func testAccPolicyConfig_nacl(policyName, ruleGroupName string) string {
+	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
+resource "aws_fms_policy" "test" {
+  depends_on = [aws_fms_admin_account.test]
+
+  exclude_resource_tags = false
+  name                  = %[1]q
+  description           = "test description"
+  remediation_enabled   = false
+  resource_type         = "AWS::EC2::Subnet"
+
+  security_service_policy_data {
+    type = "NETWORK_ACL_COMMON"
+
+    managed_service_data = jsonencode({ type = "NETWORK_ACL_COMMON" })
+
+    policy_option {
+      network_acl_common_policy {
+        network_acl_entry_set {
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 1234
+              to   = 1234
+            }
+          }
+
+          first_entry {
+            egress      = false
+            protocol    = 6
+            rule_action = "deny"
+            cidr_block  = "0.0.0.0/0"
+            port_range {
+              from = 2345
+              to   = 2345
+            }
+          }
+
+          force_remediate_for_first_entries = false
+          force_remediate_for_last_entries  = false
+        }
+      }
+    }
   }
 }
 `, policyName, ruleGroupName))

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +38,8 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "device.0.device_name", rName),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccSageMakerDevice_disappears(t *testing.T) {
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,8 +133,8 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDevice(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDeviceFleet(), "aws_sagemaker_device_fleet.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -157,7 +157,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err = tfsagemaker.FindDeviceByName(ctx, conn, deviceFleetName, deviceName)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -165,7 +165,7 @@ func testAccCheckDeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Device %q still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Device %q still exists", rs.Primary.ID)
 		}
 
 		return nil

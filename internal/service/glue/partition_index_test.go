@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -37,9 +37,9 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 					testAccCheckPartitionIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTableName, "aws_glue_catalog_table.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_glue_catalog_database.test", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", "2"),
 				),
 			},
 			{
@@ -67,8 +67,8 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,8 +92,8 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,8 +117,8 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

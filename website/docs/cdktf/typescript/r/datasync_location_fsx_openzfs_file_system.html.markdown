@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fsxFilesystemArn` - (Required) The Amazon Resource Name (ARN) for the FSx for OpenZfs file system.
 * `protocol` - (Required) The type of protocol that DataSync uses to access your file system. See below.
 * `securityGroupArns` - (Optional) The Amazon Resource Names (ARNs) of the security groups that are to use to configure the FSx for openzfs file system.
@@ -106,4 +107,4 @@ Using `terraform import`, import `aws_datasync_location_fsx_openzfs_file_system`
 % terraform import aws_datasync_location_fsx_openzfs_file_system.example arn:aws:datasync:us-west-2:123456789012:location/loc-12345678901234567#arn:aws:fsx:us-west-2:123456789012:file-system/fs-08e04cd442c1bb94a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fd48fc85d580e2ffedd314108832541f3cf603267b4fbea2028c4f03fd9b3981 -->
+<!-- cache-key: cdktf-0.20.8 input-efb942047c2180007bba7e5e0d61fe3294d42d8579c719a65704386d461ab22b -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses
@@ -29,7 +29,7 @@ func dataSourceEmailIdentity() *schema.Resource {
 			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					return strings.TrimSuffix(v.(string), ".")
 				},
 			},
@@ -37,7 +37,7 @@ func dataSourceEmailIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
@@ -50,9 +50,9 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(email)
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("identity/%s", email),
 		Service:   "ses",
 	}.String()

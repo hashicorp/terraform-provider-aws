@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -111,7 +111,7 @@ func resourceRoute() *schema.Resource {
 	}
 }
 
-func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -139,7 +139,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("request_models"); ok {
-		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.RequestModels = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
@@ -165,13 +165,13 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findRouteByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -198,7 +198,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
@@ -210,7 +210,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ns := n.(*schema.Set)
 
 		for _, tfMapRaw := range os.Difference(ns).List() {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -270,7 +270,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("request_models") {
-			input.RequestModels = flex.ExpandStringValueMap(d.Get("request_models").(map[string]interface{}))
+			input.RequestModels = flex.ExpandStringValueMap(d.Get("request_models").(map[string]any))
 		}
 
 		if d.HasChange("request_parameter") {
@@ -299,15 +299,16 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
-func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Route: %s", d.Id())
-	_, err := conn.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
+	input := apigatewayv2.DeleteRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteRoute(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -320,7 +321,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id'", d.Id())
@@ -361,8 +362,7 @@ func findRoute(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -371,13 +371,39 @@ func findRoute(ctx context.Context, conn *apigatewayv2.Client, input *apigateway
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.ParameterConstraints {
+func findRoutes(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRoutesInput) ([]awstypes.Route, error) {
+	var output []awstypes.Route
+
+	err := getRoutesPages(ctx, conn, input, func(page *apigatewayv2.GetRoutesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func expandRouteRequestParameters(tfList []any) map[string]awstypes.ParameterConstraints {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -385,7 +411,7 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.Para
 	apiObjects := map[string]awstypes.ParameterConstraints{}
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -405,15 +431,15 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.Para
 	return apiObjects
 }
 
-func flattenRouteRequestParameters(apiObjects map[string]awstypes.ParameterConstraints) []interface{} {
+func flattenRouteRequestParameters(apiObjects map[string]awstypes.ParameterConstraints) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for k, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			"request_parameter_key": k,
 			"required":              aws.ToBool(apiObject.Required),
 		})

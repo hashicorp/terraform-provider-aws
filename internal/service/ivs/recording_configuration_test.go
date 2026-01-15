@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivs_test
@@ -47,9 +47,9 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourceRecordingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivs.ResourceRecordingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,7 +161,7 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingconfiguration),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -189,7 +189,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags2(bucketName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -211,7 +211,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

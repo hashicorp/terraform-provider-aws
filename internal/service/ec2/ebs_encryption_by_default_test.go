@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -17,11 +17,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
+func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_encryption_by_default.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,7 +69,8 @@ func testAccCheckEncryptionByDefaultDestroy(ctx context.Context) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		input := ec2.GetEbsEncryptionByDefaultInput{}
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -80,7 +96,8 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, n string, enabled b
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+		input := ec2.GetEbsEncryptionByDefaultInput{}
+		response, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 		if err != nil {
 			return err
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -25,7 +25,7 @@ func TestAccVPCPeeringConnectionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test_by_filters", "ids.#", "2"),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func TestAccVPCPeeringConnectionsDataSource_NoMatches(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionsDataSourceConfig_noMatches(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_vpc_peering_connections.test", "ids.#", "0"),
 				),
 			},
 		},

@@ -48,6 +48,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.
 * `sampling_percentage` -  (Optional) The sampling depth, as a percentage, to apply when processing objects. This value determines the percentage of eligible objects that the job analyzes. If this value is less than 100, Amazon Macie selects the objects to analyze at random, up to the specified percentage, and analyzes all the data in those objects.
@@ -57,7 +58,7 @@ This resource supports the following arguments:
 * `initial_run` -  (Optional) Specifies whether to analyze all existing, eligible objects immediately after the job is created.
 * `job_type` -  (Required) The schedule for running the job. Valid values are: `ONE_TIME` - Run the job only once. If you specify this value, don't specify a value for the `schedule_frequency` property. `SCHEDULED` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `schedule_frequency` property to define the recurrence pattern for the job.
 * `s3_job_definition` -  (Optional) The S3 buckets that contain the objects to analyze, and the scope of that analysis. (documented below)
-* `tags` -  (Optional) A map of key-value pairs that specifies the tags to associate with the job. A job can have a maximum of 50 tags. Each tag consists of a tag key and an associated tag value. The maximum length of a tag key is 128 characters. The maximum length of a tag value is 256 characters.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `job_status` -  (Optional) The status for the job. Valid values are: `CANCELLED`, `RUNNING` and `USER_PAUSED`
 
 The `schedule_frequency` object supports the following:
@@ -147,6 +148,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
 * `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -173,4 +175,4 @@ Using `terraform import`, import `aws_macie2_classification_job` using the id. F
 % terraform import aws_macie2_classification_job.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f8a6a44b0b04d3be9cd1a4c9c046e920cea6b8d1c93db6603c3f6b18b8e1f25c -->
+<!-- cache-key: cdktf-0.20.8 input-fce68488959c7fa1804d49ff314e17c598fb5c3d0cf19c057718af80c86d5b33 -->

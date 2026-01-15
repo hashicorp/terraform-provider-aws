@@ -1,15 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,18 +49,18 @@ func dataSourceEBSSnapshotIDs() *schema.Resource {
 	}
 }
 
-func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeSnapshotsInput{}
+	input := ec2.DescribeSnapshotsInput{}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.OwnerIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		input.OwnerIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
-		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]any)) > 0 {
+		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -70,15 +71,13 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
 	}
 
-	sort.Slice(snapshots, func(i, j int) bool {
-		return aws.ToTime(snapshots[i].StartTime).Unix() > aws.ToTime(snapshots[j].StartTime).Unix()
-	})
+	sortSnapshotsDescending(snapshots)
 
 	var snapshotIDs []string
 
@@ -86,8 +85,14 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		snapshotIDs = append(snapshotIDs, aws.ToString(v.SnapshotId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, snapshotIDs)
 
 	return diags
+}
+
+func sortSnapshotsDescending(snapshots []awstypes.Snapshot) {
+	slices.SortFunc(snapshots, func(a, b awstypes.Snapshot) int {
+		return aws.ToTime(b.StartTime).Compare(aws.ToTime(a.StartTime))
+	})
 }

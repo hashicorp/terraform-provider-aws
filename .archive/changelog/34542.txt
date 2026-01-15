@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_ec2_transit_gateway: Add `security_group_referencing_support` argument
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway: Add `security_group_referencing_support` attribute
+```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_vpc_attachment: Add `security_group_referencing_support` argument
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_vpc_attachment: Add `security_group_referencing_support` attribute
+```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_vpc_attachment_accepter: Add `security_group_referencing_support` argument
+```

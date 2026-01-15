@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -9,15 +9,16 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func replicationGroupStateUpgradeV1(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func replicationGroupStateUpgradeFromV1(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	if rawState == nil {
-		rawState = map[string]interface{}{}
+		rawState = map[string]any{}
 	}
 
 	// Set auth_token_update_strategy to new default value.
@@ -91,10 +92,11 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  engineRedis,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      engineRedis,
+				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -280,4 +282,39 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 			},
 		},
 	}
+}
+
+func replicationGroupStateUpgradeFromV2(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	if rawState == nil {
+		rawState = map[string]any{}
+	}
+
+	// Remove auth_token_update_strategy default value if auth_token is not set
+	if v, ok := rawState["auth_token"].(string); !ok || v == "" {
+		delete(rawState, "auth_token_update_strategy")
+	}
+
+	return rawState, nil
+}
+
+func resourceReplicationGroupConfigV2() *schema.Resource {
+	s := resourceReplicationGroupConfigV1()
+
+	// Attributes added in V2 of the schema
+	s.Schema["auth_token_update_strategy"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+	}
+	s.Schema["cluster_mode"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	}
+	s.Schema["transit_encryption_mode"] = &schema.Schema{
+		Type:     schema.TypeString,
+		Optional: true,
+		Computed: true,
+	}
+
+	return s
 }

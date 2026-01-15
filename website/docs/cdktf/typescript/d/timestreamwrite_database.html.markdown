@@ -38,9 +38,10 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
-* `databaseName` – (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 256.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `databaseName` - (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 256.
 
 ## Attribute Reference
 
@@ -48,9 +49,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - The ARN that uniquely identifies this database.
 * `createdTime` - Creation time of database.
-* `databaseName` – (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 256.
+* `databaseName` - (Required) The name of the Timestream database. Minimum length of 3. Maximum length of 256.
 * `kmsKeyId` - The ARN of the KMS key used to encrypt the data stored in the database.
 * `lastUpdatedTime` - Last time database was updated.
 * `tableCount` -  Total number of tables in the Timestream database.
 
-<!-- cache-key: cdktf-0.20.1 input-09f00a2fd4d9fce1e8e04daeb035e6aa811517fe8fcd6ee09f5600b143473d33 -->
+<!-- cache-key: cdktf-0.20.8 input-e5b8a5981cb3b7781c621a8978f153fd56a5cc5c1e1c70bfb9bf07fcccfde5ae -->

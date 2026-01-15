@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -25,7 +25,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
@@ -36,7 +36,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -103,21 +103,10 @@ func testAccCheckOrganizationAdminAccountExists(ctx context.Context, resourceNam
 
 func testAccOrganizationAdminAccountConfig_self() string {
 	return `
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["guardduty.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
-
 resource "aws_guardduty_detector" "test" {}
 
 resource "aws_guardduty_organization_admin_account" "test" {
-  depends_on = [aws_organizations_organization.test, aws_guardduty_detector.test]
-
-  admin_account_id = data.aws_caller_identity.current.account_id
+  admin_account_id = aws_guardduty_detector.test.account_id
 }
 `
 }

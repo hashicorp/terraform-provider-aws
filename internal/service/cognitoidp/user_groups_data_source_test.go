@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -30,7 +30,7 @@ func TestAccCognitoIDPUserGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "groups.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "groups.#", "2"),
 				),
 			},
 		},

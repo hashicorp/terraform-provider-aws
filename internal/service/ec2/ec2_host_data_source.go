@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -91,11 +89,12 @@ func dataSourceHost() *schema.Resource {
 	}
 }
 
-func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeHostsInput{
+	input := ec2.DescribeHostsInput{
 		Filter: newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 	}
 
@@ -108,21 +107,14 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filter = nil
 	}
 
-	host, err := findHost(ctx, conn, input)
+	host, err := findHost(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
 	}
 
 	d.SetId(aws.ToString(host.HostId))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.ToString(host.OwnerId),
-		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, hostARN(ctx, c, aws.ToString(host.OwnerId), d.Id()))
 	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set(names.AttrAvailabilityZone, host.AvailabilityZone)

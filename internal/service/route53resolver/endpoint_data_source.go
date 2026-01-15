@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -71,8 +71,16 @@ func dataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rni_enhanced_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"target_name_server_metrics_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			names.AttrVPCID: {
@@ -83,7 +91,7 @@ func dataSourceEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -129,7 +137,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("protocols", flex.FlattenStringyValueSet(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
+	d.Set("rni_enhanced_metrics_enabled", ep.RniEnhancedMetricsEnabled)
 	d.Set(names.AttrStatus, ep.Status)
+	d.Set("target_name_server_metrics_enabled", ep.TargetNameServerMetricsEnabled)
 	d.Set(names.AttrVPCID, ep.HostVPCId)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
@@ -141,7 +151,12 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	var ips []*string
 
 	for _, v := range ipAddresses {
-		ips = append(ips, v.Ip)
+		if v.Ip != nil {
+			ips = append(ips, v.Ip)
+		}
+		if v.Ipv6 != nil {
+			ips = append(ips, v.Ipv6)
+		}
 	}
 
 	d.Set(names.AttrIPAddresses, aws.ToStringSlice(ips))
@@ -153,9 +168,9 @@ func buildR53ResolverTagFilters(set *schema.Set) []awstypes.Filter {
 	var filters []awstypes.Filter
 
 	for _, v := range set.List() {
-		m := v.(map[string]interface{})
+		m := v.(map[string]any)
 		var filterValues []string
-		for _, e := range m[names.AttrValues].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]any) {
 			filterValues = append(filterValues, e.(string))
 		}
 		filters = append(filters, awstypes.Filter{

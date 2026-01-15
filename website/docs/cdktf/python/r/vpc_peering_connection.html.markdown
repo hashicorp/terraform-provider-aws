@@ -12,6 +12,11 @@ description: |-
 
 Provides a resource to manage a VPC peering connection.
 
+-> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
+can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
+Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
+more information.
+
 ~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
 both a standalone [VPC Peering Connection Options](vpc_peering_connection_options.html) and a VPC Peering Connection
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
@@ -143,13 +148,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
--> **Note:** Modifying the VPC Peering Connection options requires peering to be active. An automatic activation
-can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) attribute. Alternatively, the VPC Peering
-Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
-more information.
-
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
 * `peer_vpc_id` - (Required) The ID of the target VPC with which you are creating the VPC Peering Connection.
@@ -220,4 +221,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-81146d4d65b74a0127fbac7a0b412052b1f13331dcc243c687067a6fe2c7a258 -->
+<!-- cache-key: cdktf-0.20.8 input-6b5c903900ad1ec3af327f302c9a0bb3a75d3e131690a1740ff92d8d9f323e4c -->

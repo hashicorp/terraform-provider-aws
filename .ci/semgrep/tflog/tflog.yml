@@ -1,0 +1,12 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: setfield-without-assign
+    languages: [go]
+    message: The return value of "tflog.SetField" must be used
+    patterns:
+      - pattern: tflog.SetField(...)
+      - pattern-not-inside: $CTX1 = tflog.SetField($CTX2, ...)
+      - pattern-not-inside: return tflog.SetField($CTX, ...)
+    severity: ERROR

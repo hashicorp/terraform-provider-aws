@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm
@@ -11,30 +11,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_devicefarm_test_grid_project", name="Test Grid Project")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/devicefarm/types;awstypes;awstypes.TestGridProject")
+// @Testing(preCheckRegion="us-west-2")
+// @Testing(identityRegionOverrideTest=false)
 func resourceTestGridProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTestGridProjectCreate,
 		ReadWithoutTimeout:   resourceTestGridProjectRead,
 		UpdateWithoutTimeout: resourceTestGridProjectUpdate,
 		DeleteWithoutTimeout: resourceTestGridProjectDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -79,11 +81,10 @@ func resourceTestGridProject() *schema.Resource {
 				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -97,7 +98,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
-		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
+		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]any))
 	}
 
 	output, err := conn.CreateTestGridProject(ctx, input)
@@ -115,13 +116,13 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	project, err := findTestGridProjectByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Test Grid Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -142,7 +143,7 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -169,14 +170,15 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceTestGridProjectRead(ctx, d, meta)...)
 }
 
-func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTestGridProjectDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Test Grid Project: %s", d.Id())
-	_, err := conn.DeleteTestGridProject(ctx, &devicefarm.DeleteTestGridProjectInput{
+	input := devicefarm.DeleteTestGridProjectInput{
 		ProjectArn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteTestGridProject(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -196,7 +198,7 @@ func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	output, err := conn.GetTestGridProject(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -207,18 +209,18 @@ func findTestGridProjectByARN(ctx context.Context, conn *devicefarm.Client, arn 
 	}
 
 	if output == nil || output.TestGridProject == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TestGridProject, nil
 }
 
-func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig {
+func expandTestGridProjectVPCConfig(l []any) *awstypes.TestGridVpcConfig {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.TestGridVpcConfig{
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
@@ -229,16 +231,16 @@ func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig
 	return config
 }
 
-func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []interface{} {
+func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []any {
 	if conf == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrVPCID:            aws.ToString(conf.VpcId),
 		names.AttrSubnetIDs:        flex.FlattenStringValueSet(conf.SubnetIds),
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(conf.SecurityGroupIds),
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfrontkeyvaluestore
@@ -6,29 +6,37 @@ package cloudfrontkeyvaluestore
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Key")
+// @FrameworkResource("aws_cloudfrontkeyvaluestore_key", name="Key")
+// @IdentityAttribute("key_value_store_arn")
+// @IdentityAttribute("key")
+// @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
+// @Testing(preIdentityVersion="6.0.0")
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -36,18 +44,14 @@ func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type keyResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (*keyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudfrontkeyvaluestore_key"
+	framework.ResourceWithModel[keyResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *keyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrKey: schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "The key to put.",
@@ -119,7 +123,7 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	// Set values for unknowns.
 	data.TotalSizeInBytes = fwflex.Int64ToFramework(ctx, output.TotalSizeInBytes)
-	data.setID()
+	data.ID = types.StringValue(data.setID())
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -131,17 +135,11 @@ func (r *keyResource) Read(ctx context.Context, request resource.ReadRequest, re
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
 
 	output, err := findKeyByTwoPartKey(ctx, conn, data.KvsARN.ValueString(), data.Key.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -242,11 +240,12 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 		return
 	}
 
-	_, err = conn.DeleteKey(ctx, &cloudfrontkeyvaluestore.DeleteKeyInput{
+	input := cloudfrontkeyvaluestore.DeleteKeyInput{
 		IfMatch: etag,
 		Key:     fwflex.StringFromFramework(ctx, data.Key),
 		KvsARN:  fwflex.StringFromFramework(ctx, data.KvsARN),
-	})
+	}
+	_, err = conn.DeleteKey(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -268,7 +267,7 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	output, err := conn.GetKey(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -279,7 +278,7 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	}
 
 	if output == nil || output.Key == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -293,7 +292,7 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	output, err := conn.DescribeKeyValueStore(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -304,7 +303,7 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	}
 
 	if output == nil || output.ETag == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ETag, nil
@@ -322,24 +321,50 @@ const (
 	keyResourceIDPartCount = 2
 )
 
-func (data *keyResourceModel) InitFromID() error {
-	id := data.ID.ValueString()
-	parts, err := flex.ExpandResourceId(id, keyResourceIDPartCount, false)
-	if err != nil {
-		return err
+func (data *keyResourceModel) setID() string {
+	parts := []string{
+		data.KvsARN.ValueString(),
+		data.Key.ValueString(),
 	}
 
-	_, err = arn.Parse(parts[0])
-	if err != nil {
-		return err
-	}
-
-	data.KvsARN = fwtypes.ARNValue(parts[0])
-	data.Key = types.StringValue(parts[1])
-
-	return nil
+	return createKeyImportID(parts)
 }
 
-func (data *keyResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.KvsARN.ValueString(), data.Key.ValueString()}, keyResourceIDPartCount, false)))
+func createKeyImportID(parts []string) string {
+	return strings.Join(parts, intflex.ResourceIdSeparator)
+}
+
+var (
+	_ inttypes.ImportIDParser           = securityGroupVPCAssociationImportID{}
+	_ inttypes.FrameworkImportIDCreator = securityGroupVPCAssociationImportID{}
+)
+
+type securityGroupVPCAssociationImportID struct{}
+
+func (securityGroupVPCAssociationImportID) Parse(id string) (string, map[string]string, error) {
+	kvsARN, key, found := strings.Cut(id, intflex.ResourceIdSeparator)
+	if !found {
+		return "", nil, fmt.Errorf("id \"%s\" should be in the format <key-value-store-arn>"+intflex.ResourceIdSeparator+"<key>", id)
+	}
+
+	result := map[string]string{
+		"key_value_store_arn": kvsARN,
+		names.AttrKey:         key,
+	}
+
+	return id, result, nil
+}
+
+func (securityGroupVPCAssociationImportID) Create(ctx context.Context, state tfsdk.State) string {
+	parts := make([]string, 0, keyResourceIDPartCount)
+
+	var attrVal types.String
+
+	state.GetAttribute(ctx, path.Root("key_value_store_arn"), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	state.GetAttribute(ctx, path.Root(names.AttrKey), &attrVal)
+	parts = append(parts, attrVal.ValueString())
+
+	return createKeyImportID(parts)
 }

@@ -44,6 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -82,4 +83,4 @@ Using `terraform import`, import CloudWatch Synthetics Group using the `name`. F
 % terraform import aws_synthetics_group.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a60f694e7f99a87c98a47c4127d04528abd45230d213848a0dd79453012e6e75 -->
+<!-- cache-key: cdktf-0.20.8 input-0476329e1b712dffc93a95cf13bde006384922890f381f6c1a7bd1dc5f1e4300 -->

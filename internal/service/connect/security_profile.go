@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -13,16 +13,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +38,6 @@ func resourceSecurityProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -84,7 +82,7 @@ func resourceSecurityProfile() *schema.Resource {
 	}
 }
 
-func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -116,7 +114,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
-func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -127,7 +125,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	securityProfile, err := findSecurityProfileByTwoPartKey(ctx, conn, instanceID, securityProfileID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,7 +155,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -190,7 +188,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
-func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -200,10 +198,11 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Security Profile: %s", d.Id())
-	_, err = conn.DeleteSecurityProfile(ctx, &connect.DeleteSecurityProfileInput{
+	input := connect.DeleteSecurityProfileInput{
 		InstanceId:        aws.String(instanceID),
 		SecurityProfileId: aws.String(securityProfileID),
-	})
+	}
+	_, err = conn.DeleteSecurityProfile(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -248,7 +247,7 @@ func findSecurityProfile(ctx context.Context, conn *connect.Client, input *conne
 	output, err := conn.DescribeSecurityProfile(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -259,7 +258,7 @@ func findSecurityProfile(ctx context.Context, conn *connect.Client, input *conne
 	}
 
 	if output == nil || output.SecurityProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SecurityProfile, nil
@@ -284,7 +283,7 @@ func findSecurityProfilePermissions(ctx context.Context, conn *connect.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

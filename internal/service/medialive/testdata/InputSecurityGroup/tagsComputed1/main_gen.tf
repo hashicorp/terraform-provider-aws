@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -14,12 +14,6 @@ resource "aws_medialive_input_security_group" "test" {
 }
 
 resource "null_resource" "test" {}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 
 variable "unknownTagKey" {
   type     = string

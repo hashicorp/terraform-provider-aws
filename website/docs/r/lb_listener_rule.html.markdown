@@ -202,29 +202,99 @@ resource "aws_lb_listener_rule" "oidc" {
     target_group_arn = aws_lb_target_group.static.arn
   }
 }
+
+# JWT-validation Action
+
+resource "aws_lb_listener_rule" "oidc" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type = "jwt-validation"
+
+    jwt_validation {
+      issuer        = "https://example.com"
+      jwks_endpoint = "https://example.com/.well-known/jwks.json"
+      additional_claim {
+        format = "string-array"
+        name   = "claim_name1"
+        values = ["value1", "value2"]
+      }
+      additional_claim {
+        format = "single-string"
+        name   = "claim_name2"
+        values = ["value1"]
+      }
+    }
+  }
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+}
+
+# With transform
+
+resource "aws_lb_listener_rule" "transform" {
+  listener_arn = aws_lb_listener.front_end.arn
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.static.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["*"]
+    }
+  }
+
+  transform {
+    type = "host-header-rewrite"
+    host_header_rewrite_config {
+      rewrite {
+        regex   = "^mywebsite-(.+).com$"
+        replace = "internal.dev.$1.myweb.com"
+      }
+    }
+  }
+
+  transform {
+    type = "url-rewrite"
+    url_rewrite_config {
+      rewrite {
+        regex   = "^/dp/([A-Za-z0-9]+)/?$"
+        replace = "/product.php?id=$1"
+      }
+    }
+  }
+}
 ```
 
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `listener_arn` - (Required, Forces New Resource) The ARN of the listener to which to attach the rule.
 * `priority` - (Optional) The priority for the rule between `1` and `50000`. Leaving it unset will automatically set the rule with next available priority after currently existing highest rule. A listener can't have multiple rules with the same priority.
 * `action` - (Required) An Action block. Action blocks are documented below.
 * `condition` - (Required) A Condition block. Multiple condition blocks of different types can be set and all must be satisfied for the rule to match. Condition blocks are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `transform` - (Optional) Configuration block that defines the transform to apply to requests matching this rule. See [Transform Blocks](#transform-blocks) below for more details. Once specified, to remove the transform from the rule, remove the `transform` block from the configuration.
 
 ### Action Blocks
 
 Action Blocks (for `action`) support the following:
 
-* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
+* `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito`, `authenticate-oidc` and `jwt-validation`.
 * `authenticate_cognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
 * `authenticate_oidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
   Specify only if `type` is `forward`.
   Cannot be specified with `target_group_arn`.
+* `jwt_validation` - (Optional) Information for creating a JWT validation action. Required if `type` is `jwt-validation`.
 * `order` - (Optional) Order for the action.
   The action with the lowest value for order is performed first.
   Valid values are between `1` and `50000`.
@@ -237,7 +307,7 @@ Action Blocks (for `action`) support the following:
 
 Forward Blocks (for `forward`) support the following:
 
-* `target_group` - (Required) One or more target groups block.
+* `target_group` - (Required) One or more target group blocks.
 * `stickiness` - (Optional) The target group stickiness for the rule.
 
 Target Group Blocks (for `target_group`) supports the following:
@@ -297,27 +367,54 @@ Authentication Request Extra Params Blocks (for `authentication_request_extra_pa
 * `key` - (Required) The key of query parameter
 * `value` - (Required) The value of query parameter
 
+JWT Validation Blocks (for `jwt_validation`) supports the following:
+
+* `issuer` - (Required) Issuer of the JWT.
+* `jwks_endpoint` - (Required) JSON Web Key Set (JWKS) endpoint. This endpoint contains JSON Web Keys (JWK) that are used to validate signatures from the provider. This must be a full URL, including the HTTPS protocol, the domain, and the path.
+* `additional_claim` - (Optional) Repeatable configuration block for additional claims to validate.
+
+Additional Claim Blocks (for `additional_claim`) supports the following:
+
+* `format` - (Required) Format of the claim value. Valid values are `single-string`, `string-array` and `space-separated-values`.
+* `name` - (Required) Name of the claim to validate. `exp`, `iss`, `nbf`, or `iat` cannot be specified because they are validated by default.
+* `values` - (Required) List of expected values of the claim.
+
 ### Condition Blocks
 
 One or more condition blocks can be set per rule. Most condition types can only be specified once per rule except for `http-header` and `query-string` which can be specified multiple times.
 
 Condition Blocks (for `condition`) support the following:
 
-* `host_header` - (Optional) Contains a single `values` item which is a list of host header patterns to match. The maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied.
+* `host_header` - (Optional) Host header patterns to match. [Host Header block](#host-header-blocks) fields documented below.
 * `http_header` - (Optional) HTTP headers to match. [HTTP Header block](#http-header-blocks) fields documented below.
 * `http_request_method` - (Optional) Contains a single `values` item which is a list of HTTP request methods or verbs to match. Maximum size is 40 characters. Only allowed characters are A-Z, hyphen (-) and underscore (\_). Comparison is case sensitive. Wildcards are not supported. Only one needs to match for the condition to be satisfied. AWS recommends that GET and HEAD requests are routed in the same way because the response to a HEAD request may be cached.
-* `path_pattern` - (Optional) Contains a single `values` item which is a list of path patterns to match against the request URL. Maximum size of each pattern is 128 characters. Comparison is case sensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `query_string` condition.
+* `path_pattern` - (Optional) Path patterns to match against the request URL. [Path Pattern block](#path-pattern-blocks) fields documented below.
 * `query_string` - (Optional) Query strings to match. [Query String block](#query-string-blocks) fields documented below.
 * `source_ip` - (Optional) Contains a single `values` item which is a list of source IP CIDR notations to match. You can use both IPv4 and IPv6 addresses. Wildcards are not supported. Condition is satisfied if the source IP address of the request matches one of the CIDR blocks. Condition is not satisfied by the addresses in the `X-Forwarded-For` header, use `http_header` condition instead.
 
 ~> **NOTE::** Exactly one of `host_header`, `http_header`, `http_request_method`, `path_pattern`, `query_string` or `source_ip` must be set per condition.
 
+#### Host Header Blocks
+
+Host Header Blocks (for `host_header`) support the following:
+
+* `regex_values` - (Optional) List of regular expressions to compare against the host header. The maximum length of each string is 128 characters. Conflicts with `values`.
+* `values` - (Optional) List of host header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Conflicts with `regex_values`.
+
 #### HTTP Header Blocks
 
 HTTP Header Blocks (for `http_header`) support the following:
 
-* `http_header_name` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `host-header` condition instead.
-* `values` - (Required) List of header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). If the same header appears multiple times in the request they will be searched in order until a match is found. Only one pattern needs to match for the condition to be satisfied. To require that all of the strings are a match, create one condition block per string.
+* `http_header_name` - (Required) Name of HTTP header to search. The maximum size is 40 characters. Comparison is case-insensitive. Only RFC7240 characters are supported. Wildcards are not supported. You cannot use HTTP header condition to specify the host header, use a `host-header` condition instead.
+* `regex_values` - (Optional) List of regular expression to compare against the HTTP header. The maximum length of each string is 128 characters. Conflicts with `values`.
+* `values` - (Optional) List of header value patterns to match. Maximum size of each pattern is 128 characters. Comparison is case-insensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). If the same header appears multiple times in the request they will be searched in order until a match is found. Only one pattern needs to match for the condition to be satisfied. To require that all of the strings are a match, create one condition block per string. Conflicts with `regex_values`.
+
+#### Path Pattern Blocks
+
+Path Pattern Blocks (for `path_pattern`) support the following:
+
+* `regex_values` - (Optional) List of regular expressions to compare against the request URL. The maximum length of each string is 128 characters. Conflicts with `values`.
+* `values` - (Optional) List of path patterns to compare against the request URL. Maximum size of each pattern is 128 characters. Comparison is case-sensitive. Wildcard characters supported: * (matches 0 or more characters) and ? (matches exactly 1 character). Only one pattern needs to match for the condition to be satisfied. Path pattern is compared only to the path of the URL, not to its query string. To compare against the query string, use a `query_string` condition. Conflicts with `regex_values`.
 
 #### Query String Blocks
 
@@ -330,6 +427,33 @@ Query String Value Blocks (for `query_string.values`) support the following:
 * `key` - (Optional) Query string key pattern to match.
 * `value` - (Required) Query string value pattern to match.
 
+#### Transform Blocks
+
+Transform Blocks (for `transform`) support the following:
+
+* `type` - (Required) Type of transform. Valid values are `host-header-rewrite` and `url-rewrite`.
+* `host_header_rewrite_config` - (Optional) Configuration block for host header rewrite. Required if `type` is `host-header-rewrite`. See [Host Header Rewrite Config Blocks](#host-header-rewrite-config-blocks) below.
+* `url_rewrite_config` - (Optional) Configuration block for URL rewrite. Required if `type` is `url-rewrite`. See [URL Rewrite Config Blocks](#url-rewrite-config-blocks) below.
+
+### Host Header Rewrite Config Blocks
+
+Host Header Rewrite Config Blocks (for `host_header_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for host header rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### URL Rewrite Config Blocks
+
+URL Rewrite Config Blocks (for `url_rewrite_config`) support the following:
+
+* `rewrite` - (Optional) Block for URL rewrite configuration. Only one block is accepted. See [Rewrite Blocks](#rewrite-blocks) below.
+
+### Rewrite Blocks
+
+Rewrite Blocks (for `rewrite`) support the following:
+
+* `regex` - (Required) Regular expression to match in the input string. Length constraints: Between 1 and 1024 characters.
+* `replace` - (Required) Replacement string to use when rewriting the matched input. Capture groups in the regular expression (for example, `$1` and `$2`) can be specified. Length constraints: Between 0 and 1024 characters.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -339,6 +463,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_listener_rule.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:listener-rule/app/my-load-balancer/50dc6c495c0c9188/f2f7dc8efc522ab2/9683b2d02a6cabee"
+  }
+}
+
+resource "aws_lb_listener_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the load balancer listener rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import rules using their ARN. For example:
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,38 +77,44 @@ func resourceEndpointAuthorization() *schema.Resource {
 	}
 }
 
-func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	account := d.Get("account").(string)
+	accountID, clusterID := d.Get("account").(string), d.Get(names.AttrClusterIdentifier).(string)
+	id := fmt.Sprintf("%s:%s", accountID, clusterID)
 	input := redshift.AuthorizeEndpointAccessInput{
-		Account:           aws.String(account),
-		ClusterIdentifier: aws.String(d.Get(names.AttrClusterIdentifier).(string)),
+		Account:           aws.String(accountID),
+		ClusterIdentifier: aws.String(clusterID),
 	}
 
 	if v, ok := d.GetOk("vpc_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.AuthorizeEndpointAccess(ctx, &input)
+	_, err := conn.AuthorizeEndpointAccess(ctx, &input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Endpoint Authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Endpoint Authorization (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", account, aws.ToString(output.ClusterIdentifier)))
-	log.Printf("[INFO] Redshift Endpoint Authorization ID: %s", d.Id())
+	d.SetId(id)
 
 	return append(diags, resourceEndpointAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	endpoint, err := findEndpointAuthorizationByID(ctx, conn, d.Id())
+	accountID, clusterID, err := decodeEndpointAuthorizationID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	endpoint, err := findEndpointAuthorizationByTwoPartKey(ctx, conn, accountID, clusterID)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Endpoint Authorization (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,40 +135,40 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	if d.HasChanges("vpc_ids") {
-		account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
+		accountID, clusterID, err := decodeEndpointAuthorizationID(d.Id())
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Redshift Endpoint Authorization (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		o, n := d.GetChange("vpc_ids")
-		ns := n.(*schema.Set)
-		os := o.(*schema.Set)
-		added := ns.Difference(os)
-		removed := os.Difference(ns)
+		ns, os := n.(*schema.Set), o.(*schema.Set)
+		add, del := ns.Difference(os), os.Difference(ns)
 
-		if added.Len() > 0 {
-			_, err := conn.AuthorizeEndpointAccess(ctx, &redshift.AuthorizeEndpointAccessInput{
-				Account:           aws.String(account),
-				ClusterIdentifier: aws.String(clusterId),
-				VpcIds:            flex.ExpandStringValueSet(added),
-			})
+		if add.Len() > 0 {
+			input := redshift.AuthorizeEndpointAccessInput{
+				Account:           aws.String(accountID),
+				ClusterIdentifier: aws.String(clusterID),
+				VpcIds:            flex.ExpandStringValueSet(add),
+			}
+			_, err := conn.AuthorizeEndpointAccess(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Redshift Endpoint Authorization (%s): authorizing VPCs: %s", d.Id(), err)
 			}
 		}
 
-		if removed.Len() > 0 {
-			_, err := conn.RevokeEndpointAccess(ctx, &redshift.RevokeEndpointAccessInput{
-				Account:           aws.String(account),
-				ClusterIdentifier: aws.String(clusterId),
-				VpcIds:            flex.ExpandStringValueSet(removed),
-			})
+		if del.Len() > 0 {
+			input := redshift.RevokeEndpointAccessInput{
+				Account:           aws.String(accountID),
+				ClusterIdentifier: aws.String(clusterID),
+				VpcIds:            flex.ExpandStringValueSet(del),
+			}
+			_, err := conn.RevokeEndpointAccess(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Redshift Endpoint Authorization (%s): revoking VPCs: %s", d.Id(), err)
@@ -173,22 +179,20 @@ func resourceEndpointAuthorizationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceEndpointAuthorizationRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
+	accountID, clusterID, err := decodeEndpointAuthorizationID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Authorization (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	input := &redshift.RevokeEndpointAccessInput{
-		Account:           aws.String(account),
-		ClusterIdentifier: aws.String(clusterId),
+	input := redshift.RevokeEndpointAccessInput{
+		Account:           aws.String(accountID),
+		ClusterIdentifier: aws.String(clusterID),
 		Force:             aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
-
-	_, err = conn.RevokeEndpointAccess(ctx, input)
+	_, err = conn.RevokeEndpointAccess(ctx, &input)
 
 	if errs.IsA[*awstypes.EndpointAuthorizationNotFoundFault](err) || errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 		return diags
@@ -201,7 +205,7 @@ func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func DecodeEndpointAuthorizationID(id string) (string, string, error) {
+func decodeEndpointAuthorizationID(id string) (string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return "", "", fmt.Errorf("expected ID to be the form account:cluster_identifier, given: %s", id)

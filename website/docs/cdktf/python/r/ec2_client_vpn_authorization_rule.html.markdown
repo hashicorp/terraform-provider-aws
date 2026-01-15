@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `target_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the network to which the authorization rule applies.
 * `access_group_id` - (Optional) The ID of the group to which the authorization rule grants access. One of `access_group_id` or `authorize_all_groups` must be set.
@@ -107,4 +108,4 @@ Using the endpoint ID, target network CIDR, and group name:
 % terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->
+<!-- cache-key: cdktf-0.20.8 input-42345647a001e03d42ec36f40243e799611ce21d4e437155d6fe0c8f0f09ef91 -->

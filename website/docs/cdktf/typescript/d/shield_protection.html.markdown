@@ -52,7 +52,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new DataAwsShieldProtection(this, "example", {
       resourceArn:
-        "arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh",
+        "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh",
     });
   }
 }
@@ -61,12 +61,12 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> Exactly one of `protectionId` or `resourceArn` is required.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `protectionId` - (Optional) Unique identifier for the protection.
 * `resourceArn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
+
+~> Exactly one of `protectionId` or `resourceArn` is required.
 
 ## Attribute Reference
 
@@ -75,4 +75,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the protection.
 * `protectionArn` - ARN of the protection.
 
-<!-- cache-key: cdktf-0.20.1 input-75d9f856f14ca87d032548d9404cb36b20ed94a40ec416924f4ee0c3392a6e12 -->
+<!-- cache-key: cdktf-0.20.8 input-66dc62e394597208ae34bc89474728ddcc0aaad829a1ef7e3d313016b8890a8c -->

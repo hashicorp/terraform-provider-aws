@@ -92,6 +92,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Optional) The alias of the prometheus workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-onboard-create-workspace.html).
 * `kms_key_arn` - (Optional) The ARN for the KMS encryption key. If this argument is not provided, then the AWS owned encryption key will be used to encrypt the data in the workspace. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/encryption-at-rest-Amazon-Service-Prometheus.html)
 * `logging_configuration` - (Optional) Logging configuration for the workspace. See [Logging Configuration](#logging-configuration) below for details.
@@ -137,4 +138,4 @@ Using `terraform import`, import AMP Workspaces using the identifier. For exampl
 % terraform import aws_prometheus_workspace.demo ws-C6DCB907-F2D7-4D96-957B-66691F865D8B
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-85e974d41daf7f23c519bd9d2674b76ff09b2a681285ce445b746c328e86df24 -->
+<!-- cache-key: cdktf-0.20.8 input-103296c9f277f530cb82d698ff3e14d35a7550720a893a6e8905710636f98d85 -->

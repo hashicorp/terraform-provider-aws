@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the State Machine alias.
 * `statemachineArn` - (Required) ARN of the State Machine.
 
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of state machine alias.
 * `routingConfiguration` - Routing Configuration of state machine alias
 
-<!-- cache-key: cdktf-0.20.1 input-74bb5c065bedebe96a1f1604459cc4b92ef1bc40588d2a1e6918a9e59b8ae39b -->
+<!-- cache-key: cdktf-0.20.8 input-ba45f157bc38e18457f6d4939883b34b484015af93957638bb20866446c7894b -->

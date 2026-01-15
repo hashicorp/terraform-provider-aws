@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -30,7 +30,11 @@ import (
 
 // @SDKResource("aws_guardduty_filter", name="Filter")
 // @Tags(identifierAttribute="arn")
-func ResourceFilter() *schema.Resource {
+// @Testing(serialize=true)
+// @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/guardduty;guardduty.GetFilterOutput")
+func resourceFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFilterCreate,
 		ReadWithoutTimeout:   resourceFilterRead,
@@ -103,11 +107,31 @@ func ResourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
 									"not_equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"not_matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
 									},
 								},
 							},
@@ -132,12 +156,10 @@ func ResourceFilter() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -151,7 +173,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	var err error
-	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+	input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Filter: %s", err)
 	}
@@ -167,7 +189,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -203,10 +225,10 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -229,7 +251,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -243,7 +265,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		var err error
-		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]interface{}))
+		input.FindingCriteria, err = expandFindingCriteria(d.Get("finding_criteria").([]any))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Filter %s: %s", d.Id(), err)
 		}
@@ -257,7 +279,7 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceFilterRead(ctx, d, meta)...)
 }
 
-func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFilterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -295,18 +317,18 @@ func FilterParseID(importedId string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandFindingCriteria(raw []interface{}) (*awstypes.FindingCriteria, error) {
-	findingCriteria := raw[0].(map[string]interface{})
+func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
+	findingCriteria := raw[0].(map[string]any)
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
 	criteria := map[string]awstypes.Condition{}
 	for _, criterion := range inputFindingCriteria {
-		typedCriterion := criterion.(map[string]interface{})
+		typedCriterion := criterion.(map[string]any)
 		field := typedCriterion[names.AttrField].(string)
 
 		condition := awstypes.Condition{}
 		if x, ok := typedCriterion["equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+			if v, ok := x.([]any); ok && len(v) > 0 {
 				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
@@ -316,7 +338,7 @@ func expandFindingCriteria(raw []interface{}) (*awstypes.FindingCriteria, error)
 			}
 		}
 		if x, ok := typedCriterion["not_equals"]; ok {
-			if v, ok := x.([]interface{}); ok && len(v) > 0 {
+			if v, ok := x.([]any); ok && len(v) > 0 {
 				foo := make([]string, len(v))
 				for i := range v {
 					s := v[i].(string)
@@ -361,6 +383,26 @@ func expandFindingCriteria(raw []interface{}) (*awstypes.FindingCriteria, error)
 				condition.LessThanOrEqual = aws.Int64(i)
 			}
 		}
+		if x, ok := typedCriterion["matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.Matches = foo
+			}
+		}
+		if x, ok := typedCriterion["not_matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.NotMatches = foo
+			}
+		}
 		criteria[field] = condition
 	}
 
@@ -379,11 +421,11 @@ func expandConditionIntField(field, v string) (int64, error) {
 	return strconv.ParseInt(v, 10, 64)
 }
 
-func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []interface{} {
-	var flatCriteria []interface{}
+func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []any {
+	var flatCriteria []any
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
-		criterion := map[string]interface{}{
+		criterion := map[string]any{
 			names.AttrField: field,
 		}
 		if len(conditions.Equals) > 0 {
@@ -404,11 +446,17 @@ func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []i
 		if v := aws.ToInt64(conditions.LessThanOrEqual); v > 0 {
 			criterion["less_than_or_equal"] = flattenConditionIntField(field, v)
 		}
+		if len(conditions.Matches) > 0 {
+			criterion["matches"] = conditions.Matches
+		}
+		if len(conditions.NotMatches) > 0 {
+			criterion["not_matches"] = conditions.NotMatches
+		}
 		flatCriteria = append(flatCriteria, criterion)
 	}
 
-	return []interface{}{
-		map[string][]interface{}{
+	return []any{
+		map[string][]any{
 			"criterion": flatCriteria,
 		},
 	}

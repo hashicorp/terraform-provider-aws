@@ -52,6 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `prefix` - (Optional) Limits results to object keys with this prefix (Default: none)
 * `delimiter` - (Optional) Character used to group keys (Default: none)
@@ -71,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)
 * `request_charged` - If present, indicates that the requester was successfully charged for the request.
 
-<!-- cache-key: cdktf-0.20.1 input-75319062f102d49785cbd4721ffbb267fc16f39f945cacf91b31e00a17bc10b2 -->
+<!-- cache-key: cdktf-0.20.8 input-07ab35fd7a8fdcfb057de06b5340fa574f296e1285b860e53af4a4884634da90 -->

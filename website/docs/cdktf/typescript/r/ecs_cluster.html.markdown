@@ -186,6 +186,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `configuration` - (Optional) Execute command configuration for the cluster. See [`configuration` Block](#configuration-block) for details.
 * `serviceConnectDefaults` - (Optional) Default Service Connect namespace. See [`serviceConnectDefaults` Block](#service_connect_defaults-block) for details.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. See [`setting` Block](#setting-block) for details.
@@ -234,14 +235,13 @@ The `serviceConnectDefaults` configuration block supports the following argument
 The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) Value to assign to the setting. Valid values: `enabled`, `disabled`.
+* `value` -  (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN that identifies the cluster.
-* `id` - ARN that identifies the cluster.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -272,4 +272,4 @@ Using `terraform import`, import ECS clusters using the cluster name. For exampl
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a1f09418ccf39300c804f4ebc1b140373e9d8f20f6c67a88c7ee5454f47f0f2 -->
+<!-- cache-key: cdktf-0.20.8 input-e367a347aeed7ca364c486ddb6273745fd543ff092421952bc06e05858ddf421 -->

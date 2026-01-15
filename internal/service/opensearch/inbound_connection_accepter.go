@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +32,7 @@ func resourceInboundConnectionAccepter() *schema.Resource {
 		DeleteWithoutTimeout: resourceInboundConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, m any) (result []*schema.ResourceData, err error) {
 				d.Set(names.AttrConnectionID, d.Id())
 
 				return []*schema.ResourceData{d}, nil
@@ -57,7 +58,7 @@ func resourceInboundConnectionAccepter() *schema.Resource {
 	}
 }
 
-func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -81,13 +82,13 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceInboundConnectionRead(ctx, d, meta)...)
 }
 
-func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
 	connection, err := findInboundConnectionByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Inbound Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -102,7 +103,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -160,11 +161,11 @@ func findInboundConnectionByID(ctx context.Context, conn *opensearch.Client, id 
 	}
 
 	if output.ConnectionStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ConnectionStatus.StatusCode; status == awstypes.InboundConnectionStatusCodeDeleted || status == awstypes.InboundConnectionStatusCodeRejected {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -191,7 +192,7 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -207,11 +208,11 @@ func findInboundConnections(ctx context.Context, conn *opensearch.Client, input 
 	return output, nil
 }
 
-func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInboundConnectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -224,7 +225,7 @@ func statusInboundConnection(ctx context.Context, conn *opensearch.Client, id st
 }
 
 func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeProvisioning, awstypes.InboundConnectionStatusCodeApproved),
 		Target:  enum.Slice(awstypes.InboundConnectionStatusCodeActive),
 		Refresh: statusInboundConnection(ctx, conn, id),
@@ -234,7 +235,7 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -243,7 +244,7 @@ func waitInboundConnectionAccepted(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeRejecting),
 		Target:  []string{},
 		Refresh: statusInboundConnection(ctx, conn, id),
@@ -253,7 +254,7 @@ func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}
@@ -262,7 +263,7 @@ func waitInboundConnectionRejected(ctx context.Context, conn *opensearch.Client,
 }
 
 func waitInboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.InboundConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.InboundConnectionStatusCodeDeleting),
 		Target:  []string{},
 		Refresh: statusInboundConnection(ctx, conn, id),
@@ -272,7 +273,7 @@ func waitInboundConnectionDeleted(ctx context.Context, conn *opensearch.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InboundConnection); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
 
 		return output, err
 	}

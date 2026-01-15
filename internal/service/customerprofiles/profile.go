@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package customerprofiles
@@ -11,20 +11,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles"
-	"github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_customerprofiles_profile")
-func ResourceProfile() *schema.Resource {
+// @SDKResource("aws_customerprofiles_profile", name="Profile")
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
@@ -35,86 +35,88 @@ func ResourceProfile() *schema.Resource {
 			StateContext: resourceProfileImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"additional_information": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrAddress: customerProfileAddressSchema(),
-			names.AttrAttributes: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_number": {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
-			},
-			"billing_address": customerProfileAddressSchema(),
-			"birth_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"business_email_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"business_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"business_phone_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"email_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"first_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"gender_string": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"home_phone_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"last_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mailing_address": customerProfileAddressSchema(),
-			"middle_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"mobile_phone_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"party_type_string": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"personal_email_address": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"phone_number": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"shipping_address": customerProfileAddressSchema(),
+				"additional_information": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrAddress: customerProfileAddressSchema(),
+				names.AttrAttributes: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"billing_address": customerProfileAddressSchema(),
+				"birth_date": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"business_email_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"business_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"business_phone_number": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"email_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"first_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"gender_string": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"home_phone_number": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"last_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"mailing_address": customerProfileAddressSchema(),
+				"middle_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"mobile_phone_number": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"party_type_string": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"personal_email_address": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"phone_number": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"shipping_address": customerProfileAddressSchema(),
+			}
 		},
 	}
 }
@@ -171,11 +173,11 @@ func customerProfileAddressSchema() *schema.Schema {
 	}
 }
 
-func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	input := &customerprofiles.CreateProfileInput{
+	input := customerprofiles.CreateProfileInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
@@ -188,15 +190,15 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrAddress); ok {
-		input.Address = expandAddress(v.([]interface{}))
+		input.Address = expandAddress(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrAttributes); ok {
-		input.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.Attributes = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk("billing_address"); ok {
-		input.BillingAddress = expandAddress(v.([]interface{}))
+		input.BillingAddress = expandAddress(v.([]any))
 	}
 
 	if v, ok := d.GetOk("birth_date"); ok {
@@ -236,7 +238,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("mailing_address"); ok {
-		input.MailingAddress = expandAddress(v.([]interface{}))
+		input.MailingAddress = expandAddress(v.([]any))
 	}
 
 	if v, ok := d.GetOk("middle_name"); ok {
@@ -260,10 +262,10 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("shipping_address"); ok {
-		input.ShippingAddress = expandAddress(v.([]interface{}))
+		input.ShippingAddress = expandAddress(v.([]any))
 	}
 
-	output, err := conn.CreateProfile(ctx, input)
+	output, err := conn.CreateProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Customer Profiles Profile: %s", err)
@@ -271,8 +273,8 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(output.ProfileId))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindProfileByTwoPartKey(ctx, conn, d.Id(), d.Get(names.AttrDomainName).(string))
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return findProfileByTwoPartKey(ctx, conn, d.Id(), d.Get(names.AttrDomainName).(string))
 	})
 
 	if err != nil {
@@ -282,14 +284,14 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	output, err := FindProfileByTwoPartKey(ctx, conn, d.Id(), domainName)
+	output, err := findProfileByTwoPartKey(ctx, conn, d.Id(), domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Customer Profiles Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -325,11 +327,11 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	input := &customerprofiles.UpdateProfileInput{
+	input := customerprofiles.UpdateProfileInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		ProfileId:  aws.String(d.Id()),
 	}
@@ -343,15 +345,15 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange(names.AttrAddress) {
-		input.Address = expandUpdateAddress(d.Get(names.AttrAddress).([]interface{}))
+		input.Address = expandUpdateAddress(d.Get(names.AttrAddress).([]any))
 	}
 
 	if d.HasChange(names.AttrAttributes) {
-		input.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]interface{}))
+		input.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]any))
 	}
 
 	if d.HasChange("billing_address") {
-		input.BillingAddress = expandUpdateAddress(d.Get("billing_address").([]interface{}))
+		input.BillingAddress = expandUpdateAddress(d.Get("billing_address").([]any))
 	}
 
 	if d.HasChange("additional_information") {
@@ -395,7 +397,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("mailing_address") {
-		input.MailingAddress = expandUpdateAddress(d.Get("mailing_address").([]interface{}))
+		input.MailingAddress = expandUpdateAddress(d.Get("mailing_address").([]any))
 	}
 
 	if d.HasChange("middle_name") {
@@ -419,10 +421,10 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("shipping_address") {
-		input.ShippingAddress = expandUpdateAddress(d.Get("shipping_address").([]interface{}))
+		input.ShippingAddress = expandUpdateAddress(d.Get("shipping_address").([]any))
 	}
 
-	_, err := conn.UpdateProfile(ctx, input)
+	_, err := conn.UpdateProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Customer Profiles Profile (%s): %s", d.Id(), err)
@@ -431,17 +433,18 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
-func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Customer Profiles Profile: %s", d.Id())
-	_, err := conn.DeleteProfile(ctx, &customerprofiles.DeleteProfileInput{
+	input := customerprofiles.DeleteProfileInput{
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		ProfileId:  aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteProfile(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -452,7 +455,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return []*schema.ResourceData{}, fmt.Errorf("unexpected format of import ID (%s), use: 'domain-name/profile-id'", d.Id())
@@ -464,19 +467,22 @@ func resourceProfileImport(ctx context.Context, d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindProfileByTwoPartKey(ctx context.Context, conn *customerprofiles.Client, profileId, domainName string) (*types.Profile, error) {
-	input := &customerprofiles.SearchProfilesInput{
-		DomainName: aws.String(domainName),
-		KeyName:    aws.String("_profileId"),
-		Values:     []string{profileId},
-	}
+func findProfiles(ctx context.Context, conn *customerprofiles.Client, input *customerprofiles.SearchProfilesInput) ([]awstypes.Profile, error) {
+	var output []awstypes.Profile
 
-	output, err := conn.SearchProfiles(ctx, input)
+	err := searchProfilesPages(ctx, conn, input, func(page *customerprofiles.SearchProfilesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+		output = append(output, page.Items...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -484,23 +490,35 @@ func FindProfileByTwoPartKey(ctx context.Context, conn *customerprofiles.Client,
 		return nil, err
 	}
 
-	if output == nil || len(output.Items) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Items); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.Items[0], nil
+	return output, nil
 }
 
-func flattenAddress(apiObject *types.Address) []interface{} {
+func findProfile(ctx context.Context, conn *customerprofiles.Client, input *customerprofiles.SearchProfilesInput) (*awstypes.Profile, error) {
+	output, err := findProfiles(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findProfileByTwoPartKey(ctx context.Context, conn *customerprofiles.Client, profileID, domainName string) (*awstypes.Profile, error) {
+	input := customerprofiles.SearchProfilesInput{
+		DomainName: aws.String(domainName),
+		KeyName:    aws.String("_profileId"),
+		Values:     []string{profileID},
+	}
+
+	return findProfile(ctx, conn, &input)
+}
+
+func flattenAddress(apiObject *awstypes.Address) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Address1; v != nil {
 		tfMap["address_1"] = aws.ToString(v)
@@ -542,20 +560,20 @@ func flattenAddress(apiObject *types.Address) []interface{} {
 		tfMap[names.AttrState] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandAddress(tfMap []interface{}) *types.Address {
+func expandAddress(tfMap []any) *awstypes.Address {
 	if tfMap == nil || tfMap[0] == nil {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	apiObject := &types.Address{}
+	apiObject := &awstypes.Address{}
 
 	if v, ok := tfList["address_1"]; ok {
 		apiObject.Address1 = aws.String(v.(string))
@@ -600,17 +618,17 @@ func expandAddress(tfMap []interface{}) *types.Address {
 	return apiObject
 }
 
-func expandUpdateAddress(tfMap []interface{}) *types.UpdateAddress {
+func expandUpdateAddress(tfMap []any) *awstypes.UpdateAddress {
 	if tfMap == nil || tfMap[0] == nil {
 		return nil
 	}
 
-	tfList, ok := tfMap[0].(map[string]interface{})
+	tfList, ok := tfMap[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	apiObject := &types.UpdateAddress{}
+	apiObject := &awstypes.UpdateAddress{}
 
 	if v, ok := tfList["address_1"]; ok {
 		apiObject.Address1 = aws.String(v.(string))

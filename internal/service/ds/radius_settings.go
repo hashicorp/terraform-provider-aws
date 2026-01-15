@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -93,7 +94,7 @@ func resourceRadiusSettings() *schema.Resource {
 	}
 }
 
-func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -127,13 +128,13 @@ func resourceRadiusSettingsCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	output, err := findRadiusSettingsByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) RADIUS Settings not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -156,7 +157,7 @@ func resourceRadiusSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
@@ -187,14 +188,15 @@ func resourceRadiusSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRadiusSettingsRead(ctx, d, meta)...)
 }
 
-func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRadiusSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service RADIUS Settings: %s", d.Id())
-	_, err := conn.DisableRadius(ctx, &directoryservice.DisableRadiusInput{
+	input := directoryservice.DisableRadiusInput{
 		DirectoryId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisableRadius(ctx, &input)
 
 	if errs.IsA[*awstypes.DirectoryDoesNotExistException](err) {
 		return diags
@@ -215,17 +217,17 @@ func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	if output.RadiusSettings == nil {
-		return nil, tfresource.NewEmptyResultError(directoryID)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RadiusSettings, nil
 }
 
-func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, directoryID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -238,7 +240,7 @@ func statusRadius(ctx context.Context, conn *directoryservice.Client, directoryI
 }
 
 func waitRadiusCompleted(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RadiusStatusCreating),
 		Target:  enum.Slice(awstypes.RadiusStatusCompleted),
 		Refresh: statusRadius(ctx, conn, directoryID),

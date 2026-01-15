@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver
@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -62,7 +61,7 @@ const (
 	DSNameQueryLogConfig = "Query Log Config Data Source"
 )
 
-func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
@@ -71,7 +70,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).Route53ResolverFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53ResolverFilters()
 	}
 
 	var configs []awstypes.ResolverQueryLogConfig
@@ -123,10 +122,9 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
 		}
 
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		//lintignore:AWSR002
 		if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}

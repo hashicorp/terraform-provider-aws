@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels
@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 )
 
 func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.Client, name, version string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) { //nolint:unparam
-	stateChangeConf := &retry.StateChangeConf{
+	stateChangeConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusBuilding),
 		Target: enum.Slice(
 			awstypes.StatusNotBuilt,
@@ -37,7 +37,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.Cl
 
 	if output, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
 		if output.Status == awstypes.StatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -47,7 +47,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelbuildingservice.Cl
 }
 
 func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, name string, timeout time.Duration) (*lexmodelbuildingservice.GetBotOutput, error) {
-	stateChangeConf := &retry.StateChangeConf{
+	stateChangeConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.StatusNotBuilt,
 			awstypes.StatusReady,
@@ -62,7 +62,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 
 	if output, ok := outputRaw.(*lexmodelbuildingservice.GetBotOutput); ok {
 		if output.Status == awstypes.StatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -72,7 +72,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, n
 }
 
 func waitBotAliasDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, botAliasName, botName string) (*lexmodelbuildingservice.GetBotAliasOutput, error) {
-	stateChangeConf := &retry.StateChangeConf{
+	stateChangeConf := &sdkretry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: statusBotAlias(ctx, conn, botAliasName, botName),
@@ -88,7 +88,7 @@ func waitBotAliasDeleted(ctx context.Context, conn *lexmodelbuildingservice.Clie
 }
 
 func waitIntentDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, intentId string) (*lexmodelbuildingservice.GetIntentVersionsOutput, error) {
-	stateChangeConf := &retry.StateChangeConf{
+	stateChangeConf := &sdkretry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{}, // An empty slice indicates that the resource is gone
 		Refresh: statusIntent(ctx, conn, intentId),
@@ -104,7 +104,7 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client
 }
 
 func waitSlotTypeDeleted(ctx context.Context, conn *lexmodelbuildingservice.Client, name string) (*lexmodelbuildingservice.GetSlotTypeOutput, error) {
-	stateChangeConf := &retry.StateChangeConf{
+	stateChangeConf := &sdkretry.StateChangeConf{
 		Pending: []string{serviceStatusCreated},
 		Target:  []string{},
 		Refresh: statusSlotType(ctx, conn, name, SlotTypeVersionLatest),

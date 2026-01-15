@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -42,7 +42,7 @@ func TestAccSSMInstancesDataSource_filter(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					registrationSleep(),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resourceName, names.AttrID),
 				),
 			},

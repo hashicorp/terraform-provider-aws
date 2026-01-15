@@ -53,8 +53,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `consumerArn` - (Required) The Amazon Resource Name (ARN) for the geofence collection to be associated to tracker resource. Used when you need to specify a resource across all AWS.
 * `trackerName` - (Required) The name of the tracker resource to be associated with a geofence collection.
 
@@ -101,4 +102,4 @@ Using `terraform import`, import Location Tracker Association using the `tracker
 % terraform import aws_location_tracker_association.example "tracker_name|consumer_arn"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4b73757483307c737f70b7bfb906a6a6449e1a0b838a9a4bb533c9ccf5e4bd2b -->
+<!-- cache-key: cdktf-0.20.8 input-1a9a65d93d46b2b4d692ce487554886cfb01ebc32506501826c556338d19b2bd -->

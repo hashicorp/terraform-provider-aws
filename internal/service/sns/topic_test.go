@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -6,6 +6,7 @@ package sns_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -13,13 +14,15 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,32 +55,33 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, "signature_version", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config", ""),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -109,7 +113,7 @@ func TestAccSNSTopic_disappears(t *testing.T) {
 				Config: testAccTopicConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourceTopic(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,6 +137,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -162,6 +167,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf(`%s.+$`, rName))),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
@@ -544,6 +550,43 @@ func TestAccSNSTopic_fifoExpectArchivePolicyError(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopic_fifoWithHighThroughput(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "Topic"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "Topic"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicConfig_fifoThroughputScope(rName, "MessageGroup"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fifo_throughput_scope", "MessageGroup"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSNSTopic_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var attributes map[string]string
@@ -561,7 +604,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
-					resource.TestCheckResourceAttr(resourceName, "signature_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "2"),
 				),
 			},
 			{
@@ -575,6 +618,151 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
 				),
+			},
+		},
+	})
+}
+
+/*
+Create an IAM role to be assumed via:
+
+data "aws_caller_identity" "current" {}
+
+	resource "aws_iam_role" "terraform_execution_role" {
+	  name = "sns-topic-test-terraform-execution-role"
+
+	  assume_role_policy = jsonencode({
+	    Version = "2012-10-17"
+	    Statement = [
+	      {
+	        Effect = "Allow"
+	        Principal = {
+	          AWS = [
+	            # Prefer the converted role ARN (works for callers using assumed-role sessions)
+	            data.aws_caller_identity.current.arn,
+	            # optionally keep account-root if you need cross-account/account-wide allow
+	            "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+	          ]
+	        }
+	        # Allow both AssumeRole and SetSourceIdentity so callers may pass SourceIdentity
+	        Action = [
+	          "sts:AssumeRole",
+	          "sts:SetSourceIdentity"
+	        ]
+	      }
+	    ]
+	  })
+
+	  tags = {
+	    Name        = "sns-topic-test-terraform-execution-role"
+	    Purpose     = "Terraform execution role that supports SourceIdentity"
+	    Environment = "demo"
+	  }
+	}
+
+# Policy that allows many AWS operations but specifically excludes iam:PassRole
+
+	resource "aws_iam_policy" "terraform_execution_policy" {
+	  name = "sns-topic-test-terraform-execution-policy"
+
+	  policy = jsonencode({
+	    Version = "2012-10-17"
+	    Statement = [
+
+	      {
+	        Sid    = "AllowEC2Operations"
+	        Effect = "Allow"
+	        Action = [
+	          "ec2:*"
+	        ]
+	        Resource = "*"
+	      },
+	      {
+	        Sid    = "AllowSNSOperations"
+	        Effect = "Allow"
+	        Action = [
+	          "sns:*"
+	        ]
+	        Resource = "*"
+	      },
+	      {
+	        Sid    = "AllowS3Operations"
+	        Effect = "Allow"
+	        Action = [
+	          "s3:*"
+	        ]
+	        Resource = "*"
+	      },
+	      {
+	        Sid    = "AllowIAMReadOperations"
+	        Effect = "Allow"
+	        Action = [
+	          "iam:GetRole",
+	          "iam:GetRolePolicy",
+	          "iam:ListRolePolicies",
+	          "iam:CreatePolicy",
+	          "iam:ListAttachedRolePolicies",
+	          "iam:GetPolicy",
+	          "iam:GetPolicyVersion",
+	          "iam:ListPolicyVersions",
+	          "iam:GetInstanceProfile",
+	          "iam:ListInstanceProfiles",
+	          "iam:CreateRole",
+	          "iam:DeleteRole",
+	          "iam:CreateInstanceProfile",
+	          "iam:DeleteInstanceProfile",
+	          "iam:AddRoleToInstanceProfile",
+	          "iam:RemoveRoleFromInstanceProfile",
+	          "iam:AttachRolePolicy",
+	          "iam:ListInstanceProfilesForRole",
+	          "iam:DetachRolePolicy",
+	          "iam:PutRolePolicy",
+	          "iam:DeleteRolePolicy",
+	          "iam:TagRole",
+	          "iam:UntagRole",
+	          "iam:DeletePolicy"
+	        ]
+	        Resource = "*"
+	      }
+	    ]
+	  })
+	}
+
+# Attach the policy to the role
+
+	resource "aws_iam_role_policy_attachment" "terraform_execution_policy_attachment" {
+	  role       = aws_iam_role.terraform_execution_role.name
+	  policy_arn = aws_iam_policy.terraform_execution_policy.arn
+	}
+
+	output "execution_role_arn" {
+	  value = aws_iam_role.terraform_execution_role.arn
+	}
+
+Then run this test with TF_ACC_ASSUME_ROLE_ARN=<output value>.
+*/
+func TestAccSNSTopic_iamEventualConsistency(t *testing.T) {
+	ctx := acctest.Context(t)
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_iamEventualConsistency(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(ctx, resourceName, &attributes),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -608,7 +796,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 
 		if err != nil {
-			return fmt.Errorf("testing policy equivalence: %s", err)
+			return fmt.Errorf("testing policy equivalence: %w", err)
 		}
 
 		if !equivalent {
@@ -667,7 +855,7 @@ func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -770,7 +958,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "*"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -799,7 +987,7 @@ resource "aws_sns_topic" "test" {
         "AWS": "${aws_iam_role.example.arn}"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -876,10 +1064,10 @@ resource "aws_sns_topic" "test" {
       "Sid": "Stmt1445931846145",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::012345678901:role/wooo"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::123456789012:role/wooo"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}::example"
     }
   ],
   "Version": "2012-10-17",
@@ -985,6 +1173,16 @@ resource "aws_sns_topic" "test" {
 `, rName, cbd)
 }
 
+func testAccTopicConfig_fifoThroughputScope(rName string, throughputScope string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name                  = "%[1]s.fifo"
+  fifo_topic            = true
+  fifo_throughput_scope = "%[2]s"
+}
+`, rName, throughputScope)
+}
+
 func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -1015,4 +1213,90 @@ resource "aws_sns_topic" "test" {
 EOF
 }
 `, rName)
+}
+
+func testAccTopicConfig_iamEventualConsistency(rName string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "aws" {
+  assume_role {
+    role_arn     = %[1]q
+    session_name = "TerraformSNSTopicPassRoleTest"
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "sns_feedback_role" {
+  name = "%[2]s-sns-cloudwatch-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "sns.${data.aws_partition.current.dns_suffix}"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+# Policy for SNS to write to CloudWatch Logs.
+resource "aws_iam_role_policy" "sns_feedback_policy" {
+  name = "%[2]s-sns-cloudwatch-logs-policy"
+  role = aws_iam_role.sns_feedback_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:PutMetricFilter",
+          "logs:PutRetentionPolicy"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_sns_topic" "test" {
+  name = %[2]q
+
+  lambda_failure_feedback_role_arn = aws_iam_role.sns_feedback_role.arn
+}
+
+# Grant PassRole permission to the execution role.
+resource "aws_iam_policy" "terraform_passrole_policy" {
+  name = "%[2]s-terraform_passrole_policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ExplicitlyAllowPassRole"
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the policy to the execution role.
+resource "aws_iam_role_policy_attachment" "terraform_execution_policy_attachment" {
+  # Extract the role name from the ARN.
+  role       = trimprefix(provider::aws::arn_parse(%[1]q).resource, "role/")
+  policy_arn = aws_iam_policy.terraform_passrole_policy.arn
+}
+`, os.Getenv(envvar.AccAssumeRoleARN), rName)
 }

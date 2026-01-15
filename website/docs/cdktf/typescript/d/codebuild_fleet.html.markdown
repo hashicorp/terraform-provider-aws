@@ -82,8 +82,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Fleet name.
 
 ## Attribute Reference
@@ -92,6 +93,12 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Fleet.
 * `baseCapacity` - Number of machines allocated to the ﬂeet.
+* `computeConfiguration` - Compute configuration of the compute fleet.
+    * `disk` - Amount of disk space of the instance type included in the fleet.
+    * `instanceType` - EC2 instance type in the fleet.
+    * `machineType` - Machine type of the instance type included in the fleet.
+    * `memory` - Amount of memory of the instance type included in the fleet.
+    * `vcpu` - Number of vCPUs of the instance type included in the fleet.
 * `computeType` - Compute resources the compute fleet uses.
 * `created` - Creation time of the fleet.
 * `environmentType` - Environment type of the compute fleet.
@@ -117,4 +124,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnets` - A list of one or more subnet IDs in your Amazon VPC.
     * `vpcId` - The ID of the Amazon VPC.
 
-<!-- cache-key: cdktf-0.20.1 input-1dd0c64b00818aba259878581a28993546ff6920dd1e6d4faaf8fd87b76f41ae -->
+<!-- cache-key: cdktf-0.20.8 input-3b1117c87574a1a317ccb61265d6be6c28d34b9cea54dba593b25141c9d47591 -->

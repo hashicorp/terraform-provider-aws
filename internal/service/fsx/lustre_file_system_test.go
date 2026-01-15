@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -11,13 +11,14 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,7 +28,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	deploymentType := awstypes.LustreDeploymentTypeScratch1
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		deploymentType = awstypes.LustreDeploymentTypeScratch2 // SCRATCH_1 not supported in GovCloud
 	}
 
@@ -41,27 +42,28 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", string(awstypes.DataCompressionTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(deploymentType)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`fs-.+\.fsx\.`)),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
@@ -96,7 +98,7 @@ func TestAccFSxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -169,7 +171,7 @@ func TestAccFSxLustreFileSystem_deleteConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "final_backup_tags."+acctest.CtKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
@@ -332,7 +334,7 @@ func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -350,7 +352,7 @@ func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
 			},
 		},
@@ -504,7 +506,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -523,7 +525,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -533,7 +535,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -616,14 +618,14 @@ func TestAccFSxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
 			},
 			{
 				Config: testAccLustreFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
 				),
 			},
 		},
@@ -690,8 +692,8 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 					// per_unit_storage_throughput=50 is only available with deployment_type=PERSISTENT_1, so we test both here.
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent1)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),
@@ -772,8 +774,8 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 					// per_unit_storage_throughput=125 is only available with deployment_type=PERSISTENT_2, so we test both here.
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent2)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),
@@ -835,6 +837,106 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughp
 	})
 }
 
+func TestAccFSxLustreFileSystem_efaEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_efaEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_intelligentTiering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccLustreFileSystemConfig_intelligentTiering(rName, 4000, 31),
+				ExpectError: regexache.MustCompile("File systems with throughput capacity of 4000 MB/s support a minimum read cache size of 32 GiB and maximum read cache size of 131072 GiB"),
+			},
+			{
+				Config:      testAccLustreFileSystemConfig_intelligentTiering(rName, 8000, 32),
+				ExpectError: regexache.MustCompile("File systems with throughput capacity of 8000 MB/s support a minimum read cache size of 64 GiB and maximum read cache size of 262144 GiB"),
+			},
+			{
+				Config: testAccLustreFileSystemConfig_intelligentTiering(rName, 4000, 32),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "data_compression_type", string(awstypes.DataCompressionTypeNone)),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.sizing_mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "data_read_cache_configuration.0.size", "32"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent2)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`fs-.+\.fsx\.`)),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
+					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "6000"),
+					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeIntelligentTiering)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "4000"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
+					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			},
+		},
+	})
+}
+
 func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filesystem awstypes.FileSystem
@@ -851,7 +953,7 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_log(rName, "WARN_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "WARN_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
 				),
@@ -870,7 +972,7 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_log(rName, "ERROR_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "ERROR_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
 				),
@@ -896,7 +998,7 @@ func TestAccFSxLustreFileSystem_metadataConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "AUTOMATIC"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.iops"),
 				),
@@ -908,11 +1010,11 @@ func TestAccFSxLustreFileSystem_metadataConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
-				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500),
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500, 1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
 				),
@@ -934,10 +1036,10 @@ func TestAccFSxLustreFileSystem_metadataConfig_increase(t *testing.T) {
 		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500),
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500, 1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
 				),
@@ -949,11 +1051,11 @@ func TestAccFSxLustreFileSystem_metadataConfig_increase(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
-				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000),
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000, 1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "3000"),
 				),
@@ -975,10 +1077,10 @@ func TestAccFSxLustreFileSystem_metadataConfig_decrease(t *testing.T) {
 		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000),
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000, 1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "3000"),
 				),
@@ -990,13 +1092,51 @@ func TestAccFSxLustreFileSystem_metadataConfig_decrease(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrSecurityGroupIDs},
 			},
 			{
-				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500),
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500, 1200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_metadataConfig_increaseWithStorageCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filesystem1, filesystem2 awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500, 1200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
+				),
+			},
+			{
+				// When storage_capacity is increased to 2400, IOPS must be increased to at least 3000.
+				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000, 2400),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
+					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "2400"),
 				),
 			},
 		},
@@ -1019,7 +1159,7 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "365534:65534"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.0.root_squash", "365534:65534"),
 				),
 			},
@@ -1037,7 +1177,7 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "355534:64534"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.0.root_squash", "355534:64534"),
 				),
 			},
@@ -1333,7 +1473,7 @@ func testAccCheckLustreFileSystemDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tffsx.FindLustreFileSystemByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1763,6 +1903,7 @@ func testAccLustreFileSystemConfig_kmsKeyID1(rName string) string {
 resource "aws_kms_key" "test1" {
   description             = "%[1]s-1"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1784,6 +1925,7 @@ func testAccLustreFileSystemConfig_kmsKeyID2(rName string) string {
 resource "aws_kms_key" "test2" {
   description             = "%[1]s-2"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_fsx_lustre_file_system" "test" {
@@ -1911,10 +2053,10 @@ resource "aws_fsx_lustre_file_system" "test" {
 `, rName, mode))
 }
 
-func testAccLustreFileSystemConfig_metadata_iops(rName, mode string, iops int) string {
+func testAccLustreFileSystemConfig_metadata_iops(rName, mode string, iops, storageCapacity int) string {
 	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity            = 1200
+  storage_capacity            = %[4]d
   subnet_ids                  = aws_subnet.test[*].id
   deployment_type             = "PERSISTENT_2"
   per_unit_storage_throughput = 125
@@ -1928,7 +2070,7 @@ resource "aws_fsx_lustre_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName, mode, iops))
+`, rName, mode, iops, storageCapacity))
 }
 
 func testAccLustreFileSystemConfig_rootSquash(rName, uid string) string {
@@ -1947,4 +2089,70 @@ resource "aws_fsx_lustre_file_system" "test" {
   }
 }
 `, rName, uid))
+}
+
+func testAccLustreFileSystemConfig_efaEnabled(rName string, efaEnabled bool) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  security_group_ids          = [aws_security_group.test.id]
+  storage_capacity            = 38400
+  subnet_ids                  = aws_subnet.test[*].id
+  deployment_type             = "PERSISTENT_2"
+  per_unit_storage_throughput = 125
+  efa_enabled                 = %[2]t
+
+  metadata_configuration {
+    mode = "AUTOMATIC"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, efaEnabled))
+}
+
+func testAccLustreFileSystemConfig_intelligentTiering(rName string, throughputCapacity, cacheSize int) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "PERSISTENT_2"
+  storage_type        = "INTELLIGENT_TIERING"
+  throughput_capacity = %[1]d
+
+  data_read_cache_configuration {
+    sizing_mode = "USER_PROVISIONED"
+    size        = %[2]d
+  }
+
+  metadata_configuration {
+    mode = "USER_PROVISIONED"
+    iops = 6000
+  }
+
+}
+`, throughputCapacity, cacheSize))
 }

@@ -41,17 +41,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instance_tags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
-* `filter` - (Optional) One or more name/value pairs to use as filters. There are
-several valid keys, for a full reference, check out
-[describe-instances in the AWS CLI reference][1].
-
+* `filter` - (Optional) One or more filters to apply to the search.
+  If multiple `filter` blocks are provided, they all must be true.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  See [`filter` Block](#filter-block) below.
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
 * `get_user_data` - (Optional) Retrieve Base64 encoded User Data contents into the `user_data_base64` attribute. A SHA-1 hash of the User Data contents will always be present in the `user_data` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instance_tags`, or `instance_id` must be specified.
@@ -59,6 +59,14 @@ several valid keys, for a full reference, check out
 ~> **NOTE:** If anything other than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+* `values` - (Required) One or more values to match.
 
 ## Attribute Reference
 
@@ -113,6 +121,7 @@ interpolation.
 * `outpost_arn` - ARN of the Outpost.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placement_group` - Placement group of the Instance.
+* `placement_group_id` - Placement group ID of the Instance.
 * `placement_partition_number` - Number of the partition the instance is in.
 * `private_dns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `private_dns_name_options` - Options for the instance hostname.
@@ -149,4 +158,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.1 input-0360e36bcd653291899c63abe79b8fb1fd576446cfbc317105b63e631c4e981b -->
+<!-- cache-key: cdktf-0.20.8 input-ed6e521db41b817385667c08fd033cfa8c8a6d0d71f3b15abc6035031718d8b8 -->

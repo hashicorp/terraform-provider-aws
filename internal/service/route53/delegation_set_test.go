@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -10,15 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -104,7 +103,7 @@ func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 				Config: testAccDelegationSetConfig_basic(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +121,7 @@ func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfroute53.FindDelegationSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -139,23 +138,16 @@ func testAccCheckDelegationSetDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckDelegationSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := tfroute53.FindDelegationSetByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		if err != nil {
-			return err
-		}
+		_, err := tfroute53.FindDelegationSetByID(ctx, conn, rs.Primary.ID)
 
-		if setID := tfroute53.CleanDelegationSetID(aws.ToString(output.Id)); setID != rs.Primary.ID {
-			return fmt.Errorf("Route53 Reusable Delegation Set ID does not match:\nExpected: %#v\nReturned: %#v", rs.Primary.ID, setID)
-		}
-
-		return nil
+		return err
 	}
 }
 

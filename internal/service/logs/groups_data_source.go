@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -8,15 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_log_groups")
+// @SDKDataSource("aws_cloudwatch_log_groups", name="Log Groups")
 func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupsRead,
@@ -40,39 +41,25 @@ func dataSourceGroups() *schema.Resource {
 	}
 }
 
-func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	input := &cloudwatchlogs.DescribeLogGroupsInput{}
-
+	input := cloudwatchlogs.DescribeLogGroupsInput{}
 	if v, ok := d.GetOk("log_group_name_prefix"); ok {
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	var output []types.LogGroup
-
-	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	var arns, logGroupNames []string
+	for output, err := range listLogGroups(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.LogGroup]()) {
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
 		}
 
-		output = append(output, page.LogGroups...)
+		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(output.Arn)))
+		logGroupNames = append(logGroupNames, aws.ToString(output.LogGroupName))
 	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-
-	var arns, logGroupNames []string
-
-	for _, r := range output {
-		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.ToString(r.Arn)))
-		logGroupNames = append(logGroupNames, aws.ToString(r.LogGroupName))
-	}
-
 	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)
 

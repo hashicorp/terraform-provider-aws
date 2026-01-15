@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -252,7 +253,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
-							Deprecated:   "Use filter instead",
+							Deprecated:   "prefix is deprecated. Use filter instead.",
 						},
 						names.AttrPriority: {
 							Type:     schema.TypeInt,
@@ -312,16 +313,19 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
 			Role:  aws.String(d.Get(names.AttrRole).(string)),
-			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]any)),
 		},
 	}
 
@@ -329,22 +333,22 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 		input.Token = aws.String(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, bucketPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, bucketPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.PutBucketReplication(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, errCodeInvalidRequest, "Versioning must be 'Enabled' on the bucket") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketReplication(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Replication Configuration: %s", bucket, err)
 	}
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ReplicationConfiguration is not valid, expected CreateBucketConfiguration") {
@@ -357,8 +361,8 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findReplicationConfiguration(ctx, conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return findReplicationConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -368,13 +372,18 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	return append(diags, resourceBucketReplicationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	rc, err := findReplicationConfiguration(ctx, conn, d.Id())
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	rc, err := findReplicationConfiguration(ctx, conn, bucket)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -384,7 +393,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrRole, rc.Role)
 	if err := d.Set(names.AttrRule, flattenReplicationRules(ctx, rc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
@@ -393,15 +402,20 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 	return diags
 }
 
-func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
 			Role:  aws.String(d.Get(names.AttrRole).(string)),
-			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]any)),
 		},
 	}
 
@@ -418,13 +432,18 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 	return append(diags, resourceBucketReplicationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	log.Printf("[DEBUG] Deleting S3 Bucket Replication Configuration: %s", d.Id())
 	_, err := conn.DeleteBucketReplication(ctx, &s3.DeleteBucketReplicationInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeReplicationConfigurationNotFound) {
@@ -435,8 +454,8 @@ func resourceBucketReplicationConfigurationDelete(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findReplicationConfiguration(ctx, conn, d.Id())
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return findReplicationConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -454,7 +473,7 @@ func findReplicationConfiguration(ctx context.Context, conn *s3.Client, bucket s
 	output, err := conn.GetBucketReplication(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeReplicationConfigurationNotFound) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -465,334 +484,328 @@ func findReplicationConfiguration(ctx context.Context, conn *s3.Client, bucket s
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReplicationConfiguration, nil
 }
 
-func expandReplicationRules(ctx context.Context, l []interface{}) []types.ReplicationRule {
-	var rules []types.ReplicationRule
+func expandReplicationRules(ctx context.Context, tfList []any) []types.ReplicationRule {
+	var apiObjects []types.ReplicationRule
 
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		rule := types.ReplicationRule{}
+		apiObject := types.ReplicationRule{}
 
-		if v, ok := tfMap["delete_marker_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.DeleteMarkerReplication = expandDeleteMarkerReplication(v)
+		if v, ok := tfMap["delete_marker_replication"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.DeleteMarkerReplication = expandDeleteMarkerReplication(v)
 		}
 
-		if v, ok := tfMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.Destination = expandDestination(v)
+		if v, ok := tfMap[names.AttrDestination].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.Destination = expandDestination(v)
 		}
 
-		if v, ok := tfMap["existing_object_replication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.ExistingObjectReplication = expandExistingObjectReplication(v)
+		if v, ok := tfMap["existing_object_replication"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.ExistingObjectReplication = expandExistingObjectReplication(v)
 		}
 
 		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
-			rule.ID = aws.String(v)
+			apiObject.ID = aws.String(v)
 		}
 
-		if v, ok := tfMap["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			rule.SourceSelectionCriteria = expandSourceSelectionCriteria(v)
+		if v, ok := tfMap["source_selection_criteria"].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.SourceSelectionCriteria = expandSourceSelectionCriteria(v)
 		}
 
 		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-			rule.Status = types.ReplicationRuleStatus(v)
+			apiObject.Status = types.ReplicationRuleStatus(v)
 		}
 
 		// Support the empty filter block in terraform i.e. 'filter {}',
 		// which implies the replication rule does not require a specific filter,
 		// by expanding the "filter" array even if the first element is nil.
-		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]any); ok && len(v) > 0 {
 			// XML schema V2
-			rule.Filter = expandReplicationRuleFilter(ctx, v)
-			rule.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
+			apiObject.Filter = expandReplicationRuleFilter(ctx, v)
+			apiObject.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
 		} else {
 			// XML schema V1
-			rule.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
+			apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 		}
 
-		rules = append(rules, rule)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return rules
+	return apiObjects
 }
 
-func expandDeleteMarkerReplication(l []interface{}) *types.DeleteMarkerReplication {
-	if len(l) == 0 || l[0] == nil {
+func expandDeleteMarkerReplication(tfList []any) *types.DeleteMarkerReplication {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.DeleteMarkerReplication{}
+	apiObject := &types.DeleteMarkerReplication{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.DeleteMarkerReplicationStatus(v)
+		apiObject.Status = types.DeleteMarkerReplicationStatus(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandDestination(l []interface{}) *types.Destination {
-	if len(l) == 0 || l[0] == nil {
+func expandDestination(tfList []any) *types.Destination {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.Destination{}
+	apiObject := &types.Destination{}
 
-	if v, ok := tfMap["access_control_translation"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.AccessControlTranslation = expandAccessControlTranslation(v)
+	if v, ok := tfMap["access_control_translation"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AccessControlTranslation = expandAccessControlTranslation(v)
 	}
 
 	if v, ok := tfMap["account"].(string); ok && v != "" {
-		result.Account = aws.String(v)
+		apiObject.Account = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
-		result.Bucket = aws.String(v)
+		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrEncryptionConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.EncryptionConfiguration = expandEncryptionConfiguration(v)
+	if v, ok := tfMap[names.AttrEncryptionConfiguration].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EncryptionConfiguration = expandEncryptionConfiguration(v)
 	}
 
-	if v, ok := tfMap["metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Metrics = expandMetrics(v)
+	if v, ok := tfMap["metrics"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Metrics = expandMetrics(v)
 	}
 
-	if v, ok := tfMap["replication_time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ReplicationTime = expandReplicationTime(v)
+	if v, ok := tfMap["replication_time"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ReplicationTime = expandReplicationTime(v)
 	}
 
 	if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
-		result.StorageClass = types.StorageClass(v)
+		apiObject.StorageClass = types.StorageClass(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandAccessControlTranslation(l []interface{}) *types.AccessControlTranslation {
-	if len(l) == 0 || l[0] == nil {
+func expandAccessControlTranslation(tfList []any) *types.AccessControlTranslation {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.AccessControlTranslation{}
+	apiObject := &types.AccessControlTranslation{}
 
 	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
-		result.Owner = types.OwnerOverride(v)
+		apiObject.Owner = types.OwnerOverride(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandEncryptionConfiguration(l []interface{}) *types.EncryptionConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandEncryptionConfiguration(tfList []any) *types.EncryptionConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.EncryptionConfiguration{}
+	apiObject := &types.EncryptionConfiguration{}
 
 	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
-		result.ReplicaKmsKeyID = aws.String(v)
+		apiObject.ReplicaKmsKeyID = aws.String(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandMetrics(l []interface{}) *types.Metrics {
-	if len(l) == 0 || l[0] == nil {
+func expandMetrics(tfList []any) *types.Metrics {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.Metrics{}
+	apiObject := &types.Metrics{}
 
-	if v, ok := tfMap["event_threshold"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.EventThreshold = expandReplicationTimeValue(v)
+	if v, ok := tfMap["event_threshold"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EventThreshold = expandReplicationTimeValue(v)
 	}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.MetricsStatus(v)
+		apiObject.Status = types.MetricsStatus(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicationTime(l []interface{}) *types.ReplicationTime {
-	if len(l) == 0 || l[0] == nil {
+func expandReplicationTime(tfList []any) *types.ReplicationTime {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ReplicationTime{}
+	apiObject := &types.ReplicationTime{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.ReplicationTimeStatus(v)
+		apiObject.Status = types.ReplicationTimeStatus(v)
 	}
 
-	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.Time = expandReplicationTimeValue(v)
+	if v, ok := tfMap["time"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Time = expandReplicationTimeValue(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicationTimeValue(l []interface{}) *types.ReplicationTimeValue {
-	if len(l) == 0 || l[0] == nil {
+func expandReplicationTimeValue(tfList []any) *types.ReplicationTimeValue {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ReplicationTimeValue{}
+	apiObject := &types.ReplicationTimeValue{}
 
 	if v, ok := tfMap["minutes"].(int); ok {
-		result.Minutes = aws.Int32(int32(v))
+		apiObject.Minutes = aws.Int32(int32(v))
 	}
 
-	return result
+	return apiObject
 }
 
-func expandExistingObjectReplication(l []interface{}) *types.ExistingObjectReplication {
-	if len(l) == 0 || l[0] == nil {
+func expandExistingObjectReplication(tfList []any) *types.ExistingObjectReplication {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ExistingObjectReplication{}
+	apiObject := &types.ExistingObjectReplication{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.ExistingObjectReplicationStatus(v)
+		apiObject.Status = types.ExistingObjectReplicationStatus(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandSourceSelectionCriteria(l []interface{}) *types.SourceSelectionCriteria {
-	if len(l) == 0 || l[0] == nil {
+func expandSourceSelectionCriteria(tfList []any) *types.SourceSelectionCriteria {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.SourceSelectionCriteria{}
+	apiObject := &types.SourceSelectionCriteria{}
 
-	if v, ok := tfMap["replica_modifications"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.ReplicaModifications = expandReplicaModifications(v)
+	if v, ok := tfMap["replica_modifications"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ReplicaModifications = expandReplicaModifications(v)
 	}
 
-	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.SseKmsEncryptedObjects = expandSSEKMSEncryptedObjects(v)
+	if v, ok := tfMap["sse_kms_encrypted_objects"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SseKmsEncryptedObjects = expandSSEKMSEncryptedObjects(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicaModifications(l []interface{}) *types.ReplicaModifications {
-	if len(l) == 0 || l[0] == nil {
+func expandReplicaModifications(tfList []any) *types.ReplicaModifications {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ReplicaModifications{}
+	apiObject := &types.ReplicaModifications{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.ReplicaModificationsStatus(v)
+		apiObject.Status = types.ReplicaModificationsStatus(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandSSEKMSEncryptedObjects(l []interface{}) *types.SseKmsEncryptedObjects {
-	if len(l) == 0 || l[0] == nil {
+func expandSSEKMSEncryptedObjects(tfList []any) *types.SseKmsEncryptedObjects {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.SseKmsEncryptedObjects{}
+	apiObject := &types.SseKmsEncryptedObjects{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		result.Status = types.SseKmsEncryptedObjectsStatus(v)
+		apiObject.Status = types.SseKmsEncryptedObjectsStatus(v)
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicationRuleFilter(ctx context.Context, l []interface{}) types.ReplicationRuleFilter {
-	if len(l) == 0 || l[0] == nil {
-		return &types.ReplicationRuleFilterMemberPrefix{}
+func expandReplicationRuleFilter(ctx context.Context, tfList []any) *types.ReplicationRuleFilter {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return &types.ReplicationRuleFilter{}
 	}
 
-	tfMap := l[0].(map[string]interface{})
-	var result types.ReplicationRuleFilter
+	tfMap := tfList[0].(map[string]any)
+	var apiObject *types.ReplicationRuleFilter
 
-	if v, ok := tfMap["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandReplicationRuleFilterMemberAnd(ctx, v)
+	if v, ok := tfMap["and"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject = &types.ReplicationRuleFilter{
+			And: expandReplicationRuleAndOperator(ctx, v),
+		}
 	}
 
-	if v, ok := tfMap["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandReplicationRuleFilterMemberTag(v)
+	if v, ok := tfMap["tag"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject = &types.ReplicationRuleFilter{
+			Tag: expandTag(v[0].(map[string]any)),
+		}
 	}
 
 	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
@@ -800,345 +813,334 @@ func expandReplicationRuleFilter(ctx context.Context, l []interface{}) types.Rep
 	// If a filter is specified as filter { prefix = "" } in Terraform, we should send the prefix value
 	// in the API request even if it is an empty value, else Terraform will report non-empty plans.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23487
-	if v, ok := tfMap[names.AttrPrefix].(string); ok && result == nil {
-		result = &types.ReplicationRuleFilterMemberPrefix{
-			Value: v,
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && apiObject == nil {
+		apiObject = &types.ReplicationRuleFilter{
+			Prefix: aws.String(v),
 		}
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicationRuleFilterMemberAnd(ctx context.Context, l []interface{}) *types.ReplicationRuleFilterMemberAnd {
-	if len(l) == 0 || l[0] == nil {
+func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.ReplicationRuleAndOperator {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
-
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	result := &types.ReplicationRuleFilterMemberAnd{
-		Value: types.ReplicationRuleAndOperator{},
-	}
+	apiObject := &types.ReplicationRuleAndOperator{}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
-		result.Value.Prefix = aws.String(v)
+		apiObject.Prefix = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
-		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Value.Tags = tags
+	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+		if tags := svcTags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
+			apiObject.Tags = tags
 		}
 	}
 
-	return result
+	return apiObject
 }
 
-func expandReplicationRuleFilterMemberTag(l []interface{}) *types.ReplicationRuleFilterMemberTag {
-	if len(l) == 0 || l[0] == nil {
+func expandTag(tfMap map[string]any) *types.Tag {
+	if len(tfMap) == 0 {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	apiObject := &types.Tag{}
 
-	if !ok {
+	if v, ok := tfMap[names.AttrKey].(string); ok {
+		apiObject.Key = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrValue].(string); ok {
+		apiObject.Value = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenReplicationRules(ctx context.Context, apiObjects []types.ReplicationRule) []any {
+	if len(apiObjects) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrStatus: apiObject.Status,
+		}
+
+		if apiObject.DeleteMarkerReplication != nil {
+			tfMap["delete_marker_replication"] = flattenDeleteMarkerReplication(apiObject.DeleteMarkerReplication)
+		}
+
+		if apiObject.Destination != nil {
+			tfMap[names.AttrDestination] = flattenDestination(apiObject.Destination)
+		}
+
+		if apiObject.ExistingObjectReplication != nil {
+			tfMap["existing_object_replication"] = flattenExistingObjectReplication(apiObject.ExistingObjectReplication)
+		}
+
+		if apiObject.Filter != nil {
+			tfMap[names.AttrFilter] = flattenReplicationRuleFilter(ctx, apiObject.Filter)
+		}
+
+		if apiObject.ID != nil {
+			tfMap[names.AttrID] = aws.ToString(apiObject.ID)
+		}
+
+		if apiObject.Prefix != nil {
+			tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
+		}
+
+		if apiObject.Priority != nil {
+			tfMap[names.AttrPriority] = aws.ToInt32(apiObject.Priority)
+		}
+
+		if apiObject.SourceSelectionCriteria != nil {
+			tfMap["source_selection_criteria"] = flattenSourceSelectionCriteria(apiObject.SourceSelectionCriteria)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenDeleteMarkerReplication(apiObject *types.DeleteMarkerReplication) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenDestination(apiObject *types.Destination) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStorageClass: apiObject.StorageClass,
+	}
+
+	if apiObject.AccessControlTranslation != nil {
+		tfMap["access_control_translation"] = flattenAccessControlTranslation(apiObject.AccessControlTranslation)
+	}
+
+	if apiObject.Account != nil {
+		tfMap["account"] = aws.ToString(apiObject.Account)
+	}
+
+	if apiObject.Bucket != nil {
+		tfMap[names.AttrBucket] = aws.ToString(apiObject.Bucket)
+	}
+
+	if apiObject.EncryptionConfiguration != nil {
+		tfMap[names.AttrEncryptionConfiguration] = flattenEncryptionConfiguration(apiObject.EncryptionConfiguration)
+	}
+
+	if apiObject.Metrics != nil {
+		tfMap["metrics"] = flattenMetrics(apiObject.Metrics)
+	}
+
+	if apiObject.ReplicationTime != nil {
+		tfMap["replication_time"] = flattenReplicationReplicationTime(apiObject.ReplicationTime)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenAccessControlTranslation(apiObject *types.AccessControlTranslation) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrOwner: apiObject.Owner,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenEncryptionConfiguration(apiObject *types.EncryptionConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if apiObject.ReplicaKmsKeyID != nil {
+		tfMap["replica_kms_key_id"] = aws.ToString(apiObject.ReplicaKmsKeyID)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenMetrics(apiObject *types.Metrics) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	if apiObject.EventThreshold != nil {
+		tfMap["event_threshold"] = flattenReplicationTimeValue(apiObject.EventThreshold)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationTimeValue(apiObject *types.ReplicationTimeValue) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"minutes": aws.ToInt32(apiObject.Minutes),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationReplicationTime(apiObject *types.ReplicationTime) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	if apiObject.Time != nil {
+		tfMap["time"] = flattenReplicationTimeValue(apiObject.Time)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenExistingObjectReplication(apiObject *types.ExistingObjectReplication) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationRuleFilter(ctx context.Context, apiObject *types.ReplicationRuleFilter) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.And; v != nil {
+		tfMap["and"] = flattenReplicationRuleAndOperator(ctx, v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tag; v != nil {
+		tfMap["tag"] = flattenTag(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationRuleAndOperator(ctx context.Context, apiObject *types.ReplicationRuleAndOperator) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tags; v != nil {
+		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+	}
+
+	return []any{tfMap}
+}
+
+func flattenSourceSelectionCriteria(apiObject *types.SourceSelectionCriteria) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if apiObject.ReplicaModifications != nil {
+		tfMap["replica_modifications"] = flattenReplicaModifications(apiObject.ReplicaModifications)
+	}
+
+	if apiObject.SseKmsEncryptedObjects != nil {
+		tfMap["sse_kms_encrypted_objects"] = flattenSSEKMSEncryptedObjects(apiObject.SseKmsEncryptedObjects)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicaModifications(apiObject *types.ReplicaModifications) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenSSEKMSEncryptedObjects(apiObject *types.SseKmsEncryptedObjects) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
+	return []any{tfMap}
+}
+
+func flattenTag(apiObject *types.Tag) []any {
+	if apiObject == nil {
 		return nil
 	}
 
-	result := &types.ReplicationRuleFilterMemberTag{
-		Value: types.Tag{},
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Key; v != nil {
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
-	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
-		result.Value.Key = aws.String(v)
+	if v := apiObject.Value; v != nil {
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-		result.Value.Value = aws.String(v)
-	}
-
-	return result
-}
-
-func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule) []interface{} {
-	if len(rules) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, rule := range rules {
-		m := map[string]interface{}{
-			names.AttrStatus: rule.Status,
-		}
-
-		if rule.DeleteMarkerReplication != nil {
-			m["delete_marker_replication"] = flattenDeleteMarkerReplication(rule.DeleteMarkerReplication)
-		}
-
-		if rule.Destination != nil {
-			m[names.AttrDestination] = flattenDestination(rule.Destination)
-		}
-
-		if rule.ExistingObjectReplication != nil {
-			m["existing_object_replication"] = flattenExistingObjectReplication(rule.ExistingObjectReplication)
-		}
-
-		if rule.Filter != nil {
-			m[names.AttrFilter] = flattenReplicationRuleFilter(ctx, rule.Filter)
-		}
-
-		if rule.ID != nil {
-			m[names.AttrID] = aws.ToString(rule.ID)
-		}
-
-		if rule.Prefix != nil {
-			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
-		}
-
-		if rule.Priority != nil {
-			m[names.AttrPriority] = aws.ToInt32(rule.Priority)
-		}
-
-		if rule.SourceSelectionCriteria != nil {
-			m["source_selection_criteria"] = flattenSourceSelectionCriteria(rule.SourceSelectionCriteria)
-		}
-
-		results = append(results, m)
-	}
-
-	return results
-}
-
-func flattenDeleteMarkerReplication(dmr *types.DeleteMarkerReplication) []interface{} {
-	if dmr == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: dmr.Status,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenDestination(dest *types.Destination) []interface{} {
-	if dest == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStorageClass: dest.StorageClass,
-	}
-
-	if dest.AccessControlTranslation != nil {
-		m["access_control_translation"] = flattenAccessControlTranslation(dest.AccessControlTranslation)
-	}
-
-	if dest.Account != nil {
-		m["account"] = aws.ToString(dest.Account)
-	}
-
-	if dest.Bucket != nil {
-		m[names.AttrBucket] = aws.ToString(dest.Bucket)
-	}
-
-	if dest.EncryptionConfiguration != nil {
-		m[names.AttrEncryptionConfiguration] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
-	}
-
-	if dest.Metrics != nil {
-		m["metrics"] = flattenMetrics(dest.Metrics)
-	}
-
-	if dest.ReplicationTime != nil {
-		m["replication_time"] = flattenReplicationReplicationTime(dest.ReplicationTime)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAccessControlTranslation(act *types.AccessControlTranslation) []interface{} {
-	if act == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrOwner: act.Owner,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenEncryptionConfiguration(ec *types.EncryptionConfiguration) []interface{} {
-	if ec == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if ec.ReplicaKmsKeyID != nil {
-		m["replica_kms_key_id"] = aws.ToString(ec.ReplicaKmsKeyID)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenMetrics(metrics *types.Metrics) []interface{} {
-	if metrics == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: metrics.Status,
-	}
-
-	if metrics.EventThreshold != nil {
-		m["event_threshold"] = flattenReplicationTimeValue(metrics.EventThreshold)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicationTimeValue(rtv *types.ReplicationTimeValue) []interface{} {
-	if rtv == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"minutes": rtv.Minutes,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicationReplicationTime(rt *types.ReplicationTime) []interface{} {
-	if rt == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: rt.Status,
-	}
-
-	if rt.Time != nil {
-		m["time"] = flattenReplicationTimeValue(rt.Time)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenExistingObjectReplication(eor *types.ExistingObjectReplication) []interface{} {
-	if eor == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: eor.Status,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicationRuleFilter(ctx context.Context, filter types.ReplicationRuleFilter) []interface{} {
-	if filter == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	switch v := filter.(type) {
-	case *types.ReplicationRuleFilterMemberAnd:
-		m["and"] = flattenReplicationRuleFilterMemberAnd(ctx, v)
-	case *types.ReplicationRuleFilterMemberPrefix:
-		m[names.AttrPrefix] = v.Value
-	case *types.ReplicationRuleFilterMemberTag:
-		m["tag"] = flattenReplicationRuleFilterMemberTag(v)
-	default:
-		return nil
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicationRuleFilterMemberAnd(ctx context.Context, op *types.ReplicationRuleFilterMemberAnd) []interface{} {
-	if op == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if v := op.Value.Prefix; v != nil {
-		m[names.AttrPrefix] = aws.ToString(v)
-	}
-
-	if v := op.Value.Tags; v != nil {
-		m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicationRuleFilterMemberTag(op *types.ReplicationRuleFilterMemberTag) []interface{} {
-	if op == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if v := op.Value.Key; v != nil {
-		m[names.AttrKey] = aws.ToString(v)
-	}
-
-	if v := op.Value.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenSourceSelectionCriteria(ssc *types.SourceSelectionCriteria) []interface{} {
-	if ssc == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if ssc.ReplicaModifications != nil {
-		m["replica_modifications"] = flattenReplicaModifications(ssc.ReplicaModifications)
-	}
-
-	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = flattenSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenReplicaModifications(rc *types.ReplicaModifications) []interface{} {
-	if rc == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: rc.Status,
-	}
-
-	return []interface{}{m}
-}
-
-func flattenSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) []interface{} {
-	if objects == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrStatus: objects.Status,
-	}
-
-	return []interface{}{m}
+	return []any{tfMap}
 }

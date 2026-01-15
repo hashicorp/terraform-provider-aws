@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_dms_replication_task", name="Replication Task")
+// @Tags(identifierAttribute="replication_task_arn")
 func dataSourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationTaskRead,
@@ -74,12 +75,10 @@ func dataSourceReplicationTask() *schema.Resource {
 	}
 }
 
-func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	taskID := d.Get("replication_task_id").(string)
 	task, err := findReplicationTaskByID(ctx, conn, taskID)
@@ -99,19 +98,6 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrStatus, task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
-
-	tags, err := listTags(ctx, conn, aws.ToString(task.ReplicationTaskArn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing DMS Replication Task (%s) tags: %s", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

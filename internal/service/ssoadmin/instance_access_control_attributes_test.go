@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +46,7 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
@@ -73,7 +73,7 @@ func testAccInstanceAccessControlAttributes_disappears(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceAccessControlAttributes(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssoadmin.ResourceInstanceAccessControlAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +95,7 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_multiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
@@ -150,7 +150,7 @@ func testAccCheckInstanceAccessControlAttributesDestroy(ctx context.Context) res
 
 			_, err := tfssoadmin.FindInstanceAttributeControlAttributesByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

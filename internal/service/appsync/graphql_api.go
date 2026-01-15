@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -6,22 +6,24 @@ package appsync
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,6 +36,7 @@ const (
 
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
@@ -320,12 +323,10 @@ func resourceGraphQLAPI() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -337,7 +338,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
-		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]any), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("api_type"); ok {
@@ -345,7 +346,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("enhanced_metrics_config"); ok {
-		input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]interface{}))
+		input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("introspection_config"); ok {
@@ -353,11 +354,11 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-		input.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]interface{}))
+		input.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("log_config"); ok {
-		input.LogConfig = expandLogConfig(v.([]interface{}))
+		input.LogConfig = expandLogConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("merged_api_execution_role_arn"); ok {
@@ -365,7 +366,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("openid_connect_config"); ok {
-		input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]interface{}))
+		input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("query_depth_limit"); ok {
@@ -377,7 +378,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
-		input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		input.UserPoolConfig = expandUserPoolConfig(v.([]any), meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -391,62 +392,62 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateGraphqlApi(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(aws.ToString(output.GraphqlApi.ApiId))
 
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return smerr.Append(ctx, diags, err)
 		}
 	}
 
-	return append(diags, resourceGraphQLAPIRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceGraphQLAPIRead(ctx, d, meta))
 }
 
-func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	api, err := findGraphQLAPIByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync GraphQL API (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppSync GraphQL API (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if err := d.Set("additional_authentication_provider", flattenAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("api_type", api.ApiType)
 	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
 	if err := d.Set("enhanced_metrics_config", flattenEnhancedMetricsConfig(api.EnhancedMetricsConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enhanced_metrics_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("introspection_config", api.IntrospectionConfig)
 	if err := d.Set("lambda_authorizer_config", flattenLambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("log_config", flattenLogConfig(api.LogConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("merged_api_execution_role_arn", api.MergedApiExecutionRoleArn)
 	d.Set(names.AttrName, api.Name)
 	if err := d.Set("openid_connect_config", flattenOpenIDConnectConfig(api.OpenIDConnectConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("query_depth_limit", api.QueryDepthLimit)
 	d.Set("resolver_count_limit", api.ResolverCountLimit)
 	d.Set("uris", api.Uris)
 	if err := d.Set("user_pool_config", flattenUserPoolConfig(api.UserPoolConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("visibility", api.Visibility)
 	d.Set("xray_enabled", api.XrayEnabled)
@@ -456,7 +457,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
@@ -468,11 +469,11 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
-			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.AdditionalAuthenticationProviders = expandAdditionalAuthenticationProviders(v.([]any), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("enhanced_metrics_config"); ok {
-			input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]interface{}))
+			input.EnhancedMetricsConfig = expandEnhancedMetricsConfig(v.([]any))
 		}
 
 		if v, ok := d.GetOk("introspection_config"); ok {
@@ -480,11 +481,11 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("lambda_authorizer_config"); ok {
-			input.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]interface{}))
+			input.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]any))
 		}
 
 		if v, ok := d.GetOk("log_config"); ok {
-			input.LogConfig = expandLogConfig(v.([]interface{}))
+			input.LogConfig = expandLogConfig(v.([]any))
 		}
 
 		if v, ok := d.GetOk("merged_api_execution_role_arn"); ok {
@@ -492,7 +493,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("openid_connect_config"); ok {
-			input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]interface{}))
+			input.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]any))
 		}
 
 		if v, ok := d.GetOk("query_depth_limit"); ok {
@@ -504,7 +505,7 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if v, ok := d.GetOk("user_pool_config"); ok {
-			input.UserPoolConfig = expandUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+			input.UserPoolConfig = expandUserPoolConfig(v.([]any), meta.(*conns.AWSClient).Region(ctx))
 		}
 
 		if v, ok := d.GetOk("xray_enabled"); ok {
@@ -514,36 +515,37 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateGraphqlApi(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		if d.HasChange(names.AttrSchema) {
 			if v, ok := d.GetOk(names.AttrSchema); ok {
 				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
+					return smerr.Append(ctx, diags, err)
 				}
 			}
 		}
 	}
 
-	return append(diags, resourceGraphQLAPIRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceGraphQLAPIRead(ctx, d, meta))
 }
 
-func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting AppSync GraphQL API: %s", d.Id())
-	_, err := conn.DeleteGraphqlApi(ctx, &appsync.DeleteGraphqlApiInput{
+	input := appsync.DeleteGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGraphqlApi(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppSync GraphQL API (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -558,11 +560,11 @@ func putSchema(ctx context.Context, conn *appsync.Client, apiID, definition stri
 	_, err := conn.StartSchemaCreation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating AppSync GraphQL API (%s) schema: %w", apiID, err)
+		return smarterr.NewError(err)
 	}
 
 	if _, err := waitSchemaCreated(ctx, conn, apiID, timeout); err != nil {
-		return fmt.Errorf("waiting for AppSync GraphQL API (%s) schema create: %w", apiID, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil
@@ -576,18 +578,15 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetGraphqlApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.GraphqlApi == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.GraphqlApi, nil
@@ -601,33 +600,30 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	output, err := conn.GetSchemaCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
 }
 
-func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.Status), nil
@@ -635,7 +631,7 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 }
 
 func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*appsync.GetSchemaCreationStatusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusProcessing),
 		Target:  enum.Slice(awstypes.SchemaStatusActive, awstypes.SchemaStatusSuccess),
 		Refresh: statusSchemaCreation(ctx, conn, id),
@@ -645,19 +641,19 @@ func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Details)))
-		return output, err
+		retry.SetLastError(err, errors.New(aws.ToString(output.Details)))
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
-func expandLogConfig(tfList []interface{}) *awstypes.LogConfig {
+func expandLogConfig(tfList []any) *awstypes.LogConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.LogConfig{
 		CloudWatchLogsRoleArn: aws.String(tfMap["cloudwatch_logs_role_arn"].(string)),
 		ExcludeVerboseContent: tfMap["exclude_verbose_content"].(bool),
@@ -667,12 +663,12 @@ func expandLogConfig(tfList []interface{}) *awstypes.LogConfig {
 	return apiObject
 }
 
-func expandOpenIDConnectConfig(tfList []interface{}) *awstypes.OpenIDConnectConfig {
+func expandOpenIDConnectConfig(tfList []any) *awstypes.OpenIDConnectConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.OpenIDConnectConfig{
 		Issuer: aws.String(tfMap[names.AttrIssuer].(string)),
 	}
@@ -692,12 +688,12 @@ func expandOpenIDConnectConfig(tfList []interface{}) *awstypes.OpenIDConnectConf
 	return apiObject
 }
 
-func expandUserPoolConfig(tfList []interface{}, currentRegion string) *awstypes.UserPoolConfig {
+func expandUserPoolConfig(tfList []any, currentRegion string) *awstypes.UserPoolConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.UserPoolConfig{
 		AwsRegion:     aws.String(currentRegion),
 		DefaultAction: awstypes.DefaultAction(tfMap[names.AttrDefaultAction].(string)),
@@ -715,12 +711,12 @@ func expandUserPoolConfig(tfList []interface{}, currentRegion string) *awstypes.
 	return apiObject
 }
 
-func expandEnhancedMetricsConfig(tfList []interface{}) *awstypes.EnhancedMetricsConfig {
+func expandEnhancedMetricsConfig(tfList []any) *awstypes.EnhancedMetricsConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.EnhancedMetricsConfig{
 		DataSourceLevelMetricsBehavior: awstypes.DataSourceLevelMetricsBehavior(tfMap["data_source_level_metrics_behavior"].(string)),
 		OperationLevelMetricsConfig:    awstypes.OperationLevelMetricsConfig(tfMap["operation_level_metrics_config"].(string)),
@@ -730,12 +726,12 @@ func expandEnhancedMetricsConfig(tfList []interface{}) *awstypes.EnhancedMetrics
 	return apiObject
 }
 
-func expandLambdaAuthorizerConfig(tfList []interface{}) *awstypes.LambdaAuthorizerConfig {
+func expandLambdaAuthorizerConfig(tfList []any) *awstypes.LambdaAuthorizerConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.LambdaAuthorizerConfig{
 		AuthorizerResultTtlInSeconds: int32(tfMap["authorizer_result_ttl_in_seconds"].(int)),
 		AuthorizerUri:                aws.String(tfMap["authorizer_uri"].(string)),
@@ -748,14 +744,14 @@ func expandLambdaAuthorizerConfig(tfList []interface{}) *awstypes.LambdaAuthoriz
 	return apiObject
 }
 
-func expandAdditionalAuthenticationProviders(tfList []interface{}, currentRegion string) []awstypes.AdditionalAuthenticationProvider {
+func expandAdditionalAuthenticationProviders(tfList []any, currentRegion string) []awstypes.AdditionalAuthenticationProvider {
 	if len(tfList) < 1 {
 		return nil
 	}
 
 	apiObjects := make([]awstypes.AdditionalAuthenticationProvider, 0)
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -765,15 +761,15 @@ func expandAdditionalAuthenticationProviders(tfList []interface{}, currentRegion
 		}
 
 		if v, ok := tfMap["lambda_authorizer_config"]; ok {
-			apiObject.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]interface{}))
+			apiObject.LambdaAuthorizerConfig = expandLambdaAuthorizerConfig(v.([]any))
 		}
 
 		if v, ok := tfMap["openid_connect_config"]; ok {
-			apiObject.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]interface{}))
+			apiObject.OpenIDConnectConfig = expandOpenIDConnectConfig(v.([]any))
 		}
 
 		if v, ok := tfMap["user_pool_config"]; ok {
-			apiObject.UserPoolConfig = expandCognitoUserPoolConfig(v.([]interface{}), currentRegion)
+			apiObject.UserPoolConfig = expandCognitoUserPoolConfig(v.([]any), currentRegion)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -782,12 +778,12 @@ func expandAdditionalAuthenticationProviders(tfList []interface{}, currentRegion
 	return apiObjects
 }
 
-func expandCognitoUserPoolConfig(tfList []interface{}, currentRegion string) *awstypes.CognitoUserPoolConfig {
+func expandCognitoUserPoolConfig(tfList []any, currentRegion string) *awstypes.CognitoUserPoolConfig {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CognitoUserPoolConfig{
 		AwsRegion:  aws.String(currentRegion),
 		UserPoolId: aws.String(tfMap[names.AttrUserPoolID].(string)),
@@ -804,41 +800,41 @@ func expandCognitoUserPoolConfig(tfList []interface{}, currentRegion string) *aw
 	return apiObject
 }
 
-func flattenLogConfig(apiObject *awstypes.LogConfig) []interface{} {
+func flattenLogConfig(apiObject *awstypes.LogConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cloudwatch_logs_role_arn": aws.ToString(apiObject.CloudWatchLogsRoleArn),
 		"exclude_verbose_content":  apiObject.ExcludeVerboseContent,
 		"field_log_level":          apiObject.FieldLogLevel,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenOpenIDConnectConfig(apiObject *awstypes.OpenIDConnectConfig) []interface{} {
+func flattenOpenIDConnectConfig(apiObject *awstypes.OpenIDConnectConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"auth_ttl":         apiObject.AuthTTL,
 		names.AttrClientID: aws.ToString(apiObject.ClientId),
 		"iat_ttl":          apiObject.IatTTL,
 		names.AttrIssuer:   aws.ToString(apiObject.Issuer),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenUserPoolConfig(apiObject *awstypes.UserPoolConfig) []interface{} {
+func flattenUserPoolConfig(apiObject *awstypes.UserPoolConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"aws_region":            aws.ToString(apiObject.AwsRegion),
 		names.AttrDefaultAction: apiObject.DefaultAction,
 		names.AttrUserPoolID:    aws.ToString(apiObject.UserPoolId),
@@ -848,29 +844,29 @@ func flattenUserPoolConfig(apiObject *awstypes.UserPoolConfig) []interface{} {
 		tfMap["app_id_client_regex"] = aws.ToString(apiObject.AppIdClientRegex)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEnhancedMetricsConfig(apiObject *awstypes.EnhancedMetricsConfig) []interface{} {
+func flattenEnhancedMetricsConfig(apiObject *awstypes.EnhancedMetricsConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"data_source_level_metrics_behavior": apiObject.DataSourceLevelMetricsBehavior,
 		"operation_level_metrics_config":     apiObject.OperationLevelMetricsConfig,
 		"resolver_level_metrics_behavior":    apiObject.ResolverLevelMetricsBehavior,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenLambdaAuthorizerConfig(apiObject *awstypes.LambdaAuthorizerConfig) []interface{} {
+func flattenLambdaAuthorizerConfig(apiObject *awstypes.LambdaAuthorizerConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"authorizer_result_ttl_in_seconds": apiObject.AuthorizerResultTtlInSeconds,
 		"authorizer_uri":                   aws.ToString(apiObject.AuthorizerUri),
 	}
@@ -879,17 +875,17 @@ func flattenLambdaAuthorizerConfig(apiObject *awstypes.LambdaAuthorizerConfig) [
 		tfMap["identity_validation_expression"] = aws.ToString(apiObject.IdentityValidationExpression)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAdditionalAuthenticationProviders(apiObjects []awstypes.AdditionalAuthenticationProvider) []interface{} {
+func flattenAdditionalAuthenticationProviders(apiObjects []awstypes.AdditionalAuthenticationProvider) []any {
 	if len(apiObjects) == 0 {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfList := make([]interface{}, len(apiObjects))
+	tfList := make([]any, len(apiObjects))
 	for i, apiObject := range apiObjects {
-		tfList[i] = map[string]interface{}{
+		tfList[i] = map[string]any{
 			"authentication_type":      apiObject.AuthenticationType,
 			"lambda_authorizer_config": flattenLambdaAuthorizerConfig(apiObject.LambdaAuthorizerConfig),
 			"openid_connect_config":    flattenOpenIDConnectConfig(apiObject.OpenIDConnectConfig),
@@ -900,12 +896,12 @@ func flattenAdditionalAuthenticationProviders(apiObjects []awstypes.AdditionalAu
 	return tfList
 }
 
-func flattenCognitoUserPoolConfig(apiObject *awstypes.CognitoUserPoolConfig) []interface{} {
+func flattenCognitoUserPoolConfig(apiObject *awstypes.CognitoUserPoolConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"aws_region":         aws.ToString(apiObject.AwsRegion),
 		names.AttrUserPoolID: aws.ToString(apiObject.UserPoolId),
 	}
@@ -914,5 +910,5 @@ func flattenCognitoUserPoolConfig(apiObject *awstypes.CognitoUserPoolConfig) []i
 		tfMap["app_id_client_regex"] = aws.ToString(apiObject.AppIdClientRegex)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

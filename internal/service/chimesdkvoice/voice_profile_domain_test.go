@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -61,7 +61,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +126,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/.+$`)),
 				),
 			},
 		},
@@ -164,7 +164,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -177,7 +177,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -186,7 +186,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_tags1(rName, acctest.CtKey2, "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value3"),
 				),
 			},
@@ -271,6 +271,7 @@ func testAccVoiceProfileDomainConfig_basic(rName string) string {
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -287,6 +288,7 @@ func testAccVoiceProfileDomainConfig_description(rName, description string) stri
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -304,6 +306,7 @@ func testAccVoiceProfileDomainConfig_tags1(rName, tagKey1, tagValue1 string) str
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {
@@ -324,6 +327,7 @@ func testAccVoiceProfileDomainConfig_tags2(rName, tagKey1, tagValue1, tagKey2, t
 resource "aws_kms_key" "test" {
   description             = "TF Acceptance Test Voice Profile Domain"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_chimesdkvoice_voice_profile_domain" "test" {

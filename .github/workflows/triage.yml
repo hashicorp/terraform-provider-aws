@@ -1,0 +1,122 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Auto Triage
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+on:
+  pull_request_target:
+    types:
+      - edited
+      - opened
+      - synchronize
+
+  issues:
+    types:
+      - edited
+      - opened
+
+env:
+  ISSUE_URL: ${{ github.event.issue.html_url ||  github.event.pull_request.html_url }}
+
+jobs:
+  labelers:
+    name: Labelers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          core_contributors: ${{ secrets.CORE_CONTRIBUTORS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: Add needs-triage
+        if: |
+          github.event.action == 'opened'
+          && steps.community_check.outputs.maintainer == 'false'
+        env:
+          GH_CLI_SUBCOMMAND: ${{ github.event_name == 'issues' && 'issue' || 'pr' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label needs-triage
+
+      - name: Apply Pull Request Service Labels
+        if: github.event_name == 'pull_request_target'
+        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
+        with:
+          configuration-path: .github/labeler-pr-triage.yml
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Apply Pull Request Size Labels
+        if: github.event_name == 'pull_request_target'
+        uses: codelytv/pr-size-labeler@4ec67706cd878fbc1c8db0a5dcd28b6bb412e85a # v1.10.3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          xs_label: "size/XS"
+          xs_max_size: "30"
+          s_label: "size/S"
+          s_max_size: "60"
+          m_label: "size/M"
+          m_max_size: "150"
+          l_label: "size/L"
+          l_max_size: "300"
+          xl_label: "size/XL"
+          message_if_xl: ""
+
+      - name: Apply Issue Service Labels
+        if: github.event_name == 'issues'
+        uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler-issue-triage.yml
+          enable-versioned-regex: 0
+          include-title: 1
+
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        id: token
+        if: github.event_name == 'issues'
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+
+      - name: Apply Issue Labels that Trigger Events
+        if: github.event_name == 'issues'
+        uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
+        with:
+          repo-token: ${{ steps.token.outputs.token }}
+          configuration-path: .github/labeler-issue-trigger.yml
+          enable-versioned-regex: 0
+          include-title: 1
+
+      - name: Credit Core Contributor Contributions
+        if: |
+          github.event_name == 'pull_request_target'
+          && steps.community_check.outputs.core_contributor == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'external-maintainer')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh pr edit $ISSUE_URL --add-label external-maintainer
+
+      - name: Credit Partner Contributions
+        if: |
+          github.event_name == 'pull_request_target'
+          && steps.community_check.outputs.partner == 'true'
+          && !contains(github.event.pull_request.labels.*.name, 'partner')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh pr edit $ISSUE_URL --add-label partner

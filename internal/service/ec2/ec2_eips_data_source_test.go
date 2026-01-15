@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -26,10 +26,10 @@ func TestAccEC2EIPsDataSource_basic(t *testing.T) {
 				Config: testAccEIPsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_eips.all", "allocation_ids.#", 1),
-					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr("data.aws_eips.none", "allocation_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr("data.aws_eips.none", "public_ips.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "allocation_ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_eips.by_tags", "public_ips.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_eips.none", "allocation_ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_eips.none", "public_ips.#", "0"),
 				),
 			},
 		},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftranscribe "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,9 +43,11 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "vocabulary_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "vocabulary_name", rName),
 				),
 			},
 			{
@@ -84,7 +86,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
 			},
@@ -92,7 +94,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "transcribe", "medical-vocabulary/{vocabulary_name}"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
 			},
@@ -124,7 +126,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -132,7 +134,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -141,7 +143,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -173,7 +175,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftranscribe.ResourceMedicalVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -192,7 +194,7 @@ func testAccCheckMedicalVocabularyDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tftranscribe.FindMedicalVocabularyByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

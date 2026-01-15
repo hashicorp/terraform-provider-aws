@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -10,13 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,21 +24,21 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test.0"
 	roleResourceName := "aws_iam_role.test.0"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResourceName, names.AttrARN),
 				),
 			},
@@ -57,19 +55,19 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDestination(), resourceName),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,20 +83,20 @@ func TestAccLogsDestination_update(t *testing.T) {
 	roleResource1Name := "aws_iam_role.test.0"
 	streamResource2Name := "aws_kinesis_stream.test.1"
 	roleResource2Name := "aws_iam_role.test.1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationConfig_update(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
@@ -110,18 +108,18 @@ func TestAccLogsDestination_update(t *testing.T) {
 			{
 				Config: testAccDestinationConfig_update(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccDestinationConfig_updateWithTag(rName, 0, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
@@ -129,9 +127,9 @@ func TestAccLogsDestination_update(t *testing.T) {
 			{
 				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
@@ -139,9 +137,9 @@ func TestAccLogsDestination_update(t *testing.T) {
 			{
 				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
+					testAccCheckDestinationExists(ctx, t, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
@@ -150,9 +148,9 @@ func TestAccLogsDestination_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_destination" {
@@ -160,7 +158,7 @@ func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 			_, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -175,14 +173,14 @@ func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckDestinationExists(ctx context.Context, n string, v *types.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationExists(ctx context.Context, t *testing.T, n string, v *types.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
 
@@ -215,7 +213,7 @@ data "aws_iam_policy_document" "role" {
       type = "Service"
 
       identifiers = [
-        "logs.${data.aws_region.current.name}.amazonaws.com",
+        "logs.${data.aws_region.current.region}.amazonaws.com",
       ]
     }
 

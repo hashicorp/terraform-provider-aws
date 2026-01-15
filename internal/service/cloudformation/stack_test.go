@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,12 +40,17 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "on_failure"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.DefaultSgId"),
 					resource.TestCheckResourceAttrSet(resourceName, "outputs.VpcID"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "template_url"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -53,8 +58,15 @@ func TestAccCloudFormationStack_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccStackConfig_basic(rName),
-				PlanOnly: true,
+				Config: testAccStackConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -159,7 +171,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,17 +252,17 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "10"),
 				),
 			},
 			{
@@ -264,17 +276,17 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "10"),
 				),
 			},
 		},
@@ -301,9 +313,9 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 				Config: testAccStackConfig_params(rName, vpcCidrInitial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrInitial),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 			{
@@ -316,9 +328,9 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 				Config: testAccStackConfig_params(rName, vpcCidrUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", vpcCidrUpdated),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "0"),
 				),
 			},
 		},
@@ -441,13 +453,6 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 					testAccCheckStackExists(ctx, resourceName, &stack),
 				),
 			},
-			{
-				PlanOnly: true,
-				Config:   testAccStackConfig_transform(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(ctx, resourceName, &stack),
-				),
-			},
 		},
 	})
 }
@@ -493,9 +498,9 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 				Config: testAccStackConfig_parametersAndOutputs(rName, "in1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in1"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in1-post"),
 					resource.TestCheckOutput("stack_DataOut", "pre-in1-post"),
 				),
@@ -510,9 +515,9 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.DataIn", "in2"),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.DataOut", "pre-in2-post"),
 					resource.TestCheckOutput("stack_DataOut", "pre-in2-post"),
 				),
@@ -543,7 +548,7 @@ func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 				Config: testAccStackConfig_templateUpdate(rName, "out1", acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.out1", acctest.CtValue1),
 					resource.TestCheckOutput("stack_output", "out1:value1"),
 				),
@@ -558,7 +563,7 @@ func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outputs.out2", acctest.CtValue2),
 					resource.TestCheckOutput("stack_output", "out2:value2"),
 				),
@@ -604,7 +609,7 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1007,7 +1012,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }
@@ -1029,7 +1034,7 @@ resource "aws_cloudformation_stack" "test" {
     VpcCIDR = %[3]q
   }
 
-  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
+  template_url       = "https://${aws_s3_bucket.b.id}.s3-${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${aws_s3_object.object.key}"
   on_failure         = "DELETE"
   timeout_in_minutes = 1
 }

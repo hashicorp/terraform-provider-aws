@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,8 +41,8 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 				Config: testAccProtectionConfig_globalAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -73,8 +73,8 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfshield.ResourceProtection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,8 +132,8 @@ func TestAccShieldProtection_alb(t *testing.T) {
 				Config: testAccProtectionConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -164,8 +164,8 @@ func TestAccShieldProtection_elb(t *testing.T) {
 				Config: testAccProtectionConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -197,8 +197,8 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFront(rName, testAccProtectionCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -230,8 +230,8 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 				),
 			},
@@ -244,8 +244,8 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", acctest.CtValue1Updated, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
 				),
@@ -254,8 +254,8 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
 				),
 			},
@@ -304,7 +304,7 @@ func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfshield.FindProtectionByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -777,7 +777,7 @@ resource "aws_eip" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
+  resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 }
 `, rName)
 }
@@ -786,7 +786,7 @@ func testAccProtectionConfig_globalAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_globalaccelerator_accelerator.test.id
+  resource_arn = aws_globalaccelerator_accelerator.test.arn
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {

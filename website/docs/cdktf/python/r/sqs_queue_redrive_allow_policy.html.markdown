@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `queue_url` - (Required) The URL of the SQS Queue to which to attach the policy
 * `redrive_allow_policy` - (Required) The JSON redrive allow policy for the SQS queue. Learn more in the [Amazon SQS dead-letter queues documentation](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html).
 
@@ -77,13 +78,13 @@ from imports.aws.sqs_queue_redrive_allow_policy import SqsQueueRedriveAllowPolic
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SqsQueueRedriveAllowPolicy.generate_config_for_import(self, "test", "https://queue.amazonaws.com/0123456789012/myqueue")
+        SqsQueueRedriveAllowPolicy.generate_config_for_import(self, "test", "https://queue.amazonaws.com/123456789012/myqueue")
 ```
 
 Using `terraform import`, import SQS Queue Redrive Allow Policies using the queue URL. For example:
 
 ```console
-% terraform import aws_sqs_queue_redrive_allow_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+% terraform import aws_sqs_queue_redrive_allow_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20610df5ca53af34101414784f648f77a8c2ab89455909b2c2cae249011aae9c -->
+<!-- cache-key: cdktf-0.20.8 input-e1c64e6e2458160f388b9a7ec488abd3bd04a10ae8b82f69d0d0a207b50c127d -->

@@ -79,6 +79,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `blockPublicPolicy` - (Optional) Makes an optional API call to Zelkova to validate the Resource Policy to prevent broad access to your secret.
 
 ## Attribute Reference
@@ -88,6 +89,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Amazon Resource Name (ARN) of the secret.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_secretsmanager_secret_policy.example
+  identity = {
+    "arn" = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+  }
+}
+
+resource "aws_secretsmanager_secret_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Secrets Manager secret.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_policy` using the secret Amazon Resource Name (ARN). For example:
 
@@ -119,4 +141,4 @@ Using `terraform import`, import `aws_secretsmanager_secret_policy` using the se
 % terraform import aws_secretsmanager_secret_policy.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-645c813817dc94994f91896c0dc33ab5185045f6665587858a142de45a69dfb5 -->
+<!-- cache-key: cdktf-0.20.8 input-bab672a0418f25063966888499e257371a10857206e96cdf0249cb7cef9af5cc -->

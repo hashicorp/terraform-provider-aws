@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -193,10 +193,10 @@ func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 	}
 }
 
-func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -253,16 +253,16 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []interface{} {
+func flattenLifecycleTransitionReason(rs *awstypes.LifecycleTransitionReason) []any {
 	if rs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 
 	if rs.Message != nil {
 		m[names.AttrMessage] = aws.ToString(rs.Message)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

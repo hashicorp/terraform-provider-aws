@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -14,15 +14,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -112,7 +112,7 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
 				// so that the user doesn't need to explicitly set it themselves.
 				if diff.HasChange(names.AttrDomainName) || diff.HasChange("subject_alternative_names") {
@@ -128,12 +128,11 @@ func ResourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -166,14 +165,14 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	certificate, err := FindCertificateById(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id())
 		d.SetId("")
 		return diags
@@ -195,12 +194,12 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceCertificateRead(ctx, d, meta)
 }
 
-func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -226,8 +225,8 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func domainValidationOptionsHash(v interface{}) int {
-	m, ok := v.(map[string]interface{})
+func domainValidationOptionsHash(v any) int {
+	m, ok := v.(map[string]any)
 
 	if !ok {
 		return 0
@@ -240,12 +239,12 @@ func domainValidationOptionsHash(v interface{}) int {
 	return 0
 }
 
-func flattenDomainValidationRecords(domainValidationRecords []types.DomainValidationRecord) []map[string]interface{} {
-	var domainValidationResult []map[string]interface{}
+func flattenDomainValidationRecords(domainValidationRecords []types.DomainValidationRecord) []map[string]any {
+	var domainValidationResult []map[string]any
 
 	for _, o := range domainValidationRecords {
 		if o.ResourceRecord != nil {
-			validationOption := map[string]interface{}{
+			validationOption := map[string]any{
 				names.AttrDomainName:    aws.ToString(o.DomainName),
 				"resource_record_name":  aws.ToString(o.ResourceRecord.Name),
 				"resource_record_type":  aws.ToString(o.ResourceRecord.Type),
@@ -258,7 +257,7 @@ func flattenDomainValidationRecords(domainValidationRecords []types.DomainValida
 	return domainValidationResult
 }
 
-func expandSubjectAlternativeNames(sans interface{}) []string {
+func expandSubjectAlternativeNames(sans any) []string {
 	subjectAlternativeNames := make([]string, len(sans.(*schema.Set).List()))
 	for i, sanRaw := range sans.(*schema.Set).List() {
 		subjectAlternativeNames[i] = sanRaw.(string)
@@ -275,7 +274,7 @@ func FindCertificateById(ctx context.Context, conn *lightsail.Client, name strin
 	out, err := conn.GetCertificates(ctx, in)
 
 	if IsANotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -286,7 +285,7 @@ func FindCertificateById(ctx context.Context, conn *lightsail.Client, name strin
 	}
 
 	if out == nil || len(out.Certificates) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Certificates[0].CertificateDetail, nil

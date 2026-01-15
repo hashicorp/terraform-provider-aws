@@ -194,6 +194,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `windowId` - (Required) The Id of the maintenance window to register the task with.
 * `maxConcurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
 * `maxErrors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
@@ -269,6 +270,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_task.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "4f7ca192-7e9a-40fe-9192-5cb15EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_task" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `windowId` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window task.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Maintenance Window Task using the `windowId` and `windowTaskId` separated by `/`. For example:
 
 ```typescript
@@ -285,7 +314,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     SsmMaintenanceWindowTask.generateConfigForImport(
       this,
-      "task",
+      "example",
       "<window_id>/<window_task_id>"
     );
   }
@@ -296,7 +325,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import AWS Maintenance Window Task using the `windowId` and `windowTaskId` separated by `/`. For example:
 
 ```console
-% terraform import aws_ssm_maintenance_window_task.task <window_id>/<window_task_id>
+% terraform import aws_ssm_maintenance_window_task.example <window_id>/<window_task_id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c897099591bdcacb9f61cf4c76d292fedaf9671e665a81bf657daf724fcf0e5c -->
+<!-- cache-key: cdktf-0.20.8 input-31a6f3156a7aa73769acba4cfdb46057c9766f4b23b259cea54a621621069c57 -->

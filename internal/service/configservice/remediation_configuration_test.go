@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,11 +46,11 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -86,7 +86,7 @@ func testAccRemediationConfiguration_basicBackwardCompatible(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceRemediationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,7 +158,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -174,7 +174,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(uAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(uSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(uExecPct),
 						"error_percentage":                     strconv.Itoa(uErrorPct),
@@ -208,11 +208,11 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
 					resource.TestCheckResourceAttr(resourceName, "target_id", "AWS-EnableS3BucketEncryption"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "SSM_DOCUMENT"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "automatic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -260,7 +260,7 @@ func testAccCheckRemediationConfigurationDestroy(ctx context.Context) resource.T
 
 			_, err := tfconfig.FindRemediationConfigurationByConfigRuleName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

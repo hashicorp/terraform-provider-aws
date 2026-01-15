@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana_test
@@ -34,9 +34,9 @@ func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
 				Config: testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSAMLConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
-					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),
@@ -63,9 +63,9 @@ func testAccWorkspaceSAMLConfiguration_loginValidity(t *testing.T) {
 				Config: testAccWorkspaceSAMLConfigurationConfig_providerLoginValidity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSAMLConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
-					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),
@@ -93,9 +93,9 @@ func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 				Config: testAccWorkspaceSAMLConfigurationConfig_providerAssertions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceSAMLConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "admin_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_role_values.0", "admin"),
-					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),

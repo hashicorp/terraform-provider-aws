@@ -43,7 +43,7 @@ class MyConvertedCode extends TerraformStack {
     );
     const awsGlobalacceleratorCustomRoutingListenerExample =
       new GlobalacceleratorCustomRoutingListener(this, "example_1", {
-        acceleratorArn: example.id,
+        acceleratorArn: example.arn,
         portRange: [
           {
             fromPort: 80,
@@ -88,6 +88,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_listener.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz"
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_listener" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing listener.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing listeners using the `id`. For example:
 
 ```typescript
@@ -118,4 +139,4 @@ Using `terraform import`, import Global Accelerator custom routing listeners usi
 % terraform import aws_globalaccelerator_custom_routing_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-7d9b14c85b89fb6ec7d4fa26f1cd657180812dab00b0742e6d404be95e64a568 -->
+<!-- cache-key: cdktf-0.20.8 input-0d9dcb7c9f42183017db2b403b85cd856b17e10ebf036a41e9ebae3352e187ac -->

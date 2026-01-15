@@ -83,6 +83,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the configuration.
 * `s3_destination` - (Required) Amazon S3 configuration details for the sync.
 
@@ -125,4 +126,4 @@ Using `terraform import`, import SSM resource data sync using the `name`. For ex
 % terraform import aws_ssm_resource_data_sync.example example-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1ca6cbc4ead65662883453fcaa95a776d79c46af9c730c2c622c39264e48c38b -->
+<!-- cache-key: cdktf-0.20.8 input-fa72d6b0874af4ecee4a83bcc4482cff3be4af9570d6b579f9421031c8d89125 -->

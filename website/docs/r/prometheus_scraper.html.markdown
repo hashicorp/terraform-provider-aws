@@ -8,8 +8,8 @@ description: |-
 
 # Resource: aws_prometheus_scraper
 
--> **Note:** You cannot update a scraper. If you change any attribute, Terraform
-will delete the current and create a new one.
+-> **Note:** If you change a Scraper's source (EKS cluster), Terraform
+will delete the current Scraper and create a new one.
 
 Provides an Amazon Managed Service for Prometheus fully managed collector
 (scraper).
@@ -94,6 +94,33 @@ EOT
 }
 ```
 
+### Use default EKS scraper configuration
+
+You can use the data source `aws_prometheus_scraper_configuration` to use a
+service managed scrape configuration.
+
+```terraform
+data "aws_prometheus_default_scraper_configuration" "example" {}
+
+resource "aws_prometheus_scraper" "example" {
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  scrape_configuration = data.aws_prometheus_scraper_configuration.example.configuration
+
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+}
+```
+
 ### Ignoring changes to Prometheus Workspace destination
 
 A managed scraper will add a `AMPAgentlessScraper` tag to its Prometheus workspace
@@ -136,17 +163,54 @@ Your source Amazon EKS cluster must be configured to allow the scraper to access
 metrics. Follow the [user guide](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-eks-setup)
 to setup the appropriate Kubernetes permissions.
 
+### Cross-Account Configuration
+
+This setup allows the scraper, running in a source account, to remote write its collected metrics to a workspace in a target account. Note that:
+
+- The target Role and target Workspace must be in the same account
+- The source Scraper and target Workspace must be in the same Region
+
+Follow [the AWS Best Practices guide](https://aws-observability.github.io/observability-best-practices/patterns/ampxa) to learn about the IAM roles configuration and overall setup.
+
+```terraform
+resource "aws_prometheus_scraper" "example" {
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+
+  destination {
+    amp {
+      workspace_arn = "<target_account_workspace_arn>"
+    }
+  }
+
+  role_configuration {
+    source_role_arn = aws_iam_role.source.arn
+    target_role_arn = "arn:aws:iam::ACCOUNT-ID:role/target-role-name"
+  }
+
+  scrape_configuration = "..."
+}
+```
+
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination` - (Required) Configuration block for the managed scraper to send metrics to. See [`destination`](#destination).
 * `scrape_configuration` - (Required) The configuration file to use in the new scraper. For more information, see [Scraper configuration](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-collector-how-to.html#AMP-collector-configuration).
 * `source` - (Required) Configuration block to specify where the managed scraper will collect metrics from. See [`source`](#source).
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `alias` - (Optional) a name to associate with the managed scraper. This is for your use, and does not need to be unique.
+
+* `role_configuration` - (Optional) Configuration block to enable writing to an Amazon Managed Service for Prometheus workspace in a different account. See [`role_configuration`](#role_configuration) below.
 
 ### `destination`
 
@@ -166,6 +230,11 @@ The following arguments are optional:
 * `subnet_ids` - (Required) List of subnet IDs. Must be in at least two different availability zones.
 * `security_group_ids` - (Optional) List of the security group IDs for the Amazon EKS cluster VPC configuration.
 
+### `role_configuration`
+
+* `source_role_arn` - (Required) The Amazon Resource Name (ARN) of the source role configuration. Must be an IAM role ARN.
+* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the target role configuration. Must be an IAM role ARN.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -179,6 +248,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `2m`)
 * `delete` - (Default `20m`)
 
 ## Import

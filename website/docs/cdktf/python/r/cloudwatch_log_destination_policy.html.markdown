@@ -59,6 +59,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `destination_name` - (Required) A name for the subscription filter
 * `access_policy` - (Required) The policy document. This is a JSON formatted string.
 * `force_update` - (Optional) Specify true if you are updating an existing destination policy to grant permission to an organization ID instead of granting permission to individual AWS accounts.
@@ -92,4 +93,4 @@ Using `terraform import`, import CloudWatch Logs destination policies using the 
 % terraform import aws_cloudwatch_log_destination_policy.test_destination_policy test_destination
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e9a8dea320a37c932bb21790e7e8761e42c974c856dc567a8154f492a8252914 -->
+<!-- cache-key: cdktf-0.20.8 input-eb1e792ecf672aa097a5c32b509ad5eeba801d3a35b91c7f06a85104a7f8cc21 -->

@@ -1,17 +1,17 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -69,20 +69,24 @@ func dataSourceReservedOffering() *schema.Resource {
 	}
 }
 
-func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
 		DBInstanceClass:    aws.String(d.Get("db_instance_class").(string)),
-		Duration:           aws.String(fmt.Sprint(d.Get(names.AttrDuration).(int))),
+		Duration:           aws.String(strconv.Itoa(d.Get(names.AttrDuration).(int))),
 		MultiAZ:            aws.Bool(d.Get("multi_az").(bool)),
 		OfferingType:       aws.String(d.Get("offering_type").(string)),
 		ProductDescription: aws.String(d.Get("product_description").(string)),
 	}
 
-	offering, err := findReservedDBInstancesOffering(ctx, conn, input, tfslices.PredicateTrue[*types.ReservedDBInstancesOffering]())
-
+	// A filter is necessary because the API returns all products where the product description contains
+	// the input product description. Sending "mysql" will return "mysql" *and* "aurora-mysql" offerings,
+	// causing an error: multiple RDS Reserved Instance Offerings matched
+	offering, err := findReservedDBInstancesOffering(ctx, conn, input, func(v *types.ReservedDBInstancesOffering) bool {
+		return aws.ToString(v.ProductDescription) == d.Get("product_description").(string) && aws.ToString(v.DBInstanceClass) == d.Get("db_instance_class").(string)
+	})
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS Reserved Instance Offering", err))
 	}
@@ -103,7 +107,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 
 func findReservedDBInstancesOffering(ctx context.Context, conn *rds.Client, input *rds.DescribeReservedDBInstancesOfferingsInput, filter tfslices.Predicate[*types.ReservedDBInstancesOffering]) (*types.ReservedDBInstancesOffering, error) {
 	output, err := findReservedDBInstancesOfferings(ctx, conn, input, filter)
-
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +122,7 @@ func findReservedDBInstancesOfferings(ctx context.Context, conn *rds.Client, inp
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ReservedDBInstancesOfferingNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

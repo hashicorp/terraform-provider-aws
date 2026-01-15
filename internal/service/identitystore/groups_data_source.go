@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
@@ -15,17 +15,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @FrameworkDataSource(name="Groups")
+// @FrameworkDataSource("aws_identitystore_groups", name="Groups")
 func newGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &groupsDataSource{}, nil
 }
 
 type groupsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*groupsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_identitystore_groups"
+	framework.DataSourceWithModel[groupsDataSourceModel]
 }
 
 func (d *groupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -84,6 +80,7 @@ func (d *groupsDataSource) Read(ctx context.Context, request datasource.ReadRequ
 }
 
 type groupsDataSourceModel struct {
+	framework.WithRegionModel
 	IdentityStoreID types.String                                `tfsdk:"identity_store_id"`
 	Groups          fwtypes.ListNestedObjectValueOf[groupModel] `tfsdk:"groups"`
 }

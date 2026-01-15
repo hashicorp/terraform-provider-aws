@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -11,14 +11,120 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestParseRecordID(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Input                               string
+		FunctionName, Qualifier, ResultHash string
+		ExpectError                         bool
+	}{
+		// Invalid cases
+		{"ABCDEF", "", "", "", true},
+		{"ABCDEF,42", "", "", "", true},
+		{"ABCDEF,,", "", "", "", true},
+		{"ABCDEF,invalid_qualifier,b326b5062b2f0e69046810717534cb09", "", "", "", true},
+		{"ABCDEF,42,invalid_hash", "", "", "", true},
+		// Valid cases
+		{"ABCDEF,42,b326b5062b2f0e69046810717534cb09", "ABCDEF", "42", "b326b5062b2f0e69046810717534cb09", false},
+		{"ABC_DEF,42,b326b5062b2f0e69046810717534cb09", "ABC_DEF", "42", "b326b5062b2f0e69046810717534cb09", false},
+		{"ABCDEF,$LATEST,b326b5062b2f0e69046810717534cb09", "ABCDEF", "$LATEST", "b326b5062b2f0e69046810717534cb09", false},
+		{"ABC_DEF,$LATEST,b326b5062b2f0e69046810717534cb09", "ABC_DEF", "$LATEST", "b326b5062b2f0e69046810717534cb09", false},
+		{"ABC_DEF_1234,567,b326b5062b2f0e69046810717534cb09", "ABC_DEF_1234", "567", "b326b5062b2f0e69046810717534cb09", false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Input, func(t *testing.T) {
+			t.Parallel()
+
+			functionName, qualifier, resultHash, err := tflambda.InvocationParseResourceID(tc.Input)
+
+			if tc.ExpectError {
+				if err == nil {
+					t.Fatalf("expected error for input: %s", tc.Input)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error for input %s: %v", tc.Input, err)
+			}
+
+			if functionName != tc.FunctionName {
+				t.Fatalf("input: %s\nfunction_name: %s\nexpected:%s", tc.Input, functionName, tc.FunctionName)
+			}
+			if qualifier != tc.Qualifier {
+				t.Fatalf("input: %s\nqualifier: %s\nexpected:%s", tc.Input, qualifier, tc.Qualifier)
+			}
+			if resultHash != tc.ResultHash {
+				t.Fatalf("input: %s\nresult: %s\nexpected:%s", tc.Input, resultHash, tc.ResultHash)
+			}
+		})
+	}
+}
+
+func TestInvocationResourceIDCreation(t *testing.T) {
+	t.Parallel()
+
+	functionName := "my_test_function"
+	qualifier := "$LATEST"
+	resultHash := "b326b5062b2f0e69046810717534cb09"
+
+	expectedID := "my_test_function,$LATEST,b326b5062b2f0e69046810717534cb09"
+
+	// Test parsing the expected ID format
+	parsedFunctionName, parsedQualifier, parsedResultHash, err := tflambda.InvocationParseResourceID(expectedID)
+	if err != nil {
+		t.Fatalf("unexpected error parsing resource ID: %v", err)
+	}
+
+	if parsedFunctionName != functionName {
+		t.Fatalf("expected function name: %s, got: %s", functionName, parsedFunctionName)
+	}
+	if parsedQualifier != qualifier {
+		t.Fatalf("expected qualifier: %s, got: %s", qualifier, parsedQualifier)
+	}
+	if parsedResultHash != resultHash {
+		t.Fatalf("expected result hash: %s, got: %s", resultHash, parsedResultHash)
+	}
+}
+
+// TestBuildInputPanic verifies the fix for panic: assignment to entry in nil map
+// This happens when input is empty and lifecycle_scope is CRUD
+func TestBuildInputPanic(t *testing.T) {
+	t.Parallel()
+
+	// Create ResourceData with empty input and CRUD lifecycle scope
+	resourceSchema := tflambda.ResourceInvocation().Schema
+	d := schema.TestResourceDataRaw(t, resourceSchema, map[string]any{
+		"function_name":   "test-function",
+		"input":           "", // Empty input causes getObjectFromJSONString to return nil
+		"lifecycle_scope": "CRUD",
+		"terraform_key":   "tf",
+	})
+	d.SetId("test-id")
+
+	// This should NOT panic after the fix
+	result, err := tflambda.BuildInput(d, tflambda.InvocationActionDelete)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Error("Expected result, but got nil")
+	}
+}
 
 func TestAccLambdaInvocation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -44,6 +150,12 @@ func TestAccLambdaInvocation_basic(t *testing.T) {
 					testAccCheckInvocationResult(resourceName, resultJSON),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+			},
 		},
 	})
 }
@@ -65,6 +177,12 @@ func TestAccLambdaInvocation_qualifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
 			},
 		},
 	})
@@ -153,6 +271,12 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 					testAccCheckInvocationResult(resourceName, resultJSON),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key"},
+			},
 		},
 	})
 }
@@ -162,6 +286,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	resourceName := "aws_lambda_invocation.test"
 	fName := "lambda_invocation_crud"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	ssmParamResourceName := "aws_ssm_parameter.result_key1"
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
@@ -179,19 +304,23 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, acctest.CtValue1),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
 					testAccInvocationConfig_function(fName, rName, ""),
+					testAccInvocationConfig_dependency(rName, resourceName),
 					testAccInvocationConfig_invocation(inputJSON2, extraArgs),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "valueB"),
 				),
 			},
 		},
@@ -360,6 +489,137 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	})
 }
 
+// Tests the state upgrader coming from a version < v5.1.0 where the default values
+// from the arguments added in 5.1.0 are not yet present.
+//
+// This causes unintentional invocations and/or issues processing input which is
+// valid type for CREATE_ONLY lifecycle_scope.
+//
+// https://github.com/hashicorp/terraform-provider-aws/issues/40954
+// https://github.com/hashicorp/terraform-provider-aws/issues/31786
+func TestAccLambdaInvocation_UpgradeState_Pre_v5_1_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.65.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+// Tests the state upgrader in cases where the default values from the arguments added
+// in v5.1.0 are already present
+func TestAccLambdaInvocation_UpgradeState_v5_83_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.LambdaServiceID),
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.83.0",
+					},
+				},
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function(fName, rName, testData),
+					testAccInvocationConfig_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_tenantID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	tenantID := "test-tenant-123"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccInvocationConfig_function_with_tenant(fName, rName, testData),
+					testAccInvocationConfig_tenantID(inputJSON, tenantID),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"input", "lifecycle_scope", "result", "terraform_key", "tenant_id"},
+			},
+		},
+	})
+}
+
 // testAccCheckCRUDDestroyResult verifies that when CRUD lifecycle is active that a destroyed resource
 // triggers the lambda.
 //
@@ -390,6 +650,25 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 			return fmt.Errorf("%s: input for destroy expected %s, got %s", name, expectedResult, *res.Parameter.Value)
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckInvocationResultUpdatedSSMParam(name, expectedValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("SSM parameter %s not created", name)
+		}
+
+		value, ok := rs.Primary.Attributes[names.AttrValue]
+		if !ok {
+			return fmt.Errorf("SSM parameter attribute 'value' is empty, expected: %s", expectedValue)
+		}
+
+		if value != expectedValue {
+			return fmt.Errorf("%s: Attribute 'value' expected %s, got %s", name, expectedValue, value)
+		}
 		return nil
 	}
 }
@@ -478,6 +757,30 @@ resource "aws_lambda_function" "test" {
 `, fName, rName, testData))
 }
 
+func testAccInvocationConfig_function_with_tenant(fName, rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccInvocationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/%[1]s.zip"
+  function_name = %[2]q
+  role          = aws_iam_role.test.arn
+  handler       = "%[1]s.handler"
+  runtime       = "nodejs18.x"
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+  environment {
+    variables = {
+      TEST_DATA = %[3]q
+    }
+  }
+}
+`, fName, rName, testData))
+}
+
 func testAccInvocationConfig_invocation(inputJSON, extraArgs string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_invocation" "test" {
@@ -553,4 +856,25 @@ resource "aws_lambda_invocation" "test" {
   })
 }
 `)
+}
+
+func testAccInvocationConfig_dependency(rName, resourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "result_key1" {
+  name  = "/tf-test/CRUD/%[1]s/key1"
+  type  = "String"
+  value = try(jsondecode(%[2]s.result).key1, "")
+}
+`, rName, resourceName)
+}
+
+func testAccInvocationConfig_tenantID(inputJSON, tenantID string) string {
+	return fmt.Sprintf(`
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+  tenant_id     = %[2]q
+
+  input = %[1]s
+}
+`, strconv.Quote(inputJSON), tenantID)
 }

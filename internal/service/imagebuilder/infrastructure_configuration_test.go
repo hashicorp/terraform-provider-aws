@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -8,14 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,21 +34,21 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("infrastructure-configuration/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_profile_name", iamInstanceProfileResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
 				),
 			},
@@ -78,7 +76,7 @@ func TestAccImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,7 +134,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceMetadataOptions(t *t
 				Config: testAccInfrastructureConfigurationConfig_instanceMetadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_put_response_hop_limit", "64"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_options.0.http_tokens", "required"),
 				),
@@ -202,7 +200,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) 
 				Config: testAccInfrastructureConfigurationConfig_instanceTypes1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 				),
 			},
 			{
@@ -215,7 +213,7 @@ func TestAccImageBuilderInfrastructureConfiguration_instanceTypes(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "instance_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),
 				),
 			},
 		},
@@ -285,8 +283,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 				Config: testAccInfrastructureConfigurationConfig_loggingS3LogsS3BucketName1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName, names.AttrBucket),
 				),
 			},
@@ -300,8 +298,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3BucketName(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging.0.s3_logs.0.s3_bucket_name", s3BucketResourceName2, names.AttrBucket),
 				),
 			},
@@ -324,8 +322,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 				Config: testAccInfrastructureConfigurationConfig_loggingS3LogsS3KeyPrefix(rName, "/prefix1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.0.s3_key_prefix", "/prefix1/"),
 				),
 			},
@@ -339,8 +337,8 @@ func TestAccImageBuilderInfrastructureConfiguration_LoggingS3Logs_s3KeyPrefix(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging.0.s3_logs.0.s3_key_prefix", "/prefix2/"),
 				),
 			},
@@ -363,7 +361,7 @@ func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_resourceTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
 				),
 			},
@@ -377,7 +375,7 @@ func TestAccImageBuilderInfrastructureConfiguration_resourceTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", acctest.CtValue2),
 				),
 			},
@@ -402,7 +400,7 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 				Config: testAccInfrastructureConfigurationConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName, names.AttrID),
 				),
 			},
@@ -416,7 +414,7 @@ func TestAccImageBuilderInfrastructureConfiguration_securityGroupIDs(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroupResourceName2, names.AttrID),
 				),
 			},
@@ -513,7 +511,7 @@ func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -526,7 +524,7 @@ func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -535,7 +533,7 @@ func TestAccImageBuilderInfrastructureConfiguration_tags(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -578,62 +576,84 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 	})
 }
 
+func TestAccImageBuilderInfrastructureConfiguration_placement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_placement(rName, "dedicated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "dedicated"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_placement(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.tenancy", "default"),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.availability_zone", acctest.Region()+"a"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInfrastructureConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
 				continue
 			}
 
-			input := &imagebuilder.GetInfrastructureConfigurationInput{
-				InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfimagebuilder.FindInfrastructureConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Image Builder Infrastructure Configuration (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Image Builder Infrastructure Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckInfrastructureConfigurationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInfrastructureConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
-		input := &imagebuilder.GetInfrastructureConfigurationInput{
-			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfimagebuilder.FindInfrastructureConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccInfrastructureConfigurationBaseConfig(rName string) string {
+func testAccInfrastructureConfigurationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -661,7 +681,7 @@ resource "aws_iam_role" "role" {
 
 func testAccInfrastructureConfigurationConfig_description(rName string, description string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   description           = %[2]q
@@ -673,7 +693,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_instanceMetadataOptions(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -689,7 +709,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_instanceProfileName1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -700,7 +720,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_instanceProfileName2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test2" {
   name = aws_iam_role.role2.name
@@ -731,7 +751,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_instanceTypes1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.medium", "t2.medium"),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -744,7 +764,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_instanceTypes2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.large", "t2.large"),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
@@ -757,7 +777,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_keyPair1(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
@@ -774,7 +794,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_keyPair2(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_key_pair" "test2" {
   key_name   = "%[1]s-2"
@@ -791,7 +811,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_loggingS3LogsS3BucketName1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -812,7 +832,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_loggingS3LogsS3BucketName2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test2" {
   bucket = "%[1]s-2"
@@ -833,7 +853,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_loggingS3LogsS3KeyPrefix(rName string, s3KeyPrefix string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -855,7 +875,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_name(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -866,7 +886,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_resourceTags(rName string, resourceTagKey string, resourceTagValue string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -881,7 +901,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_securityGroupIDs1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -901,7 +921,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_securityGroupIDs2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -921,7 +941,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_subnetID1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -947,7 +967,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_subnetID2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -973,7 +993,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_snsTopicARN1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -989,7 +1009,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_snsTopicARN2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_sns_topic" "test2" {
   name = "%[1]s-2"
@@ -1005,7 +1025,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -1020,7 +1040,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name = aws_iam_instance_profile.test.name
@@ -1036,7 +1056,7 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 
 func testAccInfrastructureConfigurationConfig_terminateInstanceOnFailure(rName string, terminateInstanceOnFailure bool) string {
 	return acctest.ConfigCompose(
-		testAccInfrastructureConfigurationBaseConfig(rName),
+		testAccInfrastructureConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_imagebuilder_infrastructure_configuration" "test" {
   instance_profile_name         = aws_iam_instance_profile.test.name
@@ -1044,4 +1064,22 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
   terminate_instance_on_failure = %[2]t
 }
 `, rName, terminateInstanceOnFailure))
+}
+
+func testAccInfrastructureConfigurationConfig_placement(rName, tenancy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInfrastructureConfigurationConfig_base(rName),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name = aws_iam_instance_profile.test.name
+  name                  = %[1]q
+  placement {
+    tenancy           = %[2]q
+    availability_zone = data.aws_availability_zones.available.names[0]
+  }
+}
+`, rName, tenancy))
 }

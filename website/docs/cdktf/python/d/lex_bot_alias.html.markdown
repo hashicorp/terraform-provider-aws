@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bot_name` - (Required) Name of the bot.
 * `name` - (Required) Name of the bot alias. The name is case sensitive.
 
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_updated_date` - Date that the bot alias was updated. When you create a resource, the creation date and the last updated date are the same.
 * `name` - Name of the alias. The name is not case sensitive.
 
-<!-- cache-key: cdktf-0.20.1 input-d573a0e146ccf354bee54f1fcff29eb5da0fe86b28b2cac76717ab2331d57f06 -->
+<!-- cache-key: cdktf-0.20.8 input-c8cb20e338f5da412c5eb8d84c750f22773f2084fdc174e1b3b95cd49bcbc691 -->

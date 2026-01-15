@@ -47,8 +47,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `shared_directory_id` - (Required) Identifier of the directory that is stored in the directory consumer account that corresponds to the shared directory in the owner account.
 
 ## Attribute Reference
@@ -93,4 +94,4 @@ Using `terraform import`, import Directory Service Shared Directories using the 
 % terraform import aws_directory_service_shared_directory_accepter.example d-9267633ece
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-63416097ef145afd37784c7610985af402f18b723a7a423cc37dfe1e13007046 -->
+<!-- cache-key: cdktf-0.20.8 input-2ac5ff691131a0003fa74327614bc5d268200a44810759141daf1edafbe4e1d1 -->

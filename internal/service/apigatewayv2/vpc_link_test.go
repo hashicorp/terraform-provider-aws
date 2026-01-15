@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -10,13 +10,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,30 +22,30 @@ func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName, &v),
+					testAccCheckVPCLinkExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				Config: testAccVPCLinkConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName, &v),
+					testAccCheckVPCLinkExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -64,19 +62,19 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetVpcLinkOutput
 	resourceName := "aws_apigatewayv2_vpc_link.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceVPCLink(), resourceName),
+					testAccCheckVPCLinkExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceVPCLink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -100,7 +98,7 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 // 				Config: testAccVPCLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 // 				Check: resource.ComposeTestCheckFunc(
 // 					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 // 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 // 				),
 // 			},
@@ -113,7 +111,7 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 // 				Config: testAccVPCLinkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 // 				Check: resource.ComposeTestCheckFunc(
 // 					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 // 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 // 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 // 				),
@@ -122,7 +120,7 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 // 				Config: testAccVPCLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 // 				Check: resource.ComposeTestCheckFunc(
 // 					testAccCheckVPCLinkExists(ctx, resourceName, &v),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 // 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 // 				),
 // 			},
@@ -130,9 +128,9 @@ func TestAccAPIGatewayV2VPCLink_disappears(t *testing.T) {
 // 	})
 // }
 
-func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCLinkDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_vpc_link" {
@@ -141,7 +139,7 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -156,14 +154,14 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVPCLinkExists(ctx context.Context, n string, v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
+func testAccCheckVPCLinkExists(ctx context.Context, t *testing.T, n string, v *apigatewayv2.GetVpcLinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 

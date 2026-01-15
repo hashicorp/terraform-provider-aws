@@ -36,14 +36,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Kinesis Stream.
 
 ## Attribute Reference
 
-`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
-are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Kinesis Stream (same as id).
+* `id` - ARN of the Kinesis Stream.
+* `arn` - ARN of the Kinesis Stream (same as `id`).
 * `closed_shards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
 * `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
 * `encryption_type` - Encryption type used.
@@ -65,4 +68,4 @@ are exported:
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 [4]: https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html
 
-<!-- cache-key: cdktf-0.20.1 input-fa9e8af044240db88bc0177862ab514d3d3abe026c71cbc8ce4c90ad35bdc2bd -->
+<!-- cache-key: cdktf-0.20.8 input-824ecbe9bfca1a41f514b9010b41fb913bf727f382d85b84612673f570f46fa2 -->

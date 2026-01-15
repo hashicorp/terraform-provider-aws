@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediastore_test
@@ -10,13 +10,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmediastore "github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,19 +22,19 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_media_store_container.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = strings.ReplaceAll(rName, "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerExists(ctx, resourceName),
+					testAccCheckContainerExists(ctx, t, resourceName),
 				),
 			},
 			{
@@ -52,20 +50,20 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_media_store_container.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = strings.ReplaceAll(rName, "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					testAccCheckContainerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
@@ -73,8 +71,8 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 			{
 				Config: testAccContainerConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					testAccCheckContainerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
 				),
@@ -87,8 +85,8 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 			{
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					testAccCheckContainerExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -99,20 +97,20 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_media_store_container.test"
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	rName = strings.ReplaceAll(rName, "-", "_")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerDestroy(ctx),
+		CheckDestroy:             testAccCheckContainerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainer(), resourceName),
+					testAccCheckContainerExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmediastore.ResourceContainer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,9 +118,9 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckContainerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckContainerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_store_container" {
@@ -131,7 +129,7 @@ func testAccCheckContainerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmediastore.FindContainerByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -146,14 +144,14 @@ func testAccCheckContainerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckContainerExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckContainerExists(ctx context.Context, t *testing.T, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).MediaStoreClient(ctx)
 
 		_, err := tfmediastore.FindContainerByName(ctx, conn, rs.Primary.ID)
 
@@ -166,7 +164,7 @@ func testAccCheckContainerExists(ctx context.Context, name string) resource.Test
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).MediaStoreClient(ctx)
 
 	input := &mediastore.ListContainersInput{}
 

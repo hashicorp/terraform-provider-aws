@@ -38,6 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Friendly name of the topic to match.
 
 ## Attribute Reference
@@ -48,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-9cb14ee05a81d55e9f99a318c9fbad40bd207dac283e926d3ecef9f91ffb125d -->
+<!-- cache-key: cdktf-0.20.8 input-8b65e683f4e456dc5396c8805b98d2acd05b7d2de4c54ab877edc05afb7f507c -->

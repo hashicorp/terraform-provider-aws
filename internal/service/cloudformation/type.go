@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -140,54 +141,71 @@ func resourceType() *schema.Resource {
 	}
 }
 
-func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	typeName := d.Get("type_name").(string)
-	input := &cloudformation.RegisterTypeInput{
-		ClientRequestToken:   aws.String(id.UniqueId()),
+	inputRT := cloudformation.RegisterTypeInput{
+		ClientRequestToken:   aws.String(sdkid.UniqueId()),
 		SchemaHandlerPackage: aws.String(d.Get("schema_handler_package").(string)),
 		TypeName:             aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
-		input.ExecutionRoleArn = aws.String(v.(string))
+		inputRT.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LoggingConfig = expandLoggingConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("logging_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		inputRT.LoggingConfig = expandLoggingConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrType); ok {
-		input.Type = awstypes.RegistryType(v.(string))
+		inputRT.Type = awstypes.RegistryType(v.(string))
 	}
 
-	output, err := conn.RegisterType(ctx, input)
+	outputRT, err := conn.RegisterType(ctx, &inputRT)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering CloudFormation Type (%s): %s", typeName, err)
 	}
 
-	registrationOutput, err := waitTypeRegistrationProgressStatusComplete(ctx, conn, aws.ToString(output.RegistrationToken))
+	outputDTR, err := waitTypeRegistrationProgressStatusComplete(ctx, conn, aws.ToString(outputRT.RegistrationToken))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Type (%s) register: %s", typeName, err)
 	}
 
-	// Type Version ARN is not available until after registration is complete
-	d.SetId(aws.ToString(registrationOutput.TypeVersionArn))
+	// Type Version ARN is not available until after registration is complete.
+	d.SetId(aws.ToString(outputDTR.TypeVersionArn))
+
+	_, versionID, err := typeVersionARNToTypeARNAndVersionID(aws.ToString(outputDTR.TypeVersionArn))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	inputSTDV := cloudformation.SetTypeDefaultVersionInput{
+		Type:      inputRT.Type,
+		TypeName:  inputRT.TypeName,
+		VersionId: aws.String(versionID),
+	}
+
+	_, err = conn.SetTypeDefaultVersion(ctx, &inputSTDV)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default version for CloudFormation Type (%s): %s", typeName, err)
+	}
 
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
 
-func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	output, err := findTypeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -210,7 +228,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
-		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
+		if err := d.Set("logging_config", []any{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
@@ -228,14 +246,15 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudFormation Type: %s", d.Id())
-	_, err := conn.DeregisterType(ctx, &cloudformation.DeregisterTypeInput{
+	input := cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeregisterType(ctx, &input)
 
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.
@@ -305,7 +324,7 @@ func findTypeByARN(ctx context.Context, conn *cloudformation.Client, arn string)
 	}
 
 	if status := output.DeprecatedStatus; status == awstypes.DeprecatedStatusDeprecated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			Message:     string(status),
 		}
@@ -327,7 +346,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	output, err := conn.DescribeType(ctx, input)
 
 	if errs.IsA[*awstypes.TypeNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -338,7 +357,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -352,7 +371,7 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	output, err := conn.DescribeTypeRegistration(ctx, input)
 
 	if errs.IsA[*awstypes.CFNRegistryException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -363,17 +382,17 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTypeRegistrationByToken(ctx, conn, registrationToken)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -389,7 +408,7 @@ func waitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistrationStatusInProgress),
 		Target:  enum.Slice(awstypes.RegistrationStatusComplete),
 		Refresh: statusTypeRegistrationProgress(ctx, conn, registrationToken),
@@ -405,7 +424,7 @@ func waitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 	return nil, err
 }
 
-func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
+func expandLoggingConfig(tfMap map[string]any) *awstypes.LoggingConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -423,7 +442,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 	return apiObject
 }
 
-func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]any) *awstypes.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}
@@ -467,12 +486,12 @@ func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSet
 	return apiObject
 }
 
-func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]interface{} {
+func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.LogGroupName; v != nil {
 		tfMap[names.AttrLogGroupName] = aws.ToString(v)

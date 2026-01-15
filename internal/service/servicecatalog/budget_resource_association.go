@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +51,7 @@ func resourceBudgetResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -61,25 +61,21 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 	}
 
 	var output *servicecatalog.AssociateBudgetWithResourceOutput
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = conn.AssociateBudgetWithResource(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.InvalidParametersException](err, "profile does not exist") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.AssociateBudgetWithResource(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating Service Catalog Budget with Resource: %s", err)
@@ -94,7 +90,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceBudgetResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -106,7 +102,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 
 	output, err := waitBudgetResourceAssociationReady(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Budget Resource Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,7 +122,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
@@ -153,7 +149,7 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 
 	err = waitBudgetResourceAssociationDeleted(ctx, conn, budgetName, resourceID, d.Timeout(schema.TimeoutDelete))
 
-	if err != nil && !tfresource.NotFound(err) {
+	if err != nil && !retry.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Budget Resource Disassociation (%s): %s", d.Id(), err)
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lambda_alias", Name="Alias")
+// @SDKDataSource("aws_lambda_alias", name="Alias")
 func dataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,
@@ -48,7 +48,7 @@ func dataSourceAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
@@ -63,7 +63,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), aliasARN))
 
 	return diags
 }

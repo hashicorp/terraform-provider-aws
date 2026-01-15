@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package outposts_test
@@ -31,7 +31,7 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) {
 			{
 				Config: testAccOutpostAssetsDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
 				),
 			},
 		},

@@ -1,15 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -66,10 +64,11 @@ func dataSourceInternetGateway() *schema.Resource {
 	}
 }
 
-func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
@@ -84,7 +83,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+		svcTags(tftags.New(ctx, tags.(map[string]any))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
 		filter.(*schema.Set),
@@ -99,14 +98,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(igw.InternetGatewayId))
 
 	ownerID := aws.ToString(igw.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, internetGatewayARN(ctx, c, ownerID, d.Id()))
 
 	if err := d.Set("attachments", flattenInternetGatewayAttachments(igw.Attachments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attachments: %s", err)
@@ -122,10 +114,10 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func flattenInternetGatewayAttachments(igwAttachments []awstypes.InternetGatewayAttachment) []map[string]interface{} {
-	attachments := make([]map[string]interface{}, 0, len(igwAttachments))
+func flattenInternetGatewayAttachments(igwAttachments []awstypes.InternetGatewayAttachment) []map[string]any {
+	attachments := make([]map[string]any, 0, len(igwAttachments))
 	for _, a := range igwAttachments {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		m[names.AttrState] = string(a.State)
 		m[names.AttrVPCID] = aws.ToString(a.VpcId)
 		attachments = append(attachments, m)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,6 +87,32 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				Default:          types.ImageTagMutabilityMutable,
 				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
 			},
+			"image_tag_mutability_exclusion_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrFilter: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateDiagFunc: validation.AllDiag(
+								validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
+								validation.ToDiagFunc(validation.StringMatch(
+									regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
+									"must contain only letters, numbers, and special characters (._*-)",
+								)),
+								validateImageTagMutabilityExclusionFilter(),
+							),
+						},
+						"filter_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ImageTagMutabilityExclusionFilterType](),
+						},
+					},
+				},
+			},
 			"lifecycle_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -94,17 +122,14 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
+				StateFunc:             sdkv2.NormalizeJsonStringSchemaStateFunc,
 			},
 			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
+					validation.StringLenBetween(2, 256),
 					validation.StringMatch(
 						regexache.MustCompile(`(?:ROOT|(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*)`),
 						"must only include alphanumeric, underscore, period, hyphen, or slash characters, or be the string `ROOT`"),
@@ -114,29 +139,19 @@ func resourceRepositoryCreationTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_policy": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"repository_policy":    sdkv2.IAMPolicyDocumentSchemaOptional(),
 			names.AttrResourceTags: tftags.TagsSchema(),
 		},
 	}
 }
 
-func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	prefix := d.Get(names.AttrPrefix).(string)
 	input := &ecr.CreateRepositoryCreationTemplateInput{
-		EncryptionConfiguration: expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]any)),
 		ImageTagMutability:      types.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 		Prefix:                  aws.String(prefix),
 	}
@@ -151,6 +166,10 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("image_tag_mutability_exclusion_filter"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(v.([]any))
 	}
 
 	if v, ok := d.GetOk("lifecycle_policy"); ok {
@@ -171,8 +190,8 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 		input.RepositoryPolicy = aws.String(policy)
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]any)) > 0 {
+		input.ResourceTags = svcTags(tftags.New(ctx, v.(map[string]any)))
 	}
 
 	output, err := conn.CreateRepositoryCreationTemplate(ctx, input)
@@ -186,13 +205,13 @@ func resourceRepositoryCreationTemplateCreate(ctx context.Context, d *schema.Res
 	return append(diags, resourceRepositoryCreationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	rct, registryID, err := findRepositoryCreationTemplateByRepositoryPrefix(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Repository Creation Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -209,6 +228,10 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", rct.ImageTagMutability)
+
+	if err := d.Set("image_tag_mutability_exclusion_filter", flattenImageTagMutabilityExclusionFilters(rct.ImageTagMutabilityExclusionFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting image_tag_mutability_exclusion_filter: %s", err)
+	}
 
 	if _, err := equivalentLifecyclePolicyJSON(d.Get("lifecycle_policy").(string), aws.ToString(rct.LifecyclePolicy)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -234,12 +257,12 @@ func resourceRepositoryCreationTemplateRead(ctx context.Context, d *schema.Resou
 	}
 
 	d.Set("repository_policy", policyToSet)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, rct.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, rct.ResourceTags).Map())
 
 	return diags
 }
 
-func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -263,11 +286,17 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrEncryptionConfiguration) {
-		input.EncryptionConfiguration = expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]interface{}))
+		input.EncryptionConfiguration = expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(d.Get(names.AttrEncryptionConfiguration).([]any))
 	}
 
 	if d.HasChange("image_tag_mutability") {
 		input.ImageTagMutability = types.ImageTagMutability((d.Get("image_tag_mutability").(string)))
+	}
+
+	if d.HasChange("image_tag_mutability_exclusion_filter") {
+		// To use image_tag_mutability_exclusion_filter, image_tag_mutability must be set
+		input.ImageTagMutability = types.ImageTagMutability((d.Get("image_tag_mutability").(string)))
+		input.ImageTagMutabilityExclusionFilters = expandImageTagMutabilityExclusionFilters(d.Get("image_tag_mutability_exclusion_filter").([]any))
 	}
 
 	if d.HasChange("lifecycle_policy") {
@@ -289,7 +318,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	}
 
 	if d.HasChange(names.AttrResourceTags) {
-		input.ResourceTags = Tags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]interface{})))
+		input.ResourceTags = svcTags(tftags.New(ctx, d.Get(names.AttrResourceTags).(map[string]any)))
 	}
 
 	_, err := conn.UpdateRepositoryCreationTemplate(ctx, input)
@@ -301,7 +330,7 @@ func resourceRepositoryCreationTemplateUpdate(ctx context.Context, d *schema.Res
 	return append(diags, resourceRepositoryCreationTemplateRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryCreationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRepositoryCreationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -352,7 +381,7 @@ func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.TemplateNotFoundException](err) {
-			return nil, nil, &retry.NotFoundError{
+			return nil, nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -369,12 +398,12 @@ func findRepositoryCreationTemplates(ctx context.Context, conn *ecr.Client, inpu
 	return output, registryID, nil
 }
 
-func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data []interface{}) *types.EncryptionConfigurationForRepositoryCreationTemplate {
+func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data []any) *types.EncryptionConfigurationForRepositoryCreationTemplate {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	ec := data[0].(map[string]interface{})
+	ec := data[0].(map[string]any)
 	config := &types.EncryptionConfigurationForRepositoryCreationTemplate{
 		EncryptionType: types.EncryptionType((ec["encryption_type"].(string))),
 	}
@@ -386,17 +415,17 @@ func expandRepositoryEncryptionConfigurationForRepositoryCreationTemplate(data [
 	return config
 }
 
-func flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(ec *types.EncryptionConfigurationForRepositoryCreationTemplate) []map[string]interface{} {
+func flattenRepositoryEncryptionConfigurationForRepositoryCreationTemplate(ec *types.EncryptionConfigurationForRepositoryCreationTemplate) []map[string]any {
 	if ec == nil {
 		return nil
 	}
 
-	config := map[string]interface{}{
+	config := map[string]any{
 		"encryption_type": ec.EncryptionType,
 		names.AttrKMSKey:  aws.ToString(ec.KmsKey),
 	}
 
-	return []map[string]interface{}{
+	return []map[string]any{
 		config,
 	}
 }

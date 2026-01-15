@@ -52,19 +52,24 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticationOptions` - (Required) Information about the authentication method to be used to authenticate clients.
-* `clientCidrBlock` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
+* `clientCidrBlock` - (Optional) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater. When `trafficIpAddressType` is set to `ipv6`, it must not be specified. Otherwise, it is required.
 * `clientConnectOptions` - (Optional) The options for managing connection authorization for new client connections.
 * `clientLoginBannerOptions` - (Optional) Options for enabling a customizable text banner that will be displayed on AWS provided clients when a VPN session is established.
+* `clientRouteEnforcementOptions` - (Optional) Options for enforce administrator defined routes on devices connected through the VPN.
 * `connectionLogOptions` - (Required) Information about the client connection logging options.
 * `description` - (Optional) A brief description of the Client VPN endpoint.
+* `disconnectOnSessionTimeout` - (Optional) Indicates whether the client VPN session is disconnected after the maximum `sessionTimeoutHours` is reached. If `true`, users are prompted to reconnect client VPN. If `false`, client VPN attempts to reconnect automatically. The default value is `false`.
 * `dnsServers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the connecting device is used.
+* `endpointIpAddressType` - (Optional) IP address type for the Client VPN endpoint. Valid values are `ipv4`, `ipv6`, or `dual-stack`. Defaults to `ipv4`.
 * `securityGroupIds` - (Optional) The IDs of one or more security groups to apply to the target network. You must also specify the ID of the VPC that contains the security groups.
 * `selfServicePortal` - (Optional) Specify whether to enable the self-service portal for the Client VPN endpoint. Values can be `enabled` or `disabled`. Default value is `disabled`.
 * `serverCertificateArn` - (Required) The ARN of the ACM server certificate.
 * `sessionTimeoutHours` - (Optional) The maximum session duration is a trigger by which end-users are required to re-authenticate prior to establishing a VPN session. Default value is `24` - Valid values: `8 | 10 | 12 | 24`
 * `splitTunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `trafficIpAddressType` - (Optional) IP address type for traffic within the Client VPN tunnel. Valid values are `ipv4`, `ipv6`, or `dual-stack`. Defaults to `ipv4`. When it is set to `ipv6`, `clientCidrBlock` must not be specified.
 * `transportProtocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `vpcId` - (Optional) The ID of the VPC to associate with the Client VPN endpoint. If no security group IDs are specified in the request, the default security group for the VPC is applied.
 * `vpnPort` - (Optional) The port number for the Client VPN endpoint. Valid values are `443` and `1194`. Default value is `443`.
@@ -88,6 +93,10 @@ One of the following arguments must be supplied:
 
 * `bannerText` - (Optional) Customizable text that will be displayed in a banner on AWS provided clients when a VPN session is established. UTF-8 encoded characters only. Maximum of 1400 characters.
 * `enabled` - (Optional) Enable or disable a customizable text banner that will be displayed on AWS provided clients when a VPN session is established. The default is `false` (not enabled).
+
+### `clientRouteEnforcementOptions` Argument reference
+
+* `enforced` - (Optional) Enable or disable Client Route Enforcement. The default is `false` (not enabled).
 
 ### `connectionLogOptions` Argument Reference
 
@@ -139,4 +148,4 @@ Using `terraform import`, import AWS Client VPN endpoints using the `id` value f
 % terraform import aws_ec2_client_vpn_endpoint.example cvpn-endpoint-0ac3a1abbccddd666
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-668469ff889101884cb8259cd8c05b2008ff8bae928811357f2cfcabe260d50a -->
+<!-- cache-key: cdktf-0.20.8 input-3a831c49e642e502a407124b8c0319e95ecf68e2a16b020e0565f1dd8e432afd -->

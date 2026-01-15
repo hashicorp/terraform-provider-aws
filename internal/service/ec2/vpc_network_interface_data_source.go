@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,6 +92,10 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"network_card_index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -166,9 +169,10 @@ func dataSourceNetworkInterface() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
@@ -188,23 +192,16 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(eni.NetworkInterfaceId))
 	ownerID := aws.ToString(eni.OwnerId)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: ownerID,
-		Resource:  "network-interface/" + d.Id(),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, networkInterfaceARN(ctx, c, ownerID, d.Id()))
 	if eni.Association != nil {
-		if err := d.Set("association", []interface{}{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
+		if err := d.Set("association", []any{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting association: %s", err)
 		}
 	} else {
 		d.Set("association", nil)
 	}
 	if eni.Attachment != nil {
-		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
+		if err := d.Set("attachment", []any{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
 		}
 	} else {
@@ -230,12 +227,12 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInterfaceAttachment) map[string]interface{} {
+func flattenNetworkInterfaceAttachmentForDataSource(apiObject *awstypes.NetworkInterfaceAttachment) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.AttachmentId; v != nil {
 		tfMap["attachment_id"] = aws.ToString(v)
@@ -251,6 +248,10 @@ func flattenNetworkInterfaceAttachmentForDataSource(apiObject *types.NetworkInte
 
 	if v := apiObject.InstanceOwnerId; v != nil {
 		tfMap["instance_owner_id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkCardIndex; v != nil {
+		tfMap["network_card_index"] = aws.ToInt32(v)
 	}
 
 	return tfMap

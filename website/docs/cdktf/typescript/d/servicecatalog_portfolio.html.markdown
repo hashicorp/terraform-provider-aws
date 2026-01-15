@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `acceptLanguage` - (Optional) Language code. Valid values: `en` (English), `jp` (Japanese), `zh` (Chinese). Default value is `en`.
 
 ## Attribute Reference
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Name of the person or organization who owns the portfolio.
 * `tags` - Tags applied to the portfolio.
 
-<!-- cache-key: cdktf-0.20.1 input-84da50c0619f8efedfa9915aaeed7934ec932b8663c9afe0bb857f54d0d60299 -->
+<!-- cache-key: cdktf-0.20.8 input-6cc5ac43c3bf5cf3d883915e9c56716673c1763852213dcfab427ecc8517dd5e -->

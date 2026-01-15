@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -66,7 +66,33 @@ func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCInternetGatewayAttachment_Disappears_internetGateway(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InternetGatewayAttachment
+	resourceName := "aws_internet_gateway_attachment.test"
+	igwResourceName := "aws_internet_gateway.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInternetGatewayAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInternetGateway(), igwResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +117,7 @@ func testAccCheckInternetGatewayAttachmentDestroy(ctx context.Context) resource.
 
 			_, err = tfec2.FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -111,10 +137,6 @@ func testAccCheckInternetGatewayAttachmentExists(ctx context.Context, n string, 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Internet Gateway Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)

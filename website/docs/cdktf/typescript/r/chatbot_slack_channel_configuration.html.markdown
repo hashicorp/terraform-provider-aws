@@ -53,6 +53,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `guardrailPolicyArns` - (Optional) List of IAM policy ARNs that are applied as channel guardrails. The AWS managed `AdministratorAccess` policy is applied by default if this is not set.
 * `loggingLevel` - (Optional) Logging levels include `ERROR`, `INFO`, or `NONE`.
 * `snsTopicArns` - (Optional) ARNs of the SNS topics that deliver notifications to AWS Chatbot.
@@ -95,7 +96,7 @@ class MyConvertedCode extends TerraformStack {
     ChatbotSlackChannelConfiguration.generateConfigForImport(
       this,
       "example",
-      "arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal"
+      "arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal"
     );
   }
 }
@@ -105,7 +106,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Chatbot Slack Channel Configuration using the `chatConfigurationArn`. For example:
 
 ```console
-% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::012345678901:chat-configuration/slack-channel/min-slaka-kanal
+% terraform import aws_chatbot_slack_channel_configuration.example arn:aws:chatbot::123456789012:chat-configuration/slack-channel/min-slaka-kanal
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d07ae7b961314cae21a6f83a4b9eccb7336518081785d4347a33144d3e3f04d9 -->
+<!-- cache-key: cdktf-0.20.8 input-0607da2bba29af93eb098ee266d8702ed91775091c34d0bedcf7c64498222783 -->

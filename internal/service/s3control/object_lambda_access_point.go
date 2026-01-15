@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -15,18 +15,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3control_object_lambda_access_point")
+// @SDKResource("aws_s3control_object_lambda_access_point", name="Object Lambda Access Point")
 func resourceObjectLambdaAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectLambdaAccessPointCreate,
@@ -133,11 +134,11 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -148,8 +149,8 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandObjectLambdaConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.CreateAccessPointForObjectLambda(ctx, input)
@@ -163,7 +164,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceObjectLambdaAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -174,7 +175,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 
 	outputConfiguration, err := findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,14 +188,14 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrAccountID, accountID)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3objectlambda.html#amazons3objectlambda-resources-for-iam-policies.
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3-object-lambda",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	if err := d.Set(names.AttrConfiguration, []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
+	if err := d.Set(names.AttrConfiguration, []any{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 	d.Set(names.AttrName, name)
@@ -210,7 +211,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -224,8 +225,8 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Configuration = expandObjectLambdaConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	_, err = conn.PutAccessPointConfigurationForObjectLambda(ctx, input)
@@ -237,7 +238,7 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceObjectLambdaAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
@@ -272,7 +273,7 @@ func findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, c
 	output, err := conn.GetAccessPointConfigurationForObjectLambda(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -283,7 +284,7 @@ func findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, c
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, nil
@@ -298,7 +299,7 @@ func findObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3c
 	output, err := conn.GetAccessPointForObjectLambda(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -309,7 +310,7 @@ func findObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3c
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil
@@ -334,7 +335,7 @@ func ObjectLambdaAccessPointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, objectLambdaAccessPointResourceIDSeparator)
 }
 
-func expandObjectLambdaConfiguration(tfMap map[string]interface{}) *types.ObjectLambdaConfiguration {
+func expandObjectLambdaConfiguration(tfMap map[string]any) *types.ObjectLambdaConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -360,7 +361,7 @@ func expandObjectLambdaConfiguration(tfMap map[string]interface{}) *types.Object
 	return apiObject
 }
 
-func expandObjectLambdaTransformationConfiguration(tfMap map[string]interface{}) *types.ObjectLambdaTransformationConfiguration {
+func expandObjectLambdaTransformationConfiguration(tfMap map[string]any) *types.ObjectLambdaTransformationConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -371,14 +372,14 @@ func expandObjectLambdaTransformationConfiguration(tfMap map[string]interface{})
 		apiObject.Actions = flex.ExpandStringyValueSet[types.ObjectLambdaTransformationConfigurationAction](v)
 	}
 
-	if v, ok := tfMap["content_transformation"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ContentTransformation = expandObjectLambdaContentTransformation(v[0].(map[string]interface{}))
+	if v, ok := tfMap["content_transformation"].([]any); ok && len(v) > 0 {
+		apiObject.ContentTransformation = expandObjectLambdaContentTransformation(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandObjectLambdaTransformationConfigurations(tfList []interface{}) []types.ObjectLambdaTransformationConfiguration {
+func expandObjectLambdaTransformationConfigurations(tfList []any) []types.ObjectLambdaTransformationConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -386,7 +387,7 @@ func expandObjectLambdaTransformationConfigurations(tfList []interface{}) []type
 	var apiObjects []types.ObjectLambdaTransformationConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -404,21 +405,21 @@ func expandObjectLambdaTransformationConfigurations(tfList []interface{}) []type
 	return apiObjects
 }
 
-func expandObjectLambdaContentTransformation(tfMap map[string]interface{}) types.ObjectLambdaContentTransformation {
+func expandObjectLambdaContentTransformation(tfMap map[string]any) types.ObjectLambdaContentTransformation {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.ObjectLambdaContentTransformationMemberAwsLambda{}
 
-	if v, ok := tfMap["aws_lambda"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Value = expandLambdaTransformation(v[0].(map[string]interface{}))
+	if v, ok := tfMap["aws_lambda"].([]any); ok && len(v) > 0 {
+		apiObject.Value = expandLambdaTransformation(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandLambdaTransformation(tfMap map[string]interface{}) types.AwsLambdaTransformation {
+func expandLambdaTransformation(tfMap map[string]any) types.AwsLambdaTransformation {
 	apiObject := types.AwsLambdaTransformation{}
 
 	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
@@ -432,12 +433,12 @@ func expandLambdaTransformation(tfMap map[string]interface{}) types.AwsLambdaTra
 	return apiObject
 }
 
-func flattenObjectLambdaConfiguration(apiObject *types.ObjectLambdaConfiguration) map[string]interface{} {
+func flattenObjectLambdaConfiguration(apiObject *types.ObjectLambdaConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cloud_watch_metrics_enabled": apiObject.CloudWatchMetricsEnabled,
 	}
 
@@ -456,26 +457,26 @@ func flattenObjectLambdaConfiguration(apiObject *types.ObjectLambdaConfiguration
 	return tfMap
 }
 
-func flattenObjectLambdaTransformationConfiguration(apiObject types.ObjectLambdaTransformationConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenObjectLambdaTransformationConfiguration(apiObject types.ObjectLambdaTransformationConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Actions; v != nil {
 		tfMap[names.AttrActions] = v
 	}
 
 	if v := apiObject.ContentTransformation; v != nil {
-		tfMap["content_transformation"] = []interface{}{flattenObjectLambdaContentTransformation(v)}
+		tfMap["content_transformation"] = []any{flattenObjectLambdaContentTransformation(v)}
 	}
 
 	return tfMap
 }
 
-func flattenObjectLambdaTransformationConfigurations(apiObjects []types.ObjectLambdaTransformationConfiguration) []interface{} {
+func flattenObjectLambdaTransformationConfigurations(apiObjects []types.ObjectLambdaTransformationConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenObjectLambdaTransformationConfiguration(apiObject))
@@ -484,18 +485,18 @@ func flattenObjectLambdaTransformationConfigurations(apiObjects []types.ObjectLa
 	return tfList
 }
 
-func flattenObjectLambdaContentTransformation(apiObject types.ObjectLambdaContentTransformation) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenObjectLambdaContentTransformation(apiObject types.ObjectLambdaContentTransformation) map[string]any {
+	tfMap := map[string]any{}
 
 	if v, ok := apiObject.(*types.ObjectLambdaContentTransformationMemberAwsLambda); ok {
-		tfMap["aws_lambda"] = []interface{}{flattenLambdaTransformation(v.Value)}
+		tfMap["aws_lambda"] = []any{flattenLambdaTransformation(v.Value)}
 	}
 
 	return tfMap
 }
 
-func flattenLambdaTransformation(apiObject types.AwsLambdaTransformation) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenLambdaTransformation(apiObject types.AwsLambdaTransformation) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.FunctionArn; v != nil {
 		tfMap[names.AttrFunctionARN] = aws.ToString(v)

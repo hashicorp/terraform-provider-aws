@@ -67,6 +67,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
@@ -84,10 +85,11 @@ which take the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `peerAccountId` - Identifier of the peer AWS account
-* `peerRegion` - Identifier of the peer AWS region
-* `peerTransitGatewayId` - Identifier of the peer EC2 Transit Gateway
-* `transitGatewayId` - Identifier of the local EC2 Transit Gateway
+* `arn` - ARN of the attachment.
+* `peerAccountId` - Identifier of the peer AWS account.
+* `peerRegion` - Identifier of the peer AWS region.
+* `peerTransitGatewayId` - Identifier of the peer EC2 Transit Gateway.
+* `transitGatewayId` - Identifier of the local EC2 Transit Gateway.
 
 ## Timeouts
 
@@ -95,4 +97,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-64a386696c78ec2309a46c70c800259471a55f51d87aca95430609381da1032a -->
+<!-- cache-key: cdktf-0.20.8 input-f4819dfd67f0e5bb51107c5bee24955be984de29696168bc54a31f78f014572a -->

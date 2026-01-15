@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_s3_object: Add `application/yaml` to the list of `Content-Type`s that return a body
+```
+
+```release-note:enhancement
+data-source/aws_s3_bucket_object: Add `application/yaml` to the list of `Content-Type`s that return a body
+```

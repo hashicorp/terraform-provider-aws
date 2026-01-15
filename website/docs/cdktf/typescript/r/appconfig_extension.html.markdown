@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name for the extension. Each extension name in your account must be unique. Extension versions use the same name.
 * `description` - (Optional) Information about the extension.
 * `actionPoint` - (Required) The action points defined in the extension. [Detailed below](#action_point).
@@ -153,4 +154,4 @@ Using `terraform import`, import AppConfig Extensions using their extension ID. 
 % terraform import aws_appconfig_extension.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dc3aefea2329478318f849122336f0b2be77d040d49129d32b5456797deed301 -->
+<!-- cache-key: cdktf-0.20.8 input-d2c62cb72086271da80b0f20dd52c6a067aeec55d92ad86c472cf7641684dc9e -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
@@ -102,21 +102,14 @@ func dataSourceService() *schema.Resource {
 				Required: true,
 			},
 			names.AttrTags: tftags.TagsSchema(),
-			names.AttrTagsAll: {
-				Type:       schema.TypeMap,
-				Optional:   true,
-				Computed:   true,
-				Elem:       &schema.Schema{Type: schema.TypeString},
-				Deprecated: `this attribute has been deprecated`,
-			},
 		},
 	}
 }
 
-func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	serviceSummary, err := findServiceByNameAndNamespaceID(ctx, conn, name, d.Get("namespace_id").(string))
@@ -137,21 +130,21 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
-		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dns_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dns_config: %s", err)
 		}
 	} else {
 		d.Set("dns_config", nil)
 	}
 	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
-		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("health_check_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_config", nil)
 	}
 	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
-		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
+		if err := d.Set("health_check_custom_config", []any{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check_custom_config: %s", err)
 		}
 	} else {

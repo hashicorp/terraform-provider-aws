@@ -37,12 +37,17 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_id` - (Required) The ID of the VPC from Amazon VPC that the configuration is for.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `firewall_fail_open` - Determines how DNS Firewall operates during failures, for example when all traffic that is sent to DNS Firewall fails to receive a reply.
 * `id` - The ID of the firewall configuration.
 * `owner_id` - The Amazon Web Services account ID of the owner of the VPC that this firewall configuration applies to.
 
-<!-- cache-key: cdktf-0.20.1 input-b0f09d7efd8e098bbc579593a822c42d9bc95461129ab91f2ff09be220ad7bf4 -->
+<!-- cache-key: cdktf-0.20.8 input-52d397caa6181334b1853429f784ba8bc2191ba6468885f3c3dc99c80f7f85d7 -->

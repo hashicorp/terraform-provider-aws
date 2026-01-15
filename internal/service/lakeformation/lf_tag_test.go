@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -82,7 +82,10 @@ func testAccLFTag_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
@@ -93,7 +96,7 @@ func testAccLFTag_basic(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -111,7 +114,10 @@ func testAccLFTag_TagKey_complex(t *testing.T) {
 	rName := fmt.Sprintf("%s:%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "subKey")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
@@ -122,7 +128,7 @@ func testAccLFTag_TagKey_complex(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", names.AttrValue),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -135,7 +141,10 @@ func testAccLFTag_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
@@ -144,7 +153,7 @@ func testAccLFTag_disappears(t *testing.T) {
 				Config: testAccLFTagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceLFTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceLFTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,7 +167,10 @@ func testAccLFTag_Values(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
@@ -170,7 +182,7 @@ func testAccLFTag_Values(t *testing.T) {
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -187,7 +199,7 @@ func testAccLFTag_Values(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value3"),
 					testAccCheckLFTagValuesLen(ctx, resourceName, 2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -204,7 +216,10 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 	generatedValues2 = append(generatedValues2, generateLFTagValueList(53, 120)...)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLFTagsDestroy(ctx),
@@ -216,7 +231,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -227,7 +242,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value59"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 			{
@@ -237,7 +252,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", acctest.CtValue1),
 					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)-1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 				),
 			},
 		},

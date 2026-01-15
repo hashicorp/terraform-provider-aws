@@ -53,6 +53,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_identifier` - (Required, Forces new resource) The cluster identifier.
 * `schedule_identifier` - (Required, Forces new resource) The snapshot schedule identifier.
 
@@ -85,4 +86,4 @@ Using `terraform import`, import Redshift Snapshot Schedule Association using th
 % terraform import aws_redshift_snapshot_schedule_association.default tf-redshift-cluster/tf-redshift-snapshot-schedule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cfbb9314d7e41451bce6ec8e24e4375625bd63ba89df980d70fe96df9cca5e41 -->
+<!-- cache-key: cdktf-0.20.8 input-1babe5ee654b2de2bd1a4682c41ff37cd092766312bba3c7c351794a3888135b -->

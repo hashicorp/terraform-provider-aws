@@ -1,7 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
+
+import "slices"
 
 var (
 	DefaultIgnoredFieldNames = []string{
@@ -77,10 +79,5 @@ func WithNoIgnoredFieldNames() AutoFlexOptionsFunc {
 
 // isIgnoredField returns true if s is in the list of ignored field names
 func (o *AutoFlexOptions) isIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(o.ignoredFieldNames, s)
 }

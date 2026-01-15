@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -97,12 +98,12 @@ func resourceReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceReplicationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := &ecr.PutReplicationConfigurationInput{
-		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
+		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]any)),
 	}
 
 	_, err := conn.PutReplicationConfiguration(ctx, input)
@@ -112,19 +113,19 @@ func resourceReplicationConfigurationPut(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceReplicationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	output, err := findReplicationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECR Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -142,7 +143,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
@@ -170,39 +171,39 @@ func findReplicationConfiguration(ctx context.Context, conn *ecr.Client) (*ecr.D
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil || len(output.ReplicationConfiguration.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandReplicationConfigurationReplicationConfiguration(data []interface{}) *types.ReplicationConfiguration {
+func expandReplicationConfigurationReplicationConfiguration(data []any) *types.ReplicationConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	ec := data[0].(map[string]interface{})
+	ec := data[0].(map[string]any)
 	config := &types.ReplicationConfiguration{
-		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec[names.AttrRule].([]interface{})),
+		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec[names.AttrRule].([]any)),
 	}
 	return config
 }
 
-func flattenReplicationConfigurationReplicationConfiguration(ec *types.ReplicationConfiguration) []map[string]interface{} {
+func flattenReplicationConfigurationReplicationConfiguration(ec *types.ReplicationConfiguration) []map[string]any {
 	if ec == nil {
 		return nil
 	}
 
-	config := map[string]interface{}{
+	config := map[string]any{
 		names.AttrRule: flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
 	}
 
-	return []map[string]interface{}{
+	return []map[string]any{
 		config,
 	}
 }
 
-func expandReplicationConfigurationReplicationConfigurationRules(data []interface{}) []types.ReplicationRule {
+func expandReplicationConfigurationReplicationConfigurationRules(data []any) []types.ReplicationRule {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -210,10 +211,10 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	var rules []types.ReplicationRule
 
 	for _, rule := range data {
-		ec := rule.(map[string]interface{})
+		ec := rule.(map[string]any)
 		config := types.ReplicationRule{
-			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]interface{})),
-			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
+			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]any)),
+			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]any)),
 		}
 
 		rules = append(rules, config)
@@ -221,15 +222,15 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	return rules
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.ReplicationRule) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.ReplicationRule) []any {
 	if len(ec) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range ec {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrDestination: flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
 			"repository_filter":   flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
@@ -240,7 +241,7 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 	return tfList
 }
 
-func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []interface{}) []types.ReplicationDestination {
+func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []any) []types.ReplicationDestination {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -248,7 +249,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesDestinations(dat
 	var dests []types.ReplicationDestination
 
 	for _, dest := range data {
-		ec := dest.(map[string]interface{})
+		ec := dest.(map[string]any)
 		config := types.ReplicationDestination{
 			Region:     aws.String(ec[names.AttrRegion].(string)),
 			RegistryId: aws.String(ec["registry_id"].(string)),
@@ -259,15 +260,15 @@ func expandReplicationConfigurationReplicationConfigurationRulesDestinations(dat
 	return dests
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec []types.ReplicationDestination) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec []types.ReplicationDestination) []any {
 	if len(ec) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range ec {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrRegion: aws.ToString(apiObject.Region),
 			"registry_id":    aws.ToString(apiObject.RegistryId),
 		}
@@ -278,7 +279,7 @@ func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec
 	return tfList
 }
 
-func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []types.RepositoryFilter {
+func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []any) []types.RepositoryFilter {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -286,7 +287,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	var filters []types.RepositoryFilter
 
 	for _, filter := range data {
-		ec := filter.(map[string]interface{})
+		ec := filter.(map[string]any)
 		config := types.RepositoryFilter{
 			Filter:     aws.String(ec[names.AttrFilter].(string)),
 			FilterType: types.RepositoryFilterType((ec["filter_type"].(string))),
@@ -297,15 +298,15 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	return filters
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []types.RepositoryFilter) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []types.RepositoryFilter) []any {
 	if len(ec) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range ec {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrFilter: aws.ToString(apiObject.Filter),
 			"filter_type":    apiObject.FilterType,
 		}

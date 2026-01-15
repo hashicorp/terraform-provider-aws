@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains
@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,11 +27,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Delegation Signer Record")
+// @FrameworkResource("aws_route53domains_delegation_signer_record", name="Delegation Signer Record")
 func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &delegationSignerRecordResource{}
 
@@ -41,14 +44,10 @@ func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithCo
 }
 
 type delegationSignerRecordResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[delegationSignerRecordResourceModel]
 	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
-}
-
-func (r *delegationSignerRecordResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53domains_delegation_signer_record"
 }
 
 func (r *delegationSignerRecordResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -149,7 +148,12 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 
 	// Set values for unknowns.
 	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -171,7 +175,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 
 	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -257,6 +261,35 @@ func (data *delegationSignerRecordResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *delegationSignerRecordResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DomainName.ValueString(), data.DNSSECKeyID.ValueString()}, delegationSignerRecordResourceIDPartCount, false)))
+func (data *delegationSignerRecordResourceModel) setID() (string, error) {
+	parts := []string{
+		data.DomainName.ValueString(),
+		data.DNSSECKeyID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, delegationSignerRecordResourceIDPartCount, false)
+}
+
+func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client, domainName, keyID string) (*awstypes.DnssecKey, error) {
+	output, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
+		return aws.ToString(v.Id) == keyID
+	}))
+}
+
+func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, publicKey string) (*awstypes.DnssecKey, error) {
+	output, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v awstypes.DnssecKey) bool {
+		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
+	}))
 }

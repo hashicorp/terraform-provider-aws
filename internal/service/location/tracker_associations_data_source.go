@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package location
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_tracker_associations")
+// @SDKDataSource("aws_location_tracker_associations", name="Tracker Associations")
 func DataSourceTrackerAssociations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrackerAssociationsRead,
@@ -40,7 +40,7 @@ const (
 	DSNameTrackerAssociations = "Tracker Associations Data Source"
 )
 
-func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -65,7 +65,7 @@ func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceDa
 		arns = append(arns, page.ConsumerArns...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("consumer_arns", arns)
 
 	return diags

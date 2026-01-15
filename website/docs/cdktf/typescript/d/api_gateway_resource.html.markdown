@@ -42,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) REST API id that owns the resource. If no REST API is found, an error will be returned.
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 
@@ -53,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `parentId` - Set to the ID of the parent Resource.
 * `pathPart` - Set to the path relative to the parent Resource.
 
-<!-- cache-key: cdktf-0.20.1 input-de42d4fd9ee5838ea57bf49335869fd7bec10ba3cea3b7e525af92359ab7bd14 -->
+<!-- cache-key: cdktf-0.20.8 input-56ac6247b340e20244d3288e7d3a6c90e95f5953bc4430be4b473fa2a1bf4741 -->

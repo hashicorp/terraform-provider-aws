@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr_test
@@ -43,8 +43,8 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
@@ -72,8 +72,8 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
@@ -93,7 +93,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
 					}),
@@ -115,8 +115,8 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},

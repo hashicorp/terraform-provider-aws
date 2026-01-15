@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana
@@ -17,13 +17,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,13 +36,9 @@ func newWorkspaceServiceAccountResource(_ context.Context) (resource.ResourceWit
 }
 
 type workspaceServiceAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[workspaceServiceAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*workspaceServiceAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_grafana_workspace_service_account"
 }
 
 func (r *workspaceServiceAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -102,7 +99,12 @@ func (r *workspaceServiceAccountResource) Create(ctx context.Context, request re
 
 	// Set values for unknowns.
 	data.ServiceAccountID = fwflex.StringToFramework(ctx, output.Id)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Grafana Workspace Service Account (%s)", name), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -124,7 +126,7 @@ func (r *workspaceServiceAccountResource) Read(ctx context.Context, request reso
 
 	output, err := findWorkspaceServiceAccountByTwoPartKey(ctx, conn, data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -145,7 +147,12 @@ func (r *workspaceServiceAccountResource) Read(ctx context.Context, request reso
 
 	// Restore resource ID.
 	// It has been overwritten by the 'Id' field from the API response.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Grafana Workspace Service Account (%s)", id), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	// Role is returned from the API in lowercase.
 	data.GrafanaRole = fwtypes.StringEnumValueToUpper(output.GrafanaRole)
@@ -198,7 +205,7 @@ func findWorkspaceServiceAccounts(ctx context.Context, conn *grafana.Client, inp
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -229,6 +236,7 @@ func findWorkspaceServiceAccountByTwoPartKey(ctx context.Context, conn *grafana.
 }
 
 type workspaceServiceAccountResourceModel struct {
+	framework.WithRegionModel
 	GrafanaRole      fwtypes.StringEnum[awstypes.Role] `tfsdk:"grafana_role"`
 	ID               types.String                      `tfsdk:"id"`
 	Name             types.String                      `tfsdk:"name"`
@@ -254,6 +262,11 @@ func (data *workspaceServiceAccountResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *workspaceServiceAccountResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkspaceID.ValueString(), data.ServiceAccountID.ValueString()}, workspaceServiceAccountResourceIDPartCount, false)))
+func (data *workspaceServiceAccountResourceModel) setID() (string, error) {
+	parts := []string{
+		data.WorkspaceID.ValueString(),
+		data.ServiceAccountID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, workspaceServiceAccountResourceIDPartCount, false)
 }

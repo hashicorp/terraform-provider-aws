@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Portfolio")
 func dataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePortfolioRead,
@@ -65,7 +66,7 @@ func dataSourcePortfolio() *schema.Resource {
 	}
 }
 
-func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 

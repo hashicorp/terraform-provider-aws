@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
       description: "My IPAM",
       operatingRegions: [
         {
-          regionName: Token.asString(current.name),
+          regionName: Token.asString(current.region),
         },
       ],
       tags: {
@@ -76,7 +76,7 @@ class MyConvertedCode extends TerraformStack {
     });
     const current = new DataAwsRegion(this, "current", {});
     const allIpamRegions = Fn.distinct(
-      Token.asAny(Fn.concat([[current.name], ipamRegions.value]))
+      Token.asAny(Fn.concat([[current.region], ipamRegions.value]))
     );
     /*In most cases loops should be handled in the programming language context and 
     not inside of the Terraform context. If you are looping over something external, e.g. a variable or a file input
@@ -100,8 +100,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
+* `enablePrivateGua` - (Optional) Enable this option to use your own GUA ranges as private IPv6 addresses. Default: `false`.
+* `metered_account` - (Optional) AWS account that is charged for active IP addresses managed in IPAM. Valid values are `ipam-owner` (default) and `resource-owner`.
 * `operatingRegions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
 * `tier` - (Optional) specifies the IPAM tier. Valid options include `free` and `advanced`. Default is `advanced`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -152,4 +155,4 @@ Using `terraform import`, import IPAMs using the IPAM `id`. For example:
 % terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-702fa54cd52e1c61197fa805eaebba584c89b52dda71e967bc6393a71cf8a184 -->
+<!-- cache-key: cdktf-0.20.8 input-5dd40f284ea6d4f5e4c5981694998308c90886a2596a88750be9ab840029c9f7 -->

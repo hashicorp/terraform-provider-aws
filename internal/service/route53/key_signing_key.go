@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -15,13 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -121,17 +122,26 @@ func resourceKeySigningKey() *schema.Resource {
 				}, false),
 			},
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 	}
 }
 
-func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	hostedZoneID := d.Get(names.AttrHostedZoneID).(string)
 	name := d.Get(names.AttrName).(string)
 	status := d.Get(names.AttrStatus).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{hostedZoneID, name}, keySigningKeyResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &route53.CreateKeySigningKeyInput{
 		CallerReference: aws.String(sdkid.UniqueId()),
 		HostedZoneId:    aws.String(hostedZoneID),
@@ -152,7 +162,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(id)
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -164,7 +174,7 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -176,7 +186,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	hostedZoneID, name := parts[0], parts[1]
 	keySigningKey, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Key Signing Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -204,7 +214,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -248,7 +258,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if changeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(changeInfo.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -261,7 +271,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
 }
 
-func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
@@ -289,7 +299,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if output.ChangeInfo != nil {
-			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+			if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 			}
 		}
@@ -310,7 +320,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if output.ChangeInfo != nil {
-		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
@@ -326,7 +336,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	output, err := conn.GetDNSSEC(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) || errs.IsA[*awstypes.NoSuchKeySigningKey](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -337,7 +347,7 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.KeySigningKeys {
@@ -346,14 +356,14 @@ func findKeySigningKeyByTwoPartKey(ctx context.Context, conn *route53.Client, ho
 		}
 	}
 
-	return nil, &retry.NotFoundError{}
+	return nil, &sdkretry.NotFoundError{}
 }
 
-func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusKeySigningKey(ctx context.Context, conn *route53.Client, hostedZoneID, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findKeySigningKeyByTwoPartKey(ctx, conn, hostedZoneID, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -369,7 +379,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:     []string{status},
 		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
@@ -380,7 +390,7 @@ func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Client, h
 
 	if output, ok := outputRaw.(*awstypes.KeySigningKey); ok {
 		if status := aws.ToString(output.Status); status == keySigningKeyStatusInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

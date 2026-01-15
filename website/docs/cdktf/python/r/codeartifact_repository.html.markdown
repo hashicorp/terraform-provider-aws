@@ -102,6 +102,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain that contains the created repository.
 * `repository` - (Required) The name of the repository to create.
 * `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
@@ -129,6 +130,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_repository.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:repository/example-domain/example-repo"
+  }
+}
+
+resource "aws_codeartifact_repository" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository using the CodeArtifact Repository ARN. For example:
 
 ```python
@@ -152,4 +174,4 @@ Using `terraform import`, import CodeArtifact Repository using the CodeArtifact 
 % terraform import aws_codeartifact_repository.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ca58cfb42dd4c4e2a87c170764549f39f2f66f3383a2b20872f8e68bcce2c980 -->
+<!-- cache-key: cdktf-0.20.8 input-222467f6ea55d32a2df216bccbb1e222dde73a9993c93ede0e73267aebbfc808 -->

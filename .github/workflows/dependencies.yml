@@ -1,15 +1,30 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Dependency Checks
 
 permissions:
   contents: read
-  pull-requests: write
 
 on:
   push:
     branches:
       - main
       - "release/**"
-  pull_request_target:
+  pull_request:
+    branches:
+      - main
+      - "release/**"
+    paths-ignore:
+      - .teamcity/**
+      - .release/**
+      - infrastructure/**
+      - .archive/**
+      - .changelog/**
+      - .devcontainer/**
+      - docs/**
+      - examples/**
+      - META.d/**
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -20,80 +35,38 @@ on:
 jobs:
   checks:
     name: go mod
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-      - name: Setup Go
-        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          go-version-file: .go-version
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+        with:
+          go-version-file: go.mod
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
       - name: Run make deps-check
         run: |
           echo "Using make to check dependencies"
           make deps-check
-
-  comment:
-    if: github.event_name == 'pull_request_target'
-    name: Comment on Non-Maintainer Edit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Filter Changes
-        id: filter
-        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
-        with:
-          filters: |
-            changed:
-              - .ci/providerlint/**
-              - go.mod
-              - go.sum
-
-      - name: Checkout Community Check
-        id: checkout
-        if: steps.filter.outputs.changed == 'true'
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          sparse-checkout: .github/actions/community_check
-
-      - name: Community Check
-        if: steps.checkout.outcome == 'success'
-        id: community_check
-        uses: ./.github/actions/community_check
-        with:
-          user_login: ${{ github.event.pull_request.user.login }}
-          maintainers: ${{ secrets.MAINTAINERS }}
-
-      - name: Check for Existing Comment
-        id: prc
-        if: steps.community_check.outputs.maintainer == 'false'
-        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "Please note that typically Go dependency changes"
-
-      - name: Leave a New Comment if One Does Not Exist
-        if: |
-          steps.prc.outcome == 'success'
-          && steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |-
-            Thank you for your contribution! :rocket:
-
-            Please note that typically Go dependency changes are handled in this repository by dependabot or the maintainers. This is to prevent pull request merge conflicts and further delay reviews of contributions. Remove any changes to the `go.mod` or `go.sum` files and commit them into this pull request.
-
-            Additional details:
-
-            * Check [open pull requests with the `dependencies` label](https://github.com/hashicorp/terraform-provider-aws/pulls?q=is%3Aopen+is%3Apr+label%3Adependencies) to view other dependency updates.
-            * If this pull request includes an update the AWS Go SDK (or any other dependency) version, only updates submitted via dependabot will be merged. This pull request will need to remove these changes and will need to be rebased after the existing dependency update via dependabot has been merged for this pull request to be reviewed.
-            * If this pull request is for supporting a new AWS service:
-              * Ensure the new AWS service changes are following the [Contributing Guide section on new services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/add-a-new-service.md), in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
-              * If this pull request is already a separate pull request from the above item, you can ignore this message.

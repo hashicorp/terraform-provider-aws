@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -16,23 +16,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Permission Sets")
+// @FrameworkDataSource("aws_ssoadmin_permission_sets", name="Permission Sets")
 func newPermissionSetsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &permissionSetsDataSource{}, nil
 }
 
 type permissionSetsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*permissionSetsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_ssoadmin_permission_sets"
+	framework.DataSourceWithModel[permissionSetsDataSourceModel]
 }
 
 func (d *permissionSetsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARNs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -72,13 +69,14 @@ func (d *permissionSetsDataSource) Read(ctx context.Context, request datasource.
 	}
 
 	data.ID = fwflex.StringValueToFramework(ctx, data.InstanceARN.ValueString())
-	data.ARNs = fwflex.FlattenFrameworkStringValueList(ctx, arns)
+	data.ARNs = fwflex.FlattenFrameworkStringValueListOfString(ctx, arns)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type permissionSetsDataSourceModel struct {
-	ARNs        types.List   `tfsdk:"arns"`
-	ID          types.String `tfsdk:"id"`
-	InstanceARN fwtypes.ARN  `tfsdk:"instance_arn"`
+	framework.WithRegionModel
+	ARNs        fwtypes.ListOfString `tfsdk:"arns"`
+	ID          types.String         `tfsdk:"id"`
+	InstanceARN fwtypes.ARN          `tfsdk:"instance_arn"`
 }

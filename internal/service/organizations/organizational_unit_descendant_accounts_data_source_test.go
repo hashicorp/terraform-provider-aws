@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -32,8 +32,8 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "accounts.#", 0),
-					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", "0"),
 				),
 			},
 		},

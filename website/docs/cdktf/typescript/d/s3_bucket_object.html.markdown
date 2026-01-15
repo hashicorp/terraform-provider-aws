@@ -106,6 +106,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) Full path to the object inside the bucket
 * `versionId` - (Optional) Specific version ID of the object returned (defaults to latest version)
@@ -139,4 +140,4 @@ This data source exports the following attributes in addition to the arguments a
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
-<!-- cache-key: cdktf-0.20.1 input-14b12dda7ac57652125f1d25132156ff6bbf15d1d1868bb22aca67dc6f4a95ca -->
+<!-- cache-key: cdktf-0.20.8 input-0faa6fab1580f80acd3ff75cb0f908fc96d1f2cebcd9e435746ee1879e8383b1 -->

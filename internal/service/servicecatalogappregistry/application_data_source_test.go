@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalogappregistry_test
@@ -34,7 +34,7 @@ func TestAccServiceCatalogAppRegistryApplicationDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, applicationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/.+$`)),
 				),
 			},
 		},

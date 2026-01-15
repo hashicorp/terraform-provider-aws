@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecatalyst
@@ -13,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -66,7 +66,7 @@ const (
 	ResNameSourceRepository = "Source Repository"
 )
 
-func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
@@ -91,7 +91,7 @@ func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
@@ -100,7 +100,7 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := findSourceRepositoryByName(ctx, conn, d.Id(), projectName, spaceName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeCatalyst SourceRepository (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -118,18 +118,19 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeCatalyst SourceRepository %s", d.Id())
 
-	_, err := conn.DeleteSourceRepository(ctx, &codecatalyst.DeleteSourceRepositoryInput{
+	input := codecatalyst.DeleteSourceRepositoryInput{
 		Name:        aws.String(d.Id()),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-	})
+	}
+	_, err := conn.DeleteSourceRepository(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -150,8 +151,7 @@ func findSourceRepositoryByName(ctx context.Context, conn *codecatalyst.Client, 
 	out, err := conn.GetSourceRepository(ctx, in)
 	if errs.IsA[*types.AccessDeniedException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -159,7 +159,7 @@ func findSourceRepositoryByName(ctx context.Context, conn *codecatalyst.Client, 
 	}
 
 	if out == nil || out.Name == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

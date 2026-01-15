@@ -62,13 +62,14 @@ Custom add-on configuration can be passed using `configuration_values` as a sing
 
 ~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.
 
-To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) call.
-This below is an example for extracting the `configuration_values` schema for `coredns`.
+You can use [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) to extract each add-on's JSON schema.
+Here's an example command to extract the `configuration_values` schema for `coredns`.
 
 ```bash
- aws eks describe-addon-configuration \
- --addon-name coredns \
- --addon-version v1.10.1-eksbuild.1
+aws eks describe-addon-configuration \
+  --addon-name coredns \
+  --addon-version v1.10.1-eksbuild.1 \
+  | jq -r .configurationSchema | jq .
 ```
 
 Example to create a `coredns` managed addon with custom `configuration_values`.
@@ -189,21 +190,23 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addon_name` - (Required) Name of the EKS add-on. The name must match one of
   the names returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `cluster_name` – (Required) Name of the EKS Cluster.
+* `cluster_name` - (Required) Name of the EKS Cluster.
 
 The following arguments are optional:
 
-* `addon_version` – (Optional) The version of the EKS add-on. The version must
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addon_version` - (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
 * `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
-* `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Docs.
-* `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
-* `resolve_conflicts` - (**Deprecated** use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead) Define how to resolve parameter value conflicts when migrating an existing add-on to an Amazon EKS add-on or when applying version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. Note that `PRESERVE` is only valid on addon update, not for initial addon creation. If you need to set this to `PRESERVE`, use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
+* `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Documentation.
+* `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE`, `OVERWRITE`, and `PRESERVE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Documentation.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `pod_identity_association` - (Optional) Configuration block with EKS Pod Identity association settings. See [`pod_identity_association`](#pod-identity-association) below for details.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
   existing IAM role to bind to the add-on's service account. The role must be
@@ -216,6 +219,11 @@ The following arguments are optional:
   provider created for your cluster. For more information, [see Enabling IAM roles
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
+
+### pod_identity_association
+
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to associate with the service account. The EKS Pod Identity agent manages credentials to assume this role for applications in the containers in the pods that use this service account.
+* `service_account` - (Required) The name of the Kubernetes service account inside the cluster to associate the IAM credentials with.
 
 ## Attribute Reference
 
@@ -261,4 +269,4 @@ Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_
 % terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f990813915cf558cc207cc42936ded374795b5a1aa6e17740c4cc59c4b537db3 -->
+<!-- cache-key: cdktf-0.20.8 input-8803991f8ee5790c4f13c6fd7ff29e971f90bfc6ce1a41b219532c2e0b1679d8 -->

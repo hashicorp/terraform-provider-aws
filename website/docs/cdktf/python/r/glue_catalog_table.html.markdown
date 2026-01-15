@@ -98,8 +98,9 @@ The following arguments are required:
 * `name` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 
-The follow arguments are optional:
+The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `catalog_id` - (Optional) ID of the Glue Catalog and database to create the table in. If omitted, this defaults to the AWS Account ID plus the database name.
 * `description` - (Optional) Description of the table.
 * `owner` - (Optional) Owner of the table.
@@ -142,6 +143,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 * `comment` - (Optional) Free-form text comment.
 * `name` - (Required) Name of the Partition Key.
+* `parameters` - (Optional) Map of key-value pairs.
 * `type` - (Optional) Datatype of data in the Partition Key.
 
 ### storage_descriptor
@@ -236,4 +238,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->
+<!-- cache-key: cdktf-0.20.8 input-8fe2a37ec26abf4874dd227cf62cc4bd408d251a29b815a11ddb8d5883fb766d -->

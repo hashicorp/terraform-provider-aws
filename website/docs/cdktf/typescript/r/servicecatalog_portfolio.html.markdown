@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the portfolio.
 * `description` - (Required) Description of the portfolio
 * `providerName` - (Required) Name of the person or organization who owns the portfolio.
@@ -93,4 +94,4 @@ Using `terraform import`, import Service Catalog Portfolios using the Service Ca
 % terraform import aws_servicecatalog_portfolio.testfolio port-12344321
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-da174375baa38ca503a2ff97599b160bf147cf7877cecc0642771beb1b8b5543 -->
+<!-- cache-key: cdktf-0.20.8 input-f5df669318b4719d8d888154e46c5e144498aad484df058d2d8a37dc3ee3780f -->

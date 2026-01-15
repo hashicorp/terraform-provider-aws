@@ -33,7 +33,7 @@ class MyConvertedCode extends TerraformStack {
           weight: 100,
         },
       ],
-      listenerArn: Token.asString(awsGlobalacceleratorListenerExample.id),
+      listenerArn: Token.asString(awsGlobalacceleratorListenerExample.arn),
     });
   }
 }
@@ -58,6 +58,7 @@ Terraform will only perform drift detection of its value when present in a confi
 
 `endpointConfiguration` supports the following arguments:
 
+* `attachmentArn` - (Optional) An ARN of an exposed cross-account attachment. See the [AWS documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/cross-account-resources.html) for more details.
 * `clientIpPreservationEnabled` - (Optional) Indicates whether client IP address preservation is enabled for an Application Load Balancer endpoint. See the [AWS documentation](https://docs.aws.amazon.com/global-accelerator/latest/dg/preserve-client-ip-address.html) for more details. The default value is `false`.
 **Note:** When client IP address preservation is enabled, the Global Accelerator service creates an EC2 Security Group in the VPC named `GlobalAccelerator` that must be deleted (potentially outside of Terraform) before the VPC will successfully delete. If this EC2 Security Group is not deleted, Terraform will retry the VPC deletion for a few minutes before reporting a `DependencyViolation` error. This cannot be resolved by re-running Terraform.
 * `endpointId` - (Optional) An ID for the endpoint. If the endpoint is a Network Load Balancer or Application Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If the endpoint is an Elastic IP address, this is the Elastic IP address allocation ID.
@@ -84,6 +85,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_endpoint_group.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz/endpoint-group/098765zyxwvu"
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator endpoint group.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator endpoint groups using the `id`. For example:
 
@@ -115,4 +137,4 @@ Using `terraform import`, import Global Accelerator endpoint groups using the `i
 % terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a99822bb8d802bdee38671c5875d85175be0aff6331a6b380641cb861eac7402 -->
+<!-- cache-key: cdktf-0.20.8 input-0d603176b007f2a1135149adaf10c30ad2868e770f4695b59c258a9c817e19f3 -->

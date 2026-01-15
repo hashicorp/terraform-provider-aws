@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime
@@ -11,17 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,16 +66,13 @@ func ResourceVoiceConnector() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
-			resourceVoiceConnectorDefaultRegion,
-		),
+		CustomizeDiff: resourceVoiceConnectorDefaultRegion,
 	}
 }
 
-func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 	if v, ok := diff.Get("aws_region").(string); !ok || v == "" {
-		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region); err != nil {
+		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region(ctx)); err != nil {
 			return err
 		}
 	}
@@ -84,7 +80,7 @@ func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.Resou
 	return nil
 }
 
-func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -108,7 +104,7 @@ func resourceVoiceConnectorCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVoiceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -116,11 +112,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 		return findVoiceConnectorByID(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		resp, err = findVoiceConnectorByID(ctx, conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Chime Voice connector %s not found", d.Id())
 		d.SetId("")
 		return diags
@@ -139,7 +131,7 @@ func resourceVoiceConnectorRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -158,7 +150,7 @@ func resourceVoiceConnectorUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceVoiceConnectorRead(ctx, d, meta)...)
 }
 
-func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVoiceConnectorDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
@@ -185,14 +177,14 @@ func findVoiceConnectorByID(ctx context.Context, conn *chimesdkvoice.Client, id 
 	resp, err := conn.GetVoiceConnector(ctx, in)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
 	}
 
 	if resp == nil || resp.VoiceConnector == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

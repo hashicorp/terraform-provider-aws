@@ -60,11 +60,15 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Required) ARN for an assumed role.
 
 ~> If `arn` is a non-role ARN, Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.
 
 ## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 ~> With the exception of `issuer_arn`, the attributes will not be populated unless the `arn` corresponds to an STS assumed role.
 
@@ -73,4 +77,4 @@ class MyConvertedCode(TerraformStack):
 * `issuer_name` - Name of the source role. Only available if `arn` corresponds to an STS assumed role.
 * `session_name` - Name of the STS session. Only available if `arn` corresponds to an STS assumed role.
 
-<!-- cache-key: cdktf-0.20.1 input-2e84cd322ad745896d1da57edd8c38897f3e2a4e912db65dea1fc036c7a5e65a -->
+<!-- cache-key: cdktf-0.20.8 input-a3d1c25d92893b38afe1a93ee39d0bce451fb115082f1d5d0f48f4d913ca94c5 -->

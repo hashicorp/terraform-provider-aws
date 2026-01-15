@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -6,20 +6,20 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,21 +40,19 @@ func resourceUserGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"REDIS"}, false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
-				},
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+				),
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -72,10 +70,10 @@ func resourceUserGroup() *schema.Resource {
 	}
 }
 
-func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	userGroupID := d.Get("user_group_id").(string)
 	input := &elasticache.CreateUserGroupInput{
@@ -112,7 +110,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		err := createTags(ctx, conn, aws.ToString(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 		}
 
@@ -124,13 +122,13 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	userGroup, err := findUserGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +146,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -157,10 +155,13 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}
 
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+		}
+
 		if d.HasChange("user_ids") {
 			o, n := d.GetChange("user_ids")
-			del := o.(*schema.Set).Difference(n.(*schema.Set))
-			add := n.(*schema.Set).Difference(o.(*schema.Set))
+			add, del := n.(*schema.Set).Difference(o.(*schema.Set)), o.(*schema.Set).Difference(n.(*schema.Set))
 
 			if add.Len() > 0 {
 				input.UserIdsToAdd = flex.ExpandStringValueSet(add)
@@ -172,7 +173,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		_, err := conn.ModifyUserGroup(ctx, input)
 
-		if err != nil {
+		if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not a member of user group") {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
 		}
 
@@ -184,7 +185,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceUserGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -236,8 +237,7 @@ func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasti
 
 		if errs.IsA[*awstypes.UserGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -255,11 +255,11 @@ func findUserGroups(ctx context.Context, conn *elasticache.Client, input *elasti
 	return output, nil
 }
 
-func statusUserGroup(ctx context.Context, conn *elasticache.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusUserGroup(conn *elasticache.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findUserGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -282,7 +282,7 @@ func waitUserGroupCreated(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusCreating, userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -301,7 +301,7 @@ func waitUserGroupUpdated(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusModifying},
 		Target:     []string{userGroupStatusActive},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -320,7 +320,7 @@ func waitUserGroupDeleted(ctx context.Context, conn *elasticache.Client, id stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{userGroupStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusUserGroup(ctx, conn, id),
+		Refresh:    statusUserGroup(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

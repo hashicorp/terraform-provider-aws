@@ -166,7 +166,7 @@ func (r *resource{{ .Name }}) Delete(ctx context.Context, request resource.Delet
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 {{- end}}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	tflog.Debug(ctx, "deleting TODO", map[string]any{
 		"id": data.ID.ValueString(),
 	})
 }

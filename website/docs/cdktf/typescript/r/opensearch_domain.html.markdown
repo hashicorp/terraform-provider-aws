@@ -108,7 +108,7 @@ class MyConvertedCode extends TerraformStack {
           ],
           resources: [
             "arn:aws:es:${" +
-              dataAwsRegionCurrent.name +
+              dataAwsRegionCurrent.region +
               "}:${" +
               current.accountId +
               "}:domain/${" +
@@ -272,7 +272,7 @@ class MyConvertedCode extends TerraformStack {
             ],
             resources: [
               "arn:aws:es:${" +
-                dataAwsRegionCurrent.name +
+                dataAwsRegionCurrent.region +
                 "}:${" +
                 current.accountId +
                 "}:domain/${" +
@@ -440,6 +440,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPolicies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advancedOptions` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your OpenSearch domain on every apply.
 * `advancedSecurityOptions` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -503,11 +504,25 @@ The following arguments are optional:
 * `instanceCount` - (Optional) Number of instances in the cluster.
 * `instanceType` - (Optional) Instance type of data nodes in the cluster.
 * `multiAzWithStandbyEnabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
+* `nodeOptions` - (Optional) List of node options for the domain.
 * `warmCount` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warmCount` can be only and must be set when `warmEnabled` is set to `true`.
 * `warmEnabled` - (Optional) Whether to enable warm storage.
 * `warmType` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warmType` can be only and must be set when `warmEnabled` is set to `true`.
 * `zoneAwarenessConfig` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zoneAwarenessEnabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availabilityZoneCount` within the `zoneAwarenessConfig` must be set to `3`.
+
+#### node_options
+
+Container object to specify configuration for a node type.
+
+* `nodeConfig` - (Optional) Container to specify sizing of a node type.
+* `nodeType` - (Optional) Type of node this configuration describes. Valid values: `coordinator`.
+
+#### node_config
+
+* `count` - (Optional) Number of nodes of a particular node type in the cluster.
+* `enabled` - (Optional) Whether a particular node type is enabled.
+* `type` - (Optional) The instance type of a particular node type in the cluster.
 
 #### cold_storage_options
 
@@ -602,7 +617,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpointV2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `dashboardEndpoint` - Domain-specific endpoint for Dashboard without https scheme.
 * `dashboardEndpointV2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
-* `kibanaEndpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboardEndpoint` attribute instead.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnetIds` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
@@ -643,4 +657,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e6b148c9a7c92900cd9d50b4727945d4f9e3161b5067e03493d017c7dae1d336 -->
+<!-- cache-key: cdktf-0.20.8 input-11e323fefac14842b321e31a1ee1224c5019dc60471c25e358c03918db0afcc7 -->

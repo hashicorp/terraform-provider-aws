@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -12,14 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,12 +80,16 @@ const (
 	userPoolUICustomizationResourceIDPartCount = 2
 )
 
-func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPoolID, clientID := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrClientID).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false))
+	id, err := flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
@@ -95,16 +100,14 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("image_file"); ok {
-		v, err := itypes.Base64Decode(v.(string))
+		v, err := inttypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 		input.ImageFile = v
 	}
 
-	_, err := conn.SetUICustomization(ctx, input)
-
-	if err != nil {
+	if _, err := conn.SetUICustomization(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool UI Customization (%s): %s", id, err)
 	}
 
@@ -113,7 +116,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	return append(diags, resourceUserPoolUICustomizationRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -125,7 +128,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 
 	uiCustomization, err := findUserPoolUICustomizationByTwoPartKey(ctx, conn, userPoolID, clientID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Pool UI Customization %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -146,7 +149,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -157,10 +160,11 @@ func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.Resour
 	userPoolID, clientID := parts[0], parts[1]
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool UI Customization: %s", d.Id())
-	_, err = conn.SetUICustomization(ctx, &cognitoidentityprovider.SetUICustomizationInput{
+	input := cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
 		UserPoolId: aws.String(userPoolID),
-	})
+	}
+	_, err = conn.SetUICustomization(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -182,7 +186,7 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 	output, err := conn.GetUICustomization(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -194,8 +198,8 @@ func findUserPoolUICustomizationByTwoPartKey(ctx context.Context, conn *cognitoi
 
 	// The GetUICustomization API operation will return an empty struct
 	// if nothing is present rather than nil or an error, so we equate that with nil.
-	if output == nil || output.UICustomization == nil || itypes.IsZero(output.UICustomization) {
-		return nil, tfresource.NewEmptyResultError(input)
+	if output == nil || output.UICustomization == nil || inttypes.IsZero(output.UICustomization) {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UICustomization, nil

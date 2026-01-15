@@ -1,16 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,6 +36,10 @@ func dataSourceEBSVolume() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrAvailabilityZone: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,15 +90,20 @@ func dataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"volume_initialization_rate": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeVolumesInput{}
+	input := ec2.DescribeVolumesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
@@ -106,7 +113,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumes(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -133,16 +140,9 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.ToString(volume.VolumeId))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("volume/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, ebsVolumeARN(ctx, c, d.Id()))
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
+	d.Set(names.AttrCreateTime, volume.CreateTime.Format(time.RFC3339))
 	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
@@ -152,6 +152,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
+	d.Set("volume_initialization_rate", volume.VolumeInitializationRate)
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	setTagsOut(ctx, volume.Tags)
@@ -159,18 +160,8 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-type volumeSort []awstypes.Volume
-
-func (a volumeSort) Len() int      { return len(a) }
-func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a volumeSort) Less(i, j int) bool {
-	itime := aws.ToTime(a[i].CreateTime)
-	jtime := aws.ToTime(a[j].CreateTime)
-	return itime.Unix() < jtime.Unix()
-}
-
 func mostRecentVolume(volumes []awstypes.Volume) awstypes.Volume {
-	sortedVolumes := volumes
-	sort.Sort(volumeSort(sortedVolumes))
-	return sortedVolumes[len(sortedVolumes)-1]
+	return slices.MaxFunc(volumes, func(a, b awstypes.Volume) int {
+		return a.CreateTime.Compare(aws.ToTime(b.CreateTime))
+	})
 }

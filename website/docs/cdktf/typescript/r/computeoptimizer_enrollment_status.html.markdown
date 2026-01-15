@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `includeMemberAccounts` - (Optional) Whether to enroll member accounts of the organization if the account is the management account of an organization. Default is `false`.
 * `status` - (Required) The enrollment status of the account. Valid values: `Active`, `Inactive`.
 
@@ -86,4 +87,4 @@ Using `terraform import`, import enrollment status using the account ID. For exa
 % terraform import aws_computeoptimizer_enrollment_status.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-876fb23863e7c175c734e5d39594bc987876431a86f247c0cfcc16023171d804 -->
+<!-- cache-key: cdktf-0.20.8 input-c5ca225b37c55fd9ff5153d0ba4acc50b9c3a6bf3aad8fd5a6097d3f3cad306a -->

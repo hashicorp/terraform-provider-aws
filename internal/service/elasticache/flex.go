@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -10,21 +10,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func flattenSecurityGroupNames(apiObjects []awstypes.CacheSecurityGroupMembership) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.CacheSecurityGroupMembership) string {
+		return aws.ToString(v.CacheSecurityGroupName)
+	})
+}
+
 func flattenSecurityGroupIDs(apiObjects []awstypes.SecurityGroupMembership) []string {
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SecurityGroupMembership) string {
 		return aws.ToString(v.SecurityGroupId)
 	})
 }
 
-func flattenLogDeliveryConfigurations(apiObjects []awstypes.LogDeliveryConfiguration) []interface{} {
+func flattenLogDeliveryConfigurations(apiObjects []awstypes.LogDeliveryConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{})
+		tfMap := make(map[string]any)
 
 		switch apiObject.DestinationType {
 		case awstypes.DestinationTypeKinesisFirehose:
@@ -42,7 +48,7 @@ func flattenLogDeliveryConfigurations(apiObjects []awstypes.LogDeliveryConfigura
 	return tfList
 }
 
-func expandEmptyLogDeliveryConfigurationRequest(tfMap map[string]interface{}) awstypes.LogDeliveryConfigurationRequest {
+func expandEmptyLogDeliveryConfigurationRequest(tfMap map[string]any) awstypes.LogDeliveryConfigurationRequest {
 	apiObject := awstypes.LogDeliveryConfigurationRequest{}
 
 	apiObject.Enabled = aws.Bool(false)
@@ -51,7 +57,7 @@ func expandEmptyLogDeliveryConfigurationRequest(tfMap map[string]interface{}) aw
 	return apiObject
 }
 
-func expandLogDeliveryConfigurationRequests(v map[string]interface{}) awstypes.LogDeliveryConfigurationRequest {
+func expandLogDeliveryConfigurationRequests(v map[string]any) awstypes.LogDeliveryConfigurationRequest {
 	apiObject := awstypes.LogDeliveryConfigurationRequest{}
 
 	destinationType := awstypes.DestinationType(v["destination_type"].(string))

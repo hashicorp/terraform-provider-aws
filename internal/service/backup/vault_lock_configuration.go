@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -17,15 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-// @SDKResource("aws_backup_vault_lock_configuration")
-func ResourceVaultLockConfiguration() *schema.Resource {
+// @SDKResource("aws_backup_vault_lock_configuration", name="Vault Lock Configuration")
+func resourceVaultLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultLockConfigurationCreate,
 		ReadWithoutTimeout:   resourceVaultLockConfigurationRead,
 		DeleteWithoutTimeout: resourceVaultLockConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -61,7 +62,7 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 	}
 }
 
-func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -93,13 +94,13 @@ func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceVaultLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := findVaultByName(ctx, conn, d.Id())
+	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,14 +118,15 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
-	_, err := conn.DeleteBackupVaultLockConfiguration(ctx, &backup.DeleteBackupVaultLockConfigurationInput{
+	input := backup.DeleteBackupVaultLockConfigurationInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVaultLockConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

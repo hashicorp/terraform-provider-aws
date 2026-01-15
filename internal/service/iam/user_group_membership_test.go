@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -159,7 +159,7 @@ func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, userNa
 			UserName: &userName,
 		})
 		if err != nil {
-			return fmt.Errorf("Error validing user group list for %s: %s", userName, err)
+			return fmt.Errorf("Error validing user group list for %s: %w", userName, err)
 		}
 
 		// check required groups
@@ -196,7 +196,7 @@ func testAccUserGroupMembershipImportStateIdFunc(resourceName string) resource.I
 
 		groupCount, _ := strconv.Atoi(rs.Primary.Attributes["groups.#"])
 		stateId := rs.Primary.Attributes["user"]
-		for i := 0; i < groupCount; i++ {
+		for i := range groupCount {
 			groupName := rs.Primary.Attributes[fmt.Sprintf("group.%d", i)]
 			stateId = fmt.Sprintf("%s/%s", stateId, groupName)
 		}

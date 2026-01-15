@@ -1,12 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -69,20 +70,20 @@ func dataSourceAvailabilityZones() *schema.Resource {
 	}
 }
 
-func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 
-	request := &ec2.DescribeAvailabilityZonesInput{}
+	input := ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
-		request.AllAvailabilityZones = aws.Bool(v.(bool))
+		input.AllAvailabilityZones = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk(names.AttrState); ok {
-		request.Filters = []awstypes.Filter{
+		input.Filters = []awstypes.Filter{
 			{
 				Name:   aws.String(names.AttrState),
 				Values: []string{v.(string)},
@@ -91,24 +92,24 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
-		request.Filters = append(request.Filters, newCustomFilterList(
+		input.Filters = append(input.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}
 
-	if len(request.Filters) == 0 {
+	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
-		request.Filters = nil
+		input.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading Availability Zones: %s", d.Id())
-	resp, err := conn.DescribeAvailabilityZones(ctx, request)
+	resp, err := conn.DescribeAvailabilityZones(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)
 	}
 
-	sort.Slice(resp.AvailabilityZones, func(i, j int) bool {
-		return aws.ToString(resp.AvailabilityZones[i].ZoneName) < aws.ToString(resp.AvailabilityZones[j].ZoneName)
+	slices.SortFunc(resp.AvailabilityZones, func(a, b awstypes.AvailabilityZone) int {
+		return cmp.Compare(aws.ToString(a.ZoneName), aws.ToString(b.ZoneName))
 	})
 
 	excludeNames := d.Get("exclude_names").(*schema.Set)
@@ -138,7 +139,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		zoneIds = append(zoneIds, zoneID)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)

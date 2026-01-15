@@ -64,6 +64,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `config` - (Required) One or more config blocks which define the configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below.
 * `description` - (Optional) Specifies the description of the Hours of Operation.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -121,4 +122,4 @@ Using `terraform import`, import Amazon Connect Hours of Operations using the `i
 % terraform import aws_connect_hours_of_operation.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e685961316f9f34f8486d7fd79d05b0468f7a89263abaaf59ddd74e65a685a9c -->
+<!-- cache-key: cdktf-0.20.8 input-6a3ba7d527c792164b142c6061f1ed359455993992301b4e3a08c0f20666401c -->

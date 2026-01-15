@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -9,14 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,23 +35,23 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
-					resource.TestCheckResourceAttr(resourceName, "component.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "component.0.component_arn", "imagebuilder", "aws", "component/update-linux/x.x.x"),
-					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container_type", "DOCKER"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-x86-2/x.x.x"),
-					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "target_repository.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_repository.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_repository.0.repository_name", "aws_ecr_repository.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_repository.0.service", "ECR"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
@@ -83,7 +82,7 @@ func TestAccImageBuilderContainerRecipe_disappears(t *testing.T) {
 				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceContainerRecipe(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceContainerRecipe(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +105,7 @@ func TestAccImageBuilderContainerRecipe_component(t *testing.T) {
 				Config: testAccContainerRecipeConfig_component(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "component.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "2"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "component.0.component_arn", "imagebuilder", "aws", "component/update-linux/x.x.x"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "component.1.component_arn", "imagebuilder", "aws", "component/aws-cli-version-2-linux/x.x.x"),
 				),
@@ -135,8 +134,8 @@ func TestAccImageBuilderContainerRecipe_componentParameter(t *testing.T) {
 				Config: testAccContainerRecipeConfig_componentParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "component.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.name", "Parameter1"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.value", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.1.name", "Parameter2"),
@@ -222,8 +221,8 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingDeviceName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.device_name", "/dev/xvda"),
 				),
 			},
@@ -251,9 +250,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSDeleteOnTermination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.delete_on_termination", acctest.CtTrue),
 				),
 			},
@@ -281,9 +280,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.encrypted", acctest.CtTrue),
 				),
 			},
@@ -311,9 +310,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSIOPS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.iops", "100"),
 				),
 			},
@@ -342,9 +341,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -373,9 +372,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSSnapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.snapshot_id", ebsSnapshotResourceName, names.AttrID),
 				),
 			},
@@ -403,9 +402,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSThroughput(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.throughput", "200"),
 				),
 			},
@@ -433,9 +432,9 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeSize(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.volume_size", "20"),
 				),
 			},
@@ -463,10 +462,10 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSVolumeType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.volume_type", imagebuilder.EbsVolumeTypeGp2),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.volume_type", string(awstypes.EbsVolumeTypeGp2)),
 				),
 			},
 			{
@@ -493,8 +492,8 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.no_device", acctest.CtTrue),
 				),
 			},
@@ -522,8 +521,8 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 				Config: testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingVirtualName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.virtual_name", "ephemeral0"),
 				),
 			},
@@ -552,7 +551,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_Image(t *testing.T
 				Config: testAccContainerRecipeConfig_instanceConfigurationImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.image", imageDataSourceName, names.AttrID),
 				),
 			},
@@ -608,7 +607,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 				Config: testAccContainerRecipeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -621,7 +620,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 				Config: testAccContainerRecipeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -630,7 +629,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 				Config: testAccContainerRecipeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -696,56 +695,42 @@ func TestAccImageBuilderContainerRecipe_platformOverride(t *testing.T) {
 
 func testAccCheckContainerRecipeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_container_recipe" {
 				continue
 			}
 
-			input := &imagebuilder.GetContainerRecipeInput{
-				ContainerRecipeArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfimagebuilder.FindContainerRecipeByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetContainerRecipeWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Container Recipe (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Image Builder Container Recipe (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Image Builder Container Recipe %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckContainerRecipeExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckContainerRecipeExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
-		input := &imagebuilder.GetContainerRecipeInput{
-			ContainerRecipeArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfimagebuilder.FindContainerRecipeByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetContainerRecipeWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Container Recipe (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -758,7 +743,6 @@ data "aws_partition" "current" {}
 resource "aws_ecr_repository" "test" {
   name = %[1]q
 }
-
 `, rName)
 }
 
@@ -769,11 +753,11 @@ func testAccContainerRecipeConfig_name(rName string) string {
 resource "aws_imagebuilder_container_recipe" "test" {
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -797,15 +781,15 @@ func testAccContainerRecipeConfig_component(rName string) string {
 resource "aws_imagebuilder_container_recipe" "test" {
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/aws-cli-version-2-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/aws-cli-version-2-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -854,7 +838,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
@@ -894,11 +878,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   description = "description"
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -938,11 +922,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.test.key}"
@@ -967,11 +951,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1002,11 +986,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1039,11 +1023,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1076,11 +1060,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1111,17 +1095,18 @@ func testAccContainerRecipeConfig_instanceConfigurationBlockDeviceMappingEBSKMSK
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1164,11 +1149,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1201,11 +1186,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1239,11 +1224,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1276,11 +1261,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1313,11 +1298,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1348,11 +1333,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1385,7 +1370,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
 
@@ -1393,11 +1378,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1424,17 +1409,18 @@ func testAccContainerRecipeConfig_kmsKeyID(rName string) string {
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1461,11 +1447,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1494,11 +1480,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1528,11 +1514,11 @@ resource "aws_imagebuilder_container_recipe" "test" {
   name = %[1]q
 
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-2/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-2/x.x.x"
   version        = "1.0.0"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF
@@ -1563,7 +1549,7 @@ resource "aws_imagebuilder_container_recipe" "test" {
   platform_override = "Linux"
 
   component {
-    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/x.x.x"
+    component_arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/x.x.x"
   }
 
   dockerfile_template_data = <<EOF

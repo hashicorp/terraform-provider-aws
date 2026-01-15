@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Volume. You can use a maximum of 203 alphanumeric characters, plus the underscore (_) special character.
 * `parent_volume_id` - (Required) The volume id of volume that will be the parent volume for the volume being created, this could be the root volume created from the `aws_fsx_openzfs_file_system` resource with the `root_volume_id` or the `id` property of another `aws_fsx_openzfs_volume`.
 * `copy_tags_to_snapshots` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
@@ -48,7 +49,7 @@ This resource supports the following arguments:
 * `origin_snapshot` - (Optional) Specifies the configuration to use when creating the OpenZFS volume. See [`origin_snapshot` Block](#origin_snapshot-block) below for details.
 * `storage_capacity_quota_gib`  - (Optional) The maximum amount of storage in gibibytes (GiB) that the volume can use from its parent.
 * `storage_capacity_reservation_gib`  - (Optional) The amount of storage in gibibytes (GiB) to reserve from the parent volume.
-* `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum of 100 items. See [`user_and_group_quotas` Block](#user_and_group_quotas-block) Below.
+* `user_and_group_quotas` - (Optional) - Specify how much storage users or groups can use on the volume. Maximum number of items defined by [FSx for OpenZFS Resource quota](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/limits.html#limits-openzfs-resources-file-system). See [`user_and_group_quotas` Block](#user_and_group_quotas-block) Below.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `nfs_exports` Block
@@ -120,4 +121,4 @@ Using `terraform import`, import FSx Volumes using the `id`. For example:
 % terraform import aws_fsx_openzfs_volume.example fsvol-543ab12b1ca672f33
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6da00d0f9a35a033a685c37932fdf5aa14a16e056d7330c04eb3769974b7db27 -->
+<!-- cache-key: cdktf-0.20.8 input-4ed9b308a1c77c6a861d496e155f62f6f9b9984053889f6b2fe6c5f3636054d3 -->

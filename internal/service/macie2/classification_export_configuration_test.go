@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -37,7 +37,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, string(awstypes.MacieStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", "macieprefix/"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
@@ -53,7 +53,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, string(awstypes.MacieStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
@@ -128,6 +128,8 @@ data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
+
   policy = jsonencode({
     "Version" : "2012-10-17",
     "Id" : "allow_macie",
@@ -162,7 +164,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   policy = jsonencode(
     {
       "Version" : "2012-10-17",
@@ -202,8 +204,8 @@ resource "aws_s3_bucket_policy" "test" {
             },
             "ArnLike" : {
               "aws:SourceArn" : [
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
-                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:classification-job/*"
+                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:export-configuration:*",
+                "arn:${data.aws_partition.current.partition}:macie2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:classification-job/*"
               ]
             }
           }
@@ -218,8 +220,6 @@ resource "aws_macie2_account" "test" {}
 resource "aws_macie2_classification_export_configuration" "test" {
   depends_on = [
     aws_macie2_account.test,
-    aws_kms_key.test,
-    aws_s3_bucket.test,
     aws_s3_bucket_policy.test
   ]
   s3_destination {

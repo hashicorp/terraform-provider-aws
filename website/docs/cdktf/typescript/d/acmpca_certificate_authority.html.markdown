@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) ARN of the certificate authority.
 
 ## Attribute Reference
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
 * `type` - Type of the certificate authority.
 
-<!-- cache-key: cdktf-0.20.1 input-bc455641e95958e404dd0619abf86e9d1dc1b0604b9b489c29ed39db56a62037 -->
+<!-- cache-key: cdktf-0.20.8 input-587c4772b3b9d6f6a944d0a4befecbe537495d065124acc24954b27217a83fb1 -->

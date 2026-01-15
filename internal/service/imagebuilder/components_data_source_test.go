@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -30,8 +30,8 @@ func TestAccImageBuilderComponentsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccComponentsDataSourceConfig_component2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 				),
 			},
 		},

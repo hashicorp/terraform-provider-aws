@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,10 +37,10 @@ func testAccVoiceConnectorOrigination_basic(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						names.AttrProtocol: "TCP",
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -71,7 +71,7 @@ func testAccVoiceConnectorOrigination_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,22 +97,22 @@ func testAccVoiceConnectorOrigination_update(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorOriginationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						names.AttrProtocol: "TCP",
 						names.AttrPort:     "5060",
-						names.AttrPriority: acctest.Ct1,
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						names.AttrProtocol: "UDP",
-						names.AttrPriority: acctest.Ct2,
+						names.AttrPriority: "2",
 					}),
 				),
 			},
@@ -158,7 +158,7 @@ func testAccCheckVoiceConnectorOriginationDestroy(ctx context.Context) resource.
 				return tfchime.FindVoiceConnectorOriginationByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

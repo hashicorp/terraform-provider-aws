@@ -37,8 +37,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `environment_id` - (Required) Environment to deploy application to.
 * `application_id` - (Required) Application to deploy.
 * `application_version` - (Required) Version to application to deploy
@@ -81,4 +82,4 @@ Using `terraform import`, import Mainframe Modernization Deployment using the `A
 % terraform import aws_m2_deployment.example APPLICATION-ID,DEPLOYMENT-ID
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bc7c0d2b3405ad84269038bf63c97c6572f8171abace6b51f82bc18273fb46d7 -->
+<!-- cache-key: cdktf-0.20.8 input-a927a8d04a770166efaba5e69747785afcdd8596065766d623aaeb427a4515c4 -->

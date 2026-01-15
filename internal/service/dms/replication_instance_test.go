@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -8,20 +8,24 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-	replicationInstanceClass := "dms.c4.large"
+	replicationInstanceClass := "dms.t3.micro"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		replicationInstanceClass = "dms.c4.large"
+	}
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,7 +39,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -47,11 +51,11 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -67,7 +71,10 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 func TestAccDMSReplicationInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-	replicationInstanceClass := "dms.c4.large"
+	replicationInstanceClass := "dms.t3.micro"
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
+		replicationInstanceClass = "dms.c4.large"
+	}
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,7 +88,7 @@ func TestAccDMSReplicationInstance_disappears(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -207,10 +214,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.4.7"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.4.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.2"),
 				),
 			},
 			{
@@ -220,10 +227,10 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
-				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
+				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "3.5.3"),
 				),
 			},
 		},
@@ -387,7 +394,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
 				),
 			},
 			{
@@ -438,52 +445,6 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationInstance_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_dms_replication_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
-			},
-			{
-				Config: testAccReplicationInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccReplicationInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
@@ -499,7 +460,36 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationInstance_kerberosAuthenticationSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationInstanceConfig_kerberosAuthenticationSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dns_name_servers", ""),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_authentication_settings.#", "1"),
 				),
 			},
 			{
@@ -538,7 +528,7 @@ func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -572,7 +562,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   allocated_storage           = %[2]d
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -586,7 +576,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   auto_minor_version_upgrade  = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -600,7 +590,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   availability_zone           = data.aws_availability_zones.available.names[0]
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -615,7 +605,7 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   allow_major_version_upgrade = true
   engine_version              = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -628,12 +618,13 @@ data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   kms_key_arn                 = aws_kms_key.test.arn
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -647,7 +638,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   multi_az                    = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -667,7 +658,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   network_type                = %[2]q
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 }
@@ -681,7 +672,7 @@ data "aws_partition" "current" {}
 resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   preferred_maintenance_window = %[2]q
-  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class   = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id      = %[1]q
   replication_subnet_group_id  = aws_dms_replication_subnet_group.test.id
 }
@@ -703,7 +694,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
   publicly_accessible         = %[2]t
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
 
@@ -723,41 +714,6 @@ resource "aws_dms_replication_instance" "test" {
 `, replicationInstanceClass, rName))
 }
 
-func testAccReplicationInstanceConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_replication_instance" "test" {
-  apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %[1]q
-  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1))
-}
-
-func testAccReplicationInstanceConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_dms_replication_instance" "test" {
-  apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
-  replication_instance_id     = %[1]q
-  replication_subnet_group_id = aws_dms_replication_subnet_group.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2))
-}
-
 func testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName), fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -773,10 +729,117 @@ resource "aws_security_group" "test" {
 
 resource "aws_dms_replication_instance" "test" {
   apply_immediately           = true
-  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t2.micro" : "dms.c4.large"
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
   replication_instance_id     = %[1]q
   replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
   vpc_security_group_ids      = [aws_security_group.test.id]
 }
 `, rName))
+}
+
+func testAccReplicationInstanceConfig_kerberosAuthenticationSettings(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationInstanceConfig_base(rName),
+		testAccReplicationInstanceConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  subnet_id      = aws_subnet.test[0].id
+  route_table_id = aws_route_table.test.id
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_dms_replication_instance" "test" {
+  apply_immediately           = true
+  replication_instance_class  = data.aws_partition.current.partition == "aws" ? "dms.t3.micro" : "dms.c4.large"
+  replication_instance_id     = %[1]q
+  replication_subnet_group_id = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+  vpc_security_group_ids      = [aws_security_group.test.id]
+
+  kerberos_authentication_settings {
+    key_cache_secret_iam_arn = aws_iam_role.test.arn
+    key_cache_secret_id      = aws_secretsmanager_secret.test.id
+    krb5_file_contents       = file("test-fixtures/krb5.conf")
+  }
+}
+`, rName))
+}
+
+func testAccReplicationInstanceConfig_secretBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_secretsmanager_secret" "test" {
+  name                    = %[1]q
+  recovery_window_in_days = 0
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_binary = filebase64("test-fixtures/keytab.krb")
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dms.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Action": "secretsmanager:*",
+        "Effect": "Allow",
+        "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName)
 }

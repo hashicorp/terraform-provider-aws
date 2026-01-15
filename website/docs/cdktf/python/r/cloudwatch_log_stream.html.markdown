@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the log stream. Must not be longer than 512 characters and must not contain `:`
 * `log_group_name` - (Required) The name of the log group under which the log stream is to be created.
 
@@ -74,4 +75,4 @@ Using `terraform import`, import Cloudwatch Log Stream using the stream's `log_g
 % terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4fed32ff75bb830aa4a809d588a8fcccf96c6368ab7e6ad418f7d940ac65117d -->
+<!-- cache-key: cdktf-0.20.8 input-f52a8fef59c44067d6c96d3ecb79f7dd00f9cf6cab46da88ca117a12969883d4 -->

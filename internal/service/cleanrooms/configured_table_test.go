@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms_test
@@ -41,7 +41,7 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
@@ -72,7 +72,7 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 				Config: testAccConfiguredTableConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcleanrooms.ResourceConfiguredTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcleanrooms.ResourceConfiguredTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Config: testAccConfiguredTableConfig_allowedColumns(TEST_ALLOWED_COLUMNS, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 				),
@@ -138,7 +138,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Config: testAccConfiguredTableConfig_allowedColumns("[\"my_column_1\"]", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 				),
 			},
@@ -275,9 +275,10 @@ func testAccCheckConfiguredTableDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+			input := cleanrooms.GetConfiguredTableInput{
 				ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.GetConfiguredTable(ctx, &input)
 
 			if err == nil {
 				return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, errors.New("not destroyed"))
@@ -300,9 +301,10 @@ func testAccCheckConfiguredTableExists(ctx context.Context, name string, configu
 		}
 
 		client := acctest.Provider.Meta().(*conns.AWSClient).CleanRoomsClient(ctx)
-		resp, err := client.GetConfiguredTable(ctx, &cleanrooms.GetConfiguredTableInput{
+		input := cleanrooms.GetConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(rs.Primary.ID),
-		})
+		}
+		resp, err := client.GetConfiguredTable(ctx, &input)
 
 		if err != nil {
 			return create.Error(names.CleanRooms, create.ErrActionCheckingExistence, tfcleanrooms.ResNameConfiguredTable, rs.Primary.ID, err)

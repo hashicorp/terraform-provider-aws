@@ -73,7 +73,7 @@ class MyConvertedCode extends TerraformStack {
     new ElasticsearchDomain(this, "example", {
       accessPolicies:
         '{\n  "Version": "2012-10-17",\n  "Statement": [\n    {\n      "Action": "es:*",\n      "Principal": "*",\n      "Effect": "Allow",\n      "Resource": "arn:aws:es:${' +
-        dataAwsRegionCurrent.name +
+        dataAwsRegionCurrent.region +
         "}:${" +
         current.accountId +
         "}:domain/${" +
@@ -230,7 +230,7 @@ class MyConvertedCode extends TerraformStack {
     const awsElasticsearchDomainEs = new ElasticsearchDomain(this, "es_8", {
       accessPolicies:
         '{\n\t"Version": "2012-10-17",\n\t"Statement": [\n\t\t{\n\t\t\t"Action": "es:*",\n\t\t\t"Principal": "*",\n\t\t\t"Effect": "Allow",\n\t\t\t"Resource": "arn:aws:es:${' +
-        dataAwsRegionCurrent.name +
+        dataAwsRegionCurrent.region +
         "}:${" +
         current.accountId +
         "}:domain/${" +
@@ -272,6 +272,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPolicies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advancedOptions` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your Elasticsearch domain on every apply.
 * `advancedSecurityOptions` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -404,7 +405,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the domain.
 * `domainId` - Unique identifier for the domain.
-* `domainName` - Name of the Elasticsearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibanaEndpoint` - Domain-specific endpoint for kibana without https scheme.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -447,4 +447,4 @@ Using `terraform import`, import Elasticsearch domains using the `domainName`. F
 % terraform import aws_elasticsearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-60dfcf11c5c8eac949444d5d799ae6ac9b5ba88c6982adad1d54ec9eee35c2b4 -->
+<!-- cache-key: cdktf-0.20.8 input-face87336885dfc641e0b06a92ee81cef51f4eb39910843254eb7aa3de9a7902 -->

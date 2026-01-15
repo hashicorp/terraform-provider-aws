@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram_test
@@ -30,8 +30,8 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					acctest.CheckResourceAttrAccountID(datasourceName, "owning_account_id"),
-					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, "owning_account_id"),
+					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "0"),
 				),
 			},
 		},
@@ -78,7 +78,7 @@ func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,7 +87,7 @@ func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 				Config: testAccResourceShareDataSourceConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "1"),
 				),
 			},
 		},

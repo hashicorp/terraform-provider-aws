@@ -60,6 +60,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `client_token` - (Optional) A unique, case-sensitive ID that you provide to ensure the idempotency of the request. AWS generates a random value when not provided.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -98,13 +99,13 @@ from imports.aws.ssoadmin_trusted_token_issuer import SsoadminTrustedTokenIssuer
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsoadminTrustedTokenIssuer.generate_config_for_import(self, "example", "arn:aws:sso::012345678901:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002")
+        SsoadminTrustedTokenIssuer.generate_config_for_import(self, "example", "arn:aws:sso::123456789012:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002")
 ```
 
 Using `terraform import`, import SSO Admin Trusted Token Issuer using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_trusted_token_issuer.example arn:aws:sso::012345678901:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002
+% terraform import aws_ssoadmin_trusted_token_issuer.example arn:aws:sso::123456789012:trustedTokenIssuer/ssoins-lu1ye3gew4mbc7ju/tti-2657c556-9707-11ee-b9d1-0242ac120002
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0900500b852bcc2cdb7068eab61e167d32b79c14f63d21b8cf4c9f90010fe17b -->
+<!-- cache-key: cdktf-0.20.8 input-d26a7fec5eef4da5306f9b711aaeb8ba3d93c3e290520c0884c12458d431b69b -->

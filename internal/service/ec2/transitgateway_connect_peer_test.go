@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,9 +44,9 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semap
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_peer_address"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "bgp_transit_gateway_addresses.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", "1.1.1.1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_address"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayConnectResourceName, names.AttrID),
 				),
@@ -80,7 +80,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,7 +135,7 @@ func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore t
 				Config: testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "169.254.200.0/29"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "fd00::/125"),
 				),
@@ -169,7 +169,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -182,7 +182,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccTransitGatewayConnectPeerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -191,7 +191,7 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -262,7 +262,7 @@ func testAccCheckTransitGatewayConnectPeerDestroy(ctx context.Context) resource.
 
 			_, err := tfec2.FindTransitGatewayConnectPeerByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

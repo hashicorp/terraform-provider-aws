@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_workteam: Mark `workforce_name` as Optional
+```

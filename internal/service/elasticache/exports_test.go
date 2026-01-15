@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -31,19 +31,21 @@ var (
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
 
-	DeleteCacheCluster                        = deleteCacheCluster
-	DiffVersion                               = diffVersion
-	EmptyDescription                          = emptyDescription
-	EngineMemcached                           = engineMemcached
-	EngineRedis                               = engineRedis
-	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
-	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
-	GlobalReplicationGroupRegionPrefixFormat  = globalReplicationGroupRegionPrefixFormat
-	NormalizeEngineVersion                    = normalizeEngineVersion
-	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
-	ValidateClusterEngineVersion              = validateClusterEngineVersion
-	ValidMemcachedVersionString               = validMemcachedVersionString
-	ValidRedisVersionString                   = validRedisVersionString
+	DeleteCacheCluster                                = deleteCacheCluster
+	DiffVersion                                       = diffVersion
+	EmptyDescription                                  = emptyDescription
+	EngineMemcached                                   = engineMemcached
+	EngineRedis                                       = engineRedis
+	EngineValkey                                      = engineValkey
+	EngineVersionForceNewOnDowngrade                  = engineVersionForceNewOnDowngrade
+	EngineVersionIsDowngrade                          = engineVersionIsDowngrade
+	GlobalReplicationGroupRegionPrefixFormat          = globalReplicationGroupRegionPrefixFormat
+	NormalizeEngineVersion                            = normalizeEngineVersion
+	ParamGroupNameRequiresEngineOrMajorVersionUpgrade = paramGroupNameRequiresEngineOrMajorVersionUpgrade
+	ValidateClusterEngineVersion                      = validateClusterEngineVersion
+	ValidMemcachedVersionString                       = validMemcachedVersionString
+	ValidRedisVersionString                           = validRedisVersionString
+	ValidValkeyVersionString                          = validValkeyVersionString
 )
 
 type (

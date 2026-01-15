@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the WAF Regional rate based rule.
 
 ## Attribute Reference
@@ -43,4 +44,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - ID of the WAF Regional rate based rule.
 
-<!-- cache-key: cdktf-0.20.1 input-4efc48cfee1f2c7a8f4f34e4fbb2f4523a05a710c88547ac3014e9d0ff52a993 -->
+<!-- cache-key: cdktf-0.20.8 input-710e8afd71b8833326536115add38af7f1cfa775bb95b0a6460abec00a8ad88f -->

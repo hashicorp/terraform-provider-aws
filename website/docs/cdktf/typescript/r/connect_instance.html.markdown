@@ -13,7 +13,7 @@ description: |-
 Provides an Amazon Connect instance resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-!> **WARN:** Amazon Connect enforces a limit of [100 combined instance creation and deletions every 30 days](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits).  For example, if you create 80 instances and delete 20 of them, you must wait 30 days to create or delete another instance.  Use care when creating or deleting instances.
+!> **WARN:** Amazon Connect enforces a limit of [100 combined instance creation and deletions every 30 days](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits). For example, if you create 80 instances and delete 20 of them, you must wait 30 days to create or delete another instance. Use care when creating or deleting instances.
 
 ## Example Usage
 
@@ -34,6 +34,9 @@ class MyConvertedCode extends TerraformStack {
       inboundCallsEnabled: true,
       instanceAlias: "friendly-name-connect",
       outboundCallsEnabled: true,
+      tags: {
+        hello: "world",
+      },
     });
   }
 }
@@ -95,6 +98,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoResolveBestVoicesEnabled` - (Optional) Specifies whether auto resolve best voices is enabled. Defaults to `true`.
 * `contactFlowLogsEnabled` - (Optional) Specifies whether contact flow logs are enabled. Defaults to `false`.
 * `contactLensEnabled` - (Optional) Specifies whether contact lens is enabled. Defaults to `true`.
@@ -105,6 +109,7 @@ This resource supports the following arguments:
 * `instanceAlias` - (Optional) Specifies the name of the instance. Required if `directoryId` not specified.
 * `multiPartyConferenceEnabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outboundCallsEnabled` - (Required) Specifies whether outbound calls are enabled.
+* `tags` - (Optional) Tags to apply to the Instance. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attribute Reference
@@ -116,6 +121,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdTime` - When the instance was created.
 * `serviceRole` - The service role of the instance.
 * `status` - The state of the instance.
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -125,6 +131,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_instance.example
+  identity = {
+    id = "f1288a1f-6193-445a-b47e-af739b2"
+  }
+}
+
+resource "aws_connect_instance" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect instance.
+
+#### Optional
+
+- `accountId` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connect instances using the `id`. For example:
 
@@ -156,4 +188,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->
+<!-- cache-key: cdktf-0.20.8 input-59e72550cfaf3a014e12fe99283eb9802b6d2bb0399e638db8def9c77b0acdbb -->

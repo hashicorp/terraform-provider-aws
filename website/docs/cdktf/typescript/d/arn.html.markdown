@@ -45,15 +45,11 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `partition` - Partition that the resource is in.
-
 * `service` - The [service namespace](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces) that identifies the AWS product.
-
 * `region` - Region the resource resides in.
-Note that the ARNs for some resources do not require a region, so this component might be omitted.
-
+Note that the ARNs for some resources do not include a Region, so this component might be omitted.
 * `account` - The [ID](https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html) of the AWS account that owns the resource, without the hyphens.
-
 * `resource` - Content of this part of the ARN varies by service.
 It often includes an indicator of the type of resource—for example, an IAM user or Amazon RDS database —followed by a slash (/) or a colon (:), followed by the resource name itself.
 
-<!-- cache-key: cdktf-0.20.1 input-440ccf3a9b006a55df02867b675efa529ed16c151a5b0875e321f0dd97d87344 -->
+<!-- cache-key: cdktf-0.20.8 input-714ed89c14558d30950ad22862bcdc37a70037c8b4fbf1a179ddbe424ef7249a -->

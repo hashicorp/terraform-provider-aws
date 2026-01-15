@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -6,11 +6,13 @@ package bedrock
 // Exports for use in tests only.
 var (
 	ResourceCustomModel                         = newCustomModelResource
-	ResourceGuardrail                           = newResourceGuardrail
+	ResourceGuardrail                           = newGuardrailResource
+	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
+	ResourceInferenceProfile                    = newInferenceProfileResource
 
 	FindCustomModelByID                     = findCustomModelByID
-	FindGuardrailByID                       = findGuardrailByID
+	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
 	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID

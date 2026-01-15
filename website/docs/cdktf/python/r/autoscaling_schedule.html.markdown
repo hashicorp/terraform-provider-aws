@@ -59,6 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `desired_capacity` - (Optional) The initial capacity of the Auto Scaling group after the scheduled action runs and the capacity it attempts to maintain. Set to `-1` if you don't want to change the desired capacity at the scheduled time. Defaults to `0`.
 * `end_time` - (Optional) The date and time for the recurring schedule to end, in UTC with the format `"YYYY-MM-DDThh:mm:ssZ"` (e.g. `"2021-06-01T00:00:00Z"`).
 * `max_size` - (Optional) The maximum size of the Auto Scaling group. Set to `-1` if you don't want to change the maximum size at the scheduled time. Defaults to `0`.
@@ -100,4 +101,4 @@ Using `terraform import`, import AutoScaling ScheduledAction using the `auto-sca
 % terraform import aws_autoscaling_schedule.resource-name auto-scaling-group-name/scheduled-action-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5be402701834f8814cc05c38173674caf079493d6dfbaad45363725e999d42d0 -->
+<!-- cache-key: cdktf-0.20.8 input-65fb37046016db20fa13fc3ed7b9001a6db67f0b2b57443d6425b6ea7c031874 -->

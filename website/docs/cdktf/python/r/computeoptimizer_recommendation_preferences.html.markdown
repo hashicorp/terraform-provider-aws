@@ -77,12 +77,13 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `enhanced_infrastructure_metrics` - (Optional) The status of the enhanced infrastructure metrics recommendation preference. Valid values: `Active`, `Inactive`.
 * `external_metrics_preference` - (Optional) The provider of the external metrics recommendation preference. See [External Metrics Preference](#external-metrics-preference) below.
 * `inferred_workload_types` - (Optional) The status of the inferred workload types recommendation preference. Valid values: `Active`, `Inactive`.
 * `look_back_period` - (Optional) The preference to control the number of days the utilization metrics of the AWS resource are analyzed. Valid values: `DAYS_14`, `DAYS_32`, `DAYS_93`.
 * `preferred_resource` - (Optional) The preference to control which resource type values are considered when generating rightsizing recommendations. See [Preferred Resources](#preferred-resources) below.
-* `resource_type` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`.
+* `resource_type` - (Required) The target resource type of the recommendation preferences. Valid values: `Ec2Instance`, `AutoScalingGroup`, `RdsDBInstance`, `AuroraDBClusterStorage`.
 * `savings_estimation_mode` - (Optional) The status of the savings estimation mode preference. Valid values: `AfterDiscounts`, `BeforeDiscounts`.
 * `scope` - (Required) The scope of the recommendation preferences. See [Scope](#scope) below.
 * `utilization_preference` - (Optional) The preference to control the resource’s CPU utilization threshold, CPU utilization headroom, and memory utilization headroom. See [Utilization Preferences](#utilization-preferences) below.
@@ -141,4 +142,4 @@ Using `terraform import`, import recommendation preferences using the resource t
 % terraform import aws_computeoptimizer_recommendation_preferences.example Ec2Instance,AccountId,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2baa0157c0499a84be3e2d1f847887b8a89478d41499cd5f412bd69b93587edb -->
+<!-- cache-key: cdktf-0.20.8 input-9010f0808e9da6121d1f04b5b7f3ef5f673e8b557f0b628ed5cb41d288fcd4e7 -->

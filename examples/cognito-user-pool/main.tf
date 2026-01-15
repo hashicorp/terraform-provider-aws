@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
@@ -34,7 +34,7 @@ resource "aws_lambda_function" "main" {
   function_name = "terraform-example"
   role          = aws_iam_role.main.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_iam_role" "cidp" {

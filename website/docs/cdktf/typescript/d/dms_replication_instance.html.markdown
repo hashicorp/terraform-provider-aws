@@ -38,8 +38,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replicationInstanceId` - (Required) The replication instance identifier.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `replicationSubnetGroupId` - A subnet group to associate with the replication instance.
 * `vpcSecurityGroupIds` - A set of VPC security group IDs that are used with the replication instance.
 
-<!-- cache-key: cdktf-0.20.1 input-5aba05f196697c06b58151a68778040ed73677e99368add1ba52d699e7516fbc -->
+<!-- cache-key: cdktf-0.20.8 input-aeea64734e0e9b07ba0db84d913499dd4d44fbaaceecc4123c9ef4b990b7ecad -->

@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,21 +13,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNameGroupMembership = "GroupMembership"
-)
-
-// @SDKResource("aws_identitystore_group_membership")
-func ResourceGroupMembership() *schema.Resource {
+// @SDKResource("aws_identitystore_group_membership", name="Group Membership")
+func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,
 		ReadWithoutTimeout:   resourceGroupMembershipRead,
@@ -45,21 +41,18 @@ func ResourceGroupMembership() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
-
 			"identity_store_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 36),
 			},
-
 			"member_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 47),
 			},
-
 			"membership_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -68,148 +61,142 @@ func ResourceGroupMembership() *schema.Resource {
 	}
 }
 
-func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreId := d.Get("identity_store_id").(string)
-
+	identityStoreID := d.Get("identity_store_id").(string)
 	input := &identitystore.CreateGroupMembershipInput{
-		IdentityStoreId: aws.String(identityStoreId),
+		GroupId:         aws.String(d.Get("group_id").(string)),
+		IdentityStoreId: aws.String(identityStoreID),
+		MemberId:        &types.MemberIdMemberUserId{Value: d.Get("member_id").(string)},
 	}
 
-	if v, ok := d.GetOk("group_id"); ok {
-		input.GroupId = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("member_id"); ok {
-		input.MemberId = &types.MemberIdMemberUserId{Value: v.(string)}
-	}
+	output, err := conn.CreateGroupMembership(ctx, input)
 
-	out, err := conn.CreateGroupMembership(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), err)
-	}
-	if out == nil || out.MembershipId == nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), errors.New("empty output"))
+		return sdkdiag.AppendErrorf(diags, "creating IdentityStore Group Membership: %s", err)
 	}
 
-	d.Set("membership_id", out.MembershipId)
-	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.MembershipId)))
+	d.SetId(groupMembershipCreateResourceID(identityStoreID, aws.ToString(output.MembershipId)))
 
 	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
-func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreId, groupMembershipId, err := resourceGroupMembershipParseID(d.Id())
-
+	identityStoreID, membershipID, err := groupMembershipParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := findGroupMembershipByID(ctx, conn, identityStoreId, groupMembershipId)
+	out, err := findGroupMembershipByTwoPartKey(ctx, conn, identityStoreID, membershipID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IdentityStore GroupMembership (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] IdentityStore Group Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IdentityStore Group Membership (%s): %s", d.Id(), err)
+	}
+
+	memberId, err := userIDFromMemberID(out.MemberId)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("group_id", out.GroupId)
 	d.Set("identity_store_id", out.IdentityStoreId)
-
-	memberId, err := getMemberIdMemberUserId(out.MemberId)
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
-	}
-
 	d.Set("member_id", memberId)
 	d.Set("membership_id", out.MembershipId)
 
 	return diags
 }
 
-func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	log.Printf("[INFO] Deleting IdentityStore GroupMembership %s", d.Id())
-
-	input := &identitystore.DeleteGroupMembershipInput{
-		MembershipId:    aws.String(d.Get("membership_id").(string)),
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
+	identityStoreID, membershipID, err := groupMembershipParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err := conn.DeleteGroupMembership(ctx, input)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	log.Printf("[INFO] Deleting IdentityStore Group Membership: %s", d.Id())
+	_, err = conn.DeleteGroupMembership(ctx, &identitystore.DeleteGroupMembershipInput{
+		IdentityStoreId: aws.String(identityStoreID),
+		MembershipId:    aws.String(membershipID),
+	})
 
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionDeleting, ResNameGroupMembership, d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IdentityStore Group Membership (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func getMemberIdMemberUserId(memberId types.MemberId) (*string, error) {
-	switch v := memberId.(type) {
+func userIDFromMemberID(memberID types.MemberId) (*string, error) {
+	switch v := memberID.(type) {
 	case *types.MemberIdMemberUserId:
-		return &v.Value, nil
-
-	case *types.UnknownUnionMember:
-		return nil, errors.New("expected a user id, got unknown type id")
-
+		return aws.String(v.Value), nil
 	default:
-		return nil, errors.New("expected a user id, got unknown type id")
+		return nil, fmt.Errorf("unsupported group member type: %T", v)
 	}
 }
 
-func resourceGroupMembershipParseID(id string) (identityStoreId, groupMembershipId string, err error) {
+const groupMembershipResourceIDSeparator = "/"
+
+func groupMembershipCreateResourceID(identityStoreID, membershipID string) string {
+	parts := []string{identityStoreID, membershipID}
+	id := strings.Join(parts, groupMembershipResourceIDSeparator)
+
+	return id
+}
+
+func groupMembershipParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = errors.New("expected a resource id in the form: identity-store-id/group-membership-id")
-		return
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected identity-store-id%[2]sgroup-membership-id", id, groupMembershipResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
 }
 
-func findGroupMembershipByID(ctx context.Context, conn *identitystore.Client, identityStoreId, groupMembershipId string) (*identitystore.DescribeGroupMembershipOutput, error) {
-	in := &identitystore.DescribeGroupMembershipInput{
-		IdentityStoreId: aws.String(identityStoreId),
-		MembershipId:    aws.String(groupMembershipId),
+func findGroupMembershipByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, membershipID string) (*identitystore.DescribeGroupMembershipOutput, error) {
+	input := &identitystore.DescribeGroupMembershipInput{
+		IdentityStoreId: aws.String(identityStoreID),
+		MembershipId:    aws.String(membershipID),
 	}
 
-	out, err := conn.DescribeGroupMembership(ctx, in)
+	return findGroupMembership(ctx, conn, input)
+}
 
-	if err != nil {
-		var e *types.ResourceNotFoundException
-		if errors.As(err, &e) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		} else {
-			return nil, err
+func findGroupMembership(ctx context.Context, conn *identitystore.Client, input *identitystore.DescribeGroupMembershipInput) (*identitystore.DescribeGroupMembershipOutput, error) {
+	output, err := conn.DescribeGroupMembership(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	if out == nil || out.MembershipId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if err != nil {
+		return nil, err
 	}
 
-	return out, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }

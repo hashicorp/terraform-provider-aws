@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeartifact
@@ -52,7 +52,7 @@ func dataSourceRepositoryEndpoint() *schema.Resource {
 	}
 }
 
-func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -61,7 +61,7 @@ func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)
 	} else {
-		domainOwner = meta.(*conns.AWSClient).AccountID
+		domainOwner = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	format := types.PackageFormat(d.Get(names.AttrFormat).(string))
 	repositoryName := d.Get("repository").(string)

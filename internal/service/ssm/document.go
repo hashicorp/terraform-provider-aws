@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -9,17 +9,17 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,11 +27,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,16 +40,14 @@ const (
 
 // @SDKResource("aws_ssm_document", name="Document")
 // @Tags(identifierAttribute="id", resourceType="Document")
+// @IdentityAttribute("name")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,
 		ReadWithoutTimeout:   resourceDocumentRead,
 		UpdateWithoutTimeout: resourceDocumentUpdate,
 		DeleteWithoutTimeout: resourceDocumentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -209,12 +206,11 @@ func resourceDocument() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
 					// Validates permissions keys, if set, to be type and account_ids
 					// since ValidateFunc validates only the value not the key.
-					tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+					tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 					if v, ok := tfMap[names.AttrType]; ok {
 						if awstypes.DocumentPermissionType(v) != awstypes.DocumentPermissionTypeShare {
@@ -253,7 +249,7 @@ func resourceDocument() *schema.Resource {
 	}
 }
 
-func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -266,8 +262,8 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
-		input.Attachments = expandAttachmentsSources(v.([]interface{}))
+	if v, ok := d.GetOk("attachments_source"); ok && len(v.([]any)) > 0 {
+		input.Attachments = expandAttachmentsSources(v.([]any))
 	}
 
 	if v, ok := d.GetOk("target_type"); ok {
@@ -286,13 +282,11 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(output.DocumentDescription.Name))
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
-		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToAdd: chunk,
 					Name:            aws.String(d.Id()),
@@ -315,13 +309,13 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDocumentRead(ctx, d, meta)...)
 }
 
-func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	doc, err := findDocumentByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Document %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -331,24 +325,18 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "document/" + aws.ToString(doc.Name),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	documentType, name := doc.DocumentType, aws.ToString(doc.Name)
+	d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set(names.AttrDescription, doc.Description)
 	d.Set("document_format", doc.DocumentFormat)
-	d.Set("document_type", doc.DocumentType)
+	d.Set("document_type", documentType)
 	d.Set("document_version", doc.DocumentVersion)
 	d.Set("hash", doc.Hash)
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
-	d.Set(names.AttrName, doc.Name)
+	d.Set(names.AttrName, name)
 	d.Set(names.AttrOwner, doc.Owner)
 	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
@@ -388,7 +376,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if accountsIDs := output.AccountIds; len(accountsIDs) > 0 {
-			d.Set(names.AttrPermissions, map[string]interface{}{
+			d.Set(names.AttrPermissions, map[string]any{
 				"account_ids":  strings.Join(accountsIDs, ","),
 				names.AttrType: awstypes.DocumentPermissionTypeShare,
 			})
@@ -402,15 +390,15 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	if d.HasChange(names.AttrPermissions) {
-		var oldAccountIDs, newAccountIDs itypes.Set[string]
+		var oldAccountIDs, newAccountIDs inttypes.Set[string]
 		o, n := d.GetChange(names.AttrPermissions)
 
-		if v := o.(map[string]interface{}); len(v) > 0 {
+		if v := o.(map[string]any); len(v) > 0 {
 			tfMap := flex.ExpandStringValueMap(v)
 
 			if v, ok := tfMap["account_ids"]; ok && v != "" {
@@ -418,7 +406,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v := n.(map[string]interface{}); len(v) > 0 {
+		if v := n.(map[string]any); len(v) > 0 {
 			tfMap := flex.ExpandStringValueMap(v)
 
 			if v, ok := tfMap["account_ids"]; ok && v != "" {
@@ -426,7 +414,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(newAccountIDs.Difference(oldAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToAdd: chunk,
 				Name:            aws.String(d.Id()),
@@ -440,7 +428,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
+		for chunk := range slices.Chunk(oldAccountIDs.Difference(newAccountIDs), documentPermissionsBatchLimit) {
 			input := &ssm.ModifyDocumentPermissionInput{
 				AccountIdsToRemove: chunk,
 				Name:               aws.String(d.Id()),
@@ -467,8 +455,8 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				Name:            aws.String(d.Id()),
 			}
 
-			if v, ok := d.GetOk("attachments_source"); ok && len(v.([]interface{})) > 0 {
-				input.Attachments = expandAttachmentsSources(v.([]interface{}))
+			if v, ok := d.GetOk("attachments_source"); ok && len(v.([]any)) > 0 {
+				input.Attachments = expandAttachmentsSources(v.([]any))
 			}
 
 			if v, ok := d.GetOk("target_type"); ok {
@@ -509,17 +497,15 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceDocumentRead(ctx, d, meta)...)
 }
 
-func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
-		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]any)) > 0 {
+		tfMap := flex.ExpandStringValueMap(v.(map[string]any))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
-			chunks := tfslices.Chunks(strings.Split(v, ","), documentPermissionsBatchLimit)
-
-			for _, chunk := range chunks {
+			for chunk := range slices.Chunk(strings.Split(v, ","), documentPermissionsBatchLimit) {
 				input := &ssm.ModifyDocumentPermissionInput{
 					AccountIdsToRemove: chunk,
 					Name:               aws.String(d.Id()),
@@ -563,7 +549,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	output, err := conn.DescribeDocument(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidDocument](err, "does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -574,17 +560,17 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	}
 
 	if output == nil || output.Document == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Document, nil
 }
 
-func statusDocument(ctx context.Context, conn *ssm.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDocument(ctx context.Context, conn *ssm.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDocumentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -600,7 +586,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusCreating, awstypes.DocumentStatusUpdating),
 		Target:  enum.Slice(awstypes.DocumentStatusActive),
 		Refresh: statusDocument(ctx, conn, name),
@@ -610,7 +596,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -622,7 +608,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DocumentStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDocument(ctx, conn, name),
@@ -632,7 +618,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -640,7 +626,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	return nil, err
 }
 
-func expandAttachmentsSource(tfMap map[string]interface{}) *awstypes.AttachmentsSource {
+func expandAttachmentsSource(tfMap map[string]any) *awstypes.AttachmentsSource {
 	if tfMap == nil {
 		return nil
 	}
@@ -655,14 +641,14 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *awstypes.Attachments
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
 }
 
-func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource {
+func expandAttachmentsSources(tfList []any) []awstypes.AttachmentsSource {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -670,7 +656,7 @@ func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource
 	var apiObjects []awstypes.AttachmentsSource
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -688,12 +674,12 @@ func expandAttachmentsSources(tfList []interface{}) []awstypes.AttachmentsSource
 	return apiObjects
 }
 
-func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]interface{} {
+func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: apiObject.Type,
 	}
 
@@ -712,16 +698,28 @@ func flattenDocumentParameter(apiObject *awstypes.DocumentParameter) map[string]
 	return tfMap
 }
 
-func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interface{} {
+func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenDocumentParameter(&apiObject))
 	}
 
 	return tfList
+}
+
+func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
+	var resource string
+	switch documentType {
+	case awstypes.DocumentTypeAutomation:
+		resource = "automation-definition/" + name
+	default:
+		resource = "document/" + name
+	}
+
+	return c.RegionalARN(ctx, "ssm", resource)
 }

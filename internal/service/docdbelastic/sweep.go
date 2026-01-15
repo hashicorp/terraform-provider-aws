@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdbelastic
@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -25,13 +26,13 @@ func RegisterSweepers() {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping DocDB Elastic Cluster sweep for region: %s", region)
 		return nil
 	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.DocDBElasticClient(ctx)
 	input := &docdbelastic.ListClustersInput{}
@@ -53,7 +54,7 @@ func sweepClusters(region string) error {
 			arn := aws.ToString(cluster.ClusterArn)
 
 			log.Printf("[INFO] Deleting DocDB Elastic Cluster: %s", aws.ToString(cluster.ClusterName))
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCluster, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newClusterResource, client,
 				framework.NewAttribute(names.AttrID, arn),
 			))
 		}

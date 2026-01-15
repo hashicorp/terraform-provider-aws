@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -10,13 +10,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,20 +24,20 @@ func TestAccAPIGatewayV2RouteResponse_basic(t *testing.T) {
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
 	routeResourceName := "aws_apigatewayv2_route.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(ctx, t, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_response_key", "$default"),
 				),
@@ -59,19 +57,19 @@ func TestAccAPIGatewayV2RouteResponse_disappears(t *testing.T) {
 	var apiId, routeId string
 	var v apigatewayv2.GetRouteResponseOutput
 	resourceName := "aws_apigatewayv2_route_response.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceRouteResponse(), resourceName),
+					testAccCheckRouteResponseExists(ctx, t, resourceName, &apiId, &routeId, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceRouteResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,20 +85,20 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 	modelResourceName := "aws_apigatewayv2_model.test"
 	routeResourceName := "aws_apigatewayv2_route.test"
 	// Model name must be alphanumeric.
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "")
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteResponseConfig_model(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteResponseExists(ctx, resourceName, &apiId, &routeId, &v),
+					testAccCheckRouteResponseExists(ctx, t, resourceName, &apiId, &routeId, &v),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "response_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "route_id", routeResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "route_response_key", "$default"),
@@ -116,9 +114,9 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRouteResponseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_route_response" {
@@ -127,7 +125,7 @@ func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfapigatewayv2.FindRouteResponseByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes["route_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -142,14 +140,14 @@ func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckRouteResponseExists(ctx context.Context, n string, apiID, routeID *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
+func testAccCheckRouteResponseExists(ctx context.Context, t *testing.T, n string, apiID, routeID *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		output, err := tfapigatewayv2.FindRouteResponseByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes["route_id"], rs.Primary.ID)
 

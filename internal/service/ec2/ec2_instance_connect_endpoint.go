@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -26,8 +26,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,14 +45,9 @@ func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithC
 }
 
 type instanceConnectEndpointResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[instanceConnectEndpointResourceModel]
+	framework.ResourceWithModel[instanceConnectEndpointResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (r *instanceConnectEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ec2_instance_connect_endpoint"
 }
 
 func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -82,7 +78,16 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
+			names.AttrIPAddressType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"network_interface_ids": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.List{
@@ -104,6 +109,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
@@ -144,8 +150,8 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateInstanceConnectEndpointInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, &data, input)...)
+	input := ec2.CreateInstanceConnectEndpointInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, &data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -154,7 +160,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	input.ClientToken = aws.String(id.UniqueId())
 	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
-	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
+	output, err := conn.CreateInstanceConnectEndpoint(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating EC2 Instance Connect Endpoint", err.Error())
@@ -162,8 +168,8 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 		return
 	}
 
-	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
-	id := data.InstanceConnectEndpointId.ValueString()
+	data.InstanceConnectEndpointID = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
+	id := data.InstanceConnectEndpointID.ValueString()
 
 	instanceConnectEndpoint, err := waitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
 
@@ -171,6 +177,11 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
 	}
 
 	// Set values for unknowns.
@@ -191,10 +202,10 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 
 	conn := r.Meta().EC2Client(ctx)
 
-	id := data.InstanceConnectEndpointId.ValueString()
+	id := data.InstanceConnectEndpointID.ValueString()
 	instanceConnectEndpoint, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -205,6 +216,11 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Instance Connect Endpoint (%s)", id), err.Error())
 
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
@@ -226,15 +242,16 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 
 	conn := r.Meta().EC2Client(ctx)
 
-	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &ec2.DeleteInstanceConnectEndpointInput{
-		InstanceConnectEndpointId: fwflex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
-	})
+	input := ec2.DeleteInstanceConnectEndpointInput{
+		InstanceConnectEndpointId: fwflex.StringFromFramework(ctx, data.InstanceConnectEndpointID),
+	}
+	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 		return
 	}
 
-	id := data.InstanceConnectEndpointId.ValueString()
+	id := data.InstanceConnectEndpointID.ValueString()
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 Instance Connect Endpoint (%s)", id), err.Error())
@@ -249,24 +266,22 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 	}
 }
 
-func (r *instanceConnectEndpointResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.
 type instanceConnectEndpointResourceModel struct {
-	InstanceConnectEndpointArn types.String   `tfsdk:"arn"`
-	AvailabilityZone           types.String   `tfsdk:"availability_zone"`
-	DnsName                    types.String   `tfsdk:"dns_name"`
-	FipsDnsName                types.String   `tfsdk:"fips_dns_name"`
-	InstanceConnectEndpointId  types.String   `tfsdk:"id"`
-	NetworkInterfaceIds        types.List     `tfsdk:"network_interface_ids"`
-	OwnerId                    types.String   `tfsdk:"owner_id"`
-	PreserveClientIp           types.Bool     `tfsdk:"preserve_client_ip"`
-	SecurityGroupIds           types.Set      `tfsdk:"security_group_ids"`
-	SubnetId                   types.String   `tfsdk:"subnet_id"`
-	Tags                       tftags.Map     `tfsdk:"tags"`
-	TagsAll                    tftags.Map     `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-	VpcId                      types.String   `tfsdk:"vpc_id"`
+	framework.WithRegionModel
+	InstanceConnectEndpointARN types.String                               `tfsdk:"arn"`
+	AvailabilityZone           types.String                               `tfsdk:"availability_zone"`
+	DNSName                    types.String                               `tfsdk:"dns_name"`
+	FipsDnsName                types.String                               `tfsdk:"fips_dns_name"`
+	InstanceConnectEndpointID  types.String                               `tfsdk:"id"`
+	IPAddressType              fwtypes.StringEnum[awstypes.IpAddressType] `tfsdk:"ip_address_type"`
+	NetworkInterfaceIDs        fwtypes.ListOfString                       `tfsdk:"network_interface_ids"`
+	OwnerID                    types.String                               `tfsdk:"owner_id"`
+	PreserveClientIP           types.Bool                                 `tfsdk:"preserve_client_ip"`
+	SecurityGroupIDs           fwtypes.SetOfString                        `tfsdk:"security_group_ids"`
+	SubnetId                   types.String                               `tfsdk:"subnet_id"`
+	Tags                       tftags.Map                                 `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                             `tfsdk:"timeouts"`
+	VpcId                      types.String                               `tfsdk:"vpc_id"`
 }

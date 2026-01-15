@@ -1,13 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,23 +18,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-func newResourceVPCEndpoint(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := resourceVpcEndpoint{}
+// @FrameworkResource("aws_opensearchserverless_vpc_endpoint", name="VPC Endpoint")
+func newVPCEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := vpcEndpointResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -44,60 +47,57 @@ func newResourceVPCEndpoint(_ context.Context) (resource.ResourceWithConfigure, 
 	return &r, nil
 }
 
-type resourceVpcEndpointData struct {
-	ID               types.String   `tfsdk:"id"`
-	Name             types.String   `tfsdk:"name"`
-	SecurityGroupIds types.Set      `tfsdk:"security_group_ids"`
-	SubnetIds        types.Set      `tfsdk:"subnet_ids"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	VpcId            types.String   `tfsdk:"vpc_id"`
-}
-
 const (
-	ResNameVPCEndpoint = "VPC Endpoint"
+	resNameVPCEndpoint = "VPC Endpoint"
 )
 
-type resourceVpcEndpoint struct {
-	framework.ResourceWithConfigure
+type vpcEndpointResource struct {
+	framework.ResourceWithModel[vpcEndpointResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceVpcEndpoint) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_opensearchserverless_vpc_endpoint"
-}
-
-func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *vpcEndpointResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
-				Required: true,
+				Description: "Name of the interface endpoint.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrSecurityGroupIDs: schema.SetAttribute{
+				Description: "One or more security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint. Up to 5 security groups can be provided.",
 				ElementType: types.StringType,
+				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				Computed:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 5),
 				},
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrSubnetIDs: schema.SetAttribute{
+				Description: "One or more subnet IDs from which you'll access OpenSearch Serverless. Up to 6 subnets can be provided.",
 				ElementType: types.StringType,
+				CustomType:  fwtypes.SetOfStringType,
 				Required:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 6),
 				},
 			},
 			names.AttrVPCID: schema.StringAttribute{
-				Required: true,
+				Description: "ID of the VPC from which you'll access OpenSearch Serverless.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -111,74 +111,79 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceVpcEndpoint) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceVpcEndpointData
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
+func (r *vpcEndpointResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data vpcEndpointResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().OpenSearchServerlessClient(ctx)
 
-	in := &opensearchserverless.CreateVpcEndpointInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Name:        plan.Name.ValueStringPointer(),
-		SubnetIds:   flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
-		VpcId:       plan.VpcId.ValueStringPointer(),
+	input := &opensearchserverless.CreateVpcEndpointInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.SecurityGroupIds.IsNull() && !plan.SecurityGroupIds.IsUnknown() {
-		in.SecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds)
-	}
+	input.ClientToken = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateVpcEndpoint(ctx, in)
+	output, err := conn.CreateVpcEndpoint(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, ResNameVPCEndpoint, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionCreating, resNameVPCEndpoint, data.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	if _, err := waitVPCEndpointCreated(ctx, conn, *out.CreateVpcEndpointDetail.Id, createTimeout); err != nil {
+	data.ID = fwflex.StringToFramework(ctx, output.CreateVpcEndpointDetail.Id)
+
+	if _, err := waitVPCEndpointCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, ResNameVPCEndpoint, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForCreation, resNameVPCEndpoint, data.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
-	// The create operation only returns the Id and Name so retrieve the newly
-	// created VPC Endpoint so we can store the possibly computed
-	// security_group_ids in state
-	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, aws.ToString(out.CreateVpcEndpointDetail.Id))
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionChecking, ResNameVPCEndpoint, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state := plan
-	state.refreshFromOutput(ctx, vpcEndpoint)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchServerlessClient(ctx)
-
-	var state resourceVpcEndpointData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+func (r *vpcEndpointResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data vpcEndpointResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findVPCEndpointByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
+
+	output, err := findVPCEndpointByID(ctx, conn, data.ID.ValueString())
+
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -186,36 +191,62 @@ func (r *resourceVpcEndpoint) Read(ctx context.Context, req resource.ReadRequest
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameVPCEndpoint, state.ID.ValueString(), err),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.refreshFromOutput(ctx, out)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchServerlessClient(ctx)
-
-	update := false
-
-	var plan, state resourceVpcEndpointData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &opensearchserverless.UpdateVpcEndpointInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Id:          plan.ID.ValueStringPointer(),
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), data.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, data.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	if !plan.SecurityGroupIds.Equal(state.SecurityGroupIds) {
-		newSGs := flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds)
-		oldSGs := flex.ExpandFrameworkStringValueSet(ctx, state.SecurityGroupIds)
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &data.SecurityGroupIDs)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *vpcEndpointResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var new, old vpcEndpointResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
+
+	input := &opensearchserverless.UpdateVpcEndpointInput{
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Id:          fwflex.StringFromFramework(ctx, new.ID),
+	}
+
+	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
+		newSGs := fwflex.ExpandFrameworkStringValueSet(ctx, new.SecurityGroupIDs)
+		oldSGs := fwflex.ExpandFrameworkStringValueSet(ctx, old.SecurityGroupIDs)
 
 		if add := newSGs.Difference(oldSGs); len(add) > 0 {
 			input.AddSecurityGroupIds = add
@@ -224,169 +255,152 @@ func (r *resourceVpcEndpoint) Update(ctx context.Context, req resource.UpdateReq
 		if del := oldSGs.Difference(newSGs); len(del) > 0 {
 			input.RemoveSecurityGroupIds = del
 		}
-
-		update = true
 	}
 
-	if !plan.SubnetIds.Equal(state.SubnetIds) {
-		old := flex.ExpandFrameworkStringValueSet(ctx, state.SubnetIds)
-		new := flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds)
+	if !new.SubnetIDs.Equal(old.SubnetIDs) {
+		oldSubnets := fwflex.ExpandFrameworkStringValueSet(ctx, old.SubnetIDs)
+		newSubnets := fwflex.ExpandFrameworkStringValueSet(ctx, new.SubnetIDs)
 
-		if add := new.Difference(old); len(add) > 0 {
+		if add := newSubnets.Difference(oldSubnets); len(add) > 0 {
 			input.AddSubnetIds = add
 		}
 
-		if del := old.Difference(new); len(del) > 0 {
+		if del := oldSubnets.Difference(newSubnets); len(del) > 0 {
 			input.RemoveSubnetIds = del
 		}
-
-		update = true
 	}
 
-	if !update {
-		return
-	}
+	_, err := conn.UpdateVpcEndpoint(ctx, input)
 
-	log.Printf("[DEBUG] Updating OpenSearchServerless VPC Endpoint (%s): %#v", plan.ID.ValueString(), input)
-	out, err := conn.UpdateVpcEndpoint(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("updating VPC Endpoint (%s)", plan.ID.ValueString()), err.Error())
-		return
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	if _, err := waitVPCEndpointUpdated(ctx, conn, *out.UpdateVpcEndpointDetail.Id, updateTimeout); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, ResNameVPCEndpoint, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, new.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
-	// The update operation only returns security_group_ids if those were
-	// changed so retrieve the updated VPC Endpoint so we can store the
-	// actual security_group_ids in state
-	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, *out.UpdateVpcEndpointDetail.Id)
-	if err != nil {
+	if _, err := waitVPCEndpointUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionChecking, ResNameVPCEndpoint, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForUpdate, resNameVPCEndpoint, new.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.refreshFromOutput(ctx, vpcEndpoint)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
+	// Security Group IDs are not returned and must be retrieved from the EC2 API.
+	vpce, err := tfec2.FindVPCEndpointByID(ctx, r.Meta().EC2Client(ctx), new.ID.ValueString())
 
-func (r *resourceVpcEndpoint) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().OpenSearchServerlessClient(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, resNameVPCEndpoint, new.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	var state resourceVpcEndpointData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var securityGroupIDs []*string
+	for _, group := range vpce.Groups {
+		securityGroupIDs = append(securityGroupIDs, group.GroupId)
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, securityGroupIDs, &new.SecurityGroupIDs)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+}
+
+func (r *vpcEndpointResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data vpcEndpointResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().OpenSearchServerlessClient(ctx)
+
 	_, err := conn.DeleteVpcEndpoint(ctx, &opensearchserverless.DeleteVpcEndpointInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Id:          state.ID.ValueStringPointer(),
+		ClientToken: aws.String(sdkid.UniqueId()),
+		Id:          fwflex.StringFromFramework(ctx, data.ID),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, resNameVPCEndpoint, data.Name.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	if _, err := waitVPCEndpointDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForDeletion, resNameVPCEndpoint, data.Name.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+}
+
+type vpcEndpointResourceModel struct {
+	framework.WithRegionModel
+	ID               types.String        `tfsdk:"id"`
+	Name             types.String        `tfsdk:"name"`
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetOfString `tfsdk:"subnet_ids"`
+	Timeouts         timeouts.Value      `tfsdk:"timeouts"`
+	VPCID            types.String        `tfsdk:"vpc_id"`
+}
+
+func findVPCEndpointByID(ctx context.Context, conn *opensearchserverless.Client, id string) (*awstypes.VpcEndpointDetail, error) {
+	input := &opensearchserverless.BatchGetVpcEndpointInput{
+		Ids: []string{id},
+	}
+
+	return findVPCEndpoint(ctx, conn, input)
+}
+
+func findVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.BatchGetVpcEndpointInput) (*awstypes.VpcEndpointDetail, error) {
+	output, err := findVPCEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpoints(ctx context.Context, conn *opensearchserverless.Client, input *opensearchserverless.BatchGetVpcEndpointInput) ([]awstypes.VpcEndpointDetail, error) {
+	output, err := conn.BatchGetVpcEndpoint(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionDeleting, ResNameVPCEndpoint, state.Name.String(), nil),
-			err.Error(),
-		)
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	if _, err := waitVPCEndpointDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionWaitingForDeletion, ResNameVPCEndpoint, state.Name.String(), nil),
-			err.Error(),
-		)
-		return
+	if err != nil {
+		return nil, err
 	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.VpcEndpointDetails, nil
 }
 
-func (r *resourceVpcEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
+func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPCEndpointByID(ctx, conn, id)
 
-// refreshFromOutput writes state data from an AWS response object
-func (rd *resourceVpcEndpointData) refreshFromOutput(ctx context.Context, out *awstypes.VpcEndpointDetail) {
-	if out == nil {
-		return
-	}
-
-	rd.ID = flex.StringToFramework(ctx, out.Id)
-	rd.Name = flex.StringToFramework(ctx, out.Name)
-	rd.SecurityGroupIds = flex.FlattenFrameworkStringValueSet(ctx, out.SecurityGroupIds)
-	rd.SubnetIds = flex.FlattenFrameworkStringValueSet(ctx, out.SubnetIds)
-	rd.VpcId = flex.StringToFramework(ctx, out.VpcId)
-}
-
-func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
-		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
-		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
-		Refresh:                   statusVPCEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
-		Target:  []string{},
-		Refresh: statusVPCEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findVPCEndpointByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -394,6 +408,73 @@ func statusVPCEndpoint(ctx context.Context, conn *opensearchserverless.Client, i
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
+}
+
+func waitVPCEndpointCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
+		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
+		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
+		if output.Status == awstypes.VpcEndpointStatusFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointUpdated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcEndpointStatusPending),
+		Target:                    enum.Slice(awstypes.VpcEndpointStatusActive),
+		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
+		if output.Status == awstypes.VpcEndpointStatusFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.VpcEndpointDetail, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcEndpointStatusDeleting, awstypes.VpcEndpointStatusActive),
+		Target:                    []string{},
+		Refresh:                   statusVPCEndpoint(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 5,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcEndpointDetail); ok {
+		if output.Status == awstypes.VpcEndpointStatusFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }

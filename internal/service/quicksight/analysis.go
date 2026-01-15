@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -15,23 +15,25 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_quicksight_analysis", name="Analysis")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Analysis")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalysisCreate,
@@ -40,7 +42,7 @@ func resourceAnalysis() *schema.Resource {
 		DeleteWithoutTimeout: resourceAnalysisDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("recovery_window_in_days", 30) //nolint:mnd // 30days is the default value (see below)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -63,13 +65,7 @@ func resourceAnalysis() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
 				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -112,16 +108,14 @@ func resourceAnalysis() *schema.Resource {
 				},
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -134,20 +128,20 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("definition"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
+	if v, ok := d.GetOk("definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]any))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrPermissions); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("source_entity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
+	if v, ok := d.GetOk("source_entity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]any))
 	}
 
 	if v, ok := d.Get("theme_arn").(string); ok && v != "" {
@@ -169,7 +163,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalysisRead(ctx, d, meta)...)
 }
 
-func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -180,7 +174,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	analysis, err := findAnalysisByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Analysis (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -222,7 +216,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -239,13 +233,13 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("source_entity"); ok {
-			input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]interface{}))
+			input.SourceEntity = quicksightschema.ExpandAnalysisSourceEntity(v.([]any))
 		} else {
-			input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
+			input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]any))
 		}
 
 		if v, ok := d.Get("theme_arn").(string); ok && v != "" {
@@ -291,7 +285,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceAnalysisRead(ctx, d, meta)...)
 }
 
-func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -357,7 +351,7 @@ func findAnalysisByTwoPartKey(ctx context.Context, conn *quicksight.Client, awsA
 	}
 
 	if status := output.Status; status == awstypes.ResourceStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -370,7 +364,7 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	output, err := conn.DescribeAnalysis(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -381,7 +375,7 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	}
 
 	if output == nil || output.Analysis == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analysis, nil
@@ -400,7 +394,7 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeAnalysisDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -411,7 +405,7 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil || output.Definition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Definition, nil
@@ -430,7 +424,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	output, err := conn.DescribeAnalysisPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -441,17 +435,17 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
 }
 
-func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAnalysisByTwoPartKey(ctx, conn, awsAccountID, analysisID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -464,7 +458,7 @@ func statusAnalysis(ctx context.Context, conn *quicksight.Client, awsAccountID, 
 }
 
 func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
@@ -475,7 +469,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
@@ -485,7 +479,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 }
 
 func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, analysisID string, timeout time.Duration) (*awstypes.Analysis, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress, awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful, awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusAnalysis(ctx, conn, awsAccountID, analysisID),
@@ -496,7 +490,7 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err

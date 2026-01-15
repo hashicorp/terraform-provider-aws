@@ -193,8 +193,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, One of `acl` or `accessControlPolicy` is required) Canned ACL to apply to the bucket.
-* `accessControlPolicy` - (Optional, One of `accessControlPolicy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `acl` - (Optional, either `accessControlPolicy` or `acl` is required) Specifies the Canned ACL to apply to the bucket. Valid values: `private`, `public-read`, `public-read-write`, `aws-exec-read`, `authenticated-read`, `bucket-owner-read`, `bucket-owner-full-control`, `log-delivery-write`. Full details are available on the [AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl).
+* `accessControlPolicy` - (Optional, either `accessControlPolicy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expectedBucketOwner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
@@ -235,6 +236,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The `bucket`, `expectedBucketOwner` (if configured), and `acl` (if configured) separated by commas (`,`).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_acl.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `acl` (String) Canned ACL to apply to the bucket.
+* `expectedBucketOwner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expectedBucketOwner`, and/or `acl`, depending on your situation. For example:
 
@@ -358,4 +387,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.20.1 input-a74cfed677016b6dee67ab291665d4c69ce89eec54230b7148b7e9fbd18e1eea -->
+<!-- cache-key: cdktf-0.20.8 input-35b35d3883e6c8c2e971479ebfbbffa2dce4657d6c400bc995c57dbb78f88ca6 -->

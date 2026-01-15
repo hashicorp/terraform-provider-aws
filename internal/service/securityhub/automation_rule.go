@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -21,33 +21,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Automation Rule")
+// @FrameworkResource("aws_securityhub_automation_rule", name="Automation Rule")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }
 
 type automationRuleResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
-}
-
-func (r *automationRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securityhub_automation_rule"
+	framework.ResourceWithModel[automationRuleResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	const (
+		defaultFilterSchemaMaxSize = 20
+	)
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -198,44 +202,44 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx),
-						"aws_account_name":                   stringFilterSchemaFramework(ctx),
-						"company_name":                       stringFilterSchemaFramework(ctx),
-						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx),
-						"compliance_security_control_id":     stringFilterSchemaFramework(ctx),
-						"compliance_status":                  stringFilterSchemaFramework(ctx),
-						"confidence":                         numberFilterSchemaFramework(ctx),
-						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx),
-						"criticality":                        numberFilterSchemaFramework(ctx),
-						names.AttrDescription:                stringFilterSchemaFramework(ctx),
-						"first_observed_at":                  dateFilterSchemaFramework(ctx),
-						"generator_id":                       stringFilterSchemaFramework(ctx),
-						names.AttrID:                         stringFilterSchemaFramework(ctx),
-						"last_observed_at":                   dateFilterSchemaFramework(ctx),
-						"note_text":                          stringFilterSchemaFramework(ctx),
-						"note_updated_at":                    dateFilterSchemaFramework(ctx),
-						"note_updated_by":                    stringFilterSchemaFramework(ctx),
-						"product_arn":                        stringFilterSchemaFramework(ctx),
-						"product_name":                       stringFilterSchemaFramework(ctx),
-						"record_state":                       stringFilterSchemaFramework(ctx),
-						"related_findings_id":                stringFilterSchemaFramework(ctx),
-						"related_findings_product_arn":       stringFilterSchemaFramework(ctx),
-						"resource_application_arn":           stringFilterSchemaFramework(ctx),
-						"resource_application_name":          stringFilterSchemaFramework(ctx),
-						"resource_details_other":             mapFilterSchemaFramework(ctx),
-						names.AttrResourceID:                 stringFilterSchemaFramework(ctx),
-						"resource_partition":                 stringFilterSchemaFramework(ctx),
-						"resource_region":                    stringFilterSchemaFramework(ctx),
-						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
-						names.AttrResourceType:               stringFilterSchemaFramework(ctx),
-						"severity_label":                     stringFilterSchemaFramework(ctx),
-						"source_url":                         stringFilterSchemaFramework(ctx),
-						"title":                              stringFilterSchemaFramework(ctx),
-						names.AttrType:                       stringFilterSchemaFramework(ctx),
-						"updated_at":                         dateFilterSchemaFramework(ctx),
-						"user_defined_fields":                mapFilterSchemaFramework(ctx),
-						"verification_state":                 stringFilterSchemaFramework(ctx),
-						"workflow_status":                    stringFilterSchemaFramework(ctx),
+						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
+						"aws_account_name":                   stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"company_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_security_control_id":     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"compliance_status":                  stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"confidence":                         numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrCreatedAt:                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"criticality":                        numberFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrDescription:                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"first_observed_at":                  dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"generator_id":                       stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
+						names.AttrID:                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"last_observed_at":                   dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"note_text":                          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"note_updated_at":                    dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"note_updated_by":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"product_arn":                        stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"product_name":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"record_state":                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"related_findings_id":                stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"related_findings_product_arn":       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_application_arn":           stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_application_name":          stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_details_other":             mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrResourceID:                 stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
+						"resource_partition":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"resource_region":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrResourceTags:               mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						names.AttrResourceType:               stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"severity_label":                     stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"source_url":                         stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"title":                              stringFilterSchemaFramework(ctx, 100), //nolint:mnd // 100 is the maximum number of items
+						names.AttrType:                       stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"updated_at":                         dateFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"user_defined_fields":                mapFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"verification_state":                 stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
+						"workflow_status":                    stringFilterSchemaFramework(ctx, defaultFilterSchemaMaxSize),
 					},
 				},
 			},
@@ -243,11 +247,11 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 	}
 }
 
-func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func dateFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[dateFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -283,11 +287,11 @@ func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func mapFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func mapFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[mapFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -306,11 +310,11 @@ func mapFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func numberFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func numberFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[numberFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -334,11 +338,11 @@ func numberFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	}
 }
 
-func stringFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
+func stringFilterSchemaFramework(ctx context.Context, maxSize int) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[stringFilterModel](ctx),
 		Validators: []validator.Set{
-			setvalidator.SizeAtMost(20),
+			setvalidator.SizeAtMost(maxSize),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
@@ -415,7 +419,7 @@ func (r *automationRuleResource) Read(ctx context.Context, request resource.Read
 	ruleARN := data.ID.ValueString()
 	automationRule, err := findAutomationRuleByARN(ctx, conn, ruleARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -503,10 +507,6 @@ func (r *automationRuleResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *automationRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findAutomationRuleByARN(ctx context.Context, conn *securityhub.Client, arn string) (*awstypes.AutomationRulesConfig, error) {
 	input := &securityhub.BatchGetAutomationRulesInput{
 		AutomationRulesArns: []string{arn},
@@ -529,7 +529,7 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 	output, err := conn.BatchGetAutomationRules(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -540,13 +540,14 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Rules, nil
 }
 
 type automationRuleResourceModel struct {
+	framework.WithRegionModel
 	Actions     fwtypes.SetNestedObjectValueOf[automationRulesActionModel]          `tfsdk:"actions"`
 	Criteria    fwtypes.ListNestedObjectValueOf[automationRulesFindingFiltersModel] `tfsdk:"criteria"`
 	Description types.String                                                        `tfsdk:"description"`

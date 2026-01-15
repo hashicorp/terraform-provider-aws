@@ -25,9 +25,15 @@ import { Token, TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { BcmdataexportsExport } from "./.gen/providers/aws/bcmdataexports-export";
+import { DataAwsCallerIdentity } from "./.gen/providers/aws/data-aws-caller-identity";
+import { DataAwsPartition } from "./.gen/providers/aws/data-aws-partition";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    const current = new DataAwsCallerIdentity(this, "current", {});
+    const dataAwsPartitionCurrent = new DataAwsPartition(this, "current_1", {});
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    dataAwsPartitionCurrent.overrideLogicalId("current");
     new BcmdataexportsExport(this, "test", {
       export: [
         {
@@ -37,6 +43,12 @@ class MyConvertedCode extends TerraformStack {
                 "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT",
               tableConfigurations: {
                 COST_AND_USAGE_REPORT: {
+                  BILLING_VIEW_ARN:
+                    "arn:${" +
+                    dataAwsPartitionCurrent.partition +
+                    "}:billing::${" +
+                    current.accountId +
+                    "}:billingview/primary",
                   INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY: "FALSE",
                   INCLUDE_RESOURCES: "FALSE",
                   INCLUDE_SPLIT_COST_ALLOCATION_DATA: "FALSE",
@@ -94,8 +106,8 @@ The following arguments are required:
 
 ### `dataQuery` Argument Reference
 
-* `queryStatement` - (Required) Query statement.
-* `tableConfigurations` - (Optional) Table configuration.
+* `queryStatement` - (Required) Query statement. The SQL table name for CUR 2.0 is `COST_AND_USAGE_REPORT`. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html) for a list of available columns.
+* `tableConfigurations` - (Optional) Table configuration. See the [AWS documentation](https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html#cur2-table-configurations) for the available configurations. In addition to those listed in the documentation, `BILLING_VIEW_ARN` must also be included, as shown in the example above.
 
 ### `destinationConfigurations` Argument Reference
 
@@ -123,7 +135,8 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `exportArn` - Amazon Resource Name (ARN) for this export.
+* `arn` - Amazon Resource Name (ARN) for this export.
+* `export[0].export_arn` - Amazon Resource Name (ARN) for this export.
 
 ## Timeouts
 
@@ -133,6 +146,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bcmdataexports_export.example
+  identity = {
+    "arn" = "arn:aws:bcm-data-exports:us-east-1:123456789012:export/example-export"
+  }
+}
+
+resource "aws_bcmdataexports_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the BCM Data Exports export.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 
@@ -164,4 +198,4 @@ Using `terraform import`, import BCM Data Exports Export using the export ARN. F
 % terraform import aws_bcmdataexports_export.example arn:aws:bcm-data-exports:us-east-1:123456789012:export/CostUsageReport-9f1c75f3-f982-4d9a-b936-1e7ecab814b7
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4fb321d9af3d3fd78d0e1ee2a9e67d75127bc7ff49384c729e69fa3afb07835d -->
+<!-- cache-key: cdktf-0.20.8 input-038fd0ca0bfd8a2b65e6caad433b1dbf6d39d770bb2ec2ce5fef6a1727ea1041 -->

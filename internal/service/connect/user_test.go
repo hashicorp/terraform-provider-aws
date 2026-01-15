@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,21 +41,21 @@ func testAccUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/agent/{user_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_user_id"),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", "example2"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "Password123"),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
-					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 				),
@@ -117,9 +117,11 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	emailOriginal := acctest.RandomEmailAddress(domain)
 	firstNameOriginal := "example-first-name-original"
 	lastNameOriginal := "example-last-name-original"
+	secondaryEmailOriginal := acctest.RandomEmailAddress(domain)
 	emailUpdated := acctest.RandomEmailAddress(domain)
 	firstNameUpdated := "example-first-name-updated"
 	lastNameUpdated := "example-last-name-updated"
+	secondaryEmailUpdated := acctest.RandomEmailAddress(domain)
 
 	resourceName := "aws_connect_user.test"
 
@@ -130,13 +132,14 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal, secondaryEmailOriginal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailOriginal),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameOriginal),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameOriginal),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.secondary_email", secondaryEmailOriginal),
 				),
 			},
 			{
@@ -146,13 +149,14 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
-				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated),
+				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated, secondaryEmailUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "identity_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailUpdated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", lastNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "identity_info.0.secondary_email", secondaryEmailUpdated),
 				),
 			},
 		},
@@ -186,8 +190,8 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 				),
 			},
@@ -201,7 +205,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_original, auto_accept_original, desk_phone_number_original),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_original),
@@ -218,7 +222,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_updated, auto_accept_updated, desk_phone_number_updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_updated),
@@ -250,7 +254,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 				),
 			},
@@ -264,7 +268,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.call_center_manager", "security_profile_id"),
 				),
@@ -279,7 +283,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "third"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "3"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.call_center_manager", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.admin", "security_profile_id"),
@@ -351,7 +355,7 @@ func testAccUser_updateTags(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -365,7 +369,7 @@ func testAccUser_updateTags(t *testing.T) {
 				Config: testAccUserConfig_tags(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -374,7 +378,7 @@ func testAccUser_updateTags(t *testing.T) {
 				Config: testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -404,7 +408,7 @@ func testAccUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -444,7 +448,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfconnect.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["user_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -607,7 +611,7 @@ resource "aws_connect_user" "test" {
 `, rName5, selectHierarchyGroupId))
 }
 
-func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name string) string {
+func testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, email, first_name, last_name, secondary_email string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
@@ -622,9 +626,10 @@ resource "aws_connect_user" "test" {
   ]
 
   identity_info {
-    email      = %[2]q
-    first_name = %[3]q
-    last_name  = %[4]q
+    email           = %[2]q
+    first_name      = %[3]q
+    last_name       = %[4]q
+    secondary_email = %[5]q
   }
 
   phone_config {
@@ -632,7 +637,7 @@ resource "aws_connect_user" "test" {
     phone_type                    = "SOFT_PHONE"
   }
 }
-`, rName5, email, first_name, last_name))
+`, rName5, email, first_name, last_name, secondary_email))
 }
 
 func testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5 string, after_contact_work_time_limit int, auto_accept bool, desk_phone_number string) string {

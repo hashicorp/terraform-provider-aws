@@ -1,9 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
 
 import (
+	"errors"
+	"maps"
 	"strings"
 	"testing"
 
@@ -153,45 +155,6 @@ func TestApplyToAll(t *testing.T) {
 	}
 }
 
-func TestChunk(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    []string
-		expected [][]string
-	}
-	tests := map[string]testCase{
-		"three elements": {
-			input:    []string{"one", "two", "3"},
-			expected: [][]string{{"one", "two"}, {"3"}},
-		},
-		"two elements": {
-			input:    []string{"aa", "bb"},
-			expected: [][]string{{"aa", "bb"}},
-		},
-		"one element": {
-			input:    []string{"1"},
-			expected: [][]string{{"1"}},
-		},
-		"zero elements": {
-			input:    []string{},
-			expected: [][]string{},
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := Chunks(test.input, 2)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestFilter(t *testing.T) {
 	t.Parallel()
 
@@ -210,7 +173,7 @@ func TestFilter(t *testing.T) {
 		},
 		"zero elements": {
 			input:    []string{},
-			expected: []string{},
+			expected: nil,
 		},
 	}
 
@@ -400,6 +363,49 @@ func TestRange(t *testing.T) {
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestCollectWithError(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input   map[int]error
+		wantErr bool
+	}
+	tests := map[string]testCase{
+		"no error": {
+			input: map[int]error{
+				1: nil,
+				2: nil,
+				3: nil,
+			},
+		},
+		"has error": {
+			input: map[int]error{
+				1: nil,
+				2: errors.New("test error"),
+				3: nil,
+			},
+			wantErr: true,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got, err := CollectWithError(maps.All(test.input))
+
+			if got, want := err != nil, test.wantErr; !cmp.Equal(got, want) {
+				t.Errorf("CollectWithError() err %t, want %t", got, want)
+			}
+			if err == nil {
+				if got, want := len(got), len(test.input); !cmp.Equal(got, want) {
+					t.Errorf("CollectWithError() len %d, want %d", got, want)
+				}
 			}
 		})
 	}

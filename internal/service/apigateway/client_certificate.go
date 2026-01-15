@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -9,24 +9,24 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
@@ -62,16 +62,14 @@ func resourceClientCertificate() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.GenerateClientCertificateInput{
+	input := apigateway.GenerateClientCertificateInput{
 		Tags: getTagsIn(ctx),
 	}
 
@@ -79,7 +77,7 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.GenerateClientCertificate(ctx, input)
+	output, err := conn.GenerateClientCertificate(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Client Certificate: %s", err)
@@ -90,13 +88,14 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	cert, err := findClientCertificateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Client Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,13 +105,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Client Certificate (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientCertificateARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, cert.CreatedDate.String())
 	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
@@ -123,12 +116,12 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &apigateway.UpdateClientCertificateInput{
+		input := apigateway.UpdateClientCertificateInput{
 			ClientCertificateId: aws.String(d.Id()),
 			PatchOperations: []types.PatchOperation{
 				{
@@ -139,7 +132,7 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			},
 		}
 
-		_, err := conn.UpdateClientCertificate(ctx, input)
+		_, err := conn.UpdateClientCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Client Certificate (%s): %s", d.Id(), err)
@@ -149,14 +142,15 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceClientCertificateRead(ctx, d, meta)...)
 }
 
-func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Client Certificate: %s", d.Id())
-	_, err := conn.DeleteClientCertificate(ctx, &apigateway.DeleteClientCertificateInput{
+	input := apigateway.DeleteClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteClientCertificate(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -170,16 +164,15 @@ func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetClientCertificateOutput, error) {
-	input := &apigateway.GetClientCertificateInput{
+	input := apigateway.GetClientCertificateInput{
 		ClientCertificateId: aws.String(id),
 	}
 
-	output, err := conn.GetClientCertificate(ctx, input)
+	output, err := conn.GetClientCertificate(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -188,8 +181,12 @@ func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
+}
+
+func clientCertificateARN(ctx context.Context, c *conns.AWSClient, certificateID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/clientcertificates/%s", certificateID))
 }

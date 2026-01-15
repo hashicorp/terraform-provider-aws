@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -16,9 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,6 +27,10 @@ func testAccCustomLogSource_basic(t *testing.T) {
 	resourceName := "aws_securitylake_custom_log_source.test"
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -42,19 +46,19 @@ func testAccCustomLogSource_basic(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.crawler_arn", "glue", fmt.Sprintf("crawler/%s", rName)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.crawler_arn", "glue", fmt.Sprintf("crawler/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.database_arn", "glue", fmt.Sprintf("database/amazon_security_lake_glue_db_%s", strings.Replace(acctest.Region(), "-", "_", -1))),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "attributes.0.table_arn", "glue", fmt.Sprintf("table/amazon_security_lake_table_%s_ext_%s", strings.Replace(acctest.Region(), "-", "_", -1), strings.Replace(rName, "-", "_", -1))),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", fmt.Sprintf("%s-test", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_classes"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "provider_details.0.location", regexache.MustCompile(fmt.Sprintf(`^s3://aws-security-data-lake-%s-[a-z0-9]{30}/ext/%s/$`, acctest.Region(), rName))),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-%s-%s", rName, acctest.Region())),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "provider_details.0.role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-Provider-%s-%s", rName, acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "source_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "source_version"),
 				),
@@ -74,6 +78,10 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 	resourceName := "aws_securitylake_custom_log_source.test"
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -123,6 +131,10 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 	rName2 := randomCustomLogSourceName()
 	var customLogSource, customLogSource2 types.CustomLogSourceResource
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -160,6 +172,10 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -174,7 +190,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "FILE_ACTIVITY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "event_classes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
 				),
 			},
@@ -188,7 +204,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY", "FILE_ACTIVITY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "event_classes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "MEMORY_ACTIVITY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
 				),
@@ -203,7 +219,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "event_classes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "MEMORY_ACTIVITY"),
 				),
 			},
@@ -223,6 +239,10 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 	rName := randomCustomLogSourceName()
 	var customLogSource types.CustomLogSourceResource
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -237,7 +257,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceCustomLogSource, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceCustomLogSource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -260,7 +280,7 @@ func testAccCheckCustomLogSourceDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfsecuritylake.FindCustomLogSourceBySourceName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

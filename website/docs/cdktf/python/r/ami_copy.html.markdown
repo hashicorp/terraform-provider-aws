@@ -37,7 +37,6 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         AmiCopy(self, "example",
-            description="A copy of ami-xxxxxxxx",
             name="terraform-example",
             source_ami_id="ami-xxxxxxxx",
             source_ami_region="us-west-1",
@@ -51,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
   given by `source_ami_region`.
@@ -83,4 +83,4 @@ configuration.
 * `update` - (Default `40m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.1 input-24f70ab5d03ce5421bd9ce27fd5b5602c0ac4eedfab0b82ddfc7fec0c10806cf -->
+<!-- cache-key: cdktf-0.20.8 input-f98d7e99c733a296b32252161fdfde5067757995a233d70155a1867ce5b7501b -->

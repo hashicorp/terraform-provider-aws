@@ -22,6 +22,7 @@ data "aws_backup_plan" "example" {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `plan_id` - (Required) Backup plan ID.
 
 ## Attribute Reference
@@ -31,5 +32,6 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the backup plan.
 * `name` - Display name of a backup plan.
 * `rule` - Rules of a backup plan.
+* `scan_setting` - Scanning configuration for the backup rule.
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

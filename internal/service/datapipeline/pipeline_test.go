@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datapipeline_test
@@ -118,56 +118,6 @@ func TestAccDataPipelinePipeline_disappears(t *testing.T) {
 	})
 }
 
-func TestAccDataPipelinePipeline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.PipelineDescription
-	rName := fmt.Sprintf("tf-datapipeline-%s", sdkacctest.RandString(5))
-	resourceName := "aws_datapipeline_pipeline.default"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataPipelineServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPipelineConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.fizz", "buzz"),
-				),
-			},
-			{
-				Config: testAccPipelineConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.foo", "bar2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.fizz2", "buzz2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPipelineConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckPipelineDisappears(ctx context.Context, conf *awstypes.PipelineDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
@@ -192,7 +142,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 			// Try to find the Pipeline
-			pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
+			pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*awstypes.PipelineNotFoundException](err) {
 				continue
 			} else if errs.IsA[*awstypes.PipelineDeletedException](err) {
@@ -224,7 +174,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *awstypes.Pipel
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineClient(ctx)
 
-		pipelineDescription, err := tfdatapipeline.PipelineRetrieve(ctx, rs.Primary.ID, conn)
+		pipelineDescription, err := tfdatapipeline.FindPipeline(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -277,16 +227,4 @@ resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
   description = %[2]q
 }`, rName, description)
-}
-
-func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_datapipeline_pipeline" "default" {
-  name = "%[1]s"
-
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-}`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

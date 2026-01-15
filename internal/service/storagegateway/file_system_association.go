@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway
@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,8 +36,6 @@ func resourceFileSystemAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceFileSystemAssociationRead,
 		UpdateWithoutTimeout: resourceFileSystemAssociationUpdate,
 		DeleteWithoutTimeout: resourceFileSystemAssociationDelete,
-
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -114,7 +112,7 @@ func resourceFileSystemAssociation() *schema.Resource {
 	}
 }
 
-func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -133,7 +131,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]any))
 	}
 
 	output, err := conn.AssociateFileSystem(ctx, input)
@@ -151,13 +149,13 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
 	filesystem, err := findFileSystemAssociationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway File System Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -180,7 +178,7 @@ func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -193,7 +191,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]any))
 		}
 
 		_, err := conn.UpdateFileSystemAssociation(ctx, input)
@@ -210,7 +208,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
@@ -256,7 +254,7 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	output, err := conn.DescribeFileSystemAssociations(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -267,17 +265,17 @@ func findFileSystemAssociations(ctx context.Context, conn *storagegateway.Client
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FileSystemAssociationInfoList, nil
 }
 
-func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findFileSystemAssociationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -290,7 +288,7 @@ func statusFileSystemAssociation(ctx context.Context, conn *storagegateway.Clien
 }
 
 func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{fileSystemAssociationStatusCreating, fileSystemAssociationStatusUpdating},
 		Target:  []string{fileSystemAssociationStatusAvailable},
 		Refresh: statusFileSystemAssociation(ctx, conn, fileSystemArn),
@@ -301,7 +299,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}
@@ -310,7 +308,7 @@ func waitFileSystemAssociationAvailable(ctx context.Context, conn *storagegatewa
 }
 
 func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.Client, fileSystemArn string, timeout time.Duration) (*awstypes.FileSystemAssociationInfo, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        []string{fileSystemAssociationStatusAvailable, fileSystemAssociationStatusDeleting, fileSystemAssociationStatusForceDeleting},
 		Target:         []string{},
 		Refresh:        statusFileSystemAssociation(ctx, conn, fileSystemArn),
@@ -322,7 +320,7 @@ func waitFileSystemAssociationDeleted(ctx context.Context, conn *storagegateway.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FileSystemAssociationInfo); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FileSystemAssociationStatusDetails, fileSystemAssociationStatusDetailError)...))
 
 		return output, err
 	}
@@ -334,12 +332,12 @@ func fileSystemAssociationStatusDetailError(v awstypes.FileSystemAssociationStat
 	return errors.New(aws.ToString(v.ErrorCode))
 }
 
-func expandFileSystemAssociationCacheAttributes(tfList []interface{}) *awstypes.CacheAttributes {
+func expandFileSystemAssociationCacheAttributes(tfList []any) *awstypes.CacheAttributes {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.CacheAttributes{
 		CacheStaleTimeoutInSeconds: aws.Int32(int32(tfMap["cache_stale_timeout_in_seconds"].(int))),
@@ -348,14 +346,14 @@ func expandFileSystemAssociationCacheAttributes(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenFileSystemAssociationCacheAttributes(apiObject *awstypes.CacheAttributes) []interface{} {
+func flattenFileSystemAssociationCacheAttributes(apiObject *awstypes.CacheAttributes) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"cache_stale_timeout_in_seconds": aws.ToInt32(apiObject.CacheStaleTimeoutInSeconds),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

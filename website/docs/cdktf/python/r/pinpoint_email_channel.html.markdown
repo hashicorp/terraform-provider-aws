@@ -77,11 +77,13 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 * `configuration_set` - (Optional) The ARN of the Amazon SES configuration set that you want to apply to messages that you send through the channel.
 * `from_address` - (Required) The email address used to send emails from. You can use email only (`user@example.com`) or friendly address (`User <user@example.com>`). This field comply with [RFC 5322](https://www.ietf.org/rfc/rfc5322.txt).
 * `identity` - (Required) The ARN of an identity verified with SES.
+* `orchestration_sending_role_arn` - (Optional) The ARN of an IAM role for Amazon Pinpoint to use to send email from your campaigns or journeys through Amazon SES.
 * `role_arn` - (Optional) *Deprecated* The ARN of an IAM Role used to submit events to Mobile Analytics' event ingestion service.
 
 ## Attribute Reference
@@ -115,4 +117,4 @@ Using `terraform import`, import Pinpoint Email Channel using the `application-i
 % terraform import aws_pinpoint_email_channel.email application-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6378f9b4a01e95270fdc0e626fd068fb87d9b632a57e241b972a8df73443edf7 -->
+<!-- cache-key: cdktf-0.20.8 input-56f6a078b3c6e922282e888e994cb2810b9b1a8f97b5212571a8a1670e85424f -->

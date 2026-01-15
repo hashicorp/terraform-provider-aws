@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
 
@@ -50,4 +51,8 @@ The `lex_bot` configuration block supports the following:
 * `name` - (Required) Name of the Amazon Lex (V1) bot.
 * `lex_region` - (Optional) Region that the Amazon Lex (V1) bot was created in.
 
-<!-- cache-key: cdktf-0.20.1 input-404504bb11b568903bd8a32e96212172ac650fcf502c3c69fa40dbe6b2b93e17 -->
+## Attribute Reference
+
+This data source exports no additional attributes.
+
+<!-- cache-key: cdktf-0.20.8 input-f9567fe41d1fb3b44e87fd327ef8f330954be8a18dc78d9fc03336ae1d7e58d8 -->

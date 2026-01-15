@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -13,16 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lightsail_lb_stickiness_policy")
+// @SDKResource("aws_lightsail_lb_stickiness_policy", name="Load Balancer Stickiness Policy")
 func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerStickinessPolicyCreate,
@@ -57,7 +57,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -69,12 +69,12 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 		if v == names.AttrEnabled {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessEnabled
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool)))
+			in.AttributeValue = aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool)))
 		}
 
 		if v == "cookie_duration" {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get("cookie_duration").(int)))
+			in.AttributeValue = aws.String(strconv.Itoa(d.Get("cookie_duration").(int)))
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -95,14 +95,14 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerStickinessPolicyById(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id())
 		d.SetId("")
 		return diags
@@ -129,7 +129,7 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -138,7 +138,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -158,7 +158,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("cookie_duration").(int))),
+			AttributeValue:   aws.String(strconv.Itoa(d.Get("cookie_duration").(int))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -177,7 +177,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
-func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
@@ -208,7 +208,7 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.C
 	out, err := conn.GetLoadBalancer(ctx, in)
 
 	if IsANotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -219,7 +219,7 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.C
 	}
 
 	if out == nil || out.LoadBalancer.ConfigurationOptions == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.LoadBalancer.ConfigurationOptions, nil

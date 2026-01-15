@@ -55,7 +55,7 @@ class MyConvertedCode(TerraformStack):
             function_name="Example",
             handler="index.handler",
             role=Token.as_string(aws_iam_role_example.arn),
-            runtime="nodejs16.x"
+            runtime="nodejs20.x"
         )
         aws_apigatewayv2_integration_example = Apigatewayv2Integration(self, "example_1",
             api_id=Token.as_string(aws_apigatewayv2_api_example.id),
@@ -147,6 +147,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `integration_type` - (Required) Integration type of an integration.
 Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (supported only for WebSocket APIs), `HTTP_PROXY`, `MOCK` (supported only for WebSocket APIs). For an HTTP API private integration, use `HTTP_PROXY`.
@@ -218,4 +219,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration` using the API id
 
 -> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.20.1 input-bd3868bb1d19101e5d7a5a40cefadf4031666c5772ea0394fa37f1396d869e4c -->
+<!-- cache-key: cdktf-0.20.8 input-19a8a0a3db8d36fc6fe256c58d6d4dc3f257fc738bc47f1b5cdc00513386c442 -->

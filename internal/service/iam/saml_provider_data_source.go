@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_iam_saml_provider", name="SAML Provider")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,
@@ -40,6 +42,10 @@ func dataSourceSAMLProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"saml_provider_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"valid_until": {
 				Type:     schema.TypeString,
@@ -49,11 +55,9 @@ func dataSourceSAMLProvider() *schema.Resource {
 	}
 }
 
-func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get(names.AttrARN).(string)
 	output, err := findSAMLProviderByARN(ctx, conn, arn)
@@ -76,18 +80,14 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
+	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
 		d.Set("valid_until", nil)
 	}
 
-	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

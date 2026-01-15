@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +33,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
@@ -47,7 +47,7 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
 				),
@@ -67,7 +67,7 @@ func testAccCheckVPCEndpointConnectionNotificationDestroy(ctx context.Context) r
 
 			_, err := tfec2.FindVPCEndpointConnectionNotificationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

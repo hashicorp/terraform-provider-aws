@@ -1,23 +1,20 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,11 +22,9 @@ import (
 func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
-
 	userResourceName := "aws_identitystore_user.test"
 	groupResourceName := "aws_identitystore_group.test"
 	resourceName := "aws_identitystore_group_membership.test"
-
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name
 
@@ -65,10 +60,8 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
-
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name
-
 	resourceName := "aws_identitystore_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -85,7 +78,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 				Config: testAccGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName, &groupMembership),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroupMembership(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,10 +89,8 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
-
 	groupResourceName := "aws_identitystore_group.test"
 	resourceName := "aws_identitystore_group_membership.test"
-
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name 1
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name 2
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name
@@ -140,10 +131,8 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 	ctx := acctest.Context(t)
 	var groupMembership identitystore.DescribeGroupMembershipOutput
-
 	groupResourceName := "aws_identitystore_user.test"
 	resourceName := "aws_identitystore_group_membership.test"
-
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // Group Name
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name 1
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) // User Name 2
@@ -190,48 +179,39 @@ func testAccCheckGroupMembershipDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
-				IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-				MembershipId:    aws.String(rs.Primary.Attributes["membership_id"]),
-			})
+			_, err := tfidentitystore.FindGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["membership_id"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameGroupMembership, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("IdentityStore Group Membership %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGroupMembershipExists(ctx context.Context, name string, groupMembership *identitystore.DescribeGroupMembershipOutput) resource.TestCheckFunc {
+func testAccCheckGroupMembershipExists(ctx context.Context, n string, v *identitystore.DescribeGroupMembershipOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
-		resp, err := conn.DescribeGroupMembership(ctx, &identitystore.DescribeGroupMembershipInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-			MembershipId:    aws.String(rs.Primary.Attributes["membership_id"]),
-		})
+		output, err := tfidentitystore.FindGroupMembershipByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["membership_id"])
 
 		if err != nil {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroupMembership, rs.Primary.ID, err)
+			return err
 		}
 
-		*groupMembership = *resp
+		*v = *output
 
 		return nil
 	}

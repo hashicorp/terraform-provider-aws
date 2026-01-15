@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -17,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_docdb_orderable_db_instance")
-func DataSourceOrderableDBInstance() *schema.Resource {
+// @SDKDataSource("aws_docdb_orderable_db_instance", name="Orderable DB Instance")
+func dataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
@@ -66,7 +66,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
@@ -94,7 +94,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
-	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
+	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]any)); len(preferredInstanceClasses) > 0 {
 		var orderableDBInstances []awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
@@ -111,7 +111,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if orderableDBInstance == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {
@@ -156,7 +156,7 @@ func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *do
 		}
 
 		for _, v := range page.OrderableDBInstanceOptions {
-			if !reflect.ValueOf(v).IsZero() {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

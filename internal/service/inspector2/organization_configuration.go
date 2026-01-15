@@ -1,28 +1,28 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector2_organization_configuration")
-func ResourceOrganizationConfiguration() *schema.Resource {
+// @SDKResource("aws_inspector2_organization_configuration", name="Organization Configuration")
+func resourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationCreate,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
@@ -43,6 +43,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"code_repository": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ec2": {
 							Type:     schema.TypeBool,
 							Required: true,
@@ -73,215 +78,206 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 }
 
 const (
-	ResNameOrganizationConfiguration = "Organization Configuration"
-	orgConfigMutex                   = "f14b54d7-2b10-58c2-9c1b-c48260a4825d"
+	orgConfigMutex = "f14b54d7-2b10-58c2-9c1b-c48260a4825d"
 )
 
-func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceOrganizationConfigurationUpdate(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+	output, err := findOrganizationConfiguration(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Inspector2 OrganizationConfiguration (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Inspector2 Organization Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameOrganizationConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector2 Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("auto_enable", []interface{}{flattenAutoEnable(out.AutoEnable)}); err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionSetting, ResNameOrganizationConfiguration, d.Id(), err)
+	if err := d.Set("auto_enable", []any{flattenAutoEnable(output.AutoEnable)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting auto_enable: %s", err)
 	}
-
-	d.Set("max_account_limit_reached", out.MaxAccountLimitReached)
+	d.Set("max_account_limit_reached", output.MaxAccountLimitReached)
 
 	return diags
 }
 
-func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	update := false
-
-	in := &inspector2.UpdateOrganizationConfigurationInput{}
-
-	if d.HasChanges("auto_enable") {
-		in.AutoEnable = expandAutoEnable(d.Get("auto_enable").([]interface{})[0].(map[string]interface{}))
-		update = true
-	}
-
-	if !update {
-		return diags
+	autoEnable := expandAutoEnable(d.Get("auto_enable").([]any)[0].(map[string]any))
+	input := &inspector2.UpdateOrganizationConfigurationInput{
+		AutoEnable: autoEnable,
 	}
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
 	defer conns.GlobalMutexKV.Unlock(orgConfigMutex)
 
-	log.Printf("[DEBUG] Updating Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
+	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector2 Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Get("auto_enable.0.lambda_code").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	if d.IsNewResource() {
+		timeout = d.Timeout(schema.TimeoutCreate)
+	}
+
+	if _, err := waitOrganizationConfigurationUpdated(ctx, conn, autoEnable, timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Inspector2 Organization Configuration (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
 	defer conns.GlobalMutexKV.Unlock(orgConfigMutex)
 
-	in := &inspector2.UpdateOrganizationConfigurationInput{
-		AutoEnable: &types.AutoEnable{
-			Ec2:        aws.Bool(false),
-			Ecr:        aws.Bool(false),
-			Lambda:     aws.Bool(false),
-			LambdaCode: aws.Bool(false),
-		},
+	log.Printf("[DEBUG] Deleting Inspector2 Organization Configuration: %s", d.Id())
+	autoEnable := &awstypes.AutoEnable{
+		CodeRepository: aws.Bool(false),
+		Ec2:            aws.Bool(false),
+		Ecr:            aws.Bool(false),
+		Lambda:         aws.Bool(false),
+		LambdaCode:     aws.Bool(false),
 	}
+	_, err := conn.UpdateOrganizationConfiguration(ctx, &inspector2.UpdateOrganizationConfigurationInput{
+		AutoEnable: autoEnable,
+	})
 
-	log.Printf("[DEBUG] Setting Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector2 Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+	if _, err := waitOrganizationConfigurationUpdated(ctx, conn, autoEnable, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Inspector2 Organization Configuration (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda, lambda_code bool, timeout time.Duration) error {
-	needle := fmt.Sprintf("%t:%t:%t:%t", ec2, ecr, lambda, lambda_code)
+func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client) (*inspector2.DescribeOrganizationConfigurationOutput, error) {
+	input := &inspector2.DescribeOrganizationConfigurationInput{}
+	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
-	all := []string{
-		fmt.Sprintf("%t:%t:%t:%t", false, false, false, false),
-		fmt.Sprintf("%t:%t:%t:%t", false, false, false, true),
-		fmt.Sprintf("%t:%t:%t:%t", false, true, false, false),
-		fmt.Sprintf("%t:%t:%t:%t", false, true, false, true),
-		fmt.Sprintf("%t:%t:%t:%t", false, false, true, false),
-		fmt.Sprintf("%t:%t:%t:%t", false, false, true, true),
-		fmt.Sprintf("%t:%t:%t:%t", false, true, true, false),
-		fmt.Sprintf("%t:%t:%t:%t", false, true, true, true),
-		fmt.Sprintf("%t:%t:%t:%t", true, false, false, false),
-		fmt.Sprintf("%t:%t:%t:%t", true, false, false, true),
-		fmt.Sprintf("%t:%t:%t:%t", true, false, true, false),
-		fmt.Sprintf("%t:%t:%t:%t", true, false, true, true),
-		fmt.Sprintf("%t:%t:%t:%t", true, true, false, false),
-		fmt.Sprintf("%t:%t:%t:%t", true, true, false, true),
-		fmt.Sprintf("%t:%t:%t:%t", true, true, true, false),
-		fmt.Sprintf("%t:%t:%t:%t", true, true, true, true),
-	}
-
-	for i, v := range all {
-		if v == needle {
-			all = append(all[:i], all[i+1:]...)
-			break
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Invoking account does not have access to describe the organization configuration") {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	stateConf := &retry.StateChangeConf{
-		Pending:                   all,
-		Target:                    []string{needle},
-		Refresh:                   statusOrganizationConfiguration(ctx, conn),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-		MinTimeout:                time.Second * 5,
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	if output == nil || output.AutoEnable == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
 
-	return err
+	return output, nil
 }
 
-func statusOrganizationConfiguration(ctx context.Context, conn *inspector2.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
+func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, target *awstypes.AutoEnable, timeout time.Duration) (*inspector2.DescribeOrganizationConfigurationOutput, error) { //nolint:unparam
+	var output *inspector2.DescribeOrganizationConfigurationOutput
+
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, true, func(ctx context.Context) (bool, error) {
+		var err error
+		output, err = findOrganizationConfiguration(ctx, conn)
 
 		if err != nil {
-			return nil, "", err
+			return false, err
 		}
 
-		return out, fmt.Sprintf("%t:%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda), aws.ToBool(out.AutoEnable.LambdaCode)), nil
+		equal := aws.ToBool(output.AutoEnable.Ec2) == aws.ToBool(target.Ec2)
+		equal = equal && aws.ToBool(output.AutoEnable.Ecr) == aws.ToBool(target.Ecr)
+		equal = equal && aws.ToBool(output.AutoEnable.Lambda) == aws.ToBool(target.Lambda)
+		equal = equal && aws.ToBool(output.AutoEnable.LambdaCode) == aws.ToBool(target.LambdaCode)
+		equal = equal && aws.ToBool(output.AutoEnable.CodeRepository) == aws.ToBool(target.CodeRepository)
+
+		return equal, nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
+
+	return output, nil
 }
 
-func flattenAutoEnable(apiObject *types.AutoEnable) map[string]interface{} {
+func flattenAutoEnable(apiObject *awstypes.AutoEnable) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
+
+	if v := apiObject.CodeRepository; v != nil {
+		tfMap["code_repository"] = aws.ToBool(v)
+	}
 
 	if v := apiObject.Ec2; v != nil {
-		m["ec2"] = aws.ToBool(v)
+		tfMap["ec2"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Ecr; v != nil {
-		m["ecr"] = aws.ToBool(v)
+		tfMap["ecr"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Lambda; v != nil {
-		m["lambda"] = aws.ToBool(v)
+		tfMap["lambda"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.LambdaCode; v != nil {
-		m["lambda_code"] = aws.ToBool(v)
+		tfMap["lambda_code"] = aws.ToBool(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandAutoEnable(tfMap map[string]interface{}) *types.AutoEnable {
+func expandAutoEnable(tfMap map[string]any) *awstypes.AutoEnable {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.AutoEnable{}
+	apiObject := &awstypes.AutoEnable{}
+
+	if v, ok := tfMap["code_repository"].(bool); ok {
+		apiObject.CodeRepository = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["ec2"].(bool); ok {
-		a.Ec2 = aws.Bool(v)
+		apiObject.Ec2 = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["ecr"].(bool); ok {
-		a.Ecr = aws.Bool(v)
+		apiObject.Ecr = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["lambda"].(bool); ok {
-		a.Lambda = aws.Bool(v)
+		apiObject.Lambda = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["lambda_code"].(bool); ok {
-		a.LambdaCode = aws.Bool(v)
+		apiObject.LambdaCode = aws.Bool(v)
 	}
 
-	return a
+	return apiObject
 }

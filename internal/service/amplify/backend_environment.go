@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -14,12 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,7 +69,7 @@ func resourceBackendEnvironment() *schema.Resource {
 	}
 }
 
-func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -77,7 +77,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	environmentName := d.Get("environment_name").(string)
 	id := backendEnvironmentCreateResourceID(appID, environmentName)
 
-	input := &amplify.CreateBackendEnvironmentInput{
+	input := amplify.CreateBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	}
@@ -90,7 +90,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.StackName = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateBackendEnvironment(ctx, input)
+	_, err := conn.CreateBackendEnvironment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Backend Environment (%s): %s", id, err)
@@ -101,7 +101,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceBackendEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 
 	backendEnvironment, err := findBackendEnvironmentByTwoPartKey(ctx, conn, appID, environmentName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify Backend Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -131,7 +131,7 @@ func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
@@ -141,10 +141,11 @@ func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Backend Environment: %s", d.Id())
-	_, err = conn.DeleteBackendEnvironment(ctx, &amplify.DeleteBackendEnvironmentInput{
+	input := amplify.DeleteBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
-	})
+	}
+	_, err = conn.DeleteBackendEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -158,17 +159,16 @@ func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findBackendEnvironmentByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, environmentName string) (*types.BackendEnvironment, error) {
-	input := &amplify.GetBackendEnvironmentInput{
+	input := amplify.GetBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	}
 
-	output, err := conn.GetBackendEnvironment(ctx, input)
+	output, err := conn.GetBackendEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -177,7 +177,7 @@ func findBackendEnvironmentByTwoPartKey(ctx context.Context, conn *amplify.Clien
 	}
 
 	if output == nil || output.BackendEnvironment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackendEnvironment, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -9,13 +9,12 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,30 +24,32 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
+					resource.TestCheckNoResourceAttr(resourceName, "emit_system_fields"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -57,17 +58,17 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 func TestAccLogsSubscriptionFilter_many(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNLambdaMany(rName, 2), // This is the default limit of subscription filters on an account
-				Check:  testAccCheckSubscriptionFilterManyExists(ctx, resourceName, 2),
+				Check:  testAccCheckSubscriptionFilterManyExists(ctx, t, resourceName, 2),
 			},
 		},
 	})
@@ -77,19 +78,19 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filter types.SubscriptionFilter
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceSubscriptionFilter(), resourceName),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceSubscriptionFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,19 +103,19 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter types.SubscriptionFilter
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,26 +128,27 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 	var filter types.SubscriptionFilter
 	firehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, firehoseResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -157,26 +159,27 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 	var filter types.SubscriptionFilter
 	kinesisStream := "aws_kinesis_stream.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisStream(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, kinesisStream, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -186,33 +189,88 @@ func TestAccLogsSubscriptionFilter_distribution(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filter types.SubscriptionFilter
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_distribution(rName, "Random"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "Random"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_distribution(rName, "ByLogStream"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filter types.SubscriptionFilter
+	resourceName := "aws_cloudwatch_log_subscription_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.region\"]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.region"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[\"@aws.account\", \"@aws.region\"]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.0", "@aws.account"),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.1", "@aws.region"),
+				),
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_emitSystemFields(rName, "[]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_fields.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 		},
 	})
@@ -224,31 +282,32 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	iamRoleResourceName1 := "aws_iam_role.test"
 	iamRoleResourceName2 := "aws_iam_role.test2"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriptionFilterConfig_roleARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName1, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSubscriptionFilterImportStateIDFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_on_transformed_logs"},
 			},
 			{
 				Config: testAccSubscriptionFilterConfig_roleARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName2, names.AttrARN),
 				),
 			},
@@ -256,9 +315,56 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	})
 }
 
-func testAccCheckSubscriptionFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccLogsSubscriptionFilter_applyOnTransformedLogs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filter types.SubscriptionFilter
+	resourceName := "aws_cloudwatch_log_subscription_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Config: testAccSubscriptionFilterConfig_applyOnTransformed(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN},
+			},
+			{
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Config: testAccSubscriptionFilterConfig_applyOnTransformed(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "apply_on_transformed_logs", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckSubscriptionFilterDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_subscription_filter" {
@@ -267,7 +373,7 @@ func testAccCheckSubscriptionFilterDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -282,14 +388,14 @@ func testAccCheckSubscriptionFilterDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckSubscriptionFilterExists(ctx context.Context, n string, v *types.SubscriptionFilter) resource.TestCheckFunc {
+func testAccCheckSubscriptionFilterExists(ctx context.Context, t *testing.T, n string, v *types.SubscriptionFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.Attributes[names.AttrName])
 
@@ -318,13 +424,13 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccCheckSubscriptionFilterManyExists(ctx context.Context, basename string, n int) resource.TestCheckFunc {
+func testAccCheckSubscriptionFilterManyExists(ctx context.Context, t *testing.T, basename string, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			n := fmt.Sprintf("%s.%d", basename, i)
 			var v types.SubscriptionFilter
 
-			err := testAccCheckSubscriptionFilterExists(ctx, n, &v)(s)
+			err := testAccCheckSubscriptionFilterExists(ctx, t, n, &v)(s)
 
 			if err != nil {
 				return err
@@ -411,7 +517,7 @@ resource "aws_iam_role" "cloudwatchlogs" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -431,7 +537,7 @@ resource "aws_iam_role_policy" "cloudwatchlogs" {
     {
       "Effect": "Allow",
       "Action": "firehose:*",
-      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+      "Resource": "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
     },
     {
       "Effect": "Allow",
@@ -479,7 +585,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -556,7 +662,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   handler       = "exports.handler"
 }
 
@@ -609,7 +715,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-${count.index}"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   handler       = "exports.handler"
 }
 
@@ -684,6 +790,18 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
 `, rName, n))
 }
 
+func testAccSubscriptionFilterConfig_emitSystemFields(rName, emitSystemFieldsStr string) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_subscription_filter" "test" {
+  destination_arn    = aws_lambda_function.test.arn
+  filter_pattern     = "logtype test"
+  log_group_name     = aws_cloudwatch_log_group.test.name
+  name               = %[1]q
+  emit_system_fields = %[2]s
+}
+`, rName, emitSystemFieldsStr))
+}
+
 func testAccSubscriptionFilterConfig_roleARN1(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_kinesisStreamBase(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_subscription_filter" "test" {
@@ -708,7 +826,7 @@ resource "aws_iam_role" "test2" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+        "Service": "logs.${data.aws_region.current.region}.amazonaws.com"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -748,4 +866,25 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   role_arn        = aws_iam_role.test2.arn
 }
 `, rName))
+}
+
+func testAccSubscriptionFilterConfig_applyOnTransformed(rName string, applyOnTransformedLogs bool) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_transformer" "test" {
+  log_group_arn = aws_cloudwatch_log_group.test.arn
+
+  transformer_config {
+    parse_json {}
+  }
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "test" {
+  destination_arn = aws_lambda_function.test.arn
+  filter_pattern  = "logtype test"
+  log_group_name  = aws_cloudwatch_log_group.test.name
+  name            = %[1]q
+
+  apply_on_transformed_logs = %[2]t
+}
+`, rName, applyOnTransformedLogs))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -10,20 +10,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -37,19 +37,19 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_type", "CACHED"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
@@ -66,7 +66,7 @@ func TestAccStorageGatewayGateway_GatewayType_cached(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -80,19 +80,19 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 				Config: testAccGatewayConfig_typeFileFSxSMB(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_type", "FILE_FSX_SMB"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
@@ -109,7 +109,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileFSxSMB(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -120,22 +120,22 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName),
+				Config: testAccGatewayConfig_typeFileS3(rName, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_type", "FILE_S3"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
@@ -152,7 +152,7 @@ func TestAccStorageGatewayGateway_GatewayType_fileS3(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -166,19 +166,19 @@ func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 				Config: testAccGatewayConfig_typeStored(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_network_interface.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_network_interface.0.ipv4_address", "aws_instance.test", "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_type", "STORED"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
@@ -195,7 +195,7 @@ func TestAccStorageGatewayGateway_GatewayType_stored(t *testing.T) {
 
 func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -209,7 +209,7 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 				Config: testAccGatewayConfig_typeVtl(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_instance_id", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
@@ -217,9 +217,9 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_type", "VTL"),
 					resource.TestCheckResourceAttr(resourceName, "host_environment", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "medium_changer_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "smb_guest_password", ""),
 					resource.TestCheckResourceAttr(resourceName, "tape_drive_type", ""),
 				),
@@ -236,7 +236,7 @@ func TestAccStorageGatewayGateway_GatewayType_vtl(t *testing.T) {
 
 func TestAccStorageGatewayGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -250,8 +250,8 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`gateway/sgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -265,7 +265,7 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -274,7 +274,7 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 				Config: testAccGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -284,9 +284,10 @@ func TestAccStorageGatewayGateway_tags(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var gateway awstypes.GatewayInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGateway1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameGateway2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -296,17 +297,17 @@ func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName1),
+				Config: testAccGatewayConfig_typeFileS3(rName, rNameGateway1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "gateway_name", rNameGateway1),
 				),
 			},
 			{
-				Config: testAccGatewayConfig_typeFileS3(rName2),
+				Config: testAccGatewayConfig_typeFileS3(rName, rNameGateway2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "gateway_name", rNameGateway2),
 				),
 			},
 			{
@@ -321,7 +322,7 @@ func TestAccStorageGatewayGateway_gatewayName(t *testing.T) {
 
 func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	resourceName2 := "aws_cloudwatch_log_group.test"
@@ -351,7 +352,7 @@ func TestAccStorageGatewayGateway_cloudWatchLogs(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -387,7 +388,7 @@ func TestAccStorageGatewayGateway_gatewayTimezone(t *testing.T) {
 
 func TestAccStorageGatewayGateway_gatewayVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -417,7 +418,7 @@ func TestAccStorageGatewayGateway_gatewayVPCEndpoint(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -432,7 +433,7 @@ func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 				Config: testAccGatewayConfig_smbActiveDirectorySettings(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.username", "Administrator"),
 					resource.TestCheckResourceAttrSet(resourceName, "smb_active_directory_settings.0.active_directory_status"),
@@ -450,7 +451,7 @@ func TestAccStorageGatewayGateway_smbActiveDirectorySettings(t *testing.T) {
 
 func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -465,7 +466,7 @@ func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.
 				Config: testAccGatewayConfig_smbActiveDirectorySettingsTimeout(rName, domainName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
 				),
@@ -482,7 +483,7 @@ func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.
 
 func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -498,7 +499,7 @@ func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing
 				Config: testAccGatewayConfig_smbMicrosoftActiveDirectorySettings(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.username", username),
 					resource.TestCheckResourceAttrSet(resourceName, "smb_active_directory_settings.0.active_directory_status"),
@@ -516,7 +517,7 @@ func TestAccStorageGatewayGateway_smbMicrosoftActiveDirectorySettings(t *testing
 
 func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 	domainName := acctest.RandomDomainName()
@@ -531,7 +532,7 @@ func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t 
 				Config: testAccGatewayConfig_smbMicrosoftActiveDirectorySettingsTimeout(rName, domainName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
 				),
@@ -548,7 +549,7 @@ func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t 
 
 func TestAccStorageGatewayGateway_smbGuestPassword(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -584,7 +585,7 @@ func TestAccStorageGatewayGateway_smbGuestPassword(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -621,7 +622,7 @@ func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 
 func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -664,7 +665,7 @@ func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 
 func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -678,7 +679,7 @@ func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -688,7 +689,7 @@ func TestAccStorageGatewayGateway_disappears(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -722,7 +723,7 @@ func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "0"),
 				),
 			},
 		},
@@ -731,7 +732,7 @@ func TestAccStorageGatewayGateway_bandwidthUpload(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -765,7 +766,7 @@ func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "0"),
 				),
 			},
 		},
@@ -774,7 +775,7 @@ func TestAccStorageGatewayGateway_bandwidthDownload(t *testing.T) {
 
 func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -810,8 +811,8 @@ func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 				Config: testAccGatewayConfig_typeCached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "average_download_rate_limit_in_bits_per_sec", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "average_upload_rate_limit_in_bits_per_sec", "0"),
+					resource.TestCheckResourceAttr(resourceName, "average_download_rate_limit_in_bits_per_sec", "0"),
 				),
 			},
 		},
@@ -820,7 +821,7 @@ func TestAccStorageGatewayGateway_bandwidthAll(t *testing.T) {
 
 func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var gateway storagegateway.DescribeGatewayInformationOutput
+	var gateway awstypes.GatewayInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_storagegateway_gateway.test"
 
@@ -831,13 +832,13 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayConfig_maintenanceStartTime(rName, 22, 0, acctest.Ct3, ""),
+				Config: testAccGatewayConfig_maintenanceStartTime(rName, 22, 0, "3", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "22"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", "3"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", ""),
 				),
 			},
@@ -852,20 +853,50 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "21"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "10"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", ""),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", "12"),
 				),
 			},
 			{
-				Config: testAccGatewayConfig_maintenanceStartTime(rName, 21, 10, acctest.Ct0, ""),
+				Config: testAccGatewayConfig_maintenanceStartTime(rName, 21, 10, "0", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "21"),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "10"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", "0"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", ""),
 				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/27523.
+func TestAccStorageGatewayGateway_offline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var gateway awstypes.GatewayInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayConfig_typeCached(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+			},
+			{
+				Config: testAccGatewayConfig_offline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -882,7 +913,7 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfstoragegateway.FindGatewayByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -897,7 +928,7 @@ func testAccCheckGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGatewayExists(ctx context.Context, n string, v *storagegateway.DescribeGatewayInformationOutput) resource.TestCheckFunc {
+func testAccCheckGatewayExists(ctx context.Context, n string, v *awstypes.GatewayInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -906,7 +937,7 @@ func testAccCheckGatewayExists(ctx context.Context, n string, v *storagegateway.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayClient(ctx)
 
-		output, err := tfstoragegateway.FindGatewayByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfstoragegateway.FindGatewayInfoByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -979,7 +1010,7 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_baseFile(rName string) string {
+func testAccGatewayConfig_baseFileS3(rName string) string {
 	return acctest.ConfigCompose(
 		testAccGatewayConfig_baseVPC(rName),
 		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
@@ -994,6 +1025,33 @@ resource "aws_instance" "test" {
   depends_on = [aws_route.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccGatewayConfig_baseFileFSx(rName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayConfig_baseVPC(rName),
+		// Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/Requirements.html
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "m5.xlarge", "m4.xlarge"),
+		fmt.Sprintf(`
+# Reference: https://docs.aws.amazon.com/storagegateway/latest/userguide/ec2-gateway-file.html
+data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_FSX_SMB_latest" {
+  name = "/aws/service/storagegateway/ami/FILE_FSX_SMB/latest"
+}
+
+resource "aws_instance" "test" {
+  depends_on = [aws_route.test]
+
+  ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_FSX_SMB_latest.value
   associate_public_ip_address = true
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   vpc_security_group_ids      = [aws_security_group.test.id]
@@ -1046,7 +1104,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_typeFileFSxSMB(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileFSx(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1056,19 +1114,19 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName))
 }
 
-func testAccGatewayConfig_typeFileS3(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+func testAccGatewayConfig_typeFileS3(rName, gatewayName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
   gateway_timezone   = "GMT"
   gateway_type       = "FILE_S3"
 }
-`, rName))
+`, gatewayName))
 }
 
 func testAccGatewayConfig_logGroup(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -1106,7 +1164,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_timezone(rName, gatewayTimezone string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1367,7 +1425,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbGuestPassword(rName, smbGuestPassword string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address = aws_instance.test.public_ip
   gateway_name       = %[1]q
@@ -1379,7 +1437,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbSecurityStrategy(rName, strategy string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address    = aws_instance.test.public_ip
   gateway_name          = %[1]q
@@ -1391,7 +1449,7 @@ resource "aws_storagegateway_gateway" "test" {
 }
 
 func testAccGatewayConfig_smbVisibility(rName string, visible bool) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_baseFile(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_baseFileS3(rName), fmt.Sprintf(`
 resource "aws_storagegateway_gateway" "test" {
   gateway_ip_address        = aws_instance.test.public_ip
   gateway_name              = %[1]q
@@ -1493,4 +1551,14 @@ resource "aws_storagegateway_gateway" "test" {
   }
 }
 `, rName, hourOfDay, minuteOfHour, dayOfWeek, dayOfMonth))
+}
+
+func testAccGatewayConfig_offline(rName string) string {
+	return acctest.ConfigCompose(testAccGatewayConfig_typeCached(rName), `
+resource "aws_ec2_instance_state" "test" {
+  instance_id = aws_instance.test.id
+  state       = "stopped"
+  force       = true
+}
+`)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -74,7 +74,7 @@ func TestExpandRecordName(t *testing.T) {
 		{"www", "www.example.com"},
 		{"www.", "www.example.com"},
 		{"dev.www", "dev.www.example.com"},
-		{"*", "*.example.com"},
+		{"*", "\\052.example.com"},
 		{"example.com", "example.com"},
 		{"test.example.com", "test.example.com"},
 		{"test.example.com.", "test.example.com"},

@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_api_gateway_stage: Add `canary_settings.deployment_id` attribute as `required`
+```
+
+```release-note:bug
+resource/aws_api_gateway_deployment: Fix destroy error when canary stage still exists on resource
+```
+
+```release-note:note
+resource/aws_api_gateway_stage: `deployment_id` was added to `canary_settings` as a `required` attribute. This breaking change was necessary to make `canary_settings` functional. Without this change all canary traffic was routed to the main deployment
+```

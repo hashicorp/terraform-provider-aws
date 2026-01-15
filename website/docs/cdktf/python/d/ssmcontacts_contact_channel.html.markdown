@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `arn` - Amazon Resource Name (ARN) of the contact channel.
 
 ## Attribute Reference
@@ -44,13 +45,9 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 - `activation_status` - Whether the contact channel is activated.
-
 - `contact_id` - Amazon Resource Name (ARN) of the AWS SSM Contact that the contact channel belongs to.
-
 - `delivery_address` - Details used to engage the contact channel.
-
 - `name` - Name of the contact channel.
-
 - `type` - Type of the contact channel.
 
-<!-- cache-key: cdktf-0.20.1 input-9f531cedbf6139b19742dde2e104f65f9b8b5e9b437541c3b2cb7082c8b98b4f -->
+<!-- cache-key: cdktf-0.20.8 input-2616da08b21820d0ee5438c8423c4d773f25e6894727878db88d09c8db3fa4c2 -->

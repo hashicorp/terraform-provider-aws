@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -26,6 +29,8 @@ updates:
     ignore:
       # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
       - dependency-name: "github.com/aws/smithy-go"
+      # go-cty should only be updated via terraform-plugin-sdk
+      - dependency-name: "github.com/hashicorp/go-cty"
       # hcl/v2 should only be updated via terraform-plugin-sdk
       - dependency-name: "github.com/hashicorp/hcl/v2"
       # terraform-plugin-go should only be updated via terraform-plugin-framework
@@ -47,7 +52,6 @@ updates:
       - "/.ci/providerlint"
       - "/.ci/tools"
       - "/skaff"
-      - "/tools/awssdkpatch"
       - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"

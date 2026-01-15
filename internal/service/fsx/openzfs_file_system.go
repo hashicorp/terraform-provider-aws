@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,7 +41,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceOpenZFSFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				d.Set("skip_final_backup", false)
 
 				return []*schema.ResourceData{d}, nil
@@ -154,6 +155,26 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"read_cache_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrSize: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(0, 2147483647),
+						},
+						"sizing_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OpenZFSReadCacheSizingMode](),
+						},
+					},
+				},
+			},
 			"preferred_subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -227,7 +248,6 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
-							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrID: {
@@ -315,9 +335,8 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			verify.SetTagsDiff,
 			validateDiskConfigurationIOPS,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				var (
 					singleAZ1ThroughputCapacityValues            = []int{64, 128, 256, 512, 1024, 2048, 3072, 4096}
 					singleAZ2AndMultiAZ1ThroughputCapacityValues = []int{160, 320, 640, 1280, 2560, 3840, 5120, 7680, 10240}
@@ -338,16 +357,28 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 
 				return nil
 			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				switch storageType := d.Get(names.AttrStorageType).(string); storageType {
+				case string(awstypes.StorageTypeIntelligentTiering):
+					if deploymentType := d.Get("deployment_type").(string); deploymentType != string(awstypes.OpenZFSDeploymentTypeMultiAz1) {
+						return fmt.Errorf("invalid deployment_type %q for storage_type %q: only %q is supported", deploymentType, storageType, awstypes.OpenZFSDeploymentTypeMultiAz1)
+					}
+					if _, ok := d.GetOk("storage_capacity"); ok {
+						return fmt.Errorf("storage_capacity cannot be specified for storage_type %q", storageType)
+					}
+				}
+				return nil
+			},
 		),
 	}
 }
 
-func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, meta any) error {
 	deploymentType := d.Get("deployment_type").(string)
 
 	if diskConfiguration, ok := d.GetOk("disk_iops_configuration"); ok {
-		if len(diskConfiguration.([]interface{})) > 0 {
-			m := diskConfiguration.([]interface{})[0].(map[string]interface{})
+		if len(diskConfiguration.([]any)) > 0 {
+			m := diskConfiguration.([]any)[0].(map[string]any)
 
 			if v, ok := m[names.AttrIOPS].(int); ok {
 				if deploymentType == string(awstypes.OpenZFSDeploymentTypeSingleAz1) {
@@ -355,8 +386,8 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 160000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz1, v)
 					}
 				} else if deploymentType == string(awstypes.OpenZFSDeploymentTypeSingleAz2) {
-					if v < 0 || v > 350000 {
-						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 350000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz2, v)
+					if v < 0 || v > 400000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 400000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz2, v)
 					}
 				}
 			}
@@ -366,7 +397,7 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 	return nil
 }
 
-func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -377,10 +408,9 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               awstypes.OpenZFSDeploymentType(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
 		},
-		StorageCapacity: aws.Int32(int32(d.Get("storage_capacity").(int))),
-		StorageType:     awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:       flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
-		Tags:            getTagsIn(ctx),
+		StorageType: awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
+		Tags:        getTagsIn(ctx),
 	}
 	inputB := &fsx.CreateFileSystemFromBackupInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
@@ -389,8 +419,12 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			AutomaticBackupRetentionDays: aws.Int32(int32(d.Get("automatic_backup_retention_days").(int))),
 		},
 		StorageType: awstypes.StorageType(d.Get(names.AttrStorageType).(string)),
-		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]interface{})),
+		SubnetIds:   flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
 		Tags:        getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("storage_capacity"); ok {
+		inputC.StorageCapacity = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
@@ -409,8 +443,8 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
-		inputC.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(v.([]interface{}))
-		inputB.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(v.([]interface{}))
+		inputC.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(v.([]any))
+		inputB.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("endpoint_ip_address_range"); ok {
@@ -428,9 +462,14 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.OpenZFSConfiguration.PreferredSubnetId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("read_cache_configuration"); ok {
+		inputC.OpenZFSConfiguration.ReadCacheConfiguration = expandOpenZFSReadCacheConfiguration(v.([]any))
+		inputB.OpenZFSConfiguration.ReadCacheConfiguration = expandOpenZFSReadCacheConfiguration(v.([]any))
+	}
+
 	if v, ok := d.GetOk("root_volume_configuration"); ok {
-		inputC.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenZFSCreateRootVolumeConfiguration(v.([]interface{}))
-		inputB.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenZFSCreateRootVolumeConfiguration(v.([]interface{}))
+		inputC.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenZFSCreateRootVolumeConfiguration(v.([]any))
+		inputB.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenZFSCreateRootVolumeConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok {
@@ -481,13 +520,13 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceOpenZFSFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
 	filesystem, err := findOpenZFSFileSystemByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -515,6 +554,9 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("network_interface_ids", filesystem.NetworkInterfaceIds)
 	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", openZFSConfig.PreferredSubnetId)
+	if err := d.Set("read_cache_configuration", flattenOpenZFSReadCacheConfiguration(openZFSConfig.ReadCacheConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting read_cache_configuration: %s", err)
+	}
 	rootVolumeID := aws.ToString(openZFSConfig.RootVolumeId)
 	d.Set("root_volume_id", rootVolumeID)
 	d.Set("route_table_ids", openZFSConfig.RouteTableIds)
@@ -541,7 +583,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -575,7 +617,11 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("disk_iops_configuration") {
-			input.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+			input.OpenZFSConfiguration.DiskIopsConfiguration = expandDiskIopsConfiguration(d.Get("disk_iops_configuration").([]any))
+		}
+
+		if d.HasChange("read_cache_configuration") {
+			input.OpenZFSConfiguration.ReadCacheConfiguration = expandOpenZFSReadCacheConfiguration(d.Get("read_cache_configuration").([]any))
 		}
 
 		if d.HasChange("route_table_ids") {
@@ -592,7 +638,9 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("storage_capacity") {
-			input.StorageCapacity = aws.Int32(int32(d.Get("storage_capacity").(int)))
+			if v, ok := d.GetOk("storage_capacity"); ok {
+				input.StorageCapacity = aws.Int32(int32(v.(int)))
+			}
 		}
 
 		if d.HasChange("throughput_capacity") {
@@ -622,7 +670,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			rootVolumeID := d.Get("root_volume_id").(string)
 			input := &fsx.UpdateVolumeInput{
 				ClientRequestToken:   aws.String(id.UniqueId()),
-				OpenZFSConfiguration: expandUpdateOpenZFSVolumeConfiguration(d.Get("root_volume_configuration").([]interface{})),
+				OpenZFSConfiguration: expandUpdateOpenZFSVolumeConfiguration(d.Get("root_volume_configuration").([]any)),
 				VolumeId:             aws.String(rootVolumeID),
 			}
 
@@ -646,7 +694,7 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceOpenZFSFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
@@ -661,8 +709,8 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 		input.OpenZFSConfiguration.Options = flex.ExpandStringyValueSet[awstypes.DeleteFileSystemOpenZFSOption](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.OpenZFSConfiguration.FinalBackupTags = Tags(tftags.New(ctx, v))
+	if v, ok := d.GetOk("final_backup_tags"); ok && len(v.(map[string]any)) > 0 {
+		input.OpenZFSConfiguration.FinalBackupTags = svcTags(tftags.New(ctx, v))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
@@ -683,12 +731,12 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandDiskIopsConfiguration(cfg []interface{}) *awstypes.DiskIopsConfiguration {
+func expandDiskIopsConfiguration(cfg []any) *awstypes.DiskIopsConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
-	conf := cfg[0].(map[string]interface{})
+	conf := cfg[0].(map[string]any)
 
 	out := awstypes.DiskIopsConfiguration{}
 
@@ -703,12 +751,12 @@ func expandDiskIopsConfiguration(cfg []interface{}) *awstypes.DiskIopsConfigurat
 	return &out
 }
 
-func expandOpenZFSCreateRootVolumeConfiguration(tfList []interface{}) *awstypes.OpenZFSCreateRootVolumeConfiguration {
+func expandOpenZFSCreateRootVolumeConfiguration(tfList []any) *awstypes.OpenZFSCreateRootVolumeConfiguration {
 	if len(tfList) < 1 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.OpenZFSCreateRootVolumeConfiguration{}
 
 	if v, ok := tfMap["copy_tags_to_snapshots"].(bool); ok {
@@ -719,7 +767,7 @@ func expandOpenZFSCreateRootVolumeConfiguration(tfList []interface{}) *awstypes.
 		apiObject.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
 	}
 
-	if v, ok := tfMap["nfs_exports"].([]interface{}); ok {
+	if v, ok := tfMap["nfs_exports"].([]any); ok {
 		apiObject.NfsExports = expandOpenZFSNfsExports(v)
 	}
 
@@ -738,19 +786,39 @@ func expandOpenZFSCreateRootVolumeConfiguration(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func expandUpdateOpenZFSVolumeConfiguration(tfList []interface{}) *awstypes.UpdateOpenZFSVolumeConfiguration {
+func expandOpenZFSReadCacheConfiguration(tfList []any) *awstypes.OpenZFSReadCacheConfiguration {
 	if len(tfList) < 1 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.OpenZFSReadCacheConfiguration{}
+
+	if v, ok := tfMap["sizing_mode"].(string); ok {
+		apiObject.SizingMode = awstypes.OpenZFSReadCacheSizingMode(v)
+	}
+	if apiObject.SizingMode == awstypes.OpenZFSReadCacheSizingModeUserProvisioned {
+		if v, ok := tfMap[names.AttrSize].(int); ok && v > 0 {
+			apiObject.SizeGiB = aws.Int32(int32(v))
+		}
+	}
+
+	return apiObject
+}
+
+func expandUpdateOpenZFSVolumeConfiguration(tfList []any) *awstypes.UpdateOpenZFSVolumeConfiguration {
+	if len(tfList) < 1 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.UpdateOpenZFSVolumeConfiguration{}
 
 	if v, ok := tfMap["data_compression_type"].(string); ok {
 		apiObject.DataCompressionType = awstypes.OpenZFSDataCompressionType(v)
 	}
 
-	if v, ok := tfMap["nfs_exports"].([]interface{}); ok {
+	if v, ok := tfMap["nfs_exports"].([]any); ok {
 		apiObject.NfsExports = expandOpenZFSNfsExports(v)
 	}
 
@@ -769,26 +837,43 @@ func expandUpdateOpenZFSVolumeConfiguration(tfList []interface{}) *awstypes.Upda
 	return apiObject
 }
 
-func flattenDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []interface{} {
+func flattenDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []any {
 	if rs == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	m[names.AttrMode] = string(rs.Mode)
 	if rs.Iops != nil {
 		m[names.AttrIOPS] = aws.ToInt64(rs.Iops)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func flattenOpenZFSFileSystemRootVolume(apiObject *awstypes.Volume) []interface{} {
+func flattenOpenZFSReadCacheConfiguration(apiObject *awstypes.OpenZFSReadCacheConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
+
+	if apiObject.SizingMode != "" {
+		tfMap["sizing_mode"] = string(apiObject.SizingMode)
+	}
+
+	// if apiObject.SizeGiB is nil, tfMap[names.AttrSize] will be zero value (0)
+	tfMap[names.AttrSize] = aws.ToInt32(apiObject.SizeGiB)
+
+	return []any{tfMap}
+}
+
+func flattenOpenZFSFileSystemRootVolume(apiObject *awstypes.Volume) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
 
 	if apiObject.OpenZFSConfiguration.CopyTagsToSnapshots != nil {
 		tfMap["copy_tags_to_snapshots"] = aws.ToBool(apiObject.OpenZFSConfiguration.CopyTagsToSnapshots)
@@ -807,7 +892,7 @@ func flattenOpenZFSFileSystemRootVolume(apiObject *awstypes.Volume) []interface{
 		tfMap["user_and_group_quotas"] = flattenOpenZFSUserOrGroupQuotas(apiObject.OpenZFSConfiguration.UserAndGroupQuotas)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.Client, id string) (*awstypes.FileSystem, error) {
@@ -818,7 +903,7 @@ func findOpenZFSFileSystemByID(ctx context.Context, conn *fsx.Client, id string)
 	}
 
 	if output.OpenZFSConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

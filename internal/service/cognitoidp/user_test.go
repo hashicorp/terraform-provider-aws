@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -14,11 +14,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +43,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
-					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.UserStatusTypeForceChangePassword)),
 				),
@@ -80,7 +81,7 @@ func TestAccCognitoIDPUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -218,10 +219,10 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Config: testAccUserConfig_attributes(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "attributes.one", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.two", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "attributes.three", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
 				),
 			},
 			{
@@ -241,10 +242,10 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Config: testAccUserConfig_attributesUpdated(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "attributes.two", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "three"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.four", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "attributes.four", "4"),
 				),
 			},
 		},
@@ -321,15 +322,27 @@ func TestAccCognitoIDPUser_v5560Regression(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
-					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.UserStatusTypeForceChangePassword)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccUserConfig_v5560Regression(rUserPoolName, rUserName),
-				PlanOnly:                 true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -361,7 +374,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrUsername])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

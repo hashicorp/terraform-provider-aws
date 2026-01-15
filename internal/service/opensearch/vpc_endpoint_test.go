@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -89,7 +89,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := tfresource.NotFound(tfopensearch.VPCEndpointsError(testCase.apiObjects)), testCase.notFound; got != want {
+			if got, want := retry.NotFound(tfopensearch.VPCEndpointsError(testCase.apiObjects)), testCase.notFound; got != want {
 				t.Errorf("NotFound = %v, want %v", got, want)
 			}
 		})
@@ -118,10 +118,10 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceVPCEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceVPCEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,10 +185,10 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
 			},
@@ -197,10 +197,10 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.vpc_id"),
 				),
 			},
@@ -240,7 +240,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfopensearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

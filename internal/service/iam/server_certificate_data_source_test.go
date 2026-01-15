@@ -1,46 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
 
 import (
 	"fmt"
-	"sort"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestResourceSortByExpirationDate(t *testing.T) {
-	t.Parallel()
-
-	certs := []awstypes.ServerCertificateMetadata{
-		{
-			ServerCertificateName: aws.String("oldest"),
-			Expiration:            aws.Time(time.Now()),
-		},
-		{
-			ServerCertificateName: aws.String("latest"),
-			Expiration:            aws.Time(time.Now().Add(3 * time.Hour)),
-		},
-		{
-			ServerCertificateName: aws.String("in between"),
-			Expiration:            aws.Time(time.Now().Add(2 * time.Hour)),
-		},
-	}
-	sort.Sort(tfiam.CertificateByExpiration(certs))
-	if aws.ToString(certs[0].ServerCertificateName) != "latest" {
-		t.Fatalf("Expected first item to be %q, but was %q", "latest", *certs[0].ServerCertificateName)
-	}
-}
 
 func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -48,6 +20,9 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	dataSourceName := "data.aws_iam_server_certificate.test"
+	resourceName := "aws_iam_server_certificate.test_cert"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -58,14 +33,13 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServerCertificateDataSourceConfig_cert(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("aws_iam_server_certificate.test_cert", names.AttrARN),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrARN),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrID),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrName),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrPath),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
-					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", names.AttrCertificateChain, ""),
-					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(dataSourceName, "upload_date", resourceName, "upload_date"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrCertificateChain, ""),
+					resource.TestMatchResourceAttr(dataSourceName, "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 		},

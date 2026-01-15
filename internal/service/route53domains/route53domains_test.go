@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains_test
@@ -28,6 +28,11 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 		"DelegationSignerRecord": {
 			acctest.CtBasic:      testAccDelegationSignerRecord_basic,
 			acctest.CtDisappears: testAccDelegationSignerRecord_disappears,
+		},
+		"Domain": {
+			acctest.CtBasic:      testAccDomain_basic,
+			acctest.CtDisappears: testAccDomain_disappears,
+			"tags":               testAccDomain_tags,
 		},
 	}
 

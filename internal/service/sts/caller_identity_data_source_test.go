@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sts_test
@@ -16,7 +16,8 @@ import (
 
 func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.STSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -24,7 +25,7 @@ func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCallerIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},
@@ -44,7 +45,7 @@ func TestAccSTSCallerIdentityDataSource_alternateRegion(t *testing.T) {
 		t.Skipf("Skipping test due to missing %s", envvar.AlternateRegion)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.STSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -52,7 +53,7 @@ func TestAccSTSCallerIdentityDataSource_alternateRegion(t *testing.T) {
 			{
 				Config: testAccCallerIdentityConfig_alternateRegion(defaultRegion, alternateRegion),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -191,7 +191,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
@@ -229,7 +229,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourcePlatformApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsns.ResourcePlatformApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -259,7 +259,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, names.AttrARN),
@@ -283,7 +283,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, names.AttrARN),
@@ -322,7 +322,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
@@ -481,7 +481,7 @@ func testAccCheckPlatformApplicationDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfsns.FindPlatformApplicationAttributesByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models
@@ -27,18 +27,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Intent")
-func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIntent{}
+// @FrameworkResource("aws_lexv2models_intent", name="Intent")
+func newIntentResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &intentResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -51,17 +52,13 @@ const (
 	ResNameIntent = "Intent"
 )
 
-type resourceIntent struct {
-	framework.ResourceWithConfigure
+type intentResource struct {
+	framework.ResourceWithModel[IntentResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_lexv2models_intent"
-}
-
-func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	slotPriorityLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -685,7 +682,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx, fwtypes.WithSemanticEqualityFunc(confirmationSettingsEqualityFunc)),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{
@@ -901,10 +898,10 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 
 var intentFlexOpt = flex.WithFieldNamePrefix(ResNameIntent)
 
-func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *intentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var data ResourceIntentData
+	var data IntentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -945,7 +942,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// get some data from the intent
-	var dataAfter ResourceIntentData
+	var dataAfter IntentResourceModel
 	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter, intentFlexOpt)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -958,10 +955,10 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *intentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var data ResourceIntentData
+	var data IntentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -974,7 +971,7 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 
 	out, err := findIntentByIDs(ctx, conn, data.IntentID.ValueString(), data.BotID.ValueString(), data.BotVersion.ValueString(), data.LocaleID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -995,10 +992,10 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *intentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var old, new ResourceIntentData
+	var old, new IntentResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1081,10 +1078,10 @@ func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *intentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state ResourceIntentData
+	var state IntentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -1126,7 +1123,7 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (model *ResourceIntentData) InitFromID() error {
+func (model *IntentResourceModel) InitFromID() error {
 	parts := strings.Split(model.ID.ValueString(), ":")
 	if len(parts) != 4 {
 		return fmt.Errorf("Unexpected format for import key (%s), use: IntentID:BotID:BotVersion:LocaleID", model.ID)
@@ -1139,7 +1136,7 @@ func (model *ResourceIntentData) InitFromID() error {
 	return nil
 }
 
-func (model *ResourceIntentData) setID() {
+func (model *IntentResourceModel) setID() {
 	model.ID = types.StringValue(strings.Join([]string{
 		model.IntentID.ValueString(),
 		model.BotID.ValueString(),
@@ -1153,7 +1150,7 @@ const (
 )
 
 func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
 		Refresh:                   statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
@@ -1172,7 +1169,7 @@ func waitIntentNormal(ctx context.Context, conn *lexmodelsv2.Client, intentID, b
 }
 
 func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string, timeout time.Duration) (*lexmodelsv2.DescribeIntentOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{statusNormal},
 		Target:     []string{},
 		Refresh:    statusIntent(ctx, conn, intentID, botID, botVersion, localeID),
@@ -1188,10 +1185,10 @@ func waitIntentDeleted(ctx context.Context, conn *lexmodelsv2.Client, intentID, 
 	return nil, err
 }
 
-func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIntent(ctx context.Context, conn *lexmodelsv2.Client, intentID, botID, botVersion, localeID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := findIntentByIDs(ctx, conn, intentID, botID, botVersion, localeID)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1215,7 +1212,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -1225,7 +1222,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -1497,7 +1494,8 @@ type DialogCodeHookSettings struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 }
 
-type ResourceIntentData struct {
+type IntentResourceModel struct {
+	framework.WithRegionModel
 	BotID                  types.String                                                 `tfsdk:"bot_id"`
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
 	ClosingSetting         fwtypes.ListNestedObjectValueOf[IntentClosingSetting]        `tfsdk:"closing_setting"`

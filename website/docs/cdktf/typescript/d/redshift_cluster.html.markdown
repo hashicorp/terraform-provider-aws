@@ -64,6 +64,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Required) Cluster identifier
 
 ## Attribute Reference
@@ -116,4 +117,4 @@ Cluster nodes (for `clusterNodes`) support the following attributes:
 * `privateIpAddress` - Private IP address of a node within a cluster
 * `publicIpAddress` - Public IP address of a node within a cluster
 
-<!-- cache-key: cdktf-0.20.1 input-aab68f73a05c65a75cc35fff468fa2c875296239afeda093db3bbc836a929675 -->
+<!-- cache-key: cdktf-0.20.8 input-294b6dc70152acf9cf452d8494c0da32fb69fbc99c6348f98cea8dca8eb288b4 -->

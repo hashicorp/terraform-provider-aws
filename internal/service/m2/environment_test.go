@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,13 +47,13 @@ func TestAccM2Environment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "bluage"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_arn"),
@@ -100,7 +100,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -128,13 +128,13 @@ func TestAccM2Environment_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`env/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test-1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "microfocus"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.10"),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "5"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
@@ -142,8 +142,8 @@ func TestAccM2Environment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
@@ -182,8 +182,8 @@ func TestAccM2Environment_update(t *testing.T) {
 				Config: testAccEnvironmentConfig_update(rName, "M2.m5.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sat:03:35-sat:05:35"),
 				),
@@ -192,8 +192,8 @@ func TestAccM2Environment_update(t *testing.T) {
 				Config: testAccEnvironmentConfig_update(rName, "M2.m6i.large", 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m6i.large"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sat:03:35-sat:05:35"),
 				),
@@ -307,7 +307,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -434,7 +434,9 @@ resource "aws_m2_environment" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName))
 }

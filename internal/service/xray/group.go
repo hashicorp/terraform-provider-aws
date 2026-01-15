@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray
@@ -11,19 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity
+// @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
@@ -31,12 +33,6 @@ func resourceGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -77,22 +73,22 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	name := d.Get(names.AttrGroupName).(string)
-	input := &xray.CreateGroupInput{
+	input := xray.CreateGroupInput{
 		GroupName:        aws.String(name),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("insights_configuration"); ok {
-		input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
+		input.InsightsConfiguration = expandInsightsConfig(v.([]any))
 	}
 
-	output, err := conn.CreateGroup(ctx, input)
+	output, err := conn.CreateGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating XRay Group (%s): %s", name, err)
@@ -103,13 +99,13 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	group, err := findGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] XRay Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,22 +125,22 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
+		input := xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
 
 		if v, ok := d.GetOk("filter_expression"); ok {
 			input.FilterExpression = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("insights_configuration"); ok {
-			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
+			input.InsightsConfiguration = expandInsightsConfig(v.([]any))
 		}
 
-		_, err := conn.UpdateGroup(ctx, input)
+		_, err := conn.UpdateGroup(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating XRay Group (%s): %s", d.Id(), err)
@@ -154,14 +150,15 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
-	_, err := conn.DeleteGroup(ctx, &xray.DeleteGroupInput{
+	input := xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
 		return diags
@@ -175,14 +172,14 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func findGroupByARN(ctx context.Context, conn *xray.Client, arn string) (*types.Group, error) {
-	input := &xray.GetGroupInput{
+	input := xray.GetGroupInput{
 		GroupARN: aws.String(arn),
 	}
 
-	output, err := conn.GetGroup(ctx, input)
+	output, err := conn.GetGroup(ctx, &input)
 
 	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -193,18 +190,18 @@ func findGroupByARN(ctx context.Context, conn *xray.Client, arn string) (*types.
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil
 }
 
-func expandInsightsConfig(l []interface{}) *types.InsightsConfiguration {
+func expandInsightsConfig(l []any) *types.InsightsConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 	config := types.InsightsConfiguration{}
 
 	if v, ok := m["insights_enabled"]; ok {
@@ -217,12 +214,12 @@ func expandInsightsConfig(l []interface{}) *types.InsightsConfiguration {
 	return &config
 }
 
-func flattenInsightsConfig(config *types.InsightsConfiguration) []interface{} {
+func flattenInsightsConfig(config *types.InsightsConfiguration) []any {
 	if config == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.InsightsEnabled != nil {
 		m["insights_enabled"] = config.InsightsEnabled
@@ -231,5 +228,5 @@ func flattenInsightsConfig(config *types.InsightsConfiguration) []interface{} {
 		m["notifications_enabled"] = config.NotificationsEnabled
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }

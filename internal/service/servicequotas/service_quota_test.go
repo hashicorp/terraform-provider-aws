@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -31,7 +31,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
@@ -71,7 +71,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(unsetQuotaServiceCode, unsetQuotaQuotaCode),
@@ -111,7 +111,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(hasUsageMetricServiceCode, hasUsageMetricQuotaCode),
@@ -126,7 +126,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric.0.metric_name", dataSourceName, "usage_metric.0.metric_name"),
-					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_value(serviceCode, quotaCode, value),
@@ -213,7 +213,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode),
@@ -243,11 +243,31 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaConfig_permissionError("elasticloadbalancing", "L-53DA6B97"),
 				ExpectError: regexache.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
+			},
+		},
+	})
+}
+
+func TestAccServiceQuotasServiceQuota_valueLessThanCurrent(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
+				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value less than current`),
 			},
 		},
 	})
@@ -309,4 +329,19 @@ resource "aws_servicequotas_service_quota" "test" {
   value        = 1
 }
 `, serviceCode, quotaCode))
+}
+
+func testAccServiceQuotaConfig_valueLessThanCurrent(serviceCode, quotaCode string) string {
+	return fmt.Sprintf(`
+data "aws_servicequotas_service_quota" "test" {
+  quota_code   = %[1]q
+  service_code = %[2]q
+}
+
+resource "aws_servicequotas_service_quota" "test" {
+  quota_code   = data.aws_servicequotas_service_quota.test.quota_code
+  service_code = data.aws_servicequotas_service_quota.test.service_code
+  value        = data.aws_servicequotas_service_quota.test.value - 1
+}
+`, quotaCode, serviceCode)
 }

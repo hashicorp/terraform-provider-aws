@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivschat_test
@@ -43,9 +43,9 @@ func TestAccIVSChatRoom_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`room/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`room/.+`)),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				Config: testAccRoomConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				Config: testAccRoomConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -98,7 +98,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				Config: testAccRoomConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccIVSChatRoom_disappears(t *testing.T) {
 				Config: testAccRoomConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceRoom(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfivschat.ResourceRoom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,7 +171,7 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_message_length", maximumMessageLength),
 					resource.TestCheckResourceAttr(resourceName, "maximum_message_rate_per_second", maximumMessageRatePerSecond),
 					resource.TestCheckResourceAttr(resourceName, "message_review_handler.0.fallback_result", fallbackResult),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "message_review_handler.0.uri", "lambda", fmt.Sprintf("function:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "message_review_handler.0.uri", "lambda", fmt.Sprintf("function:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -199,7 +199,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Config: testAccRoomConfig_loggingConfiguration1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", names.AttrARN),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room2),
 					testAccCheckRoomNotRecreated(&room1, &room2),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.1", "aws_ivschat_logging_configuration.test2", names.AttrARN),
 				),
@@ -223,7 +223,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room3),
 					testAccCheckRoomNotRecreated(&room2, &room3),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test3", names.AttrARN),
 				),
 			},
@@ -232,7 +232,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room4),
 					testAccCheckRoomNotRecreated(&room3, &room4),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "0"),
 				),
 			},
 		},
@@ -386,7 +386,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
   handler          = "index.handler"
 }
 

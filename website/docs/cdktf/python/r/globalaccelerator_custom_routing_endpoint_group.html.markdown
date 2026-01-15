@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
                 endpoint_id=Token.as_string(aws_subnet_example.id)
             )
             ],
-            listener_arn=Token.as_string(aws_globalaccelerator_custom_routing_listener_example.id)
+            listener_arn=Token.as_string(aws_globalaccelerator_custom_routing_listener_example.arn)
         )
 ```
 
@@ -77,6 +77,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_endpoint_group.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz/endpoint-group/098765zyxwvu"
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing endpoint group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing endpoint groups using the `id`. For example:
 
 ```python
@@ -100,4 +121,4 @@ Using `terraform import`, import Global Accelerator custom routing endpoint grou
 % terraform import aws_globalaccelerator_custom_routing_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1cdf76aa1d7720de7b94c9800ff5e5f2715b300edfc472a4a81ea499fa6efa64 -->
+<!-- cache-key: cdktf-0.20.8 input-183716cc5085d06758fc5c2f29493718be8e312d57871b9c66959f24eca12836 -->

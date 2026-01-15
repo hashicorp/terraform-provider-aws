@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr
@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emr"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -37,8 +38,6 @@ func resourceStudio() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -59,6 +58,11 @@ func resourceStudio() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"encryption_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"engine_security_group_id": {
 				Type:     schema.TypeString,
@@ -119,7 +123,7 @@ func resourceStudio() *schema.Resource {
 	}
 }
 
-func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -140,6 +144,10 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("encryption_key_arn"); ok {
+		input.EncryptionKeyArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("idp_auth_url"); ok {
 		input.IdpAuthUrl = aws.String(v.(string))
 	}
@@ -153,12 +161,13 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateStudio(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "entity does not have permissions to assume role") ||
-				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") {
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Service role does not have permission to access") ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "'ServiceRole' does not have permission to access") {
 				return true, err
 			}
 
@@ -175,13 +184,13 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
 	studio, err := findStudioByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EMR Studio (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -195,6 +204,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("auth_mode", studio.AuthMode)
 	d.Set("default_s3_location", studio.DefaultS3Location)
 	d.Set(names.AttrDescription, studio.Description)
+	d.Set("encryption_key_arn", studio.EncryptionKeyArn)
 	d.Set("engine_security_group_id", studio.EngineSecurityGroupId)
 	d.Set("idp_auth_url", studio.IdpAuthUrl)
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
@@ -211,7 +221,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -226,6 +236,10 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange("encryption_key_arn") {
+			input.EncryptionKeyArn = aws.String(d.Get("encryption_key_arn").(string))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -246,7 +260,7 @@ func resourceStudioUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceStudioRead(ctx, d, meta)...)
 }
 
-func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRClient(ctx)
 
@@ -274,7 +288,7 @@ func findStudioByID(ctx context.Context, conn *emr.Client, id string) (*awstypes
 	output, err := conn.DescribeStudio(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Studio does not exist") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -285,7 +299,7 @@ func findStudioByID(ctx context.Context, conn *emr.Client, id string) (*awstypes
 	}
 
 	if output == nil || output.Studio == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Studio, nil

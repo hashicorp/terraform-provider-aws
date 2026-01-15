@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,20 +31,21 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "origin-request-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "none"),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "none"),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "0"),
 				),
 			},
 			{
@@ -71,8 +72,8 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,19 +98,19 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cookies_config.0.cookies.0.items.*", "test1"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test3"),
@@ -126,18 +127,18 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cookies_config.0.cookies.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cookies_config.0.cookies.0.items.*", "test2"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "headers_config.0.header_behavior", "allViewerAndWhitelistCloudFront"),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "headers_config.0.headers.0.items.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "headers_config.0.headers.0.items.*", "CloudFront-Viewer-City"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "all"),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", "0"),
 				),
 			},
 		},
@@ -155,7 +156,7 @@ func testAccCheckOriginRequestPolicyDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfcloudfront.FindOriginRequestPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

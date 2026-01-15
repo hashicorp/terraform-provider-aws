@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transcribe
@@ -15,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,12 +74,10 @@ func ResourceMedicalVocabulary() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -109,13 +107,13 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindMedicalVocabularyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transcribe MedicalVocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,10 +124,10 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("medical-vocabulary/%s", d.Id()),
 	}.String()
 
@@ -141,7 +139,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
@@ -169,15 +167,16 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceMedicalVocabularyRead(ctx, d, meta)...)
 }
 
-func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe MedicalVocabulary %s", d.Id())
 
-	_, err := conn.DeleteMedicalVocabulary(ctx, &transcribe.DeleteMedicalVocabularyInput{
+	input := transcribe.DeleteMedicalVocabularyInput{
 		VocabularyName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteMedicalVocabulary(ctx, &input)
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
@@ -196,7 +195,7 @@ func resourceMedicalVocabularyDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -215,7 +214,7 @@ func waitMedicalVocabularyCreated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:                    medicalVocabularyStatus(types.VocabularyStateReady),
 		Refresh:                   statusMedicalVocabulary(ctx, conn, id),
@@ -234,7 +233,7 @@ func waitMedicalVocabularyUpdated(ctx context.Context, conn *transcribe.Client, 
 }
 
 func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*transcribe.GetMedicalVocabularyOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: medicalVocabularyStatus(types.VocabularyStatePending),
 		Target:  []string{},
 		Refresh: statusMedicalVocabulary(ctx, conn, id),
@@ -250,10 +249,10 @@ func waitMedicalVocabularyDeleted(ctx context.Context, conn *transcribe.Client, 
 	return nil, err
 }
 
-func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusMedicalVocabulary(ctx context.Context, conn *transcribe.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		out, err := FindMedicalVocabularyByName(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -274,7 +273,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 
 	var badRequestException *types.BadRequestException
 	if errors.As(err, &badRequestException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -285,7 +284,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the launch configuration.
 
 ## Attribute Reference
@@ -57,7 +58,6 @@ This data source exports the following attributes in addition to the arguments a
     * `httpPutResponseHopLimit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `securityGroups` - List of associated Security Group IDS.
 * `associatePublicIpAddress` - Whether a Public IP address is associated with the instance.
-* `primary_ipv6` - Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `userData` - User Data of the instance.
 * `enableMonitoring` - Whether Detailed Monitoring is Enabled.
 * `ebsOptimized` - Whether the launched EC2 instance will be EBS-optimized.
@@ -93,4 +93,4 @@ This data source exports the following attributes in addition to the arguments a
 * `deviceName` - Name of the device.
 * `virtualName` - Virtual Name of the device.
 
-<!-- cache-key: cdktf-0.20.1 input-0f7904ad6942115d54298c7ae804e89f82902ce14639bff2f34ee2ea3c0c7e22 -->
+<!-- cache-key: cdktf-0.20.8 input-e77f7ae32f77902c5234633543a1e6eac439822247bcf1e76904c859e6a09199 -->

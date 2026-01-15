@@ -1,19 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func axisDisplayOptionsSchema() *schema.Schema {
+var axisDisplayOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -21,7 +20,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"axis_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"axis_line_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 				"axis_offset": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -40,7 +39,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"missing_date_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"missing_date_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -136,7 +135,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"grid_line_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"grid_line_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 				"scrollbar_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScrollBarOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -144,7 +143,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"visible_range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisibleRangeOptions.html
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -159,8 +158,8 @@ func axisDisplayOptionsSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"from": floatSchema(false, validation.FloatBetween(0, 100)),
-													"to":   floatSchema(false, validation.FloatBetween(0, 100)),
+													"from": floatBetweenSchema(attrOptional, 0, 100),
+													"to":   floatBetweenSchema(attrOptional, 0, 100),
 												},
 											},
 										},
@@ -188,9 +187,9 @@ func axisDisplayOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func chartAxisLabelOptionsSchema() *schema.Schema {
+var chartAxisLabelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -213,7 +212,7 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+										"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 									},
 								},
 							},
@@ -225,14 +224,14 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"sort_icon_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-				"visibility":           stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"sort_icon_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+				"visibility":           stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func itemsLimitConfigurationSchema() *schema.Schema {
+var itemsLimitConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -244,13 +243,13 @@ func itemsLimitConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"other_categories": stringSchema(true, enum.Validate[awstypes.OtherCategories]()),
+				"other_categories": stringEnumSchema[awstypes.OtherCategories](attrRequired),
 			},
 		},
 	}
-}
+})
 
-func contributionAnalysisDefaultsSchema() *schema.Schema {
+var contributionAnalysisDefaultsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ContributionAnalysisDefault.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -265,23 +264,23 @@ func contributionAnalysisDefaultsSchema() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"column_name":         stringLenBetweenSchema(attrRequired, 1, 128),
+							"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 						},
 					},
 				},
-				"measure_field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+				"measure_field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 			},
 		},
 	}
-}
+})
 
-func referenceLineSchema(maxItems int) *schema.Schema {
+var referenceLineSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 		Type:     schema.TypeList,
 		Optional: true,
 		MinItems: 1,
-		MaxItems: maxItems,
+		MaxItems: referenceLinesMaxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDataConfiguration.html
@@ -291,7 +290,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"axis_binding": stringSchema(false, enum.Validate[awstypes.AxisBinding]()),
+							"axis_binding": stringEnumSchema[awstypes.AxisBinding](attrOptional),
 							"dynamic_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDynamicDataConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -336,13 +335,13 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+										"custom_label": stringMatchSchema(attrRequired, `.*\S.*`, ""),
 									},
 								},
 							},
-							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"font_color":          hexColorSchema(attrOptional),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-							"horizontal_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelHorizontalPosition]()),
+							"horizontal_position": stringEnumSchema[awstypes.ReferenceLineLabelHorizontalPosition](attrOptional),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -351,15 +350,15 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringSchema(false, enum.Validate[awstypes.ReferenceLineValueLabelRelativePosition]()),
+										"relative_position":    stringEnumSchema[awstypes.ReferenceLineValueLabelRelativePosition](attrOptional),
 									},
 								},
 							},
-							"vertical_position": stringSchema(false, enum.Validate[awstypes.ReferenceLineLabelVerticalPosition]()),
+							"vertical_position": stringEnumSchema[awstypes.ReferenceLineLabelVerticalPosition](attrOptional),
 						},
 					},
 				},
-				names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 				"style_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineStyleConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -367,17 +366,17 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"pattern": stringSchema(false, enum.Validate[awstypes.ReferenceLinePatternType]()),
+							"color":   hexColorSchema(attrOptional),
+							"pattern": stringEnumSchema[awstypes.ReferenceLinePatternType](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func smallMultiplesOptionsSchema() *schema.Schema {
+var smallMultiplesOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -385,16 +384,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"max_visible_columns": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
-				},
-				"max_visible_rows": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
-				},
+				"max_visible_columns": intBetweenSchema(attrOptional, 1, 10),
+				"max_visible_rows":    intBetweenSchema(attrOptional, 1, 10),
 				"panel_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -402,20 +393,20 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"background_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"border_style":          stringSchema(false, enum.Validate[awstypes.PanelBorderStyle]()),
+							"background_color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"background_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"border_color":          stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"border_style":          stringEnumSchema[awstypes.PanelBorderStyle](attrOptional),
 							"border_thickness": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"border_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"border_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"gutter_spacing": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"gutter_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"gutter_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 							"title": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -424,8 +415,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"horizontal_text_alignment": stringSchema(false, enum.Validate[awstypes.HorizontalTextAlignment]()),
-										"visibility":                stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
+										"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -435,14 +426,14 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func expandAxisDisplayOptions(tfList []interface{}) *awstypes.AxisDisplayOptions {
+func expandAxisDisplayOptions(tfList []any) *awstypes.AxisDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -458,47 +449,47 @@ func expandAxisDisplayOptions(tfList []interface{}) *awstypes.AxisDisplayOptions
 	if v, ok := tfMap["grid_line_visibility"].(string); ok && v != "" {
 		apiObject.GridLineVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["data_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_options"].([]any); ok && len(v) > 0 {
 		apiObject.DataOptions = expandAxisDataOptions(v)
 	}
-	if v, ok := tfMap["scrollbar_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scrollbar_options"].([]any); ok && len(v) > 0 {
 		apiObject.ScrollbarOptions = expandScrollBarOptions(v)
 	}
-	if v, ok := tfMap["tick_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tick_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.TickLabelOptions = expandAxisTickLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisDataOptions(tfList []interface{}) *awstypes.AxisDataOptions {
+func expandAxisDataOptions(tfList []any) *awstypes.AxisDataOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AxisDataOptions{}
 
-	if v, ok := tfMap["date_axis_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["date_axis_options"].([]any); ok && len(v) > 0 {
 		apiObject.DateAxisOptions = expandDateAxisOptions(v)
 	}
-	if v, ok := tfMap["numeric_axis_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["numeric_axis_options"].([]any); ok && len(v) > 0 {
 		apiObject.NumericAxisOptions = expandNumericAxisOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandDateAxisOptions(tfList []interface{}) *awstypes.DateAxisOptions {
+func expandDateAxisOptions(tfList []any) *awstypes.DateAxisOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -512,51 +503,51 @@ func expandDateAxisOptions(tfList []interface{}) *awstypes.DateAxisOptions {
 	return apiObject
 }
 
-func expandNumericAxisOptions(tfList []interface{}) *awstypes.NumericAxisOptions {
+func expandNumericAxisOptions(tfList []any) *awstypes.NumericAxisOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.NumericAxisOptions{}
 
-	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["range"].([]any); ok && len(v) > 0 {
 		apiObject.Range = expandAxisDisplayRange(v)
 	}
-	if v, ok := tfMap["scale"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["scale"].([]any); ok && len(v) > 0 {
 		apiObject.Scale = expandAxisScale(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisDisplayRange(tfList []interface{}) *awstypes.AxisDisplayRange {
+func expandAxisDisplayRange(tfList []any) *awstypes.AxisDisplayRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AxisDisplayRange{}
 
-	if v, ok := tfMap["data_driven"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_driven"].([]any); ok && len(v) > 0 {
 		apiObject.DataDriven = expandAxisDisplayDataDrivenRange(v)
 	}
-	if v, ok := tfMap["min_max"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["min_max"].([]any); ok && len(v) > 0 {
 		apiObject.MinMax = expandAxisDisplayMinMaxRange(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisDisplayDataDrivenRange(tfList []interface{}) *awstypes.AxisDisplayDataDrivenRange {
+func expandAxisDisplayDataDrivenRange(tfList []any) *awstypes.AxisDisplayDataDrivenRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -571,12 +562,12 @@ func expandAxisDisplayDataDrivenRange(tfList []interface{}) *awstypes.AxisDispla
 	return apiObject
 }
 
-func expandAxisDisplayMinMaxRange(tfList []interface{}) *awstypes.AxisDisplayMinMaxRange {
+func expandAxisDisplayMinMaxRange(tfList []any) *awstypes.AxisDisplayMinMaxRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -593,34 +584,34 @@ func expandAxisDisplayMinMaxRange(tfList []interface{}) *awstypes.AxisDisplayMin
 	return apiObject
 }
 
-func expandAxisScale(tfList []interface{}) *awstypes.AxisScale {
+func expandAxisScale(tfList []any) *awstypes.AxisScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.AxisScale{}
 
-	if v, ok := tfMap["linear"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["linear"].([]any); ok && len(v) > 0 {
 		apiObject.Linear = expandAxisLinearScale(v)
 	}
-	if v, ok := tfMap["logarithmic"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["logarithmic"].([]any); ok && len(v) > 0 {
 		apiObject.Logarithmic = expandAxisLogarithmicScale(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisLinearScale(tfList []interface{}) *awstypes.AxisLinearScale {
+func expandAxisLinearScale(tfList []any) *awstypes.AxisLinearScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -637,12 +628,12 @@ func expandAxisLinearScale(tfList []interface{}) *awstypes.AxisLinearScale {
 	return apiObject
 }
 
-func expandAxisLogarithmicScale(tfList []interface{}) *awstypes.AxisLogarithmicScale {
+func expandAxisLogarithmicScale(tfList []any) *awstypes.AxisLogarithmicScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -656,12 +647,12 @@ func expandAxisLogarithmicScale(tfList []interface{}) *awstypes.AxisLogarithmicS
 	return apiObject
 }
 
-func expandScrollBarOptions(tfList []interface{}) *awstypes.ScrollBarOptions {
+func expandScrollBarOptions(tfList []any) *awstypes.ScrollBarOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -671,38 +662,38 @@ func expandScrollBarOptions(tfList []interface{}) *awstypes.ScrollBarOptions {
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["visible_range"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visible_range"].([]any); ok && len(v) > 0 {
 		apiObject.VisibleRange = expandVisibleRangeOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandVisibleRangeOptions(tfList []interface{}) *awstypes.VisibleRangeOptions {
+func expandVisibleRangeOptions(tfList []any) *awstypes.VisibleRangeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.VisibleRangeOptions{}
 
-	if v, ok := tfMap["percent_range"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["percent_range"].([]any); ok && len(v) > 0 {
 		apiObject.PercentRange = expandPercentVisibleRange(v)
 	}
 
 	return apiObject
 }
 
-func expandPercentVisibleRange(tfList []interface{}) *awstypes.PercentVisibleRange {
+func expandPercentVisibleRange(tfList []any) *awstypes.PercentVisibleRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -719,12 +710,12 @@ func expandPercentVisibleRange(tfList []interface{}) *awstypes.PercentVisibleRan
 	return apiObject
 }
 
-func expandAxisTickLabelOptions(tfList []interface{}) *awstypes.AxisTickLabelOptions {
+func expandAxisTickLabelOptions(tfList []any) *awstypes.AxisTickLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -734,19 +725,19 @@ func expandAxisTickLabelOptions(tfList []interface{}) *awstypes.AxisTickLabelOpt
 	if v, ok := tfMap["rotation_angle"].(float64); ok {
 		apiObject.RotationAngle = aws.Float64(v)
 	}
-	if v, ok := tfMap["label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["label_options"].([]any); ok && len(v) > 0 {
 		apiObject.LabelOptions = expandLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandChartAxisLabelOptions(tfList []interface{}) *awstypes.ChartAxisLabelOptions {
+func expandChartAxisLabelOptions(tfList []any) *awstypes.ChartAxisLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -759,14 +750,14 @@ func expandChartAxisLabelOptions(tfList []interface{}) *awstypes.ChartAxisLabelO
 	if v, ok := tfMap["sort_icon_visibility"].(string); ok && v != "" {
 		apiObject.SortIconVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["axis_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["axis_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.AxisLabelOptions = expandAxisLabelOptionsList(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisLabelOptionsList(tfList []interface{}) []awstypes.AxisLabelOptions {
+func expandAxisLabelOptionsList(tfList []any) []awstypes.AxisLabelOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -774,7 +765,7 @@ func expandAxisLabelOptionsList(tfList []interface{}) []awstypes.AxisLabelOption
 	var apiObjects []awstypes.AxisLabelOptions
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -790,7 +781,7 @@ func expandAxisLabelOptionsList(tfList []interface{}) []awstypes.AxisLabelOption
 	return apiObjects
 }
 
-func expandAxisLabelOptions(tfMap map[string]interface{}) *awstypes.AxisLabelOptions {
+func expandAxisLabelOptions(tfMap map[string]any) *awstypes.AxisLabelOptions {
 	if tfMap == nil {
 		return nil
 	}
@@ -800,22 +791,22 @@ func expandAxisLabelOptions(tfMap map[string]interface{}) *awstypes.AxisLabelOpt
 	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
 		apiObject.CustomLabel = aws.String(v)
 	}
-	if v, ok := tfMap["apply_to"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["apply_to"].([]any); ok && len(v) > 0 {
 		apiObject.ApplyTo = expandAxisLabelReferenceOptions(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandAxisLabelReferenceOptions(tfList []interface{}) *awstypes.AxisLabelReferenceOptions {
+func expandAxisLabelReferenceOptions(tfList []any) *awstypes.AxisLabelReferenceOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -825,14 +816,14 @@ func expandAxisLabelReferenceOptions(tfList []interface{}) *awstypes.AxisLabelRe
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		apiObject.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
 
 	return apiObject
 }
 
-func expandContributionAnalysisDefaults(tfList []interface{}) []awstypes.ContributionAnalysisDefault {
+func expandContributionAnalysisDefaults(tfList []any) []awstypes.ContributionAnalysisDefault {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -840,7 +831,7 @@ func expandContributionAnalysisDefaults(tfList []interface{}) []awstypes.Contrib
 	var apiObjects []awstypes.ContributionAnalysisDefault
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -856,7 +847,7 @@ func expandContributionAnalysisDefaults(tfList []interface{}) []awstypes.Contrib
 	return apiObjects
 }
 
-func expandContributionAnalysisDefault(tfMap map[string]interface{}) *awstypes.ContributionAnalysisDefault {
+func expandContributionAnalysisDefault(tfMap map[string]any) *awstypes.ContributionAnalysisDefault {
 	if tfMap == nil {
 		return nil
 	}
@@ -866,14 +857,14 @@ func expandContributionAnalysisDefault(tfMap map[string]interface{}) *awstypes.C
 	if v, ok := tfMap["measure_field_id"].(string); ok && v != "" {
 		apiObject.MeasureFieldId = aws.String(v)
 	}
-	if v, ok := tfMap["contributor_dimensions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["contributor_dimensions"].([]any); ok && len(v) > 0 {
 		apiObject.ContributorDimensions = expandColumnIdentifiers(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLines(tfList []interface{}) []awstypes.ReferenceLine {
+func expandReferenceLines(tfList []any) []awstypes.ReferenceLine {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -881,7 +872,7 @@ func expandReferenceLines(tfList []interface{}) []awstypes.ReferenceLine {
 	var apiObjects []awstypes.ReferenceLine
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -897,7 +888,7 @@ func expandReferenceLines(tfList []interface{}) []awstypes.ReferenceLine {
 	return apiObjects
 }
 
-func expandReferenceLine(tfMap map[string]interface{}) *awstypes.ReferenceLine {
+func expandReferenceLine(tfMap map[string]any) *awstypes.ReferenceLine {
 	if tfMap == nil {
 		return nil
 	}
@@ -907,25 +898,25 @@ func expandReferenceLine(tfMap map[string]interface{}) *awstypes.ReferenceLine {
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = awstypes.WidgetStatus(v)
 	}
-	if v, ok := tfMap["data_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DataConfiguration = expandReferenceLineDataConfiguration(v)
 	}
-	if v, ok := tfMap["label_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["label_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.LabelConfiguration = expandReferenceLineLabelConfiguration(v)
 	}
-	if v, ok := tfMap["style_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["style_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StyleConfiguration = expandReferenceLineStyleConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLineDataConfiguration(tfList []interface{}) *awstypes.ReferenceLineDataConfiguration {
+func expandReferenceLineDataConfiguration(tfList []any) *awstypes.ReferenceLineDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -935,47 +926,47 @@ func expandReferenceLineDataConfiguration(tfList []interface{}) *awstypes.Refere
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
 		apiObject.AxisBinding = awstypes.AxisBinding(v)
 	}
-	if v, ok := tfMap["dynamic_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["dynamic_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.DynamicConfiguration = expandReferenceLineDynamicDataConfiguration(v)
 	}
-	if v, ok := tfMap["static_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["static_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StaticConfiguration = expandReferenceLineStaticDataConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLineDynamicDataConfiguration(tfList []interface{}) *awstypes.ReferenceLineDynamicDataConfiguration {
+func expandReferenceLineDynamicDataConfiguration(tfList []any) *awstypes.ReferenceLineDynamicDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.ReferenceLineDynamicDataConfiguration{}
 
-	if v, ok := tfMap["calculation"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["calculation"].([]any); ok && len(v) > 0 {
 		apiObject.Calculation = expandNumericalAggregationFunction(v)
 	}
-	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column"].([]any); ok && len(v) > 0 {
 		apiObject.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["measure_aggregation_function"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["measure_aggregation_function"].([]any); ok && len(v) > 0 {
 		apiObject.MeasureAggregationFunction = expandAggregationFunction(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *awstypes.ReferenceLineStaticDataConfiguration {
+func expandReferenceLineStaticDataConfiguration(tfList []any) *awstypes.ReferenceLineStaticDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -989,12 +980,12 @@ func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func expandReferenceLineLabelConfiguration(tfList []interface{}) *awstypes.ReferenceLineLabelConfiguration {
+func expandReferenceLineLabelConfiguration(tfList []any) *awstypes.ReferenceLineLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1010,25 +1001,25 @@ func expandReferenceLineLabelConfiguration(tfList []interface{}) *awstypes.Refer
 	if v, ok := tfMap["vertical_position"].(string); ok && v != "" {
 		apiObject.VerticalPosition = awstypes.ReferenceLineLabelVerticalPosition(v)
 	}
-	if v, ok := tfMap["custom_label_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["custom_label_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.CustomLabelConfiguration = expandReferenceLineCustomLabelConfiguration(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
-	if v, ok := tfMap["value_label_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["value_label_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ValueLabelConfiguration = expandReferenceLineValueLabelConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *awstypes.ReferenceLineCustomLabelConfiguration {
+func expandReferenceLineCustomLabelConfiguration(tfList []any) *awstypes.ReferenceLineCustomLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1042,12 +1033,12 @@ func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *awstypes
 	return apiObject
 }
 
-func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *awstypes.ReferenceLineValueLabelConfiguration {
+func expandReferenceLineValueLabelConfiguration(tfList []any) *awstypes.ReferenceLineValueLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1057,19 +1048,19 @@ func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *awstypes.
 	if v, ok := tfMap["relative_position"].(string); ok && v != "" {
 		apiObject.RelativePosition = awstypes.ReferenceLineValueLabelRelativePosition(v)
 	}
-	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["format_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FormatConfiguration = expandNumericFormatConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandReferenceLineStyleConfiguration(tfList []interface{}) *awstypes.ReferenceLineStyleConfiguration {
+func expandReferenceLineStyleConfiguration(tfList []any) *awstypes.ReferenceLineStyleConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1086,12 +1077,12 @@ func expandReferenceLineStyleConfiguration(tfList []interface{}) *awstypes.Refer
 	return apiObject
 }
 
-func expandSmallMultiplesOptions(tfList []interface{}) *awstypes.SmallMultiplesOptions {
+func expandSmallMultiplesOptions(tfList []any) *awstypes.SmallMultiplesOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1104,19 +1095,19 @@ func expandSmallMultiplesOptions(tfList []interface{}) *awstypes.SmallMultiplesO
 	if v, ok := tfMap["max_visible_rows"].(int); ok {
 		apiObject.MaxVisibleRows = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["panel_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["panel_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.PanelConfiguration = expandPanelConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandPanelConfiguration(tfList []interface{}) *awstypes.PanelConfiguration {
+func expandPanelConfiguration(tfList []any) *awstypes.PanelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1147,19 +1138,19 @@ func expandPanelConfiguration(tfList []interface{}) *awstypes.PanelConfiguration
 	if v, ok := tfMap["gutter_visibility"].(string); ok && v != "" {
 		apiObject.GutterVisibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandPanelTitleOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandPanelTitleOptions(tfList []interface{}) *awstypes.PanelTitleOptions {
+func expandPanelTitleOptions(tfList []any) *awstypes.PanelTitleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1172,19 +1163,19 @@ func expandPanelTitleOptions(tfList []interface{}) *awstypes.PanelTitleOptions {
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		apiObject.Visibility = awstypes.Visibility(v)
 	}
-	if v, ok := tfMap["font_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["font_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.FontConfiguration = expandFontConfiguration(v)
 	}
 
 	return apiObject
 }
 
-func expandItemsLimitConfiguration(tfList []interface{}) *awstypes.ItemsLimitConfiguration {
+func expandItemsLimitConfiguration(tfList []any) *awstypes.ItemsLimitConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -1201,12 +1192,12 @@ func expandItemsLimitConfiguration(tfList []interface{}) *awstypes.ItemsLimitCon
 	return apiObject
 }
 
-func flattenAxisDisplayOptions(apiObject *awstypes.AxisDisplayOptions) []interface{} {
+func flattenAxisDisplayOptions(apiObject *awstypes.AxisDisplayOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["axis_line_visibility"] = apiObject.AxisLineVisibility
 	if apiObject.AxisOffset != nil {
@@ -1223,15 +1214,15 @@ func flattenAxisDisplayOptions(apiObject *awstypes.AxisDisplayOptions) []interfa
 		tfMap["tick_label_options"] = flattenAxisTickLabelOptions(apiObject.TickLabelOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisDataOptions(apiObject *awstypes.AxisDataOptions) []interface{} {
+func flattenAxisDataOptions(apiObject *awstypes.AxisDataOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DateAxisOptions != nil {
 		tfMap["date_axis_options"] = flattenDateAxisOptions(apiObject.DateAxisOptions)
@@ -1240,27 +1231,27 @@ func flattenAxisDataOptions(apiObject *awstypes.AxisDataOptions) []interface{} {
 		tfMap["numeric_axis_options"] = flattenNumericAxisOptions(apiObject.NumericAxisOptions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDateAxisOptions(apiObject *awstypes.DateAxisOptions) []interface{} {
+func flattenDateAxisOptions(apiObject *awstypes.DateAxisOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"missing_date_visibility": apiObject.MissingDateVisibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenNumericAxisOptions(apiObject *awstypes.NumericAxisOptions) []interface{} {
+func flattenNumericAxisOptions(apiObject *awstypes.NumericAxisOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Range != nil {
 		tfMap["range"] = flattenAxisDisplayRange(apiObject.Range)
@@ -1269,15 +1260,15 @@ func flattenNumericAxisOptions(apiObject *awstypes.NumericAxisOptions) []interfa
 		tfMap["scale"] = flattenAxisScale(apiObject.Scale)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisDisplayRange(apiObject *awstypes.AxisDisplayRange) []interface{} {
+func flattenAxisDisplayRange(apiObject *awstypes.AxisDisplayRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.DataDriven != nil {
 		tfMap["data_driven"] = flattenAxisDisplayDataDrivenRange(apiObject.DataDriven)
@@ -1286,26 +1277,26 @@ func flattenAxisDisplayRange(apiObject *awstypes.AxisDisplayRange) []interface{}
 		tfMap["min_max"] = flattenAxisDisplayMinMaxRange(apiObject.MinMax)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisDisplayDataDrivenRange(apiObject *awstypes.AxisDisplayDataDrivenRange) []interface{} {
+func flattenAxisDisplayDataDrivenRange(apiObject *awstypes.AxisDisplayDataDrivenRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
 	// For future extensions
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisDisplayMinMaxRange(apiObject *awstypes.AxisDisplayMinMaxRange) []interface{} {
+func flattenAxisDisplayMinMaxRange(apiObject *awstypes.AxisDisplayMinMaxRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Maximum != nil {
 		tfMap["maximum"] = aws.ToFloat64(apiObject.Maximum)
@@ -1314,15 +1305,15 @@ func flattenAxisDisplayMinMaxRange(apiObject *awstypes.AxisDisplayMinMaxRange) [
 		tfMap["minimum"] = aws.ToFloat64(apiObject.Minimum)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisScale(apiObject *awstypes.AxisScale) []interface{} {
+func flattenAxisScale(apiObject *awstypes.AxisScale) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Linear != nil {
 		tfMap["linear"] = flattenAxisLinearScale(apiObject.Linear)
@@ -1331,15 +1322,15 @@ func flattenAxisScale(apiObject *awstypes.AxisScale) []interface{} {
 		tfMap["logarithmic"] = flattenAxisLogarithmicScale(apiObject.Logarithmic)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisLinearScale(apiObject *awstypes.AxisLinearScale) []interface{} {
+func flattenAxisLinearScale(apiObject *awstypes.AxisLinearScale) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.StepCount != nil {
 		tfMap["step_count"] = aws.ToInt32(apiObject.StepCount)
@@ -1348,58 +1339,58 @@ func flattenAxisLinearScale(apiObject *awstypes.AxisLinearScale) []interface{} {
 		tfMap["step_size"] = aws.ToFloat64(apiObject.StepSize)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisLogarithmicScale(apiObject *awstypes.AxisLogarithmicScale) []interface{} {
+func flattenAxisLogarithmicScale(apiObject *awstypes.AxisLogarithmicScale) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Base != nil {
 		tfMap["base"] = aws.ToFloat64(apiObject.Base)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenScrollBarOptions(apiObject *awstypes.ScrollBarOptions) []interface{} {
+func flattenScrollBarOptions(apiObject *awstypes.ScrollBarOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["visibility"] = apiObject.Visibility
 	if apiObject.VisibleRange != nil {
 		tfMap["visible_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisibleRangeOptions(apiObject *awstypes.VisibleRangeOptions) []interface{} {
+func flattenVisibleRangeOptions(apiObject *awstypes.VisibleRangeOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.PercentRange != nil {
 		tfMap["percent_range"] = flattenPercentVisibleRange(apiObject.PercentRange)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPercentVisibleRange(apiObject *awstypes.PercentVisibleRange) []interface{} {
+func flattenPercentVisibleRange(apiObject *awstypes.PercentVisibleRange) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.From != nil {
 		tfMap["from"] = aws.ToFloat64(apiObject.From)
@@ -1408,15 +1399,15 @@ func flattenPercentVisibleRange(apiObject *awstypes.PercentVisibleRange) []inter
 		tfMap["to"] = aws.ToFloat64(apiObject.To)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisTickLabelOptions(apiObject *awstypes.AxisTickLabelOptions) []interface{} {
+func flattenAxisTickLabelOptions(apiObject *awstypes.AxisTickLabelOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.LabelOptions != nil {
 		tfMap["label_options"] = flattenLabelOptions(apiObject.LabelOptions)
@@ -1425,15 +1416,15 @@ func flattenAxisTickLabelOptions(apiObject *awstypes.AxisTickLabelOptions) []int
 		tfMap["rotation_angle"] = aws.ToFloat64(apiObject.RotationAngle)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenChartAxisLabelOptions(apiObject *awstypes.ChartAxisLabelOptions) []interface{} {
+func flattenChartAxisLabelOptions(apiObject *awstypes.ChartAxisLabelOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AxisLabelOptions != nil {
 		tfMap["axis_label_options"] = flattenAxisLabelOptions(apiObject.AxisLabelOptions)
@@ -1441,18 +1432,18 @@ func flattenChartAxisLabelOptions(apiObject *awstypes.ChartAxisLabelOptions) []i
 	tfMap["sort_icon_visibility"] = apiObject.SortIconVisibility
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAxisLabelOptions(apiObjects []awstypes.AxisLabelOptions) []interface{} {
+func flattenAxisLabelOptions(apiObjects []awstypes.AxisLabelOptions) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.ApplyTo != nil {
 			tfMap["apply_to"] = flattenAxisLabelReferenceOptions(apiObject.ApplyTo)
@@ -1470,12 +1461,12 @@ func flattenAxisLabelOptions(apiObjects []awstypes.AxisLabelOptions) []interface
 	return tfList
 }
 
-func flattenAxisLabelReferenceOptions(apiObject *awstypes.AxisLabelReferenceOptions) []interface{} {
+func flattenAxisLabelReferenceOptions(apiObject *awstypes.AxisLabelReferenceOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FieldId != nil {
 		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
@@ -1484,18 +1475,18 @@ func flattenAxisLabelReferenceOptions(apiObject *awstypes.AxisLabelReferenceOpti
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenContributionAnalysisDefault(apiObjects []awstypes.ContributionAnalysisDefault) []interface{} {
+func flattenContributionAnalysisDefault(apiObjects []awstypes.ContributionAnalysisDefault) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"measure_field_id": aws.ToString(apiObject.MeasureFieldId),
 		}
 
@@ -1509,15 +1500,15 @@ func flattenContributionAnalysisDefault(apiObjects []awstypes.ContributionAnalys
 	return tfList
 }
 
-func flattenColumnIdentifiers(apiObjects []awstypes.ColumnIdentifier) []interface{} {
+func flattenColumnIdentifiers(apiObjects []awstypes.ColumnIdentifier) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"column_name":         aws.ToString(apiObject.ColumnName),
 			"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 		}
@@ -1528,15 +1519,15 @@ func flattenColumnIdentifiers(apiObjects []awstypes.ColumnIdentifier) []interfac
 	return tfList
 }
 
-func flattenReferenceLine(apiObjects []awstypes.ReferenceLine) []interface{} {
+func flattenReferenceLine(apiObjects []awstypes.ReferenceLine) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.DataConfiguration != nil {
 			tfMap["data_configuration"] = flattenReferenceLineDataConfiguration(apiObject.DataConfiguration)
@@ -1555,12 +1546,12 @@ func flattenReferenceLine(apiObjects []awstypes.ReferenceLine) []interface{} {
 	return tfList
 }
 
-func flattenReferenceLineDataConfiguration(apiObject *awstypes.ReferenceLineDataConfiguration) []interface{} {
+func flattenReferenceLineDataConfiguration(apiObject *awstypes.ReferenceLineDataConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["axis_binding"] = apiObject.AxisBinding
 	if apiObject.DynamicConfiguration != nil {
@@ -1570,15 +1561,15 @@ func flattenReferenceLineDataConfiguration(apiObject *awstypes.ReferenceLineData
 		tfMap["static_configuration"] = flattenReferenceLineStaticDataConfiguration(apiObject.StaticConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceLineDynamicDataConfiguration(apiObject *awstypes.ReferenceLineDynamicDataConfiguration) []interface{} {
+func flattenReferenceLineDynamicDataConfiguration(apiObject *awstypes.ReferenceLineDynamicDataConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Calculation != nil {
 		tfMap["calculation"] = flattenNumericalAggregationFunction(apiObject.Calculation)
@@ -1590,27 +1581,27 @@ func flattenReferenceLineDynamicDataConfiguration(apiObject *awstypes.ReferenceL
 		tfMap["measure_aggregation_function"] = flattenAggregationFunction(apiObject.MeasureAggregationFunction)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceLineStaticDataConfiguration(apiObject *awstypes.ReferenceLineStaticDataConfiguration) []interface{} {
+func flattenReferenceLineStaticDataConfiguration(apiObject *awstypes.ReferenceLineStaticDataConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrValue: apiObject.Value,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceLineLabelConfiguration(apiObject *awstypes.ReferenceLineLabelConfiguration) []interface{} {
+func flattenReferenceLineLabelConfiguration(apiObject *awstypes.ReferenceLineLabelConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CustomLabelConfiguration != nil {
 		tfMap["custom_label_configuration"] = flattenReferenceLineCustomLabelConfiguration(apiObject.CustomLabelConfiguration)
@@ -1627,56 +1618,56 @@ func flattenReferenceLineLabelConfiguration(apiObject *awstypes.ReferenceLineLab
 	}
 	tfMap["vertical_position"] = apiObject.VerticalPosition
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
-func flattenReferenceLineCustomLabelConfiguration(apiObject *awstypes.ReferenceLineCustomLabelConfiguration) []interface{} {
+func flattenReferenceLineCustomLabelConfiguration(apiObject *awstypes.ReferenceLineCustomLabelConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"custom_label": aws.ToString(apiObject.CustomLabel),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceLineValueLabelConfiguration(apiObject *awstypes.ReferenceLineValueLabelConfiguration) []interface{} {
+func flattenReferenceLineValueLabelConfiguration(apiObject *awstypes.ReferenceLineValueLabelConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
 	}
 	tfMap["relative_position"] = apiObject.RelativePosition
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenReferenceLineStyleConfiguration(apiObject *awstypes.ReferenceLineStyleConfiguration) []interface{} {
+func flattenReferenceLineStyleConfiguration(apiObject *awstypes.ReferenceLineStyleConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Color != nil {
 		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	tfMap["pattern"] = apiObject.Pattern
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSmallMultiplesOptions(apiObject *awstypes.SmallMultiplesOptions) []interface{} {
+func flattenSmallMultiplesOptions(apiObject *awstypes.SmallMultiplesOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.MaxVisibleColumns != nil {
 		tfMap["max_visible_columns"] = aws.ToInt64(apiObject.MaxVisibleColumns)
@@ -1688,15 +1679,15 @@ func flattenSmallMultiplesOptions(apiObject *awstypes.SmallMultiplesOptions) []i
 		tfMap["panel_configuration"] = flattenPanelConfiguration(apiObject.PanelConfiguration)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPanelConfiguration(apiObject *awstypes.PanelConfiguration) []interface{} {
+func flattenPanelConfiguration(apiObject *awstypes.PanelConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.BackgroundColor != nil {
 		tfMap["background_color"] = aws.ToString(apiObject.BackgroundColor)
@@ -1717,15 +1708,15 @@ func flattenPanelConfiguration(apiObject *awstypes.PanelConfiguration) []interfa
 		tfMap["title"] = flattenPanelTitleOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPanelTitleOptions(apiObject *awstypes.PanelTitleOptions) []interface{} {
+func flattenPanelTitleOptions(apiObject *awstypes.PanelTitleOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.FontConfiguration != nil {
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
@@ -1733,5 +1724,5 @@ func flattenPanelTitleOptions(apiObject *awstypes.PanelTitleOptions) []interface
 	tfMap["horizontal_text_alignment"] = apiObject.HorizontalTextAlignment
 	tfMap["visibility"] = apiObject.Visibility
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

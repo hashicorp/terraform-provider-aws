@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +75,7 @@ func resourceWorkspace() *schema.Resource {
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
 				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
+				StateFunc: func(v any) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
@@ -186,18 +187,16 @@ func resourceWorkspace() *schema.Resource {
 				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	input := &grafana.CreateWorkspaceInput{
 		AccountAccessType:       awstypes.AccountAccessType(d.Get("account_access_type").(string)),
-		AuthenticationProviders: flex.ExpandStringyValueList[awstypes.AuthenticationProviderTypes](d.Get("authentication_providers").([]interface{})),
+		AuthenticationProviders: flex.ExpandStringyValueList[awstypes.AuthenticationProviderTypes](d.Get("authentication_providers").([]any)),
 		ClientToken:             aws.String(id.UniqueId()),
 		PermissionType:          awstypes.PermissionType(d.Get("permission_type").(string)),
 		Tags:                    getTagsIn(ctx),
@@ -208,7 +207,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
-		input.WorkspaceDataSources = flex.ExpandStringyValueList[awstypes.DataSourceType](v.([]interface{}))
+		input.WorkspaceDataSources = flex.ExpandStringyValueList[awstypes.DataSourceType](v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -224,11 +223,11 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("network_access_control"); ok {
-		input.NetworkAccessControl = expandNetworkAccessControl(v.([]interface{}))
+		input.NetworkAccessControl = expandNetworkAccessControl(v.([]any))
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
-		input.WorkspaceNotificationDestinations = flex.ExpandStringyValueList[awstypes.NotificationDestinationType](v.([]interface{}))
+		input.WorkspaceNotificationDestinations = flex.ExpandStringyValueList[awstypes.NotificationDestinationType](v.([]any))
 	}
 
 	if v, ok := d.GetOk("organization_role_name"); ok {
@@ -236,7 +235,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("organizational_units"); ok {
-		input.WorkspaceOrganizationalUnits = flex.ExpandStringValueList(v.([]interface{}))
+		input.WorkspaceOrganizationalUnits = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
@@ -248,7 +247,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok {
-		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
+		input.VpcConfiguration = expandVPCConfiguration(v.([]any))
 	}
 
 	output, err := conn.CreateWorkspace(ctx, input)
@@ -266,13 +265,13 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	workspace, err := findWorkspaceByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -285,10 +284,10 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("account_access_type", workspace.AccountAccessType)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedgrafana.html#amazonmanagedgrafana-resources-for-iam-policies.
 	workspaceARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "grafana",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, workspaceARN)
@@ -329,7 +328,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -343,7 +342,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("data_sources") {
-			input.WorkspaceDataSources = flex.ExpandStringyValueList[awstypes.DataSourceType](d.Get("data_sources").([]interface{}))
+			input.WorkspaceDataSources = flex.ExpandStringyValueList[awstypes.DataSourceType](d.Get("data_sources").([]any))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -355,7 +354,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("network_access_control") {
-			if v, ok := d.Get("network_access_control").([]interface{}); ok {
+			if v, ok := d.Get("network_access_control").([]any); ok {
 				if len(v) > 0 {
 					input.NetworkAccessControl = expandNetworkAccessControl(v)
 				} else {
@@ -365,7 +364,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("notification_destinations") {
-			input.WorkspaceNotificationDestinations = flex.ExpandStringyValueList[awstypes.NotificationDestinationType](d.Get("notification_destinations").([]interface{}))
+			input.WorkspaceNotificationDestinations = flex.ExpandStringyValueList[awstypes.NotificationDestinationType](d.Get("notification_destinations").([]any))
 		}
 
 		if d.HasChange("organization_role_name") {
@@ -373,7 +372,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("organizational_units") {
-			input.WorkspaceOrganizationalUnits = flex.ExpandStringValueList(d.Get("organizational_units").([]interface{}))
+			input.WorkspaceOrganizationalUnits = flex.ExpandStringValueList(d.Get("organizational_units").([]any))
 		}
 
 		if d.HasChange("permission_type") {
@@ -389,7 +388,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange(names.AttrVPCConfiguration) {
-			if v, ok := d.Get(names.AttrVPCConfiguration).([]interface{}); ok {
+			if v, ok := d.Get(names.AttrVPCConfiguration).([]any); ok {
 				if len(v) > 0 {
 					input.VpcConfiguration = expandVPCConfiguration(v)
 				} else {
@@ -433,7 +432,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -465,7 +464,7 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	output, err := conn.DescribeWorkspace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -476,17 +475,17 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	}
 
 	if output == nil || output.Workspace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -499,7 +498,7 @@ func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) retry
 }
 
 func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusCreating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -516,7 +515,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusUpdating, awstypes.WorkspaceStatusVersionUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -533,7 +532,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -549,12 +548,12 @@ func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, 
 	return nil, err
 }
 
-func expandVPCConfiguration(tfList []interface{}) *awstypes.VpcConfiguration {
+func expandVPCConfiguration(tfList []any) *awstypes.VpcConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := awstypes.VpcConfiguration{}
 
 	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
@@ -568,24 +567,24 @@ func expandVPCConfiguration(tfList []interface{}) *awstypes.VpcConfiguration {
 	return &apiObject
 }
 
-func flattenVPCConfiguration(apiObject *awstypes.VpcConfiguration) []interface{} {
+func flattenVPCConfiguration(apiObject *awstypes.VpcConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 	tfMap[names.AttrSubnetIDs] = apiObject.SubnetIds
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandNetworkAccessControl(tfList []interface{}) *awstypes.NetworkAccessConfiguration {
+func expandNetworkAccessControl(tfList []any) *awstypes.NetworkAccessConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := awstypes.NetworkAccessConfiguration{}
 
 	if v, ok := tfMap["prefix_list_ids"].(*schema.Set); ok && v.Len() > 0 {
@@ -599,14 +598,14 @@ func expandNetworkAccessControl(tfList []interface{}) *awstypes.NetworkAccessCon
 	return &apiObject
 }
 
-func flattenNetworkAccessControl(apiObject *awstypes.NetworkAccessConfiguration) []interface{} {
+func flattenNetworkAccessControl(apiObject *awstypes.NetworkAccessConfiguration) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 	tfMap["prefix_list_ids"] = apiObject.PrefixListIds
 	tfMap["vpce_ids"] = apiObject.VpceIds
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

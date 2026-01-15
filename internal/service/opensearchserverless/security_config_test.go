@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless_test
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearchserverless "github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,7 +45,8 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "saml_options.session_timeout"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_options.0.session_timeout"),
 				),
 			},
 			{
@@ -78,7 +80,8 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
@@ -88,7 +91,8 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "40"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout", "40"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
@@ -116,9 +120,64 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearchserverless.ResourceSecurityConfig, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearchserverless.ResourceSecurityConfig, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessSecurityConfig_upgradeV6_0_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var securityconfig types.SecurityConfigDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opensearchserverless_security_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckSecurityConfig(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		CheckDestroy: testAccCheckSecurityConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.94.1",
+					},
+				},
+				Config: testAccSecurityConfig_samlOptions(rName, "test-fixtures/idp-metadata.xml", 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "60"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccSecurityConfig_samlOptions(rName, "test-fixtures/idp-metadata.xml", 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout", "60"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -135,7 +194,7 @@ func testAccCheckSecurityConfigDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfopensearchserverless.FindSecurityConfigByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -216,4 +275,18 @@ resource "aws_opensearchserverless_security_config" "test" {
   }
 }
 `, rName, samlOptions, description, sessionTimeout)
+}
+
+func testAccSecurityConfig_samlOptions(rName, samlOptions string, sessionTimeout int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearchserverless_security_config" "test" {
+  name = %[1]q
+  type = "saml"
+
+  saml_options {
+    metadata        = file("%[2]s")
+    session_timeout = %[3]d
+  }
+}
+`, rName, samlOptions, sessionTimeout)
 }

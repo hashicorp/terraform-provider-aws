@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -13,13 +13,15 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -206,25 +208,32 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "batch_target.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input", ""),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "0"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -241,8 +250,15 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config:   testAccTargetConfig_defaultBusName(rName),
-				PlanOnly: true,
+				Config: testAccTargetConfig_defaultBusName(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -264,7 +280,7 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -314,7 +330,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
@@ -324,8 +340,8 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
@@ -466,9 +482,9 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 				Config: testAccTargetConfig_ssmDocument(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.key", "tag:Name"),
-					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.0.values.0", "acceptance_test"),
 				),
 			},
@@ -499,11 +515,11 @@ func TestAccEventsTarget_http(t *testing.T) {
 				Config: testAccTargetConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.X-Test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Env", "test"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Path", "$.detail.path"),
 				),
@@ -536,12 +552,12 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 				Config: testAccTargetConfig_httpParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.X-Test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Env", "test"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Path", "$.detail.path"),
 				),
@@ -557,13 +573,13 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 				Config: testAccTargetConfig_httpParameterUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "http_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "http_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.0", "test"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.path_parameter_values.1", "test2"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.header_parameters.X-Test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Env", "test"),
 					resource.TestCheckResourceAttr(resourceName, "http_target.0.query_string_parameters.Path", "$.detail.path"),
 				),
@@ -591,13 +607,13 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", "0"),
 				),
 			},
 			{
@@ -627,7 +643,7 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 				Config: testAccTargetConfig_redshift(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.database", "redshiftdb"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.sql", "SELECT * FROM table"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.statement_name", "NewStatement"),
@@ -666,12 +682,12 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
 				),
 			},
 			{
@@ -729,12 +745,12 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
 				),
 			},
 			{
@@ -785,8 +801,8 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 				Config: testAccTargetConfig_ecsBlankTaskCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 				),
 			},
 			{
@@ -816,15 +832,15 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 				Config: testAccTargetConfig_ecsBlankTaskCountFull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.enable_execute_command", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.enable_ecs_managed_tags", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", "TASK_DEFINITION"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.placement_constraint.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.placement_constraint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.placement_constraint.0.type", "distinctInstance"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.tags.test", "test1"),
 				),
 			},
@@ -855,10 +871,10 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 				Config: testAccTargetConfig_ecsCapacityProvider(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.base", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.base", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.weight", "100"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.capacity_provider", "test"),
 				),
@@ -890,9 +906,9 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 				Config: testAccTargetConfig_ecsPlacementStrategy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.0.type", "spread"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.0.field", "attribute:ecs.availability-zone"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.ordered_placement_strategy.1.type", "spread"),
@@ -927,7 +943,7 @@ func TestAccEventsTarget_batch(t *testing.T) {
 				Config: testAccTargetConfig_batch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "batch_target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "batch_target.0.job_definition", batchJobDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.0.job_name", rName),
 				),
@@ -959,7 +975,7 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 				Config: testAccTargetConfig_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.0.partition_key_path", "$.detail"),
 				),
 			},
@@ -990,7 +1006,7 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 				Config: testAccTargetConfig_sqs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.0.message_group_id", "event_group"),
 				),
 			},
@@ -1022,8 +1038,8 @@ func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_sagemaker_pipeline.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.*", map[string]string{
 						names.AttrName:  names.AttrKey,
 						names.AttrValue: names.AttrValue,
@@ -1083,7 +1099,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", strconv.Itoa(len(validInputPaths))),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.ValidField_99", "$.ValidField_99"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", expectedInputTemplate.String()),
@@ -1116,8 +1132,8 @@ func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 				Config: testAccTargetConfig_inputTransformerJSONString(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_paths.instance", "$.detail.instance"),
 					resource.TestCheckResourceAttr(resourceName, "input_transformer.0.input_template", "\"<instance> is in state <status>\""),
 				),
@@ -1182,10 +1198,43 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 				Config: testAccTargetConfig_ecsNoPropagateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccEventsTarget_appsync(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Target
+	rName := sdkacctest.RandomWithPrefix("tf_appsync_target")
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_appsync(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.0.graphql_operation", "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"),
 				),
 			},
 			{
@@ -1231,7 +1280,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1915,15 +1964,14 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
-  database_name                       = "test"
-  master_username                     = "tfacctest"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
+  cluster_identifier        = %[1]q
+  cluster_subnet_group_name = aws_redshift_subnet_group.test.name
+  database_name             = "test"
+  master_username           = "tfacctest"
+  master_password           = "Mustbe8characters"
+  node_type                 = "ra3.large"
+  allow_version_upgrade     = false
+  skip_final_snapshot       = true
 
   depends_on = [aws_internet_gateway.test]
 }
@@ -2270,7 +2318,7 @@ resource "aws_subnet" "subnet" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.iam_instance_profile.arn
@@ -2299,10 +2347,14 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 resource "aws_batch_job_queue" "test" {
-  name                 = "%[1]s"
-  state                = "ENABLED"
-  priority             = 1
-  compute_environments = [aws_batch_compute_environment.test.arn]
+  name     = "%[1]s"
+  state    = "ENABLED"
+  priority = 1
+  compute_environment_order {
+    compute_environment = aws_batch_compute_environment.test.arn
+    order               = 1
+  }
+
 }
 
 resource "aws_batch_job_definition" "test" {
@@ -2574,7 +2626,7 @@ resource "aws_lambda_function" "test" {
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs16.x"
+  runtime          = "nodejs20.x"
 }
 
 resource "aws_iam_role" "test" {
@@ -2644,4 +2696,104 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 `)
+}
+
+func testAccTargetConfig_appsync(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = replace(aws_appsync_graphql_api.test.arn, "apis", "endpoints/graphql-api")
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  input_transformer {
+    input_paths = {
+      input = "$.detail.input"
+    }
+
+    input_template = <<EOF
+      {
+        "input": <input>
+      }
+    EOF
+  }
+
+  appsync_target {
+    graphql_operation = "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "appsync:GraphQL",
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  name                = %[1]q
+  authentication_type = "AWS_IAM"
+  schema              = <<EOF
+    schema {
+      mutation: Mutation
+      query: Query
+    }
+
+    type Query {
+      testQuery: String
+    }
+
+    type Mutation {
+      testMutation(input: MutationInput!): TestMutationResult
+    }
+
+    type TestMutationResult {
+      test: String
+    }
+
+    input MutationInput {
+      testInput: String
+    }
+  EOF
+}
+`, rName)
 }

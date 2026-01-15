@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -17,18 +17,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_global_cluster", name="Global Cluster")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.GlobalCluster")
 func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
@@ -54,6 +59,7 @@ func resourceGlobalCluster() *schema.Resource {
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrDeletionProtection: {
@@ -61,13 +67,16 @@ func resourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			names.AttrEndpoint: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrEngine: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
 			"engine_lifecycle_support": {
 				Type:         schema.TypeString,
@@ -115,12 +124,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			"source_db_cluster_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrEngine},
-				RequiredWith:  []string{names.AttrForceDestroy},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				RequiredWith: []string{names.AttrForceDestroy},
 			},
 			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
@@ -128,17 +136,20 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	globalClusterID := d.Get("global_cluster_identifier").(string)
 	input := &rds.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(globalClusterID),
+		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
@@ -163,6 +174,10 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
+		// Engine and engine version cannot be sent during create requests if a source
+		// DB cluster is specified.
+		input.Engine = nil
+		input.EngineVersion = nil
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
@@ -191,13 +206,13 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -210,6 +225,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEndpoint, globalCluster.Endpoint)
 	d.Set(names.AttrEngine, globalCluster.Engine)
 	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
@@ -234,10 +250,12 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("engine_version_actual", newEngineVersion)
 	}
 
+	setTagsOut(ctx, globalCluster.TagList)
+
 	return diags
 }
 
-func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -247,32 +265,34 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	input := &rds.ModifyGlobalClusterInput{
-		DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-		GlobalClusterIdentifier: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &rds.ModifyGlobalClusterInput{
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			GlobalClusterIdentifier: aws.String(d.Id()),
+		}
 
-	_, err := conn.ModifyGlobalCluster(ctx, input)
+		_, err := conn.ModifyGlobalCluster(ctx, input)
 
-	if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
-		return diags
-	}
+		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
+			return diags
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
+		}
 
-	if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+		if _, err := waitGlobalClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
 }
 
-func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get(names.AttrForceDestroy).(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
@@ -282,7 +302,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		globalClusterMembers := d.Get("global_cluster_members").(*schema.Set)
 		if globalClusterMembers.Len() > 0 {
 			for _, tfMapRaw := range globalClusterMembers.List() {
-				tfMap, ok := tfMapRaw.(map[string]interface{})
+				tfMap, ok := tfMapRaw.(map[string]any)
 				if !ok {
 					continue
 				}
@@ -345,13 +365,8 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		// This operation will be quick if successful
 		globalClusterClusterDeleteTimeout = 5 * time.Minute
 	)
-	var timeout time.Duration
-	if x, y := deadline.Remaining(), globalClusterClusterDeleteTimeout; x < y {
-		timeout = x
-	} else {
-		timeout = y
-	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (interface{}, error) {
+	timeout := max(deadline.Remaining(), globalClusterClusterDeleteTimeout)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.InvalidGlobalClusterStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		})
@@ -401,7 +416,7 @@ func findGlobalClusterByID(ctx context.Context, conn *rds.Client, id string) (*t
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -427,7 +442,7 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -447,11 +462,11 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -464,7 +479,7 @@ func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -481,7 +496,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -499,7 +514,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
 		Refresh:        statusGlobalCluster(ctx, conn, id),
@@ -517,7 +532,7 @@ func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClusterARN string, timeout time.Duration) (*types.GlobalCluster, error) { //nolint:unparam
-	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
 		return findGlobalClusterByDBClusterARN(ctx, conn, dbClusterARN)
 	})
 
@@ -532,10 +547,11 @@ func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClu
 // either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
 // perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
 // of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
-// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
-// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
-// as more than just an error; it guides our decision between major and minor upgrades.
-
+// a minor version upgrade isn't supported ("InvalidParameterValue"/"doesn't support minor version upgrades"),
+// we infer that a minor upgrade was intended, and should be therefore be performed on individual cluster
+// members instead. It's crucial to recognize that this error serves as more than just an error; it guides
+// our decision between major and minor upgrades.
+//
 // IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
 // logic, including the handling of errors that signify the need for a minor version upgrade.
 func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d *schema.ResourceData, timeout time.Duration) error {
@@ -543,7 +559,7 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d 
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -570,7 +586,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 	}
 
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyGlobalCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -578,7 +594,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err
 			}
 
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 
@@ -631,7 +647,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Clien
 	leelooMultiPass := false // only one pass is needed
 
 	for _, tfMapRaw := range clusterMembers.List() {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 
 		// DBClusterIdentifier supposedly can be either ARN or ID, and both used to work,
 		// but as of now, only ID works.
@@ -667,7 +683,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Clien
 
 		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", globalClusterID, clusterID, engineVersion)
 		_, err = tfresource.RetryWhen(ctx, timeout,
-			func() (interface{}, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input, optFn)
 			},
 			func(err error) (bool, error) {
@@ -747,7 +763,7 @@ func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
 }
 
 func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusConfiguringIAMDatabaseAuth,
@@ -772,15 +788,15 @@ func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id st
 	return nil, err
 }
 
-func flattenGlobalClusterMembers(apiObjects []types.GlobalClusterMember) []interface{} {
+func flattenGlobalClusterMembers(apiObjects []types.GlobalClusterMember) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			"db_cluster_arn": aws.ToString(apiObject.DBClusterArn),
 			"is_writer":      aws.ToBool(apiObject.IsWriter),
 		}

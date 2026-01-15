@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,7 +185,7 @@ func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{
@@ -193,64 +193,6 @@ func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"source_entity"},
-			},
-		},
-	})
-}
-
-func TestAccQuickSightTemplate_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var template awstypes.Template
-	resourceName := "aws_quicksight_template.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTemplateConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTemplateConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccTemplateConfig_tags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -281,8 +223,8 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
 			{
@@ -299,8 +241,8 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
 			},
 		},
@@ -318,7 +260,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindTemplateByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["template_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -648,139 +590,4 @@ resource "aws_quicksight_template" "copy" {
   }
 }
 `, rId, rName))
-}
-
-func testAccTemplateConfig_tags1(rId, rName, key1, value1 string) string {
-	return acctest.ConfigCompose(
-		testAccTemplateConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_template" "test" {
-  template_id         = %[1]q
-  name                = %[2]q
-  version_description = "test"
-  definition {
-    data_set_configuration {
-      data_set_schema {
-        column_schema_list {
-          name      = "Column1"
-          data_type = "STRING"
-        }
-        column_schema_list {
-          name      = "Column2"
-          data_type = "INTEGER"
-        }
-      }
-      placeholder = "1"
-    }
-    sheets {
-      title    = "Test"
-      sheet_id = "Test1"
-      visuals {
-        bar_chart_visual {
-          visual_id = "BarChart"
-          chart_configuration {
-            field_wells {
-              bar_chart_aggregated_field_wells {
-                category {
-                  categorical_dimension_field {
-                    field_id = "1"
-                    column {
-                      column_name         = "Column1"
-                      data_set_identifier = "1"
-                    }
-                  }
-                }
-                values {
-                  numerical_measure_field {
-                    field_id = "2"
-                    column {
-                      column_name         = "Column2"
-                      data_set_identifier = "1"
-                    }
-                    aggregation_function {
-                      simple_numerical_aggregation = "SUM"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rId, rName, key1, value1))
-}
-
-func testAccTemplateConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccTemplateConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_template" "test" {
-  template_id         = %[1]q
-  name                = %[2]q
-  version_description = "test"
-  definition {
-    data_set_configuration {
-      data_set_schema {
-        column_schema_list {
-          name      = "Column1"
-          data_type = "STRING"
-        }
-        column_schema_list {
-          name      = "Column2"
-          data_type = "INTEGER"
-        }
-      }
-      placeholder = "1"
-    }
-    sheets {
-      title    = "Test"
-      sheet_id = "Test1"
-      visuals {
-        bar_chart_visual {
-          visual_id = "BarChart"
-          chart_configuration {
-            field_wells {
-              bar_chart_aggregated_field_wells {
-                category {
-                  categorical_dimension_field {
-                    field_id = "1"
-                    column {
-                      column_name         = "Column1"
-                      data_set_identifier = "1"
-                    }
-                  }
-                }
-                values {
-                  numerical_measure_field {
-                    field_id = "2"
-                    column {
-                      column_name         = "Column2"
-                      data_set_identifier = "1"
-                    }
-                    aggregation_function {
-                      simple_numerical_aggregation = "SUM"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rId, rName, key1, value1, key2, value2))
 }

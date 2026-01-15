@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccQuickSightTheme_disappears(t *testing.T) {
 				Config: testAccThemeConfig_basic(rId, rName, themeId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThemeExists(ctx, resourceName, &theme),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTheme(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceTheme(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +140,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#000000"),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
 			},
 		},
@@ -169,7 +169,7 @@ func testAccCheckThemeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindThemeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["theme_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

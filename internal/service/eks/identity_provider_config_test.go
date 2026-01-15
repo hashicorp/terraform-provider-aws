@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,18 +41,18 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "oidc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceIdentityProviderConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,13 +104,13 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_allOIDCOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "oidc.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", names.AttrEmail),
@@ -142,7 +142,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,7 +164,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -214,7 +214,7 @@ func testAccCheckIdentityProviderConfigDestroy(ctx context.Context) resource.Tes
 
 			_, err = tfeks.FindOIDCIdentityProviderConfigByTwoPartKey(ctx, conn, clusterName, configName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -233,6 +233,10 @@ func testAccIdentityProviderBaseConfig(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "eks" {
+  service_name = "eks"
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -241,7 +245,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "eks.${data.aws_partition.current.dns_suffix}"
+        Service = data.aws_service_principal.eks.name
       }
     }]
     Version = "2012-10-17"

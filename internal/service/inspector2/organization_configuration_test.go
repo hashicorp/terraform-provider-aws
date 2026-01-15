@@ -1,23 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,7 +63,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -161,112 +156,74 @@ func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConfiguration_codeRepository(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_inspector2_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
+			acctest.PreCheckInspector2(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_codeRepository(false, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.code_repository", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
-
-		enabledDelAdAcct := false
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector2_organization_configuration" {
 				continue
 			}
 
-			out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+			_, err := tfinspector2.FindOrganizationConfiguration(ctx, conn)
 
-			if errs.MessageContains(err, "AccessDenied", "Invoking account does not") {
-				if err := testEnableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-					return err
-				}
-
-				enabledDelAdAcct = true
-
-				out, err = conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+			if retry.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				if enabledDelAdAcct {
-					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-						return err
-					}
-				}
-
-				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
+				return err
 			}
 
-			if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) && !aws.ToBool(out.AutoEnable.Lambda) && !aws.ToBool(out.AutoEnable.LambdaCode) {
-				if enabledDelAdAcct {
-					if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-						return err
-					}
-				}
-
-				return nil
-			}
-
-			if enabledDelAdAcct {
-				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
-					return err
-				}
-			}
-
-			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Inspector2 Organization Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testEnableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) error {
-	_, err := conn.EnableDelegatedAdminAccount(ctx, &inspector2.EnableDelegatedAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(accountID),
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := tfinspector2.WaitDelegatedAdminAccountEnabled(ctx, conn, accountID, time.Minute*2); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func testDisableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) error {
-	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(accountID),
-	})
-	if err != nil {
-		return err
-	}
-
-	if err := tfinspector2.WaitDelegatedAdminAccountDisabled(ctx, conn, accountID, time.Minute*2); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func testAccCheckOrganizationConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
 
-		_, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+		_, err := tfinspector2.FindOrganizationConfiguration(ctx, conn)
 
-		if err != nil {
-			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -305,4 +262,21 @@ resource "aws_inspector2_organization_configuration" "test" {
   depends_on = [aws_inspector2_delegated_admin_account.test]
 }
 `, ec2, ecr, lambda, lambda_code)
+}
+
+func testAccOrganizationConfigurationConfig_codeRepository(ec2, ecr, codeRepository bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+resource "aws_inspector2_organization_configuration" "test" {
+  auto_enable {
+    ec2             = %[1]t
+    ecr             = %[2]t
+    code_repository = %[3]t
+  }
+  depends_on = [aws_inspector2_delegated_admin_account.test]
+}
+`, ec2, ecr, codeRepository)
 }

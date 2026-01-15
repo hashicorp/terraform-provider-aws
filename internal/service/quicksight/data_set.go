@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -14,22 +14,24 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_quicksight_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSet")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -47,13 +49,7 @@ func resourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
+				names.AttrAWSAccountID:          quicksightschema.AWSAccountIDSchema(),
 				"column_groups":                 quicksightschema.DataSetColumnGroupsSchema(),
 				"column_level_permission_rules": quicksightschema.DataSetColumnLevelPermissionRulesSchema(),
 				"data_set_id": {
@@ -86,23 +82,22 @@ func resourceDataSet() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				mode := diff.Get("import_mode").(string)
-				if v, ok := diff.Get("refresh_properties").([]interface{}); ok && v != nil && len(v) > 0 && mode == "DIRECT_QUERY" {
+				if v, ok := diff.Get("refresh_properties").([]any); ok && v != nil && len(v) > 0 && mode == "DIRECT_QUERY" {
 					return fmt.Errorf("refresh_properties cannot be set when import_mode is 'DIRECT_QUERY'")
 				}
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -117,16 +112,16 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("column_groups"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ColumnGroups = quicksightschema.ExpandColumnGroups(v.([]interface{}))
+	if v, ok := d.GetOk("column_groups"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ColumnGroups = quicksightschema.ExpandColumnGroups(v.([]any))
 	}
 
-	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]interface{})) > 0 {
-		input.ColumnLevelPermissionRules = quicksightschema.ExpandColumnLevelPermissionRules(v.([]interface{}))
+	if v, ok := d.GetOk("column_level_permission_rules"); ok && len(v.([]any)) > 0 {
+		input.ColumnLevelPermissionRules = quicksightschema.ExpandColumnLevelPermissionRules(v.([]any))
 	}
 
-	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DataSetUsageConfiguration = quicksightschema.ExpandDataSetUsageConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("data_set_usage_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DataSetUsageConfiguration = quicksightschema.ExpandDataSetUsageConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("field_folders"); ok && v.(*schema.Set).Len() != 0 {
@@ -141,12 +136,12 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RowLevelPermissionDataSet = quicksightschema.ExpandRowLevelPermissionDataSet(v.([]interface{}))
+	if v, ok := d.GetOk("row_level_permission_data_set"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RowLevelPermissionDataSet = quicksightschema.ExpandRowLevelPermissionDataSet(v.([]any))
 	}
 
-	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RowLevelPermissionTagConfiguration = quicksightschema.ExpandRowLevelPermissionTagConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("row_level_permission_tag_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RowLevelPermissionTagConfiguration = quicksightschema.ExpandRowLevelPermissionTagConfiguration(v.([]any))
 	}
 
 	_, err := conn.CreateDataSet(ctx, input)
@@ -157,11 +152,11 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("refresh_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input := &quicksight.PutDataSetRefreshPropertiesInput{
 			AwsAccountId:             aws.String(awsAccountID),
 			DataSetId:                aws.String(dataSetID),
-			DataSetRefreshProperties: quicksightschema.ExpandDataSetRefreshProperties(v.([]interface{})),
+			DataSetRefreshProperties: quicksightschema.ExpandDataSetRefreshProperties(v.([]any)),
 		}
 
 		_, err := conn.PutDataSetRefreshProperties(ctx, input)
@@ -174,7 +169,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -185,7 +180,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	dataSet, err := findDataSetByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Data Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -241,7 +236,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	refreshProperties, err := findDataSetRefreshPropertiesByTwoPartKey(ctx, conn, awsAccountID, dataSetID)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Data Set (%s) refresh properties: %s", d.Id(), err)
 	default:
@@ -253,7 +248,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -265,17 +260,17 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll, "refresh_properties") {
 		input := &quicksight.UpdateDataSetInput{
 			AwsAccountId:                       aws.String(awsAccountID),
-			ColumnGroups:                       quicksightschema.ExpandColumnGroups(d.Get("column_groups").([]interface{})),
-			ColumnLevelPermissionRules:         quicksightschema.ExpandColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]interface{})),
+			ColumnGroups:                       quicksightschema.ExpandColumnGroups(d.Get("column_groups").([]any)),
+			ColumnLevelPermissionRules:         quicksightschema.ExpandColumnLevelPermissionRules(d.Get("column_level_permission_rules").([]any)),
 			DataSetId:                          aws.String(dataSetID),
-			DataSetUsageConfiguration:          quicksightschema.ExpandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]interface{})),
+			DataSetUsageConfiguration:          quicksightschema.ExpandDataSetUsageConfiguration(d.Get("data_set_usage_configuration").([]any)),
 			FieldFolders:                       quicksightschema.ExpandFieldFolders(d.Get("field_folders").(*schema.Set).List()),
 			ImportMode:                         awstypes.DataSetImportMode(d.Get("import_mode").(string)),
 			LogicalTableMap:                    quicksightschema.ExpandLogicalTableMap(d.Get("logical_table_map").(*schema.Set).List()),
 			Name:                               aws.String(d.Get(names.AttrName).(string)),
 			PhysicalTableMap:                   quicksightschema.ExpandPhysicalTableMap(d.Get("physical_table_map").(*schema.Set).List()),
-			RowLevelPermissionDataSet:          quicksightschema.ExpandRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]interface{})),
-			RowLevelPermissionTagConfiguration: quicksightschema.ExpandRowLevelPermissionTagConfiguration(d.Get("row_level_permission_tag_configuration").([]interface{})),
+			RowLevelPermissionDataSet:          quicksightschema.ExpandRowLevelPermissionDataSet(d.Get("row_level_permission_data_set").([]any)),
+			RowLevelPermissionTagConfiguration: quicksightschema.ExpandRowLevelPermissionTagConfiguration(d.Get("row_level_permission_tag_configuration").([]any)),
 		}
 
 		_, err = conn.UpdateDataSet(ctx, input)
@@ -313,7 +308,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("refresh_properties") {
 		o, n := d.GetChange("refresh_properties")
 
-		if old, new := o.([]interface{}), n.([]interface{}); len(old) == 1 && len(new) == 0 {
+		if old, new := o.([]any), n.([]any); len(old) == 1 && len(new) == 0 {
 			input := &quicksight.DeleteDataSetRefreshPropertiesInput{
 				AwsAccountId: aws.String(awsAccountID),
 				DataSetId:    aws.String(dataSetID),
@@ -342,7 +337,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -400,7 +395,7 @@ func findDataSet(ctx context.Context, conn *quicksight.Client, input *quicksight
 	output, err := conn.DescribeDataSet(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -411,7 +406,7 @@ func findDataSet(ctx context.Context, conn *quicksight.Client, input *quicksight
 	}
 
 	if output == nil || output.DataSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSet, nil
@@ -430,7 +425,7 @@ func findDataSetRefreshProperties(ctx context.Context, conn *quicksight.Client, 
 	output, err := conn.DescribeDataSetRefreshProperties(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "not a SPICE dataset") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -441,7 +436,7 @@ func findDataSetRefreshProperties(ctx context.Context, conn *quicksight.Client, 
 	}
 
 	if output == nil || output.DataSetRefreshProperties == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSetRefreshProperties, nil
@@ -460,7 +455,7 @@ func findDataSetPermissions(ctx context.Context, conn *quicksight.Client, input 
 	output, err := conn.DescribeDataSetPermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -471,7 +466,7 @@ func findDataSetPermissions(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

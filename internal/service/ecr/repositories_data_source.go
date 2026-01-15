@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecr
@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -21,17 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Repositories")
+// @FrameworkDataSource("aws_ecr_repositories", name="Repositories")
 func newRepositoriesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &repositoriesDataSource{}, nil
 }
 
 type repositoriesDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *repositoriesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_ecr_repositories"
+	framework.DataSourceWithModel[repositoriesDataSourceModel]
 }
 
 func (d *repositoriesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -63,7 +59,7 @@ func (d *repositoriesDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region)
+	data.ID = fwflex.StringValueToFramework(ctx, d.Meta().Region(ctx))
 	data.Names.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, tfslices.ApplyToAll(output, func(v awstypes.Repository) string {
 		return aws.ToString(v.RepositoryName)
 	}))
@@ -79,7 +75,7 @@ func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -96,6 +92,7 @@ func findRepositories(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 }
 
 type repositoriesDataSourceModel struct {
+	framework.WithRegionModel
 	ID    types.String                     `tfsdk:"id"`
 	Names fwtypes.SetValueOf[types.String] `tfsdk:"names"`
 }

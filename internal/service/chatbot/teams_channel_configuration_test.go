@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func testAccTeamsChannelConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceTeamsChannelConfiguration, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(testResourceTeamsChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/.*/%s`, rName))),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceTeamsChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/.*/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceTeamsChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(testResourceTeamsChannelConfiguration, "channel_id", channelID),
 					resource.TestCheckResourceAttrSet(testResourceTeamsChannelConfiguration, "channel_name"),
@@ -111,7 +111,7 @@ func testAccTeamsChannelConfiguration_disappears(t *testing.T) {
 				Config: testAccTeamsChannelConfigurationConfig_basic(rName, channelID, teamID, tenantID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTeamsChannelConfigurationExists(ctx, testResourceTeamsChannelConfiguration, &teamschannelconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceTeamsChannelConfiguration, testResourceTeamsChannelConfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceTeamsChannelConfiguration, testResourceTeamsChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -130,7 +130,7 @@ func testAccCheckTeamsChannelConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfchatbot.FindTeamsChannelConfigurationByTeamID(ctx, conn, rs.Primary.Attributes["team_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ec2_network_insights_path: Add `filter_at_destination` and `filter_at_source` configuration blocks
+```
+
+```release-note:enhancement
+data-source/aws_ec2_network_insights_path: Support `filter_at_destination` and `filter_at_source` attributes
+```

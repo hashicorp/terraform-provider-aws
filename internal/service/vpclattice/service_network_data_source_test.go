@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -36,8 +36,8 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
@@ -69,8 +69,8 @@ func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, acctest.CtTagsPercent),
 				),
 			},

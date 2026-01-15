@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -33,6 +33,10 @@ func dataSourceAvailabilityZone() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrFilter: customFiltersSchema(),
+			"group_long_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -62,10 +66,6 @@ func dataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRegion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -84,11 +84,11 @@ func dataSourceAvailabilityZone() *schema.Resource {
 	}
 }
 
-func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeAvailabilityZonesInput{}
+	input := ec2.DescribeAvailabilityZonesInput{}
 
 	if v, ok := d.GetOk("all_availability_zones"); ok {
 		input.AllAvailabilityZones = aws.Bool(v.(bool))
@@ -117,7 +117,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.Filters = nil
 	}
 
-	az, err := findAvailabilityZone(ctx, conn, input)
+	az, err := findAvailabilityZone(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))
@@ -133,13 +133,13 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(az.ZoneName))
 	d.Set(names.AttrGroupName, az.GroupName)
+	d.Set("group_long_name", az.GroupLongName)
 	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
-	d.Set(names.AttrRegion, az.RegionName)
 	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)

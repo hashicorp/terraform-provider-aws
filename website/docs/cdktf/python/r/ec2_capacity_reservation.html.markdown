@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Required) The Availability Zone in which to create the Capacity Reservation.
 * `ebs_optimized` - (Optional) Indicates whether the Capacity Reservation supports EBS-optimized instances.
 * `end_date` - (Optional) The date and time at which the Capacity Reservation expires. When a Capacity Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
@@ -94,4 +95,4 @@ Using `terraform import`, import Capacity Reservations using the `id`. For examp
 % terraform import aws_ec2_capacity_reservation.web cr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d8d155d1fbf589001a2914f71470265f6494458dcf1f80c3767248486e8a4776 -->
+<!-- cache-key: cdktf-0.20.8 input-cb78ea1dad98d886135b931a6a36cbdd47850800a41f5a24d86b9bbd41212a1e -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -47,7 +47,7 @@ func TestAccEC2OutpostsCoIPPoolDataSource_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "local_gateway_route_table_id", regexache.MustCompile(`^lgw-rtb-`)),
 					resource.TestMatchResourceAttr(dataSourceName, "pool_id", regexache.MustCompile(`^ipv4pool-coip-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ec2", regexache.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ec2", regexache.MustCompile(`coip-pool/ipv4pool-coip-.+$`)),
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "pool_cidrs.#", 0),
 				),
 			},

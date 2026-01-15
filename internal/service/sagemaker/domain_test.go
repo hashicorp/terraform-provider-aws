@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,16 +40,18 @@ func testAccDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.auto_mount_home_efs", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tag_propagation", "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
 				),
 			},
 			{
@@ -78,7 +80,7 @@ func testAccDomain_domainSettings(t *testing.T) {
 				Config: testAccDomainConfig_domainSettings(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.execution_role_identity_config", "DISABLED"),
 				),
 			},
@@ -92,7 +94,7 @@ func testAccDomain_domainSettings(t *testing.T) {
 				Config: testAccDomainConfig_domainSettings(rName, "USER_PROFILE_NAME"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.execution_role_identity_config", "USER_PROFILE_NAME"),
 				),
 			},
@@ -116,10 +118,10 @@ func testAccDomain_domainSettingsDockerSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_domainSettingsDockerSettings(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.enable_docker_access", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", "1"),
 				),
 			},
 			{
@@ -132,10 +134,10 @@ func testAccDomain_domainSettingsDockerSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_domainSettingsDockerSettings(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.enable_docker_access", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", "1"),
 				),
 			},
 		},
@@ -187,7 +189,7 @@ func testAccDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -201,7 +203,7 @@ func testAccDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -210,7 +212,7 @@ func testAccDomain_tags(t *testing.T) {
 				Config: testAccDomainConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -234,8 +236,8 @@ func testAccDomain_defaultUserSettingsSecurityGroupUpdated(t *testing.T) {
 				Config: testAccDomainConfig_defaultUserSettingsSecurityGroupUpdated(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "1"),
 				),
 			},
 			{
@@ -248,8 +250,8 @@ func testAccDomain_defaultUserSettingsSecurityGroupUpdated(t *testing.T) {
 				Config: testAccDomainConfig_defaultUserSettingsSecurityGroupUpdated(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.security_groups.#", "2"),
 				),
 			},
 		},
@@ -272,8 +274,8 @@ func testAccDomain_sharingSettings(t *testing.T) {
 				Config: testAccDomainConfig_sharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
@@ -305,9 +307,9 @@ func testAccDomain_canvasAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_canvasAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.time_series_forecasting_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.time_series_forecasting_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.time_series_forecasting_settings.0.status", "DISABLED"),
 				),
 			},
@@ -337,9 +339,9 @@ func testAccDomain_modelRegisterSettings(t *testing.T) {
 				Config: testAccDomainConfig_modelRegisterSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.model_register_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.model_register_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.model_register_settings.0.status", "DISABLED"),
 				),
 			},
@@ -369,9 +371,9 @@ func testAccDomain_generativeAiSettings(t *testing.T) {
 				Config: testAccDomainConfig_generativeAiSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.0.amazon_bedrock_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
@@ -401,9 +403,9 @@ func testAccDomain_kendraSettings(t *testing.T) {
 				Config: testAccDomainConfig_kendraSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.kendra_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.kendra_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.kendra_settings.0.status", "DISABLED"),
 				),
 			},
@@ -433,10 +435,43 @@ func testAccDomain_directDeploySettings(t *testing.T) {
 				Config: testAccDomainConfig_directDeploySettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.direct_deploy_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.direct_deploy_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.direct_deploy_settings.0.status", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_emrServerlessSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_emrServerlessSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.0.status", "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -465,9 +500,9 @@ func testAccDomain_identityProviderOAuthSettings(t *testing.T) {
 				Config: testAccDomainConfig_identityProviderOAuthSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.status", "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
@@ -498,9 +533,9 @@ func testAccDomain_workspaceSettings(t *testing.T) {
 				Config: testAccDomainConfig_workspaceSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace_settings.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.canvas_app_settings.0.workspace_settings.0.s3_artifact_path"),
 				),
 			},
@@ -530,9 +565,9 @@ func testAccDomain_tensorboardAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_tensorBoardAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -562,9 +597,9 @@ func testAccDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 				Config: testAccDomainConfig_tensorBoardAppSettingsImage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", names.AttrARN),
 				),
@@ -595,9 +630,9 @@ func testAccDomain_rSessionAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_rSessionAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_session_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_session_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_session_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_session_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_session_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -627,8 +662,8 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.access_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.user_group", "R_STUDIO_ADMIN"),
 				),
@@ -643,8 +678,8 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.access_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.user_group", "R_STUDIO_ADMIN"),
 				),
@@ -653,8 +688,8 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_rStudioServerProAppSettings(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.access_status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.r_studio_server_pro_app_settings.0.user_group", "R_STUDIO_ADMIN"),
 				),
@@ -679,8 +714,8 @@ func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
 				Config: testAccDomainConfig_rStudioServerProDomainSettings(rName, "https://connect.domain.com", "https://package.domain.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_connect_url", "https://connect.domain.com"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_package_manager_url", "https://package.domain.com"),
 				),
@@ -690,6 +725,37 @@ func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_rStudioDomainDisabledNetworkUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, "PublicInternetOnly"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, "VpcOnly"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "VpcOnly")),
 			},
 		},
 	})
@@ -711,9 +777,9 @@ func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_kernelGatewayAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -743,9 +809,9 @@ func testAccDomain_codeEditorAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_codeEditorAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -780,10 +846,10 @@ func testAccDomain_codeEditorAppSettings_customImage(t *testing.T) {
 				Config: testAccDomainConfig_codeEditorAppSettingsCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
 				),
@@ -819,10 +885,10 @@ func testAccDomain_codeEditorAppSettings_defaultResourceSpecAndCustomImage(t *te
 				Config: testAccDomainConfig_codeEditorAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.code_editor_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
@@ -854,9 +920,117 @@ func testAccDomain_jupyterLabAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_jupyterLabAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettingsEMRSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_jupyterLabAppSettingsEMRSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.assumable_role_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.assumable_role_arns.*", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.execution_role_arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.execution_role_arns.*", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettingsAppLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_jupyterLabAppSettingsAppLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", "75"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.min_idle_timeout_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.max_idle_timeout_in_minutes", "90"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.lifecycle_management", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettingsBuiltInLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigjupyterLabAppSettingsBuiltInLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.built_in_lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -886,10 +1060,10 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 				Config: testAccDomainConfig_kernelGatewayAppSettingsLifecycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
 				),
@@ -925,10 +1099,10 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 				Config: testAccDomainConfig_kernelGatewayAppSettingsCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
 				),
@@ -964,10 +1138,10 @@ func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t 
 				Config: testAccDomainConfig_kernelGatewayAppSettingsDefaultResourceSpecAndCustomImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
@@ -999,9 +1173,9 @@ func testAccDomain_jupyterServerAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_jupyterServerAppSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "system"),
 				),
 			},
@@ -1031,11 +1205,11 @@ func testAccDomain_jupyterServerAppSettings_code(t *testing.T) {
 				Config: testAccDomainConfig_jupyterServerAppSettingsCode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.default_resource_spec.0.instance_type", "system"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.code_repository.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.code_repository.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_user_settings.0.jupyter_server_app_settings.0.code_repository.*", map[string]string{
 						"repository_url": "https://github.com/hashicorp/terraform-provider-aws.git",
 					}),
@@ -1067,7 +1241,7 @@ func testAccDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1094,11 +1268,11 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
@@ -1114,8 +1288,9 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_sharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "VpcOnly"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.sharing_settings.0.s3_kms_key_id", "aws_kms_key.test", names.AttrKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "default_user_settings.0.sharing_settings.0.s3_output_path"),
@@ -1147,13 +1322,13 @@ func testAccDomain_spaceSettingsKernelGatewayAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_defaultSpaceKernelGatewayAppSettings(rName, "ml.t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -1167,13 +1342,13 @@ func testAccDomain_spaceSettingsKernelGatewayAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_defaultSpaceKernelGatewayAppSettings(rName, "ml.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
 				),
 			},
@@ -1198,7 +1373,7 @@ func testAccDomain_posix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
 				),
@@ -1230,10 +1405,10 @@ func testAccDomain_spaceStorageSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
 				),
 			},
@@ -1265,8 +1440,8 @@ func testAccDomain_efs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 				),
 			},
@@ -1275,6 +1450,15 @@ func testAccDomain_efs(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_efsRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "0"),
+				),
 			},
 		},
 	})
@@ -1296,8 +1480,8 @@ func testAccDomain_studioWebPortalSettings_hiddenAppTypes(t *testing.T) {
 				Config: testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
 				),
@@ -1312,11 +1496,54 @@ func testAccDomain_studioWebPortalSettings_hiddenAppTypes(t *testing.T) {
 				Config: testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName, []string{"JupyterServer", "KernelGateway", "CodeEditor"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "CodeEditor"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_studioWebPortalSettings_hiddenInstanceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName, []string{"ml.m5.8xlarge", "ml.m5.12xlarge"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.8xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.12xlarge"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName, []string{"ml.m5.8xlarge", "ml.m5.12xlarge", "ml.m5.16xlarge"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.8xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.12xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.16xlarge"),
 				),
 			},
 		},
@@ -1339,8 +1566,8 @@ func testAccDomain_studioWebPortalSettings_hiddenMlTools(t *testing.T) {
 				Config: testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
 				),
@@ -1355,8 +1582,8 @@ func testAccDomain_studioWebPortalSettings_hiddenMlTools(t *testing.T) {
 				Config: testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName, []string{"DataWrangler", "FeatureStore", "EmrClusters"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "DataWrangler"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "FeatureStore"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_ml_tools.*", "EmrClusters"),
@@ -1382,13 +1609,13 @@ func testAccDomain_spaceSettingsJupyterLabAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName, "ml.t3.micro", "ml.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
 				),
 			},
@@ -1402,13 +1629,13 @@ func testAccDomain_spaceSettingsJupyterLabAppSettings(t *testing.T) {
 				Config: testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName, "ml.t3.small", "ml.t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
@@ -1433,15 +1660,15 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "100"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
 				),
 			},
@@ -1456,15 +1683,15 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "150"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "250"),
 				),
 			},
@@ -1489,10 +1716,10 @@ func testAccDomain_spaceSettingsCustomPOSIXUserConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "1002"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "20000"),
 				),
@@ -1508,10 +1735,10 @@ func testAccDomain_spaceSettingsCustomPOSIXUserConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "2001"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "20000"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "2002"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "40000"),
 				),
@@ -1538,12 +1765,12 @@ func testAccDomain_spaceSettingsCustomFileSystemConfigs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 				),
 			},
@@ -1559,12 +1786,12 @@ func testAccDomain_spaceSettingsCustomFileSystemConfigs(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_space_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 				),
 			},
@@ -1583,12 +1810,12 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindDomainByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Domain (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Domain (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker domain %q still exists", rs.Primary.ID)
@@ -1749,6 +1976,7 @@ func testAccDomainConfig_kms(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_sagemaker_domain" "test" {
@@ -1851,6 +2079,7 @@ func testAccDomainConfig_sharingSettings(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 
@@ -1860,10 +2089,11 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_sagemaker_domain" "test" {
-  domain_name = %[1]q
-  auth_mode   = "IAM"
-  vpc_id      = aws_vpc.test.id
-  subnet_ids  = aws_subnet.test[*].id
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = "VpcOnly"
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
@@ -1996,6 +2226,32 @@ resource "aws_sagemaker_domain" "test" {
     canvas_app_settings {
       direct_deploy_settings {
         status = "DISABLED"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_emrServerlessSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    canvas_app_settings {
+      emr_serverless_settings {
+        execution_role_arn = aws_iam_role.test.arn
+        status             = "ENABLED"
       }
     }
   }
@@ -2273,6 +2529,26 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, connectURL, packageURL))
 }
 
+func testAccDomainConfig_rStudioDomainDisabledNetworkUpdate(rName, networkAccess string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseWithLicense(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = %[2]q
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, networkAccess))
+}
+
 func testAccDomainConfig_baseWithLicense(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -2475,6 +2751,102 @@ resource "aws_sagemaker_domain" "test" {
       default_resource_spec {
         instance_type = "ml.t3.micro"
       }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_jupyterLabAppSettingsEMRSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+      emr_settings {
+        assumable_role_arns = [aws_iam_role.test.arn]
+        execution_role_arns = [aws_iam_role.test.arn]
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_jupyterLabAppSettingsAppLifecycle(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      app_lifecycle_management {
+        idle_settings {
+          idle_timeout_in_minutes     = 75
+          lifecycle_management        = "ENABLED"
+          max_idle_timeout_in_minutes = 90
+          min_idle_timeout_in_minutes = 60
+        }
+      }
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfigjupyterLabAppSettingsBuiltInLifecycle(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_studio_lifecycle_config" "test" {
+  studio_lifecycle_config_name     = %[1]q
+  studio_lifecycle_config_app_type = "JupyterServer"
+  studio_lifecycle_config_content  = base64encode("echo Hello")
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+
+      built_in_lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
+      lifecycle_config_arns         = [aws_sagemaker_studio_lifecycle_config.test.arn]
     }
   }
 
@@ -2692,6 +3064,36 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
+func testAccDomainConfig_efsRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
 func testAccDomainConfig_spaceStorageSettings(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -2718,13 +3120,6 @@ resource "aws_sagemaker_domain" "test" {
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenAppTypes(rName string, hiddenAppTypes []string) string {
-	var hiddenAppTypesString string
-	for i, appType := range hiddenAppTypes {
-		if i > 0 {
-			hiddenAppTypesString += ", "
-		}
-		hiddenAppTypesString += fmt.Sprintf("%q", appType)
-	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -2744,17 +3139,33 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenAppTypesString))
+`, rName, acctest.ListOfStrings(hiddenAppTypes...)))
+}
+
+func testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName string, hiddenInstanceTypes []string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_instance_types = [%[2]s]
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, acctest.ListOfStrings(hiddenInstanceTypes...)))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
-	var hiddenMlToolsString string
-	for i, mlTool := range hiddenMlTools {
-		if i > 0 {
-			hiddenMlToolsString += ", "
-		}
-		hiddenMlToolsString += fmt.Sprintf("%q", mlTool)
-	}
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
@@ -2774,7 +3185,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName, hiddenMlToolsString))
+`, rName, acctest.ListOfStrings(hiddenMlTools...)))
 }
 
 func testAccDomainConfig_spaceSettingsJupyterLabAppSettings(rName string, defaultUserSettingsinstanceType string, defaultSpaceSettingsinstanceType string) string {

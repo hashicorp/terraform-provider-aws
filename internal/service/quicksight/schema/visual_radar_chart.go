@@ -1,15 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,9 +28,9 @@ func radarChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-							"alternate_band_even_color":        stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"alternate_band_odd_color":         stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"alternate_band_colors_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+							"alternate_band_even_color":        hexColorSchema(attrOptional),
+							"alternate_band_odd_color":         hexColorSchema(attrOptional),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -48,7 +45,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -83,7 +80,7 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringSchema(false, enum.Validate[awstypes.RadarChartShape]()),
+							"shape":  stringEnumSchema[awstypes.RadarChartShape](attrOptional),
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -92,14 +89,14 @@ func radarChartVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_items_limit": itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"category_sort":        fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"color_items_limit":    itemsLimitConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
-										"color_sort":           fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
+										"category_items_limit": itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"category_sort":        fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"color_items_limit":    itemsLimitConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ItemsLimitConfiguration.html
+										"color_sort":           fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html
 									},
 								},
 							},
-							"start_angle":    floatSchema(false, validation.FloatBetween(-360, 360)),
+							"start_angle":    floatBetweenSchema(attrOptional, -360, 360),
 							"visual_palette": visualPaletteSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 						},
 					},
@@ -112,12 +109,12 @@ func radarChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandRadarChartVisual(tfList []interface{}) *awstypes.RadarChartVisual {
+func expandRadarChartVisual(tfList []any) *awstypes.RadarChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -127,31 +124,31 @@ func expandRadarChartVisual(tfList []interface{}) *awstypes.RadarChartVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
-	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["chart_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.ChartConfiguration = expandRadarChartConfiguration(v)
 	}
-	if v, ok := tfMap["column_hierarchies"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_hierarchies"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnHierarchies = expandColumnHierarchies(v)
 	}
-	if v, ok := tfMap["subtitle"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["subtitle"].([]any); ok && len(v) > 0 {
 		apiObject.Subtitle = expandVisualSubtitleLabelOptions(v)
 	}
-	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["title"].([]any); ok && len(v) > 0 {
 		apiObject.Title = expandVisualTitleLabelOptions(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartConfiguration(tfList []interface{}) *awstypes.RadarChartConfiguration {
+func expandRadarChartConfiguration(tfList []any) *awstypes.RadarChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -173,134 +170,134 @@ func expandRadarChartConfiguration(tfList []interface{}) *awstypes.RadarChartCon
 	if v, ok := tfMap["start_angle"].(float64); ok {
 		apiObject.StartAngle = aws.Float64(v)
 	}
-	if v, ok := tfMap["base_series_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["base_series_settings"].([]any); ok && len(v) > 0 {
 		apiObject.BaseSeriesSettings = expandRadarChartSeriesSettings(v)
 	}
-	if v, ok := tfMap["category_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_axis"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["color_axis"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_axis"].([]any); ok && len(v) > 0 {
 		apiObject.ColorAxis = expandAxisDisplayOptions(v)
 	}
-	if v, ok := tfMap["color_label_options"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_label_options"].([]any); ok && len(v) > 0 {
 		apiObject.ColorLabelOptions = expandChartAxisLabelOptions(v)
 	}
-	if v, ok := tfMap["field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.FieldWells = expandRadarChartFieldWells(v)
 	}
-	if v, ok := tfMap["legend"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["legend"].([]any); ok && len(v) > 0 {
 		apiObject.Legend = expandLegendOptions(v)
 	}
-	if v, ok := tfMap["sort_configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sort_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.SortConfiguration = expandRadarChartSortConfiguration(v)
 	}
-	if v, ok := tfMap["visual_palette"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["visual_palette"].([]any); ok && len(v) > 0 {
 		apiObject.VisualPalette = expandVisualPalette(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartFieldWells(tfList []interface{}) *awstypes.RadarChartFieldWells {
+func expandRadarChartFieldWells(tfList []any) *awstypes.RadarChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RadarChartFieldWells{}
 
-	if v, ok := tfMap["radar_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["radar_chart_aggregated_field_wells"].([]any); ok && len(v) > 0 {
 		apiObject.RadarChartAggregatedFieldWells = expandRadarChartAggregatedFieldWells(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartAggregatedFieldWells(tfList []interface{}) *awstypes.RadarChartAggregatedFieldWells {
+func expandRadarChartAggregatedFieldWells(tfList []any) *awstypes.RadarChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RadarChartAggregatedFieldWells{}
 
-	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category"].([]any); ok && len(v) > 0 {
 		apiObject.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["colors"].([]any); ok && len(v) > 0 {
 		apiObject.Color = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]any); ok && len(v) > 0 {
 		apiObject.Values = expandMeasureFields(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartSortConfiguration(tfList []interface{}) *awstypes.RadarChartSortConfiguration {
+func expandRadarChartSortConfiguration(tfList []any) *awstypes.RadarChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RadarChartSortConfiguration{}
 
-	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.CategoryItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["category_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["category_sort"].([]any); ok && len(v) > 0 {
 		apiObject.CategorySort = expandFieldSortOptionsList(v)
 	}
-	if v, ok := tfMap["color_items_limit"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_items_limit"].([]any); ok && len(v) > 0 {
 		apiObject.ColorItemsLimit = expandItemsLimitConfiguration(v)
 	}
-	if v, ok := tfMap["color_sort"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["color_sort"].([]any); ok && len(v) > 0 {
 		apiObject.ColorSort = expandFieldSortOptionsList(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartSeriesSettings(tfList []interface{}) *awstypes.RadarChartSeriesSettings {
+func expandRadarChartSeriesSettings(tfList []any) *awstypes.RadarChartSeriesSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.RadarChartSeriesSettings{}
 
-	if v, ok := tfMap["area_style_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["area_style_settings"].([]any); ok && len(v) > 0 {
 		apiObject.AreaStyleSettings = expandRadarChartAreaStyleSettings(v)
 	}
 
 	return apiObject
 }
 
-func expandRadarChartAreaStyleSettings(tfList []interface{}) *awstypes.RadarChartAreaStyleSettings {
+func expandRadarChartAreaStyleSettings(tfList []any) *awstypes.RadarChartAreaStyleSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -314,12 +311,12 @@ func expandRadarChartAreaStyleSettings(tfList []interface{}) *awstypes.RadarChar
 	return apiObject
 }
 
-func flattenRadarChartVisual(apiObject *awstypes.RadarChartVisual) []interface{} {
+func flattenRadarChartVisual(apiObject *awstypes.RadarChartVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
@@ -338,15 +335,15 @@ func flattenRadarChartVisual(apiObject *awstypes.RadarChartVisual) []interface{}
 		tfMap["title"] = flattenVisualTitleLabelOptions(apiObject.Title)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration) []interface{} {
+func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"alternate_band_colors_visibility": apiObject.AlternateBandColorsVisibility,
 	}
 
@@ -388,55 +385,55 @@ func flattenRadarChartConfiguration(apiObject *awstypes.RadarChartConfiguration)
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartSeriesSettings(apiObject *awstypes.RadarChartSeriesSettings) []interface{} {
+func flattenRadarChartSeriesSettings(apiObject *awstypes.RadarChartSeriesSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AreaStyleSettings != nil {
 		tfMap["area_style_settings"] = flattenRadarChartAreaStyleSettings(apiObject.AreaStyleSettings)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartAreaStyleSettings(apiObject *awstypes.RadarChartAreaStyleSettings) []interface{} {
+func flattenRadarChartAreaStyleSettings(apiObject *awstypes.RadarChartAreaStyleSettings) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visibility": apiObject.Visibility,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartFieldWells(apiObject *awstypes.RadarChartFieldWells) []interface{} {
+func flattenRadarChartFieldWells(apiObject *awstypes.RadarChartFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.RadarChartAggregatedFieldWells != nil {
 		tfMap["radar_chart_aggregated_field_wells"] = flattenRadarChartAggregatedFieldWells(apiObject.RadarChartAggregatedFieldWells)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartAggregatedFieldWells(apiObject *awstypes.RadarChartAggregatedFieldWells) []interface{} {
+func flattenRadarChartAggregatedFieldWells(apiObject *awstypes.RadarChartAggregatedFieldWells) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
@@ -448,15 +445,15 @@ func flattenRadarChartAggregatedFieldWells(apiObject *awstypes.RadarChartAggrega
 		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenRadarChartSortConfiguration(apiObject *awstypes.RadarChartSortConfiguration) []interface{} {
+func flattenRadarChartSortConfiguration(apiObject *awstypes.RadarChartSortConfiguration) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CategoryItemsLimit != nil {
 		tfMap["category_items_limit"] = flattenItemsLimitConfiguration(apiObject.CategoryItemsLimit)
@@ -471,5 +468,5 @@ func flattenRadarChartSortConfiguration(apiObject *awstypes.RadarChartSortConfig
 		tfMap["color_sort"] = flattenFieldSortOptions(apiObject.ColorSort)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

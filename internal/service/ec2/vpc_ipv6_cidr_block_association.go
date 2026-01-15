@@ -1,11 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,9 +31,26 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPCIPv6CIDRBlockAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				switch parts := strings.Split(d.Id(), ","); len(parts) {
+				case 1:
+					break
+				case 2:
+					d.SetId(parts[0])
+					d.Set("ipv6_ipam_pool_id", parts[1])
+				case 3:
+					d.SetId(parts[0])
+					d.Set("ipv6_ipam_pool_id", parts[1])
+					d.Set("ipv6_netmask_length", flex.StringValueToInt64Value(parts[2]))
+				default:
+					return nil, fmt.Errorf("invalid import ID (%s)", d.Id())
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
-		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v any) error {
 			// ipv6_cidr_block can be set by a value returned from IPAM or explicitly in config.
 			if diff.Id() != "" && diff.HasChange("ipv6_cidr_block") {
 				// If netmask is set then ipv6_cidr_block is derived from IPAM, ignore changes.
@@ -48,6 +68,14 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"ipv6_pool", "ipv6_ipam_pool_id", "ipv6_cidr_block", "ipv6_netmask_length"},
+			},
+			"ip_source": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_address_attribute": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
@@ -90,7 +118,7 @@ func resourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -134,13 +162,13 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	return append(diags, resourceVPCIPv6CIDRBlockAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	vpcIpv6CidrBlockAssociation, vpc, err := findVPCIPv6CIDRBlockAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC IPv6 CIDR Block Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,6 +182,8 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 
 	d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
+	d.Set("ip_source", vpcIpv6CidrBlockAssociation.IpSource)
+	d.Set("ipv6_address_attribute", vpcIpv6CidrBlockAssociation.Ipv6AddressAttribute)
 	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
 	d.Set("ipv6_pool", ipv6PoolID)
 	d.Set(names.AttrVPCID, vpc.VpcId)
@@ -161,14 +191,15 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIPv6CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting VPC IPv6 CIDR Block Association: %s", d.Id())
-	_, err := conn.DisassociateVpcCidrBlock(ctx, &ec2.DisassociateVpcCidrBlockInput{
+	input := ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
 		return diags

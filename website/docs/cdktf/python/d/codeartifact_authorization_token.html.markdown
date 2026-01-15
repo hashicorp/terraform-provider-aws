@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) Name of the domain that is in scope for the generated authorization token.
 * `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
 * `duration_seconds` - (Optional) Time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `authorization_token` - Temporary authorization token.
 * `expiration` - Time in UTC RFC3339 format when the authorization token expires.
 
-<!-- cache-key: cdktf-0.20.1 input-35ae5dc1307055f4be42f0268b760c21da97017124c46086e4dc01079119728a -->
+<!-- cache-key: cdktf-0.20.8 input-630433e7b5433ddba86e8eca6fcdeaf990ef45c0938fb5505b0f753fba11ec3a -->

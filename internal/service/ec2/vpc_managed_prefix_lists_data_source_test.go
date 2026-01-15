@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -42,7 +42,7 @@ func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "1"),
 				),
 			},
 		},
@@ -59,7 +59,7 @@ func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_noMatches,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
 				),
 			},
 		},

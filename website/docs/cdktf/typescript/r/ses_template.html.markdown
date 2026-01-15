@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the template. Cannot exceed 64 characters. You will refer to this name when you send email.
 * `html` - (Optional) The HTML body of the email. Must be less than 500KB in size, including both the text and HTML parts.
 * `subject` - (Optional) The subject line of the email.
@@ -81,4 +82,4 @@ Using `terraform import`, import SES templates using the template name. For exam
 % terraform import aws_ses_template.MyTemplate MyTemplate
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-89f6a47e22acad1bd893a7574f8e49d30c8778128ae5a667746ded2b1f55f3f8 -->
+<!-- cache-key: cdktf-0.20.8 input-56570ceb0ae388fc67078cc1ae48913c9f3275f3cd8d6f022ae7b016de3333e9 -->

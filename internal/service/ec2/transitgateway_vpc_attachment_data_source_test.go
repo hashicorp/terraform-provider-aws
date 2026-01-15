@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -33,8 +33,10 @@ func testAccTransitGatewayVPCAttachmentDataSource_Filter(t *testing.T, semaphore
 			{
 				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
@@ -66,8 +68,10 @@ func testAccTransitGatewayVPCAttachmentDataSource_ID(t *testing.T, semaphore tfs
 			{
 				Config: testAccTransitGatewayVPCAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(resourceName, "appliance_mode_support", dataSourceName, "appliance_mode_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_support", dataSourceName, "dns_support"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_referencing_support", dataSourceName, "security_group_referencing_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_support", dataSourceName, "ipv6_support"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),

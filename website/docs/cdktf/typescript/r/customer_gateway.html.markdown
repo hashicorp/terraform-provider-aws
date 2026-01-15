@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bgpAsn` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `1` to `2147483647`. Conflicts with `bgpAsnExtended`.
 * `bgpAsnExtended` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `2147483648` to `4294967295` Conflicts with `bgpAsn`.
 * `certificateArn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
@@ -90,4 +91,4 @@ Using `terraform import`, import Customer Gateways using the `id`. For example:
 % terraform import aws_customer_gateway.main cgw-b4dc3961
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-307f6d74eba03e018eb74b5a5dd43419005726131327845a42a10924c9765f9d -->
+<!-- cache-key: cdktf-0.20.8 input-9b05b2842ef8d37ffca8ba179c95697a6f294c56cc01cc2456a2fe60abc1473c -->

@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `addressFamily` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgpAsn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 * `connectionId` - (Required) The ID of the Direct Connect connection (or LAG) on which to create the virtual interface.
@@ -107,4 +108,4 @@ Using `terraform import`, import Direct Connect private virtual interfaces using
 % terraform import aws_dx_private_virtual_interface.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c9ac0219d04bdf984abd5ff5099a9682a1da16fcc6658d74d4103ab21c9a9998 -->
+<!-- cache-key: cdktf-0.20.8 input-2b0c1d3a4572d1a864a31363f2e0fd200e251a4ff2684e3142cb350bfb75e173 -->

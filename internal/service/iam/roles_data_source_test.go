@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -91,8 +91,8 @@ func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 			{
 				Config: testAccRolesDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
 				),
 			},
 		},
@@ -112,10 +112,10 @@ func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, acctest.Ct0),
+				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 				),
 			},
 		},
@@ -128,7 +128,9 @@ data "aws_iam_roles" "test" {}
 
 func testAccRolesDataSourceConfig_nameRegex(rCount, rName string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -141,7 +143,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -162,7 +164,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_pathPrefix(rCount, rName, rPathPrefix string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -175,7 +179,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -201,7 +205,9 @@ data "aws_iam_roles" "test" {
 
 func testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, rIndex string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_iam_role" "test" {
   count = %[1]s
@@ -214,7 +220,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""

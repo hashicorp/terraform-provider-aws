@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -54,7 +54,7 @@ func dataSourceOrganizationalUnits() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -74,11 +74,11 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func findOrganizationalUnitsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
-	input := &organizations.ListOrganizationalUnitsForParentInput{
+	input := organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(id),
 	}
 
-	return findOrganizationalUnitsForParent(ctx, conn, input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
+	return findOrganizationalUnitsForParent(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
 }
 
 func findOrganizationalUnitForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*awstypes.OrganizationalUnit]) (*awstypes.OrganizationalUnit, error) {
@@ -99,7 +99,7 @@ func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.C
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ParentNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -119,15 +119,15 @@ func findOrganizationalUnitsForParent(ctx context.Context, conn *organizations.C
 	return output, nil
 }
 
-func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []interface{} {
+func flattenOrganizationalUnits(apiObjects []awstypes.OrganizationalUnit) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, ou := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:  aws.ToString(ou.Arn),
 			names.AttrID:   aws.ToString(ou.Id),
 			names.AttrName: aws.ToString(ou.Name),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway
@@ -14,7 +14,6 @@ import (
 const (
 	operationErrCodeFileShareNotFound             awstypes.ErrorCode = "FileShareNotFound"
 	operationErrCodeFileSystemAssociationNotFound awstypes.ErrorCode = "FileSystemAssociationNotFound"
-	operationErrCodeGatewayNotFound               awstypes.ErrorCode = "GatewayNotFound"
 )
 
 // operationErrorCode returns the operation error code from the specified error:
@@ -34,9 +33,26 @@ func operationErrorCode(err error) awstypes.ErrorCode {
 	return ""
 }
 
+// The API returns multiple responses for a disconnected gateway.
+func isGatewayNotConnectedErr(err error) bool {
+	if operationErrorCode(err) == awstypes.ErrorCodeGatewayNotConnected {
+		return true
+	}
+
+	if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeGatewayNotConnected)) {
+		return true
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidGatewayRequestException](err, "The specified gateway is not connected") {
+		return true
+	}
+
+	return false
+}
+
 // The API returns multiple responses for a missing gateway.
 func isGatewayNotFoundErr(err error) bool {
-	if operationErrorCode(err) == operationErrCodeGatewayNotFound {
+	if operationErrorCode(err) == awstypes.ErrorCodeGatewayNotFound {
 		return true
 	}
 

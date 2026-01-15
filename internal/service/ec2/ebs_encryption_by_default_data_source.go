@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -32,16 +32,17 @@ func dataSourceEBSEncryptionByDefault() *schema.Resource {
 		},
 	}
 }
-func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	res, err := conn.GetEbsEncryptionByDefault(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
+	input := ec2.GetEbsEncryptionByDefaultInput{}
+	res, err := conn.GetEbsEncryptionByDefault(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading default EBS encryption toggle: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrEnabled, res.EbsEncryptionByDefault)
 
 	return diags

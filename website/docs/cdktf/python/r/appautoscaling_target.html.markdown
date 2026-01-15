@@ -141,6 +141,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `max_capacity` - (Required) Max capacity of the scalable target.
 * `min_capacity` - (Required) Min capacity of the scalable target.
 * `resource_id` - (Required) Resource type and unique identifier string for the resource associated with the scaling policy. Documentation can be found in the `ResourceId` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
@@ -190,4 +191,4 @@ Using `terraform import`, import Application AutoScaling Target using the `servi
 % terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-59e23cfb0876150f3e680ba270a8d818960ea34e93d37e9dea28d1559dcee5dd -->
+<!-- cache-key: cdktf-0.20.8 input-473a597bdb986febf8648ba44e6dd84b03e54a5e943b13b4614cfe734972bddb -->

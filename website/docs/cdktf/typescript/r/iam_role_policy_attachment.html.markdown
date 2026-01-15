@@ -89,6 +89,33 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role_policy_attachment.example
+  identity = {
+    role       = "test-role"
+    policy_arn = "arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `role` (String) Name of the IAM role.
+* `policyArn` (String) ARN of the IAM policy.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM role policy attachments using the role name and policy arn separated by `/`. For example:
 
 ```typescript
@@ -105,7 +132,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     IamRolePolicyAttachment.generateConfigForImport(
       this,
-      "testAttach",
+      "example",
       "test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy"
     );
   }
@@ -116,7 +143,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import IAM role policy attachments using the role name and policy arn separated by `/`. For example:
 
 ```console
-% terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
+% terraform import aws_iam_role_policy_attachment.example test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8fa8f1d0aab28daaa2f2296516256e63edd3a1f444a588a760d3d43847fd78f4 -->
+<!-- cache-key: cdktf-0.20.8 input-45bbac38f9836b51ed5be779dd4b73fdfbcbd7886d5fe2317790d0bf2b80ac1d -->

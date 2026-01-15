@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,22 +15,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	// Allow IAM role to become visible to the index
+	propagationTimeout = 2 * time.Minute
+
+	// accessDeniedExceptionMessage describes the error returned when the IAM role has not yet propagated
+	accessDeniedExceptionAssumeRoleMessage              = "Failed to assume your role. Verify the trust relationships of the role in the IAM console"
+	accessDeniedExceptionInsufficientPermissionsMessage = "Insufficient permission to access the manifest file"
 )
 
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -47,14 +59,8 @@ func resourceDataSource() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrAWSAccountID: {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
-				},
-				"credentials": quicksightschema.DataSourceCredentialsSchema(),
+				names.AttrAWSAccountID: quicksightschema.AWSAccountIDSchema(),
+				"credentials":          quicksightschema.DataSourceCredentialsSchema(),
 				"data_source_id": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -82,16 +88,14 @@ func resourceDataSource() *schema.Resource {
 				"vpc_connection_properties": quicksightschema.VPCConnectionPropertiesSchema(),
 			}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
@@ -100,32 +104,49 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &quicksight.CreateDataSourceInput{
 		AwsAccountId:         aws.String(awsAccountID),
 		DataSourceId:         aws.String(dataSourceID),
-		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]interface{})),
+		DataSourceParameters: quicksightschema.ExpandDataSourceParameters(d.Get(names.AttrParameters).([]any)),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 		Tags:                 getTagsIn(ctx),
 		Type:                 awstypes.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]interface{}))
+	if v, ok := d.GetOk("credentials"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]any))
 	}
 
 	if v, ok := d.GetOk("permission"); ok && v.(*schema.Set).Len() != 0 {
 		input.Permissions = quicksightschema.ExpandResourcePermissions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-		input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]interface{}))
+	if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]any)) != 0 && v.([]any)[0] != nil {
+		input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]any))
 	}
 
-	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
+	if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
 	}
 
-	_, err := conn.CreateDataSource(ctx, input)
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
+			return conn.CreateDataSource(ctx, input)
+		},
+		func(err error) (bool, error) {
+			var accessDeniedException *awstypes.AccessDeniedException
+
+			if errors.As(err, &accessDeniedException) && (strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionAssumeRoleMessage) || strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionInsufficientPermissionsMessage)) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source (%s): %s", id, err)
+	}
+
+	if outputRaw == nil {
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source (%s): empty output", id)
 	}
 
 	d.SetId(id)
@@ -137,7 +158,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -148,7 +169,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	dataSource, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] QuickSight Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -186,7 +207,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -202,26 +223,43 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("credentials"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]interface{}))
+		if v, ok := d.GetOk("credentials"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.Credentials = quicksightschema.ExpandDataSourceCredentials(v.([]any))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.DataSourceParameters = quicksightschema.ExpandDataSourceParameters(v.([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.DataSourceParameters = quicksightschema.ExpandDataSourceParameters(v.([]any))
 		}
 
-		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]interface{})) != 0 && v.([]interface{})[0] != nil {
-			input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]interface{}))
+		if v, ok := d.GetOk("ssl_properties"); ok && len(v.([]any)) != 0 && v.([]any)[0] != nil {
+			input.SslProperties = quicksightschema.ExpandSSLProperties(v.([]any))
 		}
 
-		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]interface{}))
+		if v, ok := d.GetOk("vpc_connection_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.VpcConnectionProperties = quicksightschema.ExpandVPCConnectionProperties(v.([]any))
 		}
 
-		_, err = conn.UpdateDataSource(ctx, input)
+		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateDataSource(ctx, input)
+			},
+			func(err error) (bool, error) {
+				var accessDeniedException *awstypes.AccessDeniedException
+
+				if errors.As(err, &accessDeniedException) && (strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionAssumeRoleMessage) || strings.Contains(accessDeniedException.ErrorMessage(), accessDeniedExceptionInsufficientPermissionsMessage)) {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): %s", d.Id(), err)
+		}
+
+		if outputRaw == nil {
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): empty output", d.Id())
 		}
 
 		if _, err := waitDataSourceUpdated(ctx, conn, awsAccountID, dataSourceID); err != nil {
@@ -257,7 +295,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
@@ -315,7 +353,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	output, err := conn.DescribeDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -326,7 +364,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
@@ -345,7 +383,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	output, err := conn.DescribeDataSourcePermissions(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -356,17 +394,17 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
 }
 
-func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDataSource(ctx context.Context, conn *quicksight.Client, awsAccountID, dataSourceID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, awsAccountID, dataSourceID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -382,7 +420,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusCreationInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusCreationSuccessful),
 		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
@@ -393,7 +431,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err
@@ -406,7 +444,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.ResourceStatusUpdateSuccessful),
 		Refresh: statusDataSource(ctx, conn, awsAccountID, dataSourceID),
@@ -417,7 +455,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err

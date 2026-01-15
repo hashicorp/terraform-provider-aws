@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -8,13 +8,19 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,13 +39,23 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.monitoring_type", "DataQuality"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"monitoring_job_definition":      knownvalue.ListSizeExact(0),
+						"monitoring_job_definition_name": knownvalue.NotNull(),
+						"monitoring_type":                tfknownvalue.StringExact(awstypes.MonitoringTypeDataQuality),
+						"schedule_config":                knownvalue.ListSizeExact(1),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -65,9 +81,17 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -78,18 +102,34 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				Config: testAccMonitoringScheduleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 		},
 	})
@@ -110,10 +150,19 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 * ? * * *)"),
+						})}),
+					})})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -124,19 +173,37 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionDaily(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 0 ? * * *)"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 0 ? * * *)"),
+						})}),
+					})})),
+				},
 			},
 			{
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"schedule_config": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrScheduleExpression: tfknownvalue.StringExact("cron(0 * ? * * *)"),
+						})}),
+					})})),
+				},
 			},
 		},
 	})
@@ -157,9 +224,63 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSageMakerMonitoringSchedule_monitoringAppSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_monitoring_schedule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMonitoringScheduleConfig_monitoringAppSpecificationBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("monitoring_schedule_config"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectPartial(map[string]knownvalue.Check{
+						"monitoring_job_definition": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"baseline":                     knownvalue.ListSizeExact(0),
+							names.AttrEnvironment:          knownvalue.Null(),
+							"monitoring_app_specification": knownvalue.ListSizeExact(1),
+							"monitoring_inputs":            knownvalue.ListSizeExact(1),
+							"monitoring_output_config":     knownvalue.ListSizeExact(1),
+							"monitoring_resources":         knownvalue.ListSizeExact(1),
+							"network_config":               knownvalue.ListSizeExact(0),
+							names.AttrRoleARN:              knownvalue.NotNull(),
+							"stopping_condition":           knownvalue.ListSizeExact(1),
+						})}),
+					})})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -176,7 +297,7 @@ func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfsagemaker.FindMonitoringScheduleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -184,7 +305,7 @@ func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Monitoring Schedule (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Monitoring Schedule (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
@@ -194,14 +315,11 @@ func testAccCheckMonitoringScheduleExists(ctx context.Context, n string) resourc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker Monitoring Schedule ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+
 		_, err := tfsagemaker.FindMonitoringScheduleByName(ctx, conn, rs.Primary.ID)
 
 		return err
@@ -257,6 +375,153 @@ resource "aws_iam_role_policy" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
+  repository_name = "sagemaker-model-monitor-analyzer"
+  image_tag       = "latest"
+}
+
+resource "aws_sagemaker_data_quality_job_definition" "test" {
+  name = %[1]q
+
+  data_quality_app_specification {
+    image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+  }
+
+  data_quality_job_input {
+    batch_transform_input {
+      data_captured_destination_s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/captured"
+      dataset_format {
+        csv {}
+      }
+    }
+  }
+
+  data_quality_job_output_config {
+    monitoring_outputs {
+      s3_output {
+        s3_uri = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+      }
+    }
+  }
+
+  job_resources {
+    cluster_config {
+      instance_count    = 1
+      instance_type     = "ml.t3.medium"
+      volume_size_in_gb = 20
+    }
+  }
+
+  role_arn = aws_iam_role.test.arn
+}
+`, rName)
+}
+
+func testAccMonitoringScheduleConfig_endpointBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "cloudwatch:PutMetricData",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup",
+      "logs:DescribeLogStreams",
+      "ecr:GetAuthorizationToken",
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "s3:GetObject",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.name
+  policy = data.aws_iam_policy_document.access.json
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "model.tar.gz"
+  source = "test-fixtures/sagemaker-tensorflow-serving-test-model.tar.gz"
+}
+
+data "aws_sagemaker_prebuilt_ecr_image" "test" {
+  repository_name = "sagemaker-tensorflow-serving"
+  image_tag       = "1.12-cpu"
+}
+
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    model_data_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    initial_instance_count = 1
+    initial_variant_weight = 1
+    instance_type          = "ml.t2.medium"
+    model_name             = aws_sagemaker_model.test.name
+    variant_name           = "variant-1"
+  }
+
+  data_capture_config {
+    enable_capture              = true
+    initial_sampling_percentage = 100
+
+    destination_s3_uri = "s3://${aws_s3_bucket.test.bucket_regional_domain_name}/capture"
+
+    capture_options {
+      capture_mode = "Input"
+    }
+    capture_options {
+      capture_mode = "Output"
+    }
+  }
+}
+
+resource "aws_sagemaker_endpoint" "test" {
+  endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
+  name                 = %[1]q
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "monitor" {
@@ -377,6 +642,50 @@ resource "aws_sagemaker_monitoring_schedule" "test" {
 
     schedule_config {
       schedule_expression = "cron(0 0 ? * * *)"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccMonitoringScheduleConfig_monitoringAppSpecificationBasic(rName string) string {
+	return acctest.ConfigCompose(testAccMonitoringScheduleConfig_endpointBase(rName), fmt.Sprintf(`
+resource "aws_sagemaker_monitoring_schedule" "test" {
+  name = %[1]q
+
+  monitoring_schedule_config {
+    monitoring_type = "DataQuality"
+
+    monitoring_job_definition {
+      monitoring_app_specification {
+        image_uri = data.aws_sagemaker_prebuilt_ecr_image.monitor.registry_path
+      }
+
+      monitoring_inputs {
+        endpoint_input {
+          local_path    = "/opt/ml/processing/input"
+          endpoint_name = aws_sagemaker_endpoint.test.name
+        }
+      }
+
+      monitoring_output_config {
+        monitoring_outputs {
+          s3_output {
+            local_path = "/opt/ml/processing/output"
+            s3_uri     = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/output"
+          }
+        }
+      }
+
+      monitoring_resources {
+        cluster_config {
+          instance_count    = 1
+          instance_type     = "ml.t3.medium"
+          volume_size_in_gb = 20
+        }
+      }
+
+      role_arn = aws_iam_role.test.arn
     }
   }
 }

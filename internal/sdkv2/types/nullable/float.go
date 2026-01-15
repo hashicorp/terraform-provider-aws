@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package nullable
@@ -34,7 +34,7 @@ func (i Float) ValueFloat64() (float64, bool, error) {
 
 // ValidateTypeStringNullableFloat provides custom error messaging for TypeString floats
 // Some arguments require an float value or unspecified, empty field.
-func ValidateTypeStringNullableFloat(v interface{}, k string) (ws []string, es []error) {
+func ValidateTypeStringNullableFloat(v any, k string) (ws []string, es []error) {
 	value, ok := v.(string)
 	if !ok {
 		es = append(es, fmt.Errorf("expected type of %s to be string", k))

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,9 +36,9 @@ func TestAccS3BucketObjectLockConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -66,7 +66,7 @@ func TestAccS3BucketObjectLockConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketObjectLockConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketObjectLockConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketObjectLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,9 +95,9 @@ func TestAccS3BucketObjectLockConfiguration_update(t *testing.T) {
 				Config: testAccBucketObjectLockConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.years", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeGovernance)),
 				),
 			},
@@ -126,11 +126,11 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", acctest.Ct3),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
 				),
 			},
 			{
@@ -138,9 +138,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_noChange(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -164,9 +164,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "0"),
 				),
 			},
 			{
@@ -174,9 +174,9 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.default_retention.0.mode", string(types.ObjectLockRetentionModeCompliance)),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
 				),
 			},
 			{
@@ -232,9 +232,9 @@ func TestAccS3BucketObjectLockConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketObjectLockConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_object_lock_configuration" {
 				continue
 			}
@@ -244,9 +244,13 @@ func testAccCheckBucketObjectLockConfigurationDestroy(ctx context.Context) resou
 				return err
 			}
 
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			}
+
 			_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -274,6 +278,9 @@ func testAccCheckBucketObjectLockConfigurationExists(ctx context.Context, n stri
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindObjectLockConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
@@ -338,7 +345,7 @@ resource "aws_s3_bucket_object_lock_configuration" "test" {
 }
 
 func testAccBucketObjectLockConfigurationConfig_directoryBucket(bucketName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(bucketName), fmt.Sprintf(`
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

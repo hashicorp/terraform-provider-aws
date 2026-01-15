@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric_test
@@ -9,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,7 +29,7 @@ func testAccAppAuthorization_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -41,10 +42,10 @@ func testAccAppAuthorization_basic(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -68,7 +69,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -79,13 +80,13 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappfabric.ResourceAppAuthorization, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -104,7 +105,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -117,10 +118,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -137,10 +138,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "updatedApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "updated"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -164,7 +165,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -177,11 +178,11 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_id", "ClinentID"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_secret", "SecretforOath2"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -198,11 +199,11 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_id", "newClinentID"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_secret", "newSecretforOath2"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "updated"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -228,7 +229,7 @@ func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

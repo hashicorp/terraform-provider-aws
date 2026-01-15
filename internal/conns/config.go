@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -9,12 +9,11 @@ import (
 	"strings"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagpolicy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -33,7 +33,7 @@ type Config struct {
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
-	EC2MetadataServiceEnableState  imds_sdkv2.ClientEnableState
+	EC2MetadataServiceEnableState  imds.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -46,7 +46,7 @@ type Config struct {
 	NoProxy                        string
 	Profile                        string
 	Region                         string
-	RetryMode                      aws_sdkv2.RetryMode
+	RetryMode                      aws.RetryMode
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
@@ -57,11 +57,13 @@ type Config struct {
 	SkipRequestingAccountId        bool
 	STSRegion                      string
 	SuppressDebugLog               bool
+	TagPolicyConfig                *tftags.TagPolicyConfig
 	TerraformVersion               string
 	Token                          string
 	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
+	UserAgent                      awsbase.UserAgentProducts
 }
 
 // ConfigureProvider configures the provided provider Meta (instance data).
@@ -113,6 +115,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		TokenBucketRateLimiterCapacity: c.TokenBucketRateLimiterCapacity,
 		UseDualStackEndpoint:           c.UseDualStackEndpoint,
 		UseFIPSEndpoint:                c.UseFIPSEndpoint,
+		UserAgent:                      c.UserAgent,
 	}
 
 	if c.CustomCABundle != "" {
@@ -165,23 +168,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
-	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
-
-	for _, d := range awsDiags {
-		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSDKSeverity(d.Severity()),
-			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
-			Detail:   d.Detail(),
-		})
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partitionID, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSDKSeverity(d.Severity()),
@@ -190,7 +178,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		})
 	}
 
-	if accountID == "" {
+	if accountID == "" && !awsbaseConfig.SkipRequestingAccountId {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
@@ -201,24 +189,36 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
-	dnsSuffix := "amazonaws.com"
-	if p, ok := endpoints_sdkv1.PartitionForRegion(endpoints_sdkv1.DefaultPartitions(), c.Region); ok {
-		dnsSuffix = p.DNSSuffix()
+	for _, partition := range endpoints.DefaultPartitions() {
+		if partition.ID() == partitionID {
+			client.partition = partition
+		}
 	}
 
-	client.AccountID = accountID
-	client.DefaultTagsConfig = c.DefaultTagsConfig
-	client.dnsSuffix = dnsSuffix
-	client.IgnoreTagsConfig = c.IgnoreTagsConfig
-	client.Partition = partition
-	client.Region = c.Region
-	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.session = session
+	// Fetch tag policy details when enforced
+	if c.TagPolicyConfig != nil {
+		tflog.Debug(ctx, "Retrieving tag policy details")
+		reqTags, err := tagpolicy.GetRequiredTags(ctx, cfg)
+		if err != nil {
+			diags = append(diags, errs.NewErrorDiagnostic(
+				"Retrieving Required Tags",
+				`Failed to retrieve required tags from the organizations tag policies. Ensure the calling principal `+
+					`has the "tag:ListRequiredTags" IAM permission and that tag policies are attached to the target account.`+
+					fmt.Sprintf("\n\nOriginal error: %s", err)))
+			return nil, diags
+		}
+		c.TagPolicyConfig.RequiredTags = reqTags
+	}
+
+	client.accountID = accountID
+	client.defaultTagsConfig = c.DefaultTagsConfig
+	client.ignoreTagsConfig = c.IgnoreTagsConfig
+	client.tagPolicyConfig = c.TagPolicyConfig
+	client.terraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
-	client.clients = make(map[string]any, 0)
-	client.conns = make(map[string]any, 0)
+	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle

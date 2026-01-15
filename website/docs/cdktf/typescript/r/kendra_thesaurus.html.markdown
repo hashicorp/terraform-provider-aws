@@ -59,6 +59,7 @@ The `sourceS3Path` configuration block supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) The description for a thesaurus.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -111,4 +112,4 @@ Using `terraform import`, import `aws_kendra_thesaurus` using the unique identif
 % terraform import aws_kendra_thesaurus.example thesaurus-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c0dadf9d404f36bcb0eb8e47f42f731ded578d3015ecba91c35c34dacf029082 -->
+<!-- cache-key: cdktf-0.20.8 input-db2ad8188f48d97ebab15b9bdde10f5e748ee5085c676d898bc3d0bd7f6c4eaf -->

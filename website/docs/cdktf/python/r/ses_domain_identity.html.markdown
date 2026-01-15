@@ -64,6 +64,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain` - (Required) The domain name to assign to SES
 
 ## Attribute Reference
@@ -98,4 +99,4 @@ Using `terraform import`, import SES domain identities using the domain name. Fo
 % terraform import aws_ses_domain_identity.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e9c56869a46ad1b02fa7b205f2048ccc35a338dee7bb4db3f9882d9519cccda7 -->
+<!-- cache-key: cdktf-0.20.8 input-f89e441bd870009274db46830e4e52630acc710289802fa82841751c7781b422 -->

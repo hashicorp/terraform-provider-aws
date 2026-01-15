@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -695,5 +695,35 @@ func TestContainerDefinitionsAreEquivalent_healthCheck(t *testing.T) {
 	}
 	if !equal {
 		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
+func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80
+        }
+      ],
+      "memory": 500,
+      "cpu": 10,
+      "versionConsistency": "invalid"
+    }
+]`
+	_, err := expandContainerDefinitions(cfgRepresention)
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+
+	expectedErr := "invalid version consistency value (invalid) for container definition supplied at index (0)"
+	if err.Error() != expectedErr {
+		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
 	}
 }

@@ -47,13 +47,6 @@ class MyConvertedCode(TerraformStack):
             disable_api_stop=True,
             disable_api_termination=True,
             ebs_optimized=Token.as_string(True),
-            elastic_gpu_specifications=[LaunchTemplateElasticGpuSpecifications(
-                type="test"
-            )
-            ],
-            elastic_inference_accelerator=LaunchTemplateElasticInferenceAccelerator(
-                type="eia1.medium"
-            ),
             iam_instance_profile=LaunchTemplateIamInstanceProfile(
                 name="test"
             ),
@@ -103,6 +96,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -115,9 +109,6 @@ This resource supports the following arguments:
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
-  below for more details.
-* `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -180,6 +171,7 @@ The `ebs` block supports the following:
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
 * `volume_size` - (Optional) The size of the volume in gigabytes.
+* `volume_initialization_rate` - (Optional) The volume initialization rate in MiB/s (specified as an integer, e.g. 100), with a minimum of 100 MiB/s and maximum of 300 MiB/s.
 * `volume_type` - (Optional) The volume type.
   Can be one of `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1`.
 
@@ -187,7 +179,7 @@ The `ebs` block supports the following:
 
 The `capacity_reservation_specification` block supports the following:
 
-* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacity_reservation_id` or `capacity_reservation_resource_group_arn` is specified in `capacity_reservation_target` block, either omit `capacity_reservation_preference` or set it to `capacity-reservations-only`.
 * `capacity_reservation_target` - Used to target a specific Capacity Reservation:
 
 The `capacity_reservation_target` block supports the following:
@@ -217,22 +209,6 @@ The `credit_specification` block supports the following:
   Can be `standard` or `unlimited`.
   T3 instances are launched as `unlimited` by default.
   T2 instances are launched as `standard` by default.
-
-### Elastic GPU
-
-Attach an elastic GPU the instance.
-
-The `elastic_gpu_specifications` block supports the following:
-
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
-
-### Elastic Inference Accelerator
-
-Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
-
-The `elastic_inference_accelerator` configuration block supports the following:
-
-* `type` - (Required) Accelerator type.
 
 ### Enclave Options
 
@@ -430,11 +406,8 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
-* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
-  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
-  Boolean value, can be left unset.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface.
-  Boolean value, can be left unset.
+* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface. Boolean value, can be left unset.
 * `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
 * `description` - (Optional) Description of the network interface.
 * `device_index` - (Optional) The integer index of the network interface attachment.
@@ -447,11 +420,31 @@ Each `network_interfaces` block supports the following:
 * `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - (Optional) The ID of the network interface to attach.
 * `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `primary_ipv6` - (Optional) Whether the first IPv6 GUA will be made the primary IPv6 address.
 * `private_ip_address` - (Optional) The primary private IPv4 address.
 * `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
 * `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
 * `security_groups` - (Optional) A list of security group IDs to associate.
 * `subnet_id` - (Optional) The VPC Subnet ID to associate.
+* `ena_srd_specification` - (Optional) Configuration for Elastic Network Adapter (ENA) Express settings. Applies to network interfaces that use the [ena Express](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html) feature. See details below.
+* `connection_tracking_specification` - (Optional) The Connection Tracking Configuration for the network interface. See [Amazon EC2 security group connection tracking](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts)
+
+The `ena_srd_specification` block supports the following:
+
+* `ena_srd_enabled` - (Optional) Whether to enable ENA Express. ENA Express uses AWS Scalable Reliable Datagram (SRD) technology to improve the performance of TCP traffic.
+* `ena_srd_udp_specification` - (Optional) Configuration for ENA Express UDP optimization. See details below.
+
+The `ena_srd_udp_specification` block supports the following:
+
+* `ena_srd_udp_enabled` - (Optional) Whether to enable UDP traffic optimization through ENA Express. Requires `ena_srd_enabled` to be `true`.
+
+NOTE: ENA Express requires [specific instance types](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/enhanced-networking-ena-express.html#ena-express-requirements) and minimum bandwidth of 25 Gbps.
+
+The `connection_tracking_specification` block supports the following:
+
+* `tcp_established_timeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min: 60 seconds. Max: 432000 seconds (5 days). Default: 432000 seconds. Recommended: Less than 432000 seconds.
+* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min: 30 seconds. Max: 60 seconds. Default: 30 seconds.
+* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min: 60 seconds. Max: 180 seconds (3 minutes). Default: 180 seconds.
 
 ### Placement
 
@@ -461,7 +454,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availability_zone` - (Optional) The Availability Zone for the instance.
-* `group_name` - (Optional) The name of the placement group for the instance.
+* `group_id` - (Optional) The ID of the placement group for the instance. Conflicts with `group_name`.
+* `group_name` - (Optional) The name of the placement group for the instance. Conflicts with `group_id`.
 * `host_id` - (Optional) The ID of the Dedicated Host for the instance.
 * `host_resource_group_arn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - (Optional) Reserved for future use.
@@ -519,4 +513,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-eb46931f560f9bd164e98b954f3becd91353d04fb42aa6cdb223ac168ffd71f6 -->
+<!-- cache-key: cdktf-0.20.8 input-92d9977f8d1c5bc9b3b0021fb0d5d2f7dce3e91c7a647d9c0095fd0667e0d85b -->

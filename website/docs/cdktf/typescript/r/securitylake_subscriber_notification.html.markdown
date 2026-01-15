@@ -75,8 +75,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `subscriberId` - (Required) The subscriber ID for the notification subscription.
 * `configuration` - (Required) Specify the configuration using which you want to create the subscriber notification..
 
@@ -112,4 +113,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.20.1 input-ed0e58bfd100a3606d95276a920ac381134d5f06cfc392d2a37d7e4a9e8735c7 -->
+<!-- cache-key: cdktf-0.20.8 input-cbcf52a2db0d2e5af0e8592d21f313c85cdf500a3949d42e6f90ef36986e0ea0 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -30,6 +30,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"dateFilters":        testAccAutomationRule_dateFilters,
 			"mapFilters":         testAccAutomationRule_mapFilters,
 			"tags":               testAccAutomationRule_tags,
+			"Identity":           testAccSecurityHubAutomationRule_IdentitySerial,
 		},
 		"ActionTarget": {
 			acctest.CtBasic:      testAccActionTarget_basic,
@@ -88,6 +89,9 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			acctest.CtBasic:                         testAccStandardsControl_basic,
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
+		},
+		"StandardsControlAssociation": {
+			acctest.CtBasic: testAccStandardsControlAssociation_basic,
 		},
 		"StandardsControlAssociationsDataSource": {
 			acctest.CtBasic: testAccStandardsControlAssociationsDataSource_basic,

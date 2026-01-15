@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Add `init_containers` and `share_process_namespace` arguments
+```
+```release-note:enhancement
+resource/aws_batch_job_definition: Increase maximum number of `containers` arguments to 10
+```
+```release-note:enhancement
+data-source/aws_batch_job_definition: Add `init_containers`, `share_process_namespace`, and `image_pull_secrets` attributes
+```

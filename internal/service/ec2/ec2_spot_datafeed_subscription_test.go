@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -16,20 +16,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
-		acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+	testCases := map[string]map[string]func(t *testing.T){
+		"SpotDatafeedSubscription": {
+			acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
+			acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+		},
+		"SpotDatafeedSubscriptionDataSource": {
+			acctest.CtBasic: testAccSpotDataFeedSubscriptionDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccSpotDatafeedSubscription_basic(t *testing.T) {
@@ -75,7 +80,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(ctx, resourceName, &subscription),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +124,7 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 
 			_, err := tfec2.FindSpotDatafeedSubscription(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -137,7 +142,8 @@ func testAccCheckSpotDatafeedSubscriptionDestroy(ctx context.Context) resource.T
 func testAccPreCheckSpotDatafeedSubscription(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
+	input := ec2.DescribeSpotDatafeedSubscriptionInput{}
+	_, err := conn.DescribeSpotDatafeedSubscription(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

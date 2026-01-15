@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,6 +38,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_basic(t *testing.T) {
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 2),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -58,7 +65,7 @@ func TestAccVPCEndpointSecurityGroupAssociation_disappears(t *testing.T) {
 				Config: testAccVPCEndpointSecurityGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointSecurityGroupAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpointSecurityGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,6 +119,13 @@ func TestAccVPCEndpointSecurityGroupAssociation_replaceDefaultAssociation(t *tes
 					testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(&v, 1),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"replace_default_association"},
+			},
 		},
 	})
 }
@@ -127,7 +141,7 @@ func testAccCheckVPCEndpointSecurityGroupAssociationDestroy(ctx context.Context)
 
 			err := tfec2.FindVPCEndpointSecurityGroupAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -173,6 +187,18 @@ func testAccCheckVPCEndpointSecurityGroupAssociationExists(ctx context.Context, 
 	}
 }
 
+func testAccVPCEndpointSecurityGroupAssociationImportStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["security_group_id"])
+		return id, nil
+	}
+}
+
 func testAccCheckVPCEndpointSecurityGroupAssociationNumAssociations(v *awstypes.VpcEndpoint, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len := len(v.Groups); len != n {
@@ -207,7 +233,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {

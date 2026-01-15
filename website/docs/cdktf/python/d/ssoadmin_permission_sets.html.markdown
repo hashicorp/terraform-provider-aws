@@ -41,8 +41,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required) ARN of the SSO Instance associated with the permission set.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - Set of string contain the ARN of all Permission Sets.
 
-<!-- cache-key: cdktf-0.20.1 input-91eafcaf35cfcefd86bb5eec504b84e94ef0ec7c9845492fbd8b627bb8738f1c -->
+<!-- cache-key: cdktf-0.20.8 input-4c18e04ae6742d04f069642cabfb71ea926c76eb0270a64a92355805b273be3f -->

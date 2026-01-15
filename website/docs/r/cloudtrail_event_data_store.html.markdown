@@ -78,8 +78,10 @@ resource "aws_cloudtrail_event_data_store" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `name` - (Required) The name of the event data store.
 - `billing_mode` - (Optional) The billing mode for the event data store. The valid values are `EXTENDABLE_RETENTION_PRICING` and `FIXED_RETENTION_PRICING`. Defaults to `EXTENDABLE_RETENTION_PRICING`.
+- `suspend` - (Optional) Specifies whether to stop ingesting new events into the event data store. If set to `true`, ingestion is suspended while maintaining the ability to query existing events. If set to `false`, ingestion is active.
 - `advanced_event_selector` - (Optional) The advanced event selectors to use to select the events for the data store. For more information about how to use advanced event selectors, see [Log events by using advanced event selectors](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html#creating-data-event-selectors-advanced) in the CloudTrail User Guide.
 - `multi_region_enabled` - (Optional) Specifies whether the event data store includes events from all regions, or only from the region in which the event data store is created. Default: `true`.
 - `organization_enabled` - (Optional) Specifies whether an event data store collects events logged for an organization in AWS Organizations. Default: `false`.
@@ -116,6 +118,27 @@ This resource exports the following attributes in addition to the arguments abov
 - `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudtrail_event_data_store.example
+  identity = {
+    "arn" = "arn:aws:cloudtrail:us-east-1:123456789012:eventdatastore/example-event-data-store-id"
+  }
+}
+
+resource "aws_cloudtrail_event_data_store" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CloudTrail event data store.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event data stores using their `arn`. For example:
 

@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `adminAccountId` - (Required) The AWS account ID for the account to designate as the delegated Amazon Macie administrator account for the organization.
 
 ## Attribute Reference
@@ -84,4 +85,4 @@ Using `terraform import`, import `aws_macie2_organization_admin_account` using t
 % terraform import aws_macie2_organization_admin_account.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ce092bbcd6ad04e47b3e88a6f9f4f8d7424bc7880543e934e20790f46e48066f -->
+<!-- cache-key: cdktf-0.20.8 input-1d63bba064308866268c5250b78eb84c4c8d5c3e38f45042ceaefa156ddf81f5 -->

@@ -60,6 +60,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A name that lets you identify the rule, to manage and use it.
 * `action` - (Required) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list. Valid values: `ALLOW`, `BLOCK`, `ALERT`.
 * `block_override_dns_type` - (Required if `block_response` is `OVERRIDE`) The DNS record's type. This determines the format of the record value that you provided in BlockOverrideDomain. Value values: `CNAME`.
@@ -103,4 +104,4 @@ Using `terraform import`, import  Route 53 Resolver DNS Firewall rules using the
 % terraform import aws_route53_resolver_firewall_rule.example rslvr-frg-0123456789abcdef:rslvr-fdl-0123456789abcdef
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d458f15a90a09c2af72b36e34a6381be867e94e3cadbae033820a2e3273fe68d -->
+<!-- cache-key: cdktf-0.20.8 input-7fa274fde1a7b862f38542a8edcec463caf29d2435c361825d91fd6779731118 -->

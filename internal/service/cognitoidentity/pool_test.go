@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -41,7 +41,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", ""),
 				),
@@ -120,7 +120,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.graph.facebook.com", "7346241598935555"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.graph.facebook.com", "7346241598935552"),
 					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.accounts.google.com", "123456789012.apps.googleusercontent.com"),
 				),
@@ -146,7 +146,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "supported_login_providers.%", "0"),
 				),
 			},
 		},
@@ -170,7 +170,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "1"),
 				),
 			},
 			{
@@ -184,7 +184,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "2"),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "0"),
 				),
 			},
 		},
@@ -219,7 +219,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", names.AttrARN),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "saml_provider_arns.0", "aws_iam_saml_provider.secondary", names.AttrARN),
 				),
 			},
@@ -244,7 +244,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "saml_provider_arns.#", "0"),
 				),
 			},
 		},
@@ -268,7 +268,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						names.AttrClientID:        "7lhlkkfbfb4q5kpp90urffao",
 						names.AttrProviderName:    fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
@@ -292,7 +292,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						names.AttrClientID:        "6lhlkkfbfb4q5kpp90urffae",
 						names.AttrProviderName:    fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
@@ -306,7 +306,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "0"),
 				),
 			},
 		},
@@ -330,7 +330,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
 				),
 			},
 			{
@@ -344,8 +344,8 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "1"),
 				),
 			},
 			{
@@ -354,8 +354,8 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "openid_connect_provider_arns.#", "0"),
 				),
 			},
 		},
@@ -378,7 +378,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				Config: testAccPoolConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -392,7 +392,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -402,7 +402,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -426,7 +426,7 @@ func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 				Config: testAccPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePool(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -447,9 +447,10 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		result, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		input := cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
-		})
+		}
+		result, err := conn.DescribeIdentityPool(ctx, &input)
 		if err != nil {
 			return err
 		}
@@ -473,9 +474,10 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+			input := cognitoidentity.DescribeIdentityPoolInput{
 				IdentityPoolId: aws.String(rs.Primary.ID),
-			})
+			}
+			_, err := conn.DescribeIdentityPool(ctx, &input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
@@ -655,13 +657,13 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Ab129faBb"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Ab129faBb"
     server_side_token_check = false
   }
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 }
@@ -680,7 +682,7 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "6lhlkkfbfb4q5kpp90urffae"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 }
@@ -699,13 +701,13 @@ resource "aws_cognito_identity_pool" "test" {
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Ab129faBb"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Ab129faBb"
     server_side_token_check = false
   }
 
   cognito_identity_providers {
     client_id               = "7lhlkkfbfb4q5kpp90urffao"
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.name}_Zr231apJu"
+    provider_name           = "cognito-idp.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/${data.aws_region.current.region}_Zr231apJu"
     server_side_token_check = false
   }
 

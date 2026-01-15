@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,7 +35,10 @@ import (
 
 // @FrameworkResource("aws_rds_integration", name="Integration")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Integration")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &integrationResource{}
 
@@ -55,14 +59,9 @@ const (
 )
 
 type integrationResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[integrationResourceModel]
-	framework.WithImportByID
+	framework.ResourceWithModel[integrationResourceModel]
+	framework.WithImportByIdentity
 	framework.WithTimeouts
-}
-
-func (*integrationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_rds_integration"
 }
 
 func (r *integrationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -77,7 +76,15 @@ func (r *integrationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			"data_filter": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			"integration_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -160,6 +167,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	// Set values for unknowns.
 	data.KMSKeyID = fwflex.StringToFramework(ctx, integration.KMSKeyId)
+	data.DataFilter = fwflex.StringToFramework(ctx, integration.DataFilter)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -181,7 +189,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findIntegrationByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -222,7 +230,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: data.ID.ValueStringPointer(),
+		IntegrationIdentifier: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
@@ -240,10 +248,6 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 		return
 	}
-}
-
-func (r *integrationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findIntegrationByARN(ctx context.Context, conn *rds.Client, arn string) (*awstypes.Integration, error) {
@@ -272,7 +276,7 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -292,11 +296,11 @@ func findIntegrations(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIntegration(ctx context.Context, conn *rds.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIntegrationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -309,7 +313,7 @@ func statusIntegration(ctx context.Context, conn *rds.Client, arn string) retry.
 }
 
 func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{integrationStatusCreating, integrationStatusModifying},
 		Target:  []string{integrationStatusActive},
 		Refresh: statusIntegration(ctx, conn, arn),
@@ -319,7 +323,7 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
@@ -328,7 +332,7 @@ func waitIntegrationCreated(ctx context.Context, conn *rds.Client, arn string, t
 }
 
 func waitIntegrationDeleted(ctx context.Context, conn *rds.Client, arn string, timeout time.Duration) (*awstypes.Integration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{integrationStatusDeleting, integrationStatusActive},
 		Target:  []string{},
 		Refresh: statusIntegration(ctx, conn, arn),
@@ -338,7 +342,7 @@ func waitIntegrationDeleted(ctx context.Context, conn *rds.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Integration); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.Errors, integrationError)...))
 
 		return output, err
 	}
@@ -351,16 +355,18 @@ func integrationError(v awstypes.IntegrationError) error {
 }
 
 type integrationResourceModel struct {
-	AdditionalEncryptionContext fwtypes.MapValueOf[types.String] `tfsdk:"additional_encryption_context"`
-	ID                          types.String                     `tfsdk:"id"`
-	IntegrationARN              types.String                     `tfsdk:"arn"`
-	IntegrationName             types.String                     `tfsdk:"integration_name"`
-	KMSKeyID                    types.String                     `tfsdk:"kms_key_id"`
-	SourceARN                   fwtypes.ARN                      `tfsdk:"source_arn"`
-	Tags                        tftags.Map                       `tfsdk:"tags"`
-	TagsAll                     tftags.Map                       `tfsdk:"tags_all"`
-	TargetARN                   fwtypes.ARN                      `tfsdk:"target_arn"`
-	Timeouts                    timeouts.Value                   `tfsdk:"timeouts"`
+	framework.WithRegionModel
+	AdditionalEncryptionContext fwtypes.MapOfString `tfsdk:"additional_encryption_context"`
+	DataFilter                  types.String        `tfsdk:"data_filter"`
+	ID                          types.String        `tfsdk:"id"`
+	IntegrationARN              types.String        `tfsdk:"arn"`
+	IntegrationName             types.String        `tfsdk:"integration_name"`
+	KMSKeyID                    types.String        `tfsdk:"kms_key_id"`
+	SourceARN                   fwtypes.ARN         `tfsdk:"source_arn"`
+	Tags                        tftags.Map          `tfsdk:"tags"`
+	TagsAll                     tftags.Map          `tfsdk:"tags_all"`
+	TargetARN                   fwtypes.ARN         `tfsdk:"target_arn"`
+	Timeouts                    timeouts.Value      `tfsdk:"timeouts"`
 }
 
 func (model *integrationResourceModel) InitFromID() error {

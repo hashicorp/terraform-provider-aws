@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +36,7 @@ func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrComment, "test key group"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "etag"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", names.AttrID),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrName, rName),
 				),
 			},
@@ -64,7 +64,7 @@ func TestAccCloudFrontKeyGroup_disappears(t *testing.T) {
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceKeyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,7 +124,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "1"),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 				Config: testAccKeyGroupConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "2"),
 				),
 			},
 		},
@@ -169,7 +169,7 @@ func testAccCheckKeyGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudfront.FindKeyGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

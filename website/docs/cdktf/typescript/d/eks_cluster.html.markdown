@@ -32,9 +32,6 @@ class MyConvertedCode extends TerraformStack {
     new TerraformOutput(this, "endpoint", {
       value: example.endpoint,
     });
-    new TerraformOutput(this, "identity-oidc-issuer", {
-      value: Fn.lookupNested(example.identity, ["0", "oidc", "0", "issuer"]),
-    });
     new TerraformOutput(this, "kubeconfig-certificate-authority-data", {
       value: Fn.lookupNested(example.certificateAuthority, ["0", "data"]),
     });
@@ -45,6 +42,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the cluster.
 
 ## Attribute Reference
@@ -56,16 +56,23 @@ This data source exports the following attributes in addition to the arguments a
 * `accessConfig` - Configuration block for access config.
     * `authenticationMode` - Values returned are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
     * `bootstrapClusterCreatorAdminPermissions` - Default to `true`.
+* `computeConfig` - Nested attribute containing compute capability configuration for EKS Auto Mode enabled cluster.
+    * `enabled` - Whether the EKS Auto Mode compute capability is enabled or not.
+    * `nodePools` - List of node pools for the EKS Auto Mode compute capability.
+    * `nodeRoleArn` - The ARN of the IAM Role EKS will assign to EC2 Managed Instances in your EKS Auto Mode cluster.
 * `certificateAuthority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `clusterId` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `createdAt` - Unix epoch time stamp in seconds for when the cluster was created.
+* `deletionProtection` - Whether deletion protection for the cluster is enabled.
 * `enabledClusterLogTypes` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `kubernetesNetworkConfig` - Nested list containing Kubernetes Network Configuration.
+    * `elasticLoadBalancing` - Contains Elastic Load Balancing configuration for EKS Auto Mode enabled cluster.
+        * `enabled` - Indicates if the load balancing capability is enabled for EKS Auto Mode enabled cluster.
     * `ipFamily` - `ipv4` or `ipv6`.
     * `serviceIpv4Cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv4` was specified when the cluster was created.
     * `serviceIpv6Cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
@@ -75,19 +82,29 @@ This data source exports the following attributes in addition to the arguments a
         * `groupName` - The name of the placement group for the Kubernetes control plane instances.
     * `outpostArns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platformVersion` - Platform version for the cluster.
+* `remoteNetworkConfig` - Contains remote network configuration for EKS Hybrid Nodes.
+    * `remoteNodeNetworks` - The networks that can contain hybrid nodes.
+        * `cidrs` - List of network CIDRs that can contain hybrid nodes.
+    * `remotePodNetworks` - The networks that can contain pods that run Kubernetes webhooks on hybrid nodes.
+        * `cidrs` - List of network CIDRs that can contain pods that run Kubernetes webhooks on hybrid nodes.
 * `roleArn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
+* `storageConfig` - Contains storage configuration for EKS Auto Mode enabled cluster.
+    * `blockStorage` - Contains block storage configuration for EKS Auto Mode enabled cluster.
+        * `enabled` - Indicates if the block storage capability is enabled for EKS Auto Mode enabled cluster.
 * `tags` - Key-value map of resource tags.
-* `upgradePolicy` - (Optional) Configuration block for the support policy to use for the cluster.
-    * `supportType` - (Optional) Support type to use for the cluster.
+* `upgradePolicy` - Configuration block for the support policy to use for the cluster.
+    * `supportType` - Support type to use for the cluster.
 * `version` - Kubernetes server version for the cluster.
 * `vpcConfig` - Nested list containing VPC configuration for the cluster.
     * `clusterSecurityGroupId` - The cluster security group that was created by Amazon EKS for the cluster.
     * `endpointPrivateAccess` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
     * `endpointPublicAccess` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
     * `publicAccessCidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `securityGroupIds` – List of security group IDs
-    * `subnetIds` – List of subnet IDs
-    * `vpcId` – The VPC associated with your cluster.
+    * `securityGroupIds` - List of security group IDs
+    * `subnetIds` - List of subnet IDs
+    * `vpcId` - The VPC associated with your cluster.
+* `zonalShiftConfig` - Contains Zonal Shift Configuration.
+    * `enabled` - Whether zonal shift is enabled.
 
-<!-- cache-key: cdktf-0.20.1 input-2f858927be7bf4d84b730bd1c7bc1415840ed27358e0ce92b62ad60ac4d50047 -->
+<!-- cache-key: cdktf-0.20.8 input-b18434906ba80518682a27fbecd4607c7592f24bd2e720edd829ff1f366ad757 -->

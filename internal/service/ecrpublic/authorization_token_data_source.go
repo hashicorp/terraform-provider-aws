@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecrpublic
@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ecrpublic_authorization_token")
+// @SDKDataSource("aws_ecrpublic_authorization_token", name="Authorization Token")
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
@@ -46,7 +46,7 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 	params := &ecrpublic.GetAuthorizationTokenInput{}
@@ -60,7 +60,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	authorizationData := out.AuthorizationData
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
 	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
-	authBytes, err := itypes.Base64Decode(authorizationToken)
+	authBytes, err := inttypes.Base64Decode(authorizationToken)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding ECR Public authorization token: %s", err)
@@ -73,7 +73,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("authorization_token", authorizationToken)
 	d.Set("expires_at", expiresAt)
 	d.Set(names.AttrUserName, userName)

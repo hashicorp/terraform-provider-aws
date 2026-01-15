@@ -17,8 +17,6 @@ Terraform resource for managing an AWS DataZone Environment.
 ```terraform
 resource "aws_datazone_environment" "example" {
   name                 = "example"
-  account_identifier   = data.aws_caller_identity.test.account_id
-  account_region       = data.aws_region.test.name
   blueprint_identifier = aws_datazone_environment_blueprint_configuration.test.environment_blueprint_id
   profile_identifier   = aws_datazone_environment_profile.test.id
   project_identifier   = aws_datazone_project.test.id
@@ -45,7 +43,6 @@ resource "aws_datazone_environment" "example" {
 
 The following arguments are required:
 
-* `account_identifier` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `domain_identifier` - (Required) The ID of the domain where the environment exists.
 * `name` - (Required) The name of the environment.
 * `profile_identifier` - (Required) The ID of the profile with which the environment is created.
@@ -53,12 +50,15 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_identifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `account_region` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprint_identifier` - (Optional) The blueprint with which the environment is created.
-* `descrioption` - (Optional) The description of the environment.
+* `description` - (Optional) The description of the environment.
 * `glossary_terms` - (Optional) The business glossary terms that can be used in this environment.
-* `user_parameters` - (Optional) The user parameters that are used in the environment. See [User Parameters](#user-parameters) for more information.
+* `user_parameters` - (Optional) The user parameters that are used in the environment.
+  See [User Parameters](#user-parameters) for more information.
+  Changing these values recreates the resource.
 
 ### User Parameters
 

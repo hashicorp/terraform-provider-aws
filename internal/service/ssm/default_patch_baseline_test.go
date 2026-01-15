@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,7 +56,7 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -83,7 +83,7 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDefaultPatchBaseline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceDefaultPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,7 +124,7 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -165,7 +165,7 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -226,7 +226,7 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -276,7 +276,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -324,7 +324,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			// Import by Baseline ID
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, "baseline_id"),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -350,7 +350,7 @@ func testAccCheckDefaultPatchBaselineDestroy(ctx context.Context) resource.TestC
 			// If the resource has been deleted, the default patch baseline will be the AWS-provided patch baseline for the OS.
 			output, err := tfssm.FindDefaultPatchBaselineByOperatingSystem(ctx, conn, awstypes.OperatingSystem(rs.Primary.ID))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -387,17 +387,6 @@ func testAccCheckDefaultPatchBaselineExists(ctx context.Context, n string, v *ss
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccDefaultPatchBaselineImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["baseline_id"], nil
 	}
 }
 

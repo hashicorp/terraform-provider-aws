@@ -19,6 +19,8 @@ connection into management.
 
 ## Example Usage
 
+### Cross-Account Peering Or Cross-Region Peering Terraform AWS Provider v5 (and below)
+
 ```terraform
 provider "aws" {
   region = "us-east-1"
@@ -71,10 +73,53 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 }
 ```
 
+### Cross-Region Peering (Same Account) Terraform AWS Provider v6 (and above)
+
+```terraform
+provider "aws" {
+  region = "us-east-1"
+
+  # Requester's credentials.
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_vpc" "peer" {
+  region     = "us-west-2"
+  cidr_block = "10.1.0.0/16"
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "peer" {
+  vpc_id      = aws_vpc.main.id
+  peer_vpc_id = aws_vpc.peer.id
+  peer_region = "us-west-2"
+  auto_accept = false
+
+  tags = {
+    Side = "Requester"
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  region                    = "us-west-2"
+  vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
+  auto_accept               = true
+
+  tags = {
+    Side = "Accepter"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpc_peering_connection_id` - (Required) The VPC Peering Connection ID to manage.
 * `auto_accept` - (Optional) Whether or not to accept the peering request. Defaults to `false`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

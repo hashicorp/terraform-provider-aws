@@ -37,10 +37,14 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-## Attributes Reference
+## Argument Reference
+
+This data source does not support any arguments.
+
+## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - A list of all the Route53 Hosted Zone IDs found.
 
-<!-- cache-key: cdktf-0.20.1 input-3fbe6820a68ecf2da6375f150bdfc5e047486cc8673ce3ea581ccb4c5b61d5e6 -->
+<!-- cache-key: cdktf-0.20.8 input-45d160bcdac0615de23bc94f24c3ec3d8307857791439a4341824b2ac9d936dc -->

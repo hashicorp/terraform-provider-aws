@@ -40,8 +40,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountId` - (Required) Account to enable as delegated admin account.
 
 ## Attribute Reference
@@ -76,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
     Inspector2DelegatedAdminAccount.generateConfigForImport(
       this,
       "example",
-      "012345678901"
+      "123456789012"
     );
   }
 }
@@ -86,7 +87,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Inspector Delegated Admin Account using the `accountId`. For example:
 
 ```console
-% terraform import aws_inspector2_delegated_admin_account.example 012345678901
+% terraform import aws_inspector2_delegated_admin_account.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5828f02fcb3f6e66bfb0cfe7ea840e097f0fe9fe69f8bc3e6a28d81ab8a5ab11 -->
+<!-- cache-key: cdktf-0.20.8 input-a859fa67e835e850d7f777ab25862ba943001a7cb48a55f3e60a3f5f3aa42fd1 -->

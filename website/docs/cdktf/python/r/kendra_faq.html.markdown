@@ -110,6 +110,7 @@ The `s3_path` configuration block supports the following arguments:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) The description for a FAQ.
 * `file_format` - (Optional, Forces new resource) The file format used by the input files for the FAQ. Valid Values are `CSV`, `CSV_WITH_HEADER`, `JSON`.
 * `language_code` - (Optional, Forces new resource) The code for a language. This shows a supported language for the FAQ document. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
@@ -160,4 +161,4 @@ Using `terraform import`, import `aws_kendra_faq` using the unique identifiers o
 % terraform import aws_kendra_faq.example faq-123456780/idx-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-57f89e70ce17623b02f00b073b804b218ccbbb5d903a356e14ccc19a733fa5e6 -->
+<!-- cache-key: cdktf-0.20.8 input-485317c2b3c379728ee38ca33f994068863bfb93fc45d7c6b43a90df3cbdccd7 -->

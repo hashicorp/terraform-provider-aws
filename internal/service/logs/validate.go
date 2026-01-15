@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -7,34 +7,9 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 )
 
-func validResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
-	if len(value) > 5120 || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
-	}
-	return
-}
-
-func validAccountPolicyDocument(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutAccountPolicy.html
-	if len(value) > 30720 || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("CloudWatch log account policy document must be between 1 and 30,720 characters."))
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
-	}
-	return
-}
-
-func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
+func validLogGroupName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 512 {
@@ -54,7 +29,7 @@ func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+func validLogGroupNamePrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 483 {
@@ -74,7 +49,7 @@ func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func validLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
+func validLogMetricFilterName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 512 {
@@ -93,7 +68,7 @@ func validLogMetricFilterName(v interface{}, k string) (ws []string, errors []er
 	return
 }
 
-func validLogMetricFilterTransformationName(v interface{}, k string) (ws []string, errors []error) {
+func validLogMetricFilterTransformationName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) > 255 {
@@ -108,6 +83,20 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 			"%q isn't a valid log metric transformation name (must not contain"+
 				" colon, asterisk nor dollar sign): %q",
 			k, value))
+	}
+
+	return
+}
+
+func validLogStreamName(v any, k string) (ws []string, errors []error) { // nosemgrep:ci.logs-in-func-name
+	value := v.(string)
+	if regexache.MustCompile(`:`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"colons not allowed in %q:", k))
+	}
+	if len(value) < 1 || len(value) > 512 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be between 1 and 512 characters: %q", k, value))
 	}
 
 	return

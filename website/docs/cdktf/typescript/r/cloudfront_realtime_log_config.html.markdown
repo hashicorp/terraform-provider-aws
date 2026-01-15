@@ -120,6 +120,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudfront_realtime_log_config.example
+  identity = {
+    "arn" = "arn:aws:cloudfront::123456789012:realtime-log-config/ExampleNameForRealtimeLogConfig"
+  }
+}
+
+resource "aws_cloudfront_realtime_log_config" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CloudFront real-time log configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront real-time log configurations using the ARN. For example:
 
 ```typescript
@@ -150,4 +171,4 @@ Using `terraform import`, import CloudFront real-time log configurations using t
 % terraform import aws_cloudfront_realtime_log_config.example arn:aws:cloudfront::111122223333:realtime-log-config/ExampleNameForRealtimeLogConfig
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-be02677fb3ad25ac1055ce131b85e8c78a124b0a2ec359c977c007200fc38e11 -->
+<!-- cache-key: cdktf-0.20.8 input-8a75eacf317508212531f286fd92dd8ed4de14479bdcc686d6f6dfcbc5239cdd -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -40,7 +40,7 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN), // nosemgrep:ci.semgrep.acctest.checks.arn-resourceattrset // TODO: need event source for testing
 				),
 			},
 		},

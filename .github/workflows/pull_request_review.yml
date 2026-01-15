@@ -1,0 +1,54 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Pull Request Review
+
+permissions:
+  contents: read
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  approved:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Community Check
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.review.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: Maintainer Approval
+        if: |
+          github.event.review.state == 'approved'
+          && (steps.community_check.outputs.maintainer == 'true' || steps.community_check.outputs.partner == 'true')
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        env:
+          REVIEW_AUTHOR_URL: ${{ github.event.review.user.html_url }}
+          REVIEW_AUTHOR_LOGIN: ${{ github.event.review.user.login }}
+          PR_HTML_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':bufo-approves: <{0}|{1}> approved <{2}|{3}>', env.REVIEW_AUTHOR_URL, env.REVIEW_AUTHOR_LOGIN, env.PR_HTML_URL, env.PR_TITLE)) }}
+                  }
+                }
+              ]
+            }

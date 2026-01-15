@@ -43,7 +43,7 @@ class MyConvertedCode(TerraformStack):
         data_aws_region_current.override_logical_id("current")
         aws_shield_protection_example = ShieldProtection(self, "example_4",
             name="example",
-            resource_arn="arn:aws:ec2:${" + data_aws_region_current.name + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}",
+            resource_arn="arn:aws:ec2:${" + data_aws_region_current.region + "}:${" + current.account_id + "}:eip-allocation/${" + example.id + "}",
             tags={
                 "Environment": "Dev"
             }
@@ -93,4 +93,4 @@ Using `terraform import`, import Shield protection resources using specifying th
 % terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-35847768aaaa80ceec4dd0e0320b0024c8b87792dc136354d8b49f64094399b6 -->
+<!-- cache-key: cdktf-0.20.8 input-c8ad5c34e35b67006c0a905cc6b5ce2aec08f4b21d49f283cd3b0e43e98bff9a -->

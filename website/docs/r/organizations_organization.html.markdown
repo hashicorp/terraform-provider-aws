@@ -32,46 +32,77 @@ resource "aws_organizations_organization" "org" {
 This resource supports the following arguments:
 
 * `aws_service_access_principals` - (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have `feature_set` set to `ALL`. Some services do not support enablement via this endpoint, see [warning in aws docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html).
-* `enabled_policy_types` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY`, and `TAG_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
-* `feature_set` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING".
+* `enabled_policy_types` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `BEDROCK_POLICY`, `CHATBOT_POLICY`, `DECLARATIVE_POLICY_EC2`, `INSPECTOR_POLICY`, `RESOURCE_CONTROL_POLICY`, `S3_POLICY`, `SECURITYHUB_POLICY`, `SERVICE_CONTROL_POLICY`, `TAG_POLICY` and `UPGRADE_ROLLOUT_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html). To enable `INSPECTOR_POLICY`, `aws_service_access_principals` must include `inspector2.amazonaws.com`. To enable `SECURITYHUB_POLICY`, `aws_service_access_principals` must include `securityhub.amazonaws.com`.
+* `feature_set` - (Optional) Specify `ALL` (default) or `CONSOLIDATED_BILLING`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
-    * `arn` - ARN of the account
-    * `email` - Email of the account
-    * `id` - Identifier of the account
-    * `name` - Name of the account
-    * `status` - Current status of the account
-* `arn` - ARN of the organization
-* `id` - Identifier of the organization
-* `master_account_arn` - ARN of the master account
-* `master_account_email` - Email address of the master account
-* `master_account_id` - Identifier of the master account
-* `master_account_name` - Name of the master account
+    * `arn` - ARN of the account.
+    * `email` - Email of the account.
+    * `id` - Identifier of the account.
+    * `joined_method` - Method by which the account joined the organization.
+    * `joined_timestamp` - Date the account became a part of the organization.
+    * `name` - Name of the account.
+    * `state` - State of the account.
+    * `status` - (**Deprecated** use `state` instead) Status of the account.
+* `arn` - ARN of the organization.
+* `id` - Identifier of the organization.
+* `master_account_arn` - ARN of the master account.
+* `master_account_email` - Email address of the master account.
+* `master_account_id` - Identifier of the master account.
+* `master_account_name` - Name of the master account.
 * `non_master_accounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
-    * `arn` - ARN of the account
-    * `email` - Email of the account
-    * `id` - Identifier of the account
-    * `name` - Name of the account
-    * `status` - Current status of the account
+    * `arn` - ARN of the account.
+    * `email` - Email of the account.
+    * `id` - Identifier of the account.
+    * `joined_method` - Method by which the account joined the organization.
+    * `joined_timestamp` - Date the account became a part of the organization.
+    * `name` - Name of the account.
+    * `state` - State of the account.
+    * `status` - (**Deprecated** use `state` instead) Status of the account.
 * `roots` - List of organization roots. All elements have these attributes:
-    * `arn` - ARN of the root
-    * `id` - Identifier of the root
-    * `name` - Name of the root
+    * `arn` - ARN of the root.
+    * `id` - Identifier of the root.
+    * `name` - Name of the root.
     * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
-        * `name` - The name of the policy type
-        * `status` - The status of the policy type as it relates to the associated root
+        * `name` - Name of the policy type.
+        * `status` - Status of the policy type as it relates to the associated root.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_organizations_organization.example
+  identity = {
+    id = "o-1234567"
+  }
+}
+
+resource "aws_organizations_organization" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the AWS Organizations organization.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the AWS organization using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_organizations_organization.my_org
+  to = aws_organizations_organization.example
   id = "o-1234567"
 }
 ```
@@ -79,5 +110,5 @@ import {
 Using `terraform import`, import the AWS organization using the `id`. For example:
 
 ```console
-% terraform import aws_organizations_organization.my_org o-1234567
+% terraform import aws_organizations_organization.example o-1234567
 ```

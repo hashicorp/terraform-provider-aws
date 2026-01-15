@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs
@@ -13,17 +13,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +39,6 @@ func resourceAccessPoint() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -135,7 +133,7 @@ func resourceAccessPoint() *schema.Resource {
 	}
 }
 
-func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -146,11 +144,11 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("posix_user"); ok {
-		input.PosixUser = expandAccessPointPOSIXUser(v.([]interface{}))
+		input.PosixUser = expandAccessPointPOSIXUser(v.([]any))
 	}
 
 	if v, ok := d.GetOk("root_directory"); ok {
-		input.RootDirectory = expandAccessPointRootDirectory(v.([]interface{}))
+		input.RootDirectory = expandAccessPointRootDirectory(v.([]any))
 	}
 
 	output, err := conn.CreateAccessPoint(ctx, input)
@@ -168,13 +166,13 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	ap, err := findAccessPointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EFS Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,9 +185,9 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.ToString(ap.FileSystemId)
 	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
@@ -208,7 +206,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -216,7 +214,7 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAccessPointRead(ctx, d, meta)...)
 }
 
-func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -258,7 +256,7 @@ func findAccessPoints(ctx context.Context, conn *efs.Client, input *efs.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.AccessPointNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -290,7 +288,7 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	}
 
 	if state := output.LifeCycleState; state == awstypes.LifeCycleStateDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -299,11 +297,11 @@ func findAccessPointByID(ctx context.Context, conn *efs.Client, id string) (*aws
 	return output, nil
 }
 
-func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAccessPointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -319,7 +317,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, id string) (*
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
 		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
@@ -340,7 +338,7 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 		accessPointCreatedTimeout = 10 * time.Minute
 		accessPointDeletedTimeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting),
 		Target:  []string{},
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, id),
@@ -356,12 +354,12 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, id string) (*
 	return nil, err
 }
 
-func expandAccessPointPOSIXUser(tfList []interface{}) *awstypes.PosixUser {
+func expandAccessPointPOSIXUser(tfList []any) *awstypes.PosixUser {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.PosixUser{
 		Gid: aws.Int64(int64(tfMap["gid"].(int))),
 		Uid: aws.Int64(int64(tfMap["uid"].(int))),
@@ -374,12 +372,12 @@ func expandAccessPointPOSIXUser(tfList []interface{}) *awstypes.PosixUser {
 	return apiObject
 }
 
-func expandAccessPointRootDirectory(tfList []interface{}) *awstypes.RootDirectory {
+func expandAccessPointRootDirectory(tfList []any) *awstypes.RootDirectory {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.RootDirectory{}
 
 	if v, ok := tfMap[names.AttrPath]; ok {
@@ -387,18 +385,18 @@ func expandAccessPointRootDirectory(tfList []interface{}) *awstypes.RootDirector
 	}
 
 	if v, ok := tfMap["creation_info"]; ok {
-		apiObject.CreationInfo = expandAccessPointRootDirectoryCreationInfo(v.([]interface{}))
+		apiObject.CreationInfo = expandAccessPointRootDirectoryCreationInfo(v.([]any))
 	}
 
 	return apiObject
 }
 
-func expandAccessPointRootDirectoryCreationInfo(tfList []interface{}) *awstypes.CreationInfo {
+func expandAccessPointRootDirectoryCreationInfo(tfList []any) *awstypes.CreationInfo {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.CreationInfo{
 		OwnerGid:    aws.Int64(int64(tfMap["owner_gid"].(int))),
 		OwnerUid:    aws.Int64(int64(tfMap["owner_uid"].(int))),
@@ -408,43 +406,43 @@ func expandAccessPointRootDirectoryCreationInfo(tfList []interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenAccessPointPOSIXUser(apiObject *awstypes.PosixUser) []interface{} {
+func flattenAccessPointPOSIXUser(apiObject *awstypes.PosixUser) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"gid":            aws.ToInt64(apiObject.Gid),
 		"uid":            aws.ToInt64(apiObject.Uid),
 		"secondary_gids": apiObject.SecondaryGids,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAccessPointRootDirectory(apiObject *awstypes.RootDirectory) []interface{} {
+func flattenAccessPointRootDirectory(apiObject *awstypes.RootDirectory) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"creation_info": flattenAccessPointRootDirectoryCreationInfo(apiObject.CreationInfo),
 		names.AttrPath:  aws.ToString(apiObject.Path),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAccessPointRootDirectoryCreationInfo(apiObject *awstypes.CreationInfo) []interface{} {
+func flattenAccessPointRootDirectoryCreationInfo(apiObject *awstypes.CreationInfo) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"owner_gid":           aws.ToInt64(apiObject.OwnerGid),
 		"owner_uid":           aws.ToInt64(apiObject.OwnerUid),
 		names.AttrPermissions: aws.ToString(apiObject.Permissions),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

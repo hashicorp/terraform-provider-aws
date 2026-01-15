@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -25,8 +25,8 @@ func TestAccEC2OutpostsLocalGatewayDataSource_basic(t *testing.T) {
 				Config: testAccOutpostsLocalGatewayDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^lgw-`)),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
-					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrOwnerID),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "outpost_arn", "outposts", regexache.MustCompile(`outpost/op-.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrState, "available"),
 				),
 			},

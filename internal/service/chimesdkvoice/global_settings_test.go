@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -75,7 +75,7 @@ func testAccGlobalSettings_disappears(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceGlobalSettings(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceGlobalSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) // run test in us-east-1 only since eventual consistency causes intermittent failures in other regions.
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,11 +131,11 @@ func testAccCheckGlobalSettingsDestroy(ctx context.Context) resource.TestCheckFu
 			const retryTimeout = 10 * time.Second
 			response := &chimesdkvoice.GetGlobalSettingsOutput{}
 
-			err := tfresource.Retry(ctx, retryTimeout, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, retryTimeout, func(ctx context.Context) *tfresource.RetryError {
 				var err error
 				response, err = conn.GetGlobalSettings(ctx, input)
 				if err == nil && response.VoiceConnector.CdrBucket != nil {
-					return retry.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
+					return tfresource.RetryableError(errors.New("error Chime Voice Connector Global settings still exists"))
 				}
 				return nil
 			})

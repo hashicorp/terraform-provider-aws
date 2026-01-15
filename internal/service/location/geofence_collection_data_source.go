@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package location
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_geofence_collection")
+// @SDKDataSource("aws_location_geofence_collection", name="Geofence Collection")
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,
@@ -58,7 +58,7 @@ const (
 	DSNameGeofenceCollection = "Geofence Collection Data Source"
 )
 
-func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
@@ -77,9 +77,9 @@ func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.Location, create.ErrActionSetting, DSNameGeofenceCollection, d.Id(), err)
 	}
 

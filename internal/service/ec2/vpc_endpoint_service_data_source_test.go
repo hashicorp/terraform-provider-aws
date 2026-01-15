@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -28,16 +28,19 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_type("dynamodb", "Gateway"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", 0),
-					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", acctest.CtFalse),
 					resource.TestCheckResourceAttr(datasourceName, names.AttrOwner, "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", ""),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_names.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
 					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "dynamodb"),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", 0),
-					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", acctest.CtTrue),
 				),
 			},
@@ -58,16 +61,18 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
 				Config: testAccVPCEndpointServiceDataSourceConfig_type("ec2", "Interface"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "acceptance_required", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "availability_zones.#", 0),
-					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "base_endpoint_dns_names.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", acctest.CtFalse),
 					resource.TestCheckResourceAttr(datasourceName, names.AttrOwner, "amazon"),
 					acctest.CheckResourceAttrRegionalHostnameService(datasourceName, "private_dns_name", "ec2"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
 					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "ec2"),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", 0),
-					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", acctest.CtTrue),
 				),
 			},
@@ -94,8 +99,11 @@ func TestAccVPCEndpointServiceDataSource_custom(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
-					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_names.#", resourceName, "private_dns_names.#"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -125,8 +133,11 @@ func TestAccVPCEndpointServiceDataSource_Custom_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
-					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_names.#", resourceName, "private_dns_names.#"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -156,8 +167,48 @@ func TestAccVPCEndpointServiceDataSource_CustomFilter_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "availability_zones.#", resourceName, "availability_zones.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
-					acctest.CheckResourceAttrAccountID(datasourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_names.#", resourceName, "private_dns_names.#"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
+					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
+					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_policy_supported", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpointServiceDataSource_Custom_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_endpoint_service.test"
+	datasourceName := "data.aws_vpc_endpoint_service.test"
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointServiceDataSourceConfig_customCrossRegion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "acceptance_required", resourceName, "acceptance_required"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(datasourceName, "availability_zones.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "base_endpoint_dns_names.#", resourceName, "base_endpoint_dns_names.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "manages_vpc_endpoints", resourceName, "manages_vpc_endpoints"),
+					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwner),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_name", resourceName, "private_dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "private_dns_names.#", resourceName, "private_dns_names.#"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrRegion, acctest.Region()),
+					resource.TestCheckResourceAttr(datasourceName, "service_region", acctest.Region()),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttrPair(datasourceName, "supported_ip_address_types.#", resourceName, "supported_ip_address_types.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
@@ -228,4 +279,17 @@ data "aws_vpc_endpoint_service" "test" {
   }
 }
 `)
+}
+
+func testAccVPCEndpointServiceDataSourceConfig_customCrossRegion(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.AlternateRegion()),
+		fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "test" {
+  provider        = "awsalternate"
+  service_name    = aws_vpc_endpoint_service.test.service_name
+  service_regions = [%[1]q]
+}
+`, acctest.Region()))
 }

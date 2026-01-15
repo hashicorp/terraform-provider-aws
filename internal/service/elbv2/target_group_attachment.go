@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -13,13 +13,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,31 +39,37 @@ func resourceTargetGroupAttachment() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"target_group_arn": {
+			names.AttrPort: {
+				Type:     schema.TypeInt,
+				ForceNew: true,
+				Optional: true,
+			},
+			"quic_server_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
-				Required: true,
+				Optional: true,
+			},
+			"target_group_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"target_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrPort: {
-				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-			},
 		},
 	}
 }
 
-func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elasticloadbalancingv2.RegisterTargetsInput{
+	input := elasticloadbalancingv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupARN),
 		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
@@ -76,11 +84,15 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
+	}
+
 	const (
 		timeout = 10 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidTargetException](ctx, timeout, func() (interface{}, error) {
-		return conn.RegisterTargets(ctx, input)
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidTargetException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.RegisterTargets(ctx, &input)
 	})
 
 	if err != nil {
@@ -95,12 +107,12 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 // resourceAttachmentRead requires all of the fields in order to describe the correct
 // target, so there is no work to do beyond ensuring that the target and group still exist.
-func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elasticloadbalancingv2.DescribeTargetHealthInput{
+	input := elasticloadbalancingv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(targetGroupARN),
 		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
@@ -115,9 +127,13 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := findTargetHealthDescription(ctx, conn, input)
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
+	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	_, err := findTargetHealthDescription(ctx, conn, &input)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Target Group Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -130,12 +146,12 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elasticloadbalancingv2.DeregisterTargetsInput{
+	input := elasticloadbalancingv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupARN),
 		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
@@ -150,8 +166,12 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("quic_server_id"); ok {
+		input.Targets[0].QuicServerId = aws.String(v.(string))
+	}
+
 	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
-	_, err := conn.DeregisterTargets(ctx, input)
+	_, err := conn.DeregisterTargets(ctx, &input)
 
 	if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
 		return diags
@@ -194,7 +214,7 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancin
 	output, err := conn.DescribeTargetHealth(ctx, input)
 
 	if errs.IsA[*awstypes.InvalidTargetException](err) || errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -205,7 +225,7 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.TargetHealthDescriptions {

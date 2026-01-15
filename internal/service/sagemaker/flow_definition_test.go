@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,21 +36,21 @@ func testAccFlowDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("flow-definition/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("flow-definition/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "human_loop_config.0.human_task_ui_arn", "aws_sagemaker_human_task_ui.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_availability_lifetime_in_seconds", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_availability_lifetime_in_seconds", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.task_title", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "human_loop_config.0.workteam_arn", "aws_sagemaker_workteam.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "output_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "output_config.0.s3_output_path"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -79,11 +79,11 @@ func testAccFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.cents", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.tenth_fractions_of_a_cent", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.cents", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_config.0.public_workforce_task_price.0.amount_in_usd.0.tenth_fractions_of_a_cent", "2"),
 				),
 			},
 			{
@@ -112,10 +112,10 @@ func testAccFlowDefinition_humanLoopRequestSource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
 					resource.TestCheckResourceAttr(resourceName, "flow_definition_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "human_loop_request_source.0.aws_managed_human_loop_request_source", "AWS/Textract/AnalyzeDocument/Forms/V1"),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.0.human_loop_activation_conditions_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "human_loop_activation_config.0.human_loop_activation_conditions_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "human_loop_activation_config.0.human_loop_activation_conditions_config.0.human_loop_activation_conditions"),
 				),
 			},
@@ -144,7 +144,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 				Config: testAccFlowDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -157,7 +157,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 				Config: testAccFlowDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -166,7 +166,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 				Config: testAccFlowDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -190,7 +190,7 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 				Config: testAccFlowDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceFlowDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,7 +209,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsagemaker.FindFlowDefinitionByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -217,7 +217,7 @@ func testAccCheckFlowDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return fmt.Errorf("SageMaker Flow Definition %s still exists", rs.Primary.ID)
+			return fmt.Errorf("SageMaker AI Flow Definition %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -232,7 +232,7 @@ func testAccCheckFlowDefinitionExists(ctx context.Context, n string, flowDefinit
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SageMaker Flow Definition ID is set")
+			return fmt.Errorf("No SageMaker AI Flow Definition ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -355,7 +355,7 @@ resource "aws_sagemaker_flow_definition" "test" {
     task_count                            = 1
     task_description                      = %[1]q
     task_title                            = %[1]q
-    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.name}:394669845002:workteam/public-crowd/default"
+    workteam_arn                          = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.region}:394669845002:workteam/public-crowd/default"
 
     public_workforce_task_price {
       amount_in_usd {

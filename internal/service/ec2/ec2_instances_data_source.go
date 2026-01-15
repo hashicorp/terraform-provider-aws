@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -64,11 +64,11 @@ func dataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeInstancesInput{}
+	input := ec2.DescribeInstancesInput{}
 
 	if v, ok := d.GetOk("instance_state_names"); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = append(input.Filters, awstypes.Filter{
@@ -83,7 +83,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]interface{}))),
+		svcTags(tftags.New(ctx, d.Get("instance_tags").(map[string]any))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -94,15 +94,13 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findInstances(ctx, conn, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
-	}
-
 	var instanceIDs, privateIPs, publicIPs, ipv6Addresses []string
 
-	for _, v := range output {
+	for v, err := range listInstances(ctx, conn, &input) {
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instances: %s", err)
+		}
+
 		instanceIDs = append(instanceIDs, aws.ToString(v.InstanceId))
 		if privateIP := aws.ToString(v.PrivateIpAddress); privateIP != "" {
 			privateIPs = append(privateIPs, privateIP)
@@ -115,7 +113,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, instanceIDs)
 	d.Set("ipv6_addresses", ipv6Addresses)
 	d.Set("private_ips", privateIPs)

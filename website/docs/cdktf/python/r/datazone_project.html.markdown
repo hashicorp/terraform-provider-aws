@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `skip_deletion_check` - (Optional) Optional flag to delete all child entities within the project.
 * `description` - (Optional) Description of project.
 * `glossary_terms` - (Optional) List of glossary terms that can be used in the project. The list cannot be empty or include over 20 values. Each value must follow the regex of `[a-zA-Z0-9_-]{1,36}$`.
@@ -115,4 +116,4 @@ Using `terraform import`, import DataZone Project using a colon-delimited string
 % terraform import aws_datazone_project.example domain-1234:project-1234
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4930f33d20f0d4998990d008e7126f3b8b3a0f12964d87688eec35a9b0fcb0c -->
+<!-- cache-key: cdktf-0.20.8 input-0ea1bfee5074cc9a295e6e3b42e66a1c26dcce727868a721bdd38fc45b2ceb04 -->

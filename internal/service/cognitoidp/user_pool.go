@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -16,14 +17,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,7 +34,7 @@ import (
 )
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
-// @Tags
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
@@ -208,6 +211,31 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"email_mfa_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrMessage: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(6, 20000),
+								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+							),
+						},
+						"subject": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+								`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+						},
+					},
+				},
+			},
 			"email_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -368,7 +396,6 @@ func resourceUserPool() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
@@ -422,6 +449,7 @@ func resourceUserPool() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 50,
+				Set:      resourceUserPoolSchemaHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
@@ -478,6 +506,24 @@ func resourceUserPool() *schema.Resource {
 										Optional: true,
 									},
 								},
+							},
+						},
+					},
+				},
+			},
+			"sign_in_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allowed_first_auth_factors": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.AuthFactorType](),
 							},
 						},
 					},
@@ -559,6 +605,22 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advanced_security_additional_flows": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"custom_auth_mode": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
+									},
+								},
+							},
+						},
 						"advanced_security_mode": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -566,6 +628,12 @@ func resourceUserPool() *schema.Resource {
 						},
 					},
 				},
+			},
+			"user_pool_tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
 			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
@@ -580,12 +648,14 @@ func resourceUserPool() *schema.Resource {
 			"username_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"case_sensitive": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
@@ -640,13 +710,29 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"web_authn_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relying_party_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"user_verification": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
+						},
+					},
+				},
+			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
@@ -657,13 +743,13 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("account_recovery_setting"); ok {
-		if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+		if config, ok := v.([]any)[0].(map[string]any); ok {
 			input.AccountRecoverySetting = expandAccountRecoverySettingType(config)
 		}
 	}
 
 	if v, ok := d.GetOk("admin_create_user_config"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.AdminCreateUserConfig = expandAdminCreateUserConfigType(v)
 		}
 	}
@@ -681,13 +767,13 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("device_configuration"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.DeviceConfiguration = expandDeviceConfigurationType(v)
 		}
 	}
 
-	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.EmailConfiguration = expandEmailConfigurationType(v.([]interface{}))
+	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
+		input.EmailConfiguration = expandEmailConfigurationType(v.([]any))
 	}
 
 	if v, ok := d.GetOk("email_verification_subject"); ok {
@@ -699,21 +785,33 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("lambda_config"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.LambdaConfig = expandLambdaConfigType(v)
 		}
 	}
 
 	if v, ok := d.GetOk("password_policy"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-			input.Policies = &awstypes.UserPoolPolicyType{
-				PasswordPolicy: expandPasswordPolicyType(v),
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+			passwordPolicy := expandPasswordPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
 			}
+			input.Policies.PasswordPolicy = passwordPolicy
 		}
 	}
 
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = expandSchemaAttributeTypes(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("sign_in_policy"); ok {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+			signInPolicy := expandSignInPolicyType(v)
+			if input.Policies == nil {
+				input.Policies = &awstypes.UserPoolPolicyType{}
+			}
+			input.Policies.SignInPolicy = signInPolicy
+		}
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
@@ -725,7 +823,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Include the SMS configuration outside of MFA configuration since it
 	// can be used for user verification.
 	if v, ok := d.GetOk("sms_configuration"); ok {
-		input.SmsConfiguration = expandSMSConfigurationType(v.([]interface{}))
+		input.SmsConfiguration = expandSMSConfigurationType(v.([]any))
 	}
 
 	if v, ok := d.GetOk("sms_verification_message"); ok {
@@ -737,34 +835,32 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("username_configuration"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.UsernameConfiguration = expandUsernameConfigurationType(v)
 		}
 	}
 
 	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.UserAttributeUpdateSettings = expandUserAttributeUpdateSettingsType(v)
 		}
 	}
 
-	if v, ok := d.GetOk("user_pool_add_ons"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-			input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-			if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-				input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-			}
-		}
+	if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 {
+		input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("verification_message_template"); ok {
-		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+		if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 			input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
 		}
 	}
 
-	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+	if v := awstypes.UserPoolTierType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
+		input.UserPoolTier = v
+	}
+
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
 
@@ -774,14 +870,21 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(outputRaw.(*cognitoidentityprovider.CreateUserPoolOutput).UserPool.Id))
 
-	if v := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); v != awstypes.UserPoolMfaTypeOff {
+	if mfaConfig := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string)); mfaConfig != awstypes.UserPoolMfaTypeOff || len(d.Get("web_authn_configuration").([]any)) > 0 {
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              v,
-			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
-			UserPoolId:                    aws.String(d.Id()),
+			UserPoolId: aws.String(d.Id()),
 		}
 
-		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
+		if mfaConfig != awstypes.UserPoolMfaTypeOff {
+			input.MfaConfiguration = mfaConfig
+			input.SoftwareTokenMfaConfiguration = expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any))
+		}
+
+		if v, ok := d.Get("email_mfa_configuration").([]any); ok && len(v) > 0 {
+			input.EmailMfaConfiguration = expandEmailMFAConfigType(v)
+		}
+
+		if v := d.Get("sms_configuration").([]any); len(v) > 0 && v[0] != nil {
 			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfigurationType(v),
 			}
@@ -791,7 +894,11 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		if webAuthnConfig := d.Get("web_authn_configuration").([]any); len(webAuthnConfig) > 0 {
+			input.WebAuthnConfiguration = expandWebAuthnConfigurationConfigType(webAuthnConfig)
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -803,13 +910,13 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceUserPoolRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPool, err := findUserPoolByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Pool %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -852,9 +959,12 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("password_policy", flattenPasswordPolicyType(userPool.Policies.PasswordPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
-	var configuredSchema []interface{}
+	var configuredSchema []any
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
+	}
+	if err := d.Set("sign_in_policy", flattenSignInPolicyType(userPool.Policies.SignInPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting sign_in_policy: %s", err)
 	}
 	if err := d.Set(names.AttrSchema, flattenSchemaAttributeTypes(expandSchemaAttributeTypes(configuredSchema), userPool.SchemaAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
@@ -870,6 +980,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("user_pool_add_ons", flattenUserPoolAddOnsType(userPool.UserPoolAddOns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_add_ons: %s", err)
 	}
+	d.Set("user_pool_tier", userPool.UserPoolTier)
 	d.Set("username_attributes", userPool.UsernameAttributes)
 	if err := d.Set("username_configuration", flattenUsernameConfigurationType(userPool.UsernameConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting username_configuration: %s", err)
@@ -886,36 +997,46 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
 	}
 
+	if err := d.Set("email_mfa_configuration", flattenEmailMFAConfigType(output.EmailMfaConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting email_mfa_configuration: %s", err)
+	}
 	d.Set("mfa_configuration", output.MfaConfiguration)
 	if err := d.Set("software_token_mfa_configuration", flattenSoftwareTokenMFAConfigType(output.SoftwareTokenMfaConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
+	}
+	if err := d.Set("web_authn_configuration", flattenWebAuthnConfigType(output.WebAuthnConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting web_authn_configuration: %s", err)
 	}
 
 	return diags
 }
 
-func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	// MFA updates.
 	if d.HasChanges(
+		"email_mfa_configuration",
 		"mfa_configuration",
 		"sms_authentication_message",
 		"sms_configuration",
 		"software_token_mfa_configuration",
+		"web_authn_configuration",
 	) {
 		mfaConfiguration := awstypes.UserPoolMfaType(d.Get("mfa_configuration").(string))
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
 			MfaConfiguration:              mfaConfiguration,
-			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]interface{})),
+			EmailMfaConfiguration:         expandEmailMFAConfigType(d.Get("email_mfa_configuration").([]any)),
+			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfigType(d.Get("software_token_mfa_configuration").([]any)),
 			UserPoolId:                    aws.String(d.Id()),
+			WebAuthnConfiguration:         expandWebAuthnConfigurationConfigType(d.Get("web_authn_configuration").([]any)),
 		}
 
 		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
 		// Otherwise, the API will return the following error:
 		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
-		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
+		if v := d.Get("sms_configuration").([]any); len(v) > 0 && v[0] != nil && mfaConfiguration != awstypes.UserPoolMfaTypeOff {
 			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfigurationType(v),
 			}
@@ -925,7 +1046,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
@@ -948,29 +1069,34 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"email_verification_message",
 		"email_verification_subject",
 		"lambda_config",
+		names.AttrName,
 		"password_policy",
+		"sign_in_policy",
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
-		names.AttrTags,
-		names.AttrTagsAll,
+		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
+		"user_pool_tier",
 		"verification_message_template",
 	) {
+		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
+		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
+		// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
-			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: getTagsIn(ctx),
+			UserPoolId: aws.String(d.Id()),
+			// UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok {
 				input.AccountRecoverySetting = expandAccountRecoverySettingType(v)
 			}
 		}
 
 		if v, ok := d.GetOk("admin_create_user_config"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				input.AdminCreateUserConfig = expandAdminCreateUserConfigType(v)
 			}
 		}
@@ -984,13 +1110,13 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				input.DeviceConfiguration = expandDeviceConfigurationType(v)
 			}
 		}
 
-		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
-			input.EmailConfiguration = expandEmailConfigurationType(v.([]interface{}))
+		if v, ok := d.GetOk("email_configuration"); ok && len(v.([]any)) > 0 {
+			input.EmailConfiguration = expandEmailConfigurationType(v.([]any))
 		}
 
 		if v, ok := d.GetOk("email_verification_subject"); ok {
@@ -1002,13 +1128,13 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("lambda_config"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				if d.HasChange("lambda_config.0.pre_token_generation") {
 					preTokenGeneration := d.Get("lambda_config.0.pre_token_generation")
-					if tfList, ok := v["pre_token_generation_config"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
-						v["pre_token_generation_config"].([]interface{})[0].(map[string]interface{})["lambda_arn"] = preTokenGeneration
+					if tfList, ok := v["pre_token_generation_config"].([]any); ok && len(tfList) > 0 && tfList[0] != nil {
+						v["pre_token_generation_config"].([]any)[0].(map[string]any)["lambda_arn"] = preTokenGeneration
 					} else {
-						v["pre_token_generation_config"] = []interface{}{map[string]interface{}{
+						v["pre_token_generation_config"] = []any{map[string]any{
 							"lambda_arn":     preTokenGeneration,
 							"lambda_version": string(awstypes.PreTokenGenerationLambdaVersionTypeV10), // A guess...
 						}}
@@ -1027,11 +1153,27 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
 		}
 
+		if v, ok := d.GetOk(names.AttrName); ok {
+			input.PoolName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("password_policy"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-				input.Policies = &awstypes.UserPoolPolicyType{
-					PasswordPolicy: expandPasswordPolicyType(v),
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				passwordPolicy := expandPasswordPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
 				}
+				input.Policies.PasswordPolicy = passwordPolicy
+			}
+		}
+
+		if v, ok := d.GetOk("sign_in_policy"); ok {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
+				signInPolicy := expandSignInPolicyType(v)
+				if input.Policies == nil {
+					input.Policies = &awstypes.UserPoolPolicyType{}
+				}
+				input.Policies.SignInPolicy = signInPolicy
 			}
 		}
 
@@ -1040,7 +1182,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("sms_configuration"); ok {
-			input.SmsConfiguration = expandSMSConfigurationType(v.([]interface{}))
+			input.SmsConfiguration = expandSMSConfigurationType(v.([]any))
 		}
 
 		if v, ok := d.GetOk("sms_verification_message"); ok {
@@ -1048,7 +1190,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				input.UserAttributeUpdateSettings = expandUserAttributeUpdateSettingsType(v)
 			}
 		}
@@ -1060,18 +1202,12 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("user_pool_add_ons"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-				input.UserPoolAddOns = &awstypes.UserPoolAddOnsType{}
-
-				if v, ok := v["advanced_security_mode"]; ok && v.(string) != "" {
-					input.UserPoolAddOns.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
-				}
-			}
+		if v, ok := d.GetOk("user_pool_add_ons"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.UserPoolAddOns = expandUserPoolAddOnsType(v.([]any)[0].(map[string]any))
 		}
 
 		if v, ok := d.GetOk("verification_message_template"); ok {
-			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
+			if v, ok := v.([]any)[0].(map[string]any); ok && v != nil {
 				if d.HasChange("email_verification_message") {
 					v["email_message"] = d.Get("email_verification_message")
 				}
@@ -1086,8 +1222,12 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
+		if v, ok := d.GetOk("user_pool_tier"); ok {
+			input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
+		}
+
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateUserPool(ctx, input)
 			},
 			func(err error) (bool, error) {
@@ -1133,14 +1273,15 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceUserPoolRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool: %s", d.Id())
-	_, err := conn.DeleteUserPool(ctx, &cognitoidentityprovider.DeleteUserPoolInput{
+	input := cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteUserPool(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -1173,7 +1314,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	output, err := conn.DescribeUserPool(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1184,7 +1325,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	}
 
 	if output == nil || output.UserPool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserPool, nil
@@ -1198,7 +1339,7 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	output, err := conn.GetUserPoolMfaConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1209,18 +1350,41 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandSMSConfigurationType(tfList []interface{}) *awstypes.SmsConfigurationType {
+func expandEmailMFAConfigType(tfList []any) *awstypes.EmailMfaConfigType {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	if tfList[0] == nil {
+		return &awstypes.EmailMfaConfigType{}
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.EmailMfaConfigType{}
+
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
+		apiObject.Message = aws.String(v)
+	}
+
+	if v, ok := tfMap["subject"].(string); ok && v != "" {
+		apiObject.Subject = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSMSConfigurationType(tfList []any) *awstypes.SmsConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.SmsConfigurationType{}
 
 	if v, ok := tfMap[names.AttrExternalID].(string); ok && v != "" {
@@ -1238,12 +1402,12 @@ func expandSMSConfigurationType(tfList []interface{}) *awstypes.SmsConfiguration
 	return apiObject
 }
 
-func expandSoftwareTokenMFAConfigType(tfList []interface{}) *awstypes.SoftwareTokenMfaConfigType {
+func expandSoftwareTokenMFAConfigType(tfList []any) *awstypes.SoftwareTokenMfaConfigType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.SoftwareTokenMfaConfigType{}
 
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
@@ -1253,12 +1417,32 @@ func expandSoftwareTokenMFAConfigType(tfList []interface{}) *awstypes.SoftwareTo
 	return apiObject
 }
 
-func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []interface{} {
+func expandWebAuthnConfigurationConfigType(tfList []any) *awstypes.WebAuthnConfigurationType {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.WebAuthnConfigurationType{}
+
+	if v, ok := tfMap["relying_party_id"].(string); ok && v != "" {
+		apiObject.RelyingPartyId = aws.String(v)
+	}
+
+	if v, ok := tfMap["user_verification"].(string); ok && v != "" {
+		apiObject.UserVerification = awstypes.UserVerificationType(v)
+	}
+
+	return apiObject
+}
+
+func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ExternalId; v != nil {
 		tfMap[names.AttrExternalID] = aws.ToString(v)
@@ -1272,22 +1456,56 @@ func flattenSMSConfigurationType(apiObject *awstypes.SmsConfigurationType) []int
 		tfMap["sns_region"] = aws.ToString(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfigType) []interface{} {
+func flattenEmailMFAConfigType(apiObject *awstypes.EmailMfaConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{}
+
+	if v := apiObject.Message; v != nil {
+		tfMap[names.AttrMessage] = aws.ToString(v)
+	}
+
+	if v := apiObject.Subject; v != nil {
+		tfMap["subject"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenSoftwareTokenMFAConfigType(apiObject *awstypes.SoftwareTokenMfaConfigType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
 		names.AttrEnabled: apiObject.Enabled,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandAccountRecoverySettingType(tfMap map[string]interface{}) *awstypes.AccountRecoverySettingType {
+func flattenWebAuthnConfigType(apiObject *awstypes.WebAuthnConfigurationType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"user_verification": apiObject.UserVerification,
+	}
+
+	if v := apiObject.RelyingPartyId; v != nil {
+		tfMap["relying_party_id"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
+}
+
+func expandAccountRecoverySettingType(tfMap map[string]any) *awstypes.AccountRecoverySettingType {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -1296,7 +1514,7 @@ func expandAccountRecoverySettingType(tfMap map[string]interface{}) *awstypes.Ac
 
 	if v, ok := tfMap["recovery_mechanism"]; ok {
 		for _, tfMapRaw := range v.(*schema.Set).List() {
-			tfMap := tfMapRaw.(map[string]interface{})
+			tfMap := tfMapRaw.(map[string]any)
 			apiObject := awstypes.RecoveryOptionType{}
 
 			if v, ok := tfMap[names.AttrName]; ok {
@@ -1318,15 +1536,15 @@ func expandAccountRecoverySettingType(tfMap map[string]interface{}) *awstypes.Ac
 	return apiObject
 }
 
-func flattenAccountRecoverySettingType(apiObject *awstypes.AccountRecoverySettingType) []interface{} {
+func flattenAccountRecoverySettingType(apiObject *awstypes.AccountRecoverySettingType) []any {
 	if apiObject == nil || len(apiObject.RecoveryMechanisms) == 0 {
 		return nil
 	}
 
-	tfList := make([]map[string]interface{}, 0)
+	tfList := make([]map[string]any, 0)
 
 	for _, apiObject := range apiObject.RecoveryMechanisms {
-		tfMap := map[string]interface{}{
+		tfMap := map[string]any{
 			names.AttrName:     apiObject.Name,
 			names.AttrPriority: aws.ToInt32(apiObject.Priority),
 		}
@@ -1334,19 +1552,19 @@ func flattenAccountRecoverySettingType(apiObject *awstypes.AccountRecoverySettin
 		tfList = append(tfList, tfMap)
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"recovery_mechanism": tfList,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEmailConfigurationType(apiObject *awstypes.EmailConfigurationType) []interface{} {
+func flattenEmailConfigurationType(apiObject *awstypes.EmailConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := make(map[string]interface{})
+	tfMap := make(map[string]any)
 
 	if apiObject.ConfigurationSet != nil {
 		tfMap["configuration_set"] = aws.ToString(apiObject.ConfigurationSet)
@@ -1367,13 +1585,13 @@ func flattenEmailConfigurationType(apiObject *awstypes.EmailConfigurationType) [
 	}
 
 	if len(tfMap) > 0 {
-		return []interface{}{tfMap}
+		return []any{tfMap}
 	}
 
-	return []interface{}{}
+	return []any{}
 }
 
-func expandAdminCreateUserConfigType(tfMap map[string]interface{}) *awstypes.AdminCreateUserConfigType {
+func expandAdminCreateUserConfigType(tfMap map[string]any) *awstypes.AdminCreateUserConfigType {
 	apiObject := &awstypes.AdminCreateUserConfigType{}
 
 	if v, ok := tfMap["allow_admin_create_user_only"]; ok {
@@ -1381,8 +1599,8 @@ func expandAdminCreateUserConfigType(tfMap map[string]interface{}) *awstypes.Adm
 	}
 
 	if v, ok := tfMap["invite_message_template"]; ok {
-		if tfList := v.([]interface{}); len(tfList) > 0 {
-			if tfMap, ok := tfList[0].(map[string]interface{}); ok {
+		if tfList := v.([]any); len(tfList) > 0 {
+			if tfMap, ok := tfList[0].(map[string]any); ok {
 				imt := &awstypes.MessageTemplateType{}
 
 				if v, ok := tfMap["email_message"]; ok {
@@ -1405,17 +1623,17 @@ func expandAdminCreateUserConfigType(tfMap map[string]interface{}) *awstypes.Adm
 	return apiObject
 }
 
-func flattenAdminCreateUserConfigType(apiObject *awstypes.AdminCreateUserConfigType) []interface{} {
+func flattenAdminCreateUserConfigType(apiObject *awstypes.AdminCreateUserConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"allow_admin_create_user_only": apiObject.AllowAdminCreateUserOnly,
 	}
 
 	if apiObject := apiObject.InviteMessageTemplate; apiObject != nil {
-		imt := map[string]interface{}{}
+		imt := map[string]any{}
 
 		if apiObject.EmailMessage != nil {
 			imt["email_message"] = aws.ToString(apiObject.EmailMessage)
@@ -1430,14 +1648,14 @@ func flattenAdminCreateUserConfigType(apiObject *awstypes.AdminCreateUserConfigT
 		}
 
 		if len(imt) > 0 {
-			tfMap["invite_message_template"] = []map[string]interface{}{imt}
+			tfMap["invite_message_template"] = []map[string]any{imt}
 		}
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandDeviceConfigurationType(tfMap map[string]interface{}) *awstypes.DeviceConfigurationType {
+func expandDeviceConfigurationType(tfMap map[string]any) *awstypes.DeviceConfigurationType {
 	apiObject := &awstypes.DeviceConfigurationType{}
 
 	if v, ok := tfMap["challenge_required_on_new_device"]; ok {
@@ -1451,15 +1669,15 @@ func expandDeviceConfigurationType(tfMap map[string]interface{}) *awstypes.Devic
 	return apiObject
 }
 
-func expandLambdaConfigType(tfMap map[string]interface{}) *awstypes.LambdaConfigType {
+func expandLambdaConfigType(tfMap map[string]any) *awstypes.LambdaConfigType {
 	apiObject := &awstypes.LambdaConfigType{}
 
 	if v, ok := tfMap["create_auth_challenge"]; ok && v.(string) != "" {
 		apiObject.CreateAuthChallenge = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["custom_email_sender"].([]interface{}); ok && len(v) > 0 {
-		if v, ok := v[0].(map[string]interface{}); ok && v != nil {
+	if v, ok := tfMap["custom_email_sender"].([]any); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]any); ok && v != nil {
 			apiObject.CustomEmailSender = expandCustomEmailLambdaVersionConfigType(v)
 		}
 	}
@@ -1468,8 +1686,8 @@ func expandLambdaConfigType(tfMap map[string]interface{}) *awstypes.LambdaConfig
 		apiObject.CustomMessage = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["custom_sms_sender"].([]interface{}); ok && len(v) > 0 {
-		if v, ok := v[0].(map[string]interface{}); ok && v != nil {
+	if v, ok := tfMap["custom_sms_sender"].([]any); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]any); ok && v != nil {
 			apiObject.CustomSMSSender = expandCustomSMSLambdaVersionConfigType(v)
 		}
 	}
@@ -1502,8 +1720,8 @@ func expandLambdaConfigType(tfMap map[string]interface{}) *awstypes.LambdaConfig
 		apiObject.PreTokenGeneration = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap["pre_token_generation_config"].([]interface{}); ok && len(v) > 0 {
-		if v, ok := v[0].(map[string]interface{}); ok && v != nil {
+	if v, ok := tfMap["pre_token_generation_config"].([]any); ok && len(v) > 0 {
+		if v, ok := v[0].(map[string]any); ok && v != nil {
 			apiObject.PreTokenGenerationConfig = expandPreTokenGenerationVersionConfigType(v)
 		}
 	}
@@ -1519,12 +1737,12 @@ func expandLambdaConfigType(tfMap map[string]interface{}) *awstypes.LambdaConfig
 	return apiObject
 }
 
-func flattenLambdaConfigType(apiObject *awstypes.LambdaConfigType) []interface{} {
+func flattenLambdaConfigType(apiObject *awstypes.LambdaConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.CreateAuthChallenge != nil {
 		tfMap["create_auth_challenge"] = aws.ToString(apiObject.CreateAuthChallenge)
@@ -1583,13 +1801,13 @@ func flattenLambdaConfigType(apiObject *awstypes.LambdaConfigType) []interface{}
 	}
 
 	if len(tfMap) > 0 {
-		return []interface{}{tfMap}
+		return []any{tfMap}
 	}
 
-	return []interface{}{}
+	return []any{}
 }
 
-func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPolicyType {
+func expandPasswordPolicyType(tfMap map[string]any) *awstypes.PasswordPolicyType {
 	apiObject := &awstypes.PasswordPolicyType{}
 
 	if v, ok := tfMap["minimum_length"]; ok {
@@ -1623,23 +1841,80 @@ func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPo
 	return apiObject
 }
 
-func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []interface{} {
-	if apiObject == nil {
-		return []interface{}{}
+func expandSignInPolicyType(tfMap map[string]any) *awstypes.SignInPolicyType {
+	apiObject := &awstypes.SignInPolicyType{}
+
+	if v, ok := tfMap["allowed_first_auth_factors"]; ok {
+		apiObject.AllowedFirstAuthFactors = flex.ExpandStringyValueSet[awstypes.AuthFactorType](v.(*schema.Set))
 	}
 
-	tfMap := make(map[string]interface{})
-
-	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
-
-	return []interface{}{tfMap}
+	return apiObject
 }
 
-func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttributeType {
+func expandUserPoolAddOnsType(tfMap map[string]any) *awstypes.UserPoolAddOnsType {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.UserPoolAddOnsType{}
+
+	if v, ok := tfMap["advanced_security_additional_flows"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AdvancedSecurityAdditionalFlows = expandAdvancedSecurityAdditionalFlowType(v[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["advanced_security_mode"].(string); ok {
+		apiObject.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v)
+	}
+
+	return apiObject
+}
+
+func expandAdvancedSecurityAdditionalFlowType(tfMap map[string]any) *awstypes.AdvancedSecurityAdditionalFlowsType {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AdvancedSecurityAdditionalFlowsType{}
+
+	if v, ok := tfMap["custom_auth_mode"].(string); ok {
+		apiObject.CustomAuthMode = awstypes.AdvancedSecurityEnabledModeType(v)
+	}
+
+	return apiObject
+}
+
+func flattenUserPoolAddOnsType(apiObject *awstypes.UserPoolAddOnsType) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	tfMap["advanced_security_additional_flows"] = flattenAdvancedSecurityAdditionalFlowType(apiObject.AdvancedSecurityAdditionalFlows)
+	tfMap["advanced_security_mode"] = apiObject.AdvancedSecurityMode
+
+	return []any{tfMap}
+}
+
+func flattenAdvancedSecurityAdditionalFlowType(apiObject *awstypes.AdvancedSecurityAdditionalFlowsType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.CustomAuthMode; v != "" {
+		tfMap["custom_auth_mode"] = v
+	}
+
+	return []any{tfMap}
+}
+
+func expandSchemaAttributeTypes(tfList []any) []awstypes.SchemaAttributeType {
 	apiObjects := make([]awstypes.SchemaAttributeType, len(tfList))
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap := tfMapRaw.(map[string]any)
 		apiObject := awstypes.SchemaAttributeType{}
 
 		if v, ok := tfMap["attribute_data_type"]; ok {
@@ -1659,8 +1934,8 @@ func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttribute
 		}
 
 		if v, ok := tfMap["number_attribute_constraints"]; ok {
-			if tfList := v.([]interface{}); len(tfList) > 0 {
-				if tfMap, ok := tfList[0].(map[string]interface{}); ok {
+			if tfList := v.([]any); len(tfList) > 0 {
+				if tfMap, ok := tfList[0].(map[string]any); ok {
 					nact := &awstypes.NumberAttributeConstraintsType{}
 
 					if v, ok := tfMap["max_value"]; ok && v.(string) != "" {
@@ -1681,8 +1956,8 @@ func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttribute
 		}
 
 		if v, ok := tfMap["string_attribute_constraints"]; ok {
-			if tfList := v.([]interface{}); len(tfList) > 0 {
-				if tfMap, ok := tfList[0].(map[string]interface{}); ok {
+			if tfList := v.([]any); len(tfList) > 0 {
+				if tfMap, ok := tfList[0].(map[string]any); ok {
 					sact := &awstypes.StringAttributeConstraintsType{}
 
 					if v, ok := tfMap["max_length"]; ok && v.(string) != "" {
@@ -1693,7 +1968,11 @@ func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttribute
 						sact.MinLength = aws.String(v.(string))
 					}
 
-					apiObject.StringAttributeConstraints = sact
+					if sact.MinLength == nil && sact.MaxLength == nil {
+						apiObject.StringAttributeConstraints = nil
+					} else {
+						apiObject.StringAttributeConstraints = sact
+					}
 				}
 			}
 		}
@@ -1704,8 +1983,8 @@ func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttribute
 	return apiObjects
 }
 
-func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.SchemaAttributeType) []interface{} {
-	tfList := make([]interface{}, 0)
+func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.SchemaAttributeType) []any {
+	tfList := make([]any, 0)
 
 	for _, apiObject := range apiObjects {
 		// The API returns all standard attributes
@@ -1739,7 +2018,7 @@ func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.Sch
 			}
 		}
 
-		var tfMap = map[string]interface{}{
+		var tfMap = map[string]any{
 			"attribute_data_type":      apiObject.AttributeDataType,
 			"developer_only_attribute": aws.ToBool(apiObject.DeveloperOnlyAttribute),
 			"mutable":                  aws.ToBool(apiObject.Mutable),
@@ -1748,7 +2027,7 @@ func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.Sch
 		}
 
 		if apiObject.NumberAttributeConstraints != nil {
-			nact := make(map[string]interface{})
+			nact := make(map[string]any)
 
 			if apiObject.NumberAttributeConstraints.MaxValue != nil {
 				nact["max_value"] = aws.ToString(apiObject.NumberAttributeConstraints.MaxValue)
@@ -1758,11 +2037,11 @@ func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.Sch
 				nact["min_value"] = aws.ToString(apiObject.NumberAttributeConstraints.MinValue)
 			}
 
-			tfMap["number_attribute_constraints"] = []interface{}{nact}
+			tfMap["number_attribute_constraints"] = []any{nact}
 		}
 
 		if apiObject.StringAttributeConstraints != nil && !skipFlatteningStringAttributeContraints(configuredAttributes, &apiObject) {
-			sact := make(map[string]interface{})
+			sact := make(map[string]any)
 
 			if apiObject.StringAttributeConstraints.MaxLength != nil {
 				sact["max_length"] = aws.ToString(apiObject.StringAttributeConstraints.MaxLength)
@@ -1772,7 +2051,7 @@ func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.Sch
 				sact["min_length"] = aws.ToString(apiObject.StringAttributeConstraints.MinLength)
 			}
 
-			tfMap["string_attribute_constraints"] = []interface{}{sact}
+			tfMap["string_attribute_constraints"] = []any{sact}
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1781,7 +2060,7 @@ func flattenSchemaAttributeTypes(configuredAttributes, apiObjects []awstypes.Sch
 	return tfList
 }
 
-func expandUsernameConfigurationType(tfMap map[string]interface{}) *awstypes.UsernameConfigurationType {
+func expandUsernameConfigurationType(tfMap map[string]any) *awstypes.UsernameConfigurationType {
 	apiObject := &awstypes.UsernameConfigurationType{
 		CaseSensitive: aws.Bool(tfMap["case_sensitive"].(bool)),
 	}
@@ -1789,19 +2068,19 @@ func expandUsernameConfigurationType(tfMap map[string]interface{}) *awstypes.Use
 	return apiObject
 }
 
-func flattenUsernameConfigurationType(apiObject *awstypes.UsernameConfigurationType) []interface{} {
+func flattenUsernameConfigurationType(apiObject *awstypes.UsernameConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["case_sensitive"] = aws.ToBool(apiObject.CaseSensitive)
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandVerificationMessageTemplateType(tfMap map[string]interface{}) *awstypes.VerificationMessageTemplateType {
+func expandVerificationMessageTemplateType(tfMap map[string]any) *awstypes.VerificationMessageTemplateType {
 	apiObject := &awstypes.VerificationMessageTemplateType{}
 
 	if v, ok := tfMap["default_email_option"]; ok && v.(string) != "" {
@@ -1831,12 +2110,12 @@ func expandVerificationMessageTemplateType(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func flattenVerificationMessageTemplateType(apiObject *awstypes.VerificationMessageTemplateType) []interface{} {
+func flattenVerificationMessageTemplateType(apiObject *awstypes.VerificationMessageTemplateType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"default_email_option": apiObject.DefaultEmailOption,
 	}
 
@@ -1861,31 +2140,31 @@ func flattenVerificationMessageTemplateType(apiObject *awstypes.VerificationMess
 	}
 
 	if len(tfMap) > 0 {
-		return []interface{}{tfMap}
+		return []any{tfMap}
 	}
 
-	return []interface{}{}
+	return []any{}
 }
 
-func flattenDeviceConfigurationType(apiObject *awstypes.DeviceConfigurationType) []interface{} {
+func flattenDeviceConfigurationType(apiObject *awstypes.DeviceConfigurationType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"challenge_required_on_new_device":      apiObject.ChallengeRequiredOnNewDevice,
 		"device_only_remembered_on_user_prompt": apiObject.DeviceOnlyRememberedOnUserPrompt,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interface{} {
+func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"require_lowercase":                apiObject.RequireLowercase,
 		"require_numbers":                  apiObject.RequireNumbers,
 		"require_symbols":                  apiObject.RequireSymbols,
@@ -1902,13 +2181,29 @@ func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interfa
 	}
 
 	if len(tfMap) > 0 {
-		return []interface{}{tfMap}
+		return []any{tfMap}
 	}
 
-	return []interface{}{}
+	return []any{}
 }
 
-func expandPreTokenGenerationVersionConfigType(tfMap map[string]interface{}) *awstypes.PreTokenGenerationVersionConfigType {
+func flattenSignInPolicyType(apiObject *awstypes.SignInPolicyType) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"allowed_first_auth_factors": apiObject.AllowedFirstAuthFactors,
+	}
+
+	if len(tfMap) > 0 {
+		return []any{tfMap}
+	}
+
+	return []any{}
+}
+
+func expandPreTokenGenerationVersionConfigType(tfMap map[string]any) *awstypes.PreTokenGenerationVersionConfigType {
 	apiObject := &awstypes.PreTokenGenerationVersionConfigType{
 		LambdaArn:     aws.String(tfMap["lambda_arn"].(string)),
 		LambdaVersion: awstypes.PreTokenGenerationLambdaVersionType(tfMap["lambda_version"].(string)),
@@ -1917,20 +2212,20 @@ func expandPreTokenGenerationVersionConfigType(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func flattenPreTokenGenerationVersionConfigType(apiObject *awstypes.PreTokenGenerationVersionConfigType) []interface{} {
+func flattenPreTokenGenerationVersionConfigType(apiObject *awstypes.PreTokenGenerationVersionConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["lambda_arn"] = aws.ToString(apiObject.LambdaArn)
 	tfMap["lambda_version"] = apiObject.LambdaVersion
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCustomSMSLambdaVersionConfigType(tfMap map[string]interface{}) *awstypes.CustomSMSLambdaVersionConfigType {
+func expandCustomSMSLambdaVersionConfigType(tfMap map[string]any) *awstypes.CustomSMSLambdaVersionConfigType {
 	apiObject := &awstypes.CustomSMSLambdaVersionConfigType{
 		LambdaArn:     aws.String(tfMap["lambda_arn"].(string)),
 		LambdaVersion: awstypes.CustomSMSSenderLambdaVersionType(tfMap["lambda_version"].(string)),
@@ -1939,20 +2234,20 @@ func expandCustomSMSLambdaVersionConfigType(tfMap map[string]interface{}) *awsty
 	return apiObject
 }
 
-func flattenCustomSMSLambdaVersionConfigType(apiObject *awstypes.CustomSMSLambdaVersionConfigType) []interface{} {
+func flattenCustomSMSLambdaVersionConfigType(apiObject *awstypes.CustomSMSLambdaVersionConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["lambda_arn"] = aws.ToString(apiObject.LambdaArn)
 	tfMap["lambda_version"] = apiObject.LambdaVersion
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandCustomEmailLambdaVersionConfigType(tfMap map[string]interface{}) *awstypes.CustomEmailLambdaVersionConfigType {
+func expandCustomEmailLambdaVersionConfigType(tfMap map[string]any) *awstypes.CustomEmailLambdaVersionConfigType {
 	apiObject := &awstypes.CustomEmailLambdaVersionConfigType{
 		LambdaArn:     aws.String(tfMap["lambda_arn"].(string)),
 		LambdaVersion: awstypes.CustomEmailSenderLambdaVersionType(tfMap["lambda_version"].(string)),
@@ -1961,21 +2256,21 @@ func expandCustomEmailLambdaVersionConfigType(tfMap map[string]interface{}) *aws
 	return apiObject
 }
 
-func flattenCustomEmailLambdaVersionConfigType(apiObject *awstypes.CustomEmailLambdaVersionConfigType) []interface{} {
+func flattenCustomEmailLambdaVersionConfigType(apiObject *awstypes.CustomEmailLambdaVersionConfigType) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	tfMap["lambda_arn"] = aws.ToString(apiObject.LambdaArn)
 	tfMap["lambda_version"] = apiObject.LambdaVersion
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func expandEmailConfigurationType(tfList []interface{}) *awstypes.EmailConfigurationType {
-	tfMap := tfList[0].(map[string]interface{})
+func expandEmailConfigurationType(tfList []any) *awstypes.EmailConfigurationType {
+	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.EmailConfigurationType{}
 
 	if v, ok := tfMap["configuration_set"]; ok && v.(string) != "" {
@@ -2001,7 +2296,7 @@ func expandEmailConfigurationType(tfList []interface{}) *awstypes.EmailConfigura
 	return apiObject
 }
 
-func expandUserAttributeUpdateSettingsType(tfMap map[string]interface{}) *awstypes.UserAttributeUpdateSettingsType {
+func expandUserAttributeUpdateSettingsType(tfMap map[string]any) *awstypes.UserAttributeUpdateSettingsType {
 	apiObject := &awstypes.UserAttributeUpdateSettingsType{}
 
 	if v, ok := tfMap["attributes_require_verification_before_update"]; ok {
@@ -2011,7 +2306,7 @@ func expandUserAttributeUpdateSettingsType(tfMap map[string]interface{}) *awstyp
 	return apiObject
 }
 
-func flattenUserAttributeUpdateSettingsType(apiObject *awstypes.UserAttributeUpdateSettingsType) []interface{} {
+func flattenUserAttributeUpdateSettingsType(apiObject *awstypes.UserAttributeUpdateSettingsType) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -2021,10 +2316,10 @@ func flattenUserAttributeUpdateSettingsType(apiObject *awstypes.UserAttributeUpd
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 	tfMap["attributes_require_verification_before_update"] = apiObject.AttributesRequireVerificationBeforeUpdate
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
 // skipFlatteningStringAttributeContraints returns true when all of the schema arguments
@@ -2278,4 +2573,55 @@ func userPoolSchemaAttributeMatchesStandardAttribute(apiObject *awstypes.SchemaA
 	}
 
 	return false
+}
+
+func resourceUserPoolSchemaHash(v any) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]any)
+	if !ok {
+		return 0
+	}
+
+	fmt.Fprintf(&buf, "%s-", m[names.AttrName].(string))
+	fmt.Fprintf(&buf, "%s-", m["attribute_data_type"].(string))
+	fmt.Fprintf(&buf, "%t-", m["developer_only_attribute"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["mutable"].(bool))
+	fmt.Fprintf(&buf, "%t-", m["required"].(bool))
+
+	if v, ok := m["string_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("string_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_length"]; ok && l.(string) != "" {
+					fmt.Fprintf(&buf, "%s-", l.(string))
+				}
+
+				if l, ok := m["max_length"]; ok && l.(string) != "" {
+					fmt.Fprintf(&buf, "%s-", l.(string))
+				}
+			}
+		}
+	}
+
+	if v, ok := m["number_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("number_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_value"]; ok && l.(string) != "" {
+					fmt.Fprintf(&buf, "%s-", l.(string))
+				}
+
+				if l, ok := m["max_value"]; ok && l.(string) != "" {
+					fmt.Fprintf(&buf, "%s-", l.(string))
+				}
+			}
+		}
+	}
+	return create.StringHashcode(buf.String())
 }

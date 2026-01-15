@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Raising a Pull Request
 
 1. [Fork the GitHub repository](https://help.github.com/en/articles/fork-a-repo) allowing you to make the changes in your own copy of the repository.
@@ -19,6 +22,14 @@
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
+
+1. Pull Request Best Practices
+    - **Descriptive Titles:**  When creating a pull request (PR), use a clear and descriptive title that highlights the primary change. If the change pertains to a specific resource or data source, include its name in the title.
+    - **Detailed Descriptions:**  Provide a comprehensive description that explains the reasoning behind the change, what was modified, and any expected changes to the user experience (if applicable).
+    - **Focused and Manageable Scope:**
+        * Keep pull requests small and focused on a single change.
+        * For resource or data source additions, each PR should contain only one item and its corresponding tests.
+        * Avoid bundling multiple resources or combining service client additions with resource changes in a single PR. Such combinations are significantly harder and more time-consuming for maintainers to review.
 
 1. Create a changelog entry following the process outlined [here](changelog-process.md)
 
@@ -102,7 +113,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
 - __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
 - __Does Not Set Optional or Required for Non-Configurable Attributes__: Resource schema definitions for read-only attributes must not include `Optional: true` or `Required: true`.
-- __Avoids retry.RetryContext() without retry.RetryableError()__: Resource logic should only implement [`retry.Retry()`](https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry) if there is a retryable condition (e.g., `return retry.RetryableError(err)`).
+- __Avoids tfresource.Retry() without tfresource.RetryableError()__: Resource logic should only implement `tfresource.Retry()` if there is a retryable condition (e.g., `return tfresource.RetryableError(err)`).
 - __Avoids Reusing Resource Read Function in Data Source Read Function__: Data sources should fully implement their own resource `Read` functionality.
 - __Avoids Reading Schema Structure in Resource Code__: The resource `Schema` should not be read in resource `Create`/`Read`/`Update`/`Delete` functions to perform looping or otherwise complex attribute logic. Use [`d.Get()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get) and [`d.Set()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set) directly with individual attributes instead.
 - __Avoids ResourceData.GetOkExists()__: Resource logic should avoid using [`ResourceData.GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.GetOkExists) as its expected functionality is not guaranteed in all scenarios.

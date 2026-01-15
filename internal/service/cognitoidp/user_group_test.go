@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -6,6 +6,7 @@ package cognitoidp_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -13,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,6 +24,7 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedGroupNameUTF8 := strings.Repeat("あ", 128)
 	resourceName := "aws_cognito_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -50,6 +52,13 @@ func TestAccCognitoIDPUserGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupName),
 				),
 			},
+			{
+				Config: testAccUserGroupConfig_basic(poolName, updatedGroupNameUTF8),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedGroupNameUTF8),
+				),
+			},
 		},
 	})
 }
@@ -70,7 +79,7 @@ func TestAccCognitoIDPUserGroup_disappears(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(poolName, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +106,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
-					resource.TestCheckResourceAttr(resourceName, "precedence", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
@@ -180,7 +189,7 @@ func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -232,7 +241,7 @@ resource "aws_iam_role" "test" {
       "Action": "sts:AssumeRoleWithWebIdentity",
       "Condition": {
         "StringEquals": {
-          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.name}:12345678-dead-beef-cafe-123456790ab"
+          "cognito-identity.amazonaws.com:aud": "${data.aws_region.current.region}:12345678-dead-beef-cafe-123456790ab"
         },
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"

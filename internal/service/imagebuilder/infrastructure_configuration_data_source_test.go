@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -38,6 +38,7 @@ func TestAccImageBuilderInfrastructureConfigurationDataSource_arn(t *testing.T) 
 					resource.TestCheckResourceAttrPair(dataSourceName, "key_pair", resourceName, "key_pair"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "logging.#", resourceName, "logging.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "placement.#", resourceName, "placement.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_tags.%", resourceName, "resource_tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSNSTopicARN, resourceName, names.AttrSNSTopicARN),

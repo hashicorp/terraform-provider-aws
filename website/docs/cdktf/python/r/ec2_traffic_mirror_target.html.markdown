@@ -47,6 +47,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
 * `network_load_balancer_arn` - (Optional, Forces new) The Amazon Resource Name (ARN) of the Network Load Balancer that is associated with the target.
@@ -89,4 +90,4 @@ Using `terraform import`, import traffic mirror targets using the `id`. For exam
 % terraform import aws_ec2_traffic_mirror_target.target tmt-0c13a005422b86606
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0dcea120206f78ae4bab492b768957fc04e77c30670fd1496757b5d3a63f1ae0 -->
+<!-- cache-key: cdktf-0.20.8 input-ef80ce3a5da8909d05cb45e7fa86fcf96bc3f78cdbb1d015d98cf2d5dcfd7674 -->

@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoCreate` - (Optional)  Create a database user with the name specified for the user named in `dbUser` if one does not exist.
 * `clusterIdentifier` - (Required) Unique identifier of the cluster that contains the database for which your are requesting credentials.
 * `dbName` - (Optional) Name of a database that DbUser is authorized to log on to. If `dbName` is not specified, `dbUser` can log on to any existing database.
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `dbPassword` - Temporary password that authorizes the user name returned by `dbUser` to log on to the database `dbName`.
 * `expiration` - Date and time the password in `dbPassword` expires.
 
-<!-- cache-key: cdktf-0.20.1 input-213149af130486a765c70a3136e8b43c8007a43f9271c0b532f89e893f1f207c -->
+<!-- cache-key: cdktf-0.20.8 input-b2ed1024f3c8b1783649376e85215d35e18b34c56eb613c571a4c5e16b52af24 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,8 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,8 +45,6 @@ func resourceReplicaExternalKey() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -95,13 +94,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 			"primary_key_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -119,20 +112,19 @@ func resourceReplicaExternalKey() *schema.Resource {
 	}
 }
 
-func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	// e.g. arn:aws:kms:us-east-2:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab
 	primaryKeyARN, err := arn.Parse(d.Get("primary_key_arn").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing primary key ARN: %s", err)
 	}
 
-	input := &kms.ReplicateKeyInput{
+	input := kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
-		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -148,9 +140,9 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		input.Policy = aws.String(v.(string))
 	}
 
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.ReplicateKeyOutput, error) {
 		// Replication is initiated in the primary key's Region.
-		return conn.ReplicateKey(ctx, input, func(o *kms.Options) {
+		return conn.ReplicateKey(ctx, &input, func(o *kms.Options) {
 			o.Region = primaryKeyARN.Region
 		})
 	})
@@ -198,7 +190,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
 		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica External Key (%s) tag update: %s", d.Id(), err)
 		}
@@ -207,7 +199,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceReplicaExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -215,7 +207,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS External Replica Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -244,18 +236,14 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
-
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), key.policy)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	d.Set(names.AttrPolicy, policyToSet)
-
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
-	if key.metadata.ValidTo != nil {
-		d.Set("valid_to", aws.ToTime(key.metadata.ValidTo).Format(time.RFC3339))
+	if v := key.metadata.ValidTo; v != nil {
+		d.Set("valid_to", aws.ToTime(v).Format(time.RFC3339))
 	} else {
 		d.Set("valid_to", nil)
 	}
@@ -265,7 +253,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
@@ -316,22 +304,21 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceReplicaExternalKeyRead(ctx, d, meta)...)
 }
 
-func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	input := &kms.ScheduleKeyDeletionInput{
+	input := kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
 	}
-
 	if v, ok := d.GetOk("deletion_window_in_days"); ok {
 		input.PendingWindowInDays = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting KMS Replica External Key: %s", d.Id())
-	_, err := conn.ScheduleKeyDeletion(ctx, input)
+	_, err := conn.ScheduleKeyDeletion(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
@@ -356,7 +343,7 @@ func waitReplicaExternalKeyCreated(ctx context.Context, conn *kms.Client, id str
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreating),
 		Target:  enum.Slice(awstypes.KeyStatePendingImport),
 		Refresh: statusKeyState(ctx, conn, id),

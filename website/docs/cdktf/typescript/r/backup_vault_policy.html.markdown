@@ -24,6 +24,7 @@ import { Token, TerraformStack } from "cdktf";
  */
 import { BackupVault } from "./.gen/providers/aws/backup-vault";
 import { BackupVaultPolicy } from "./.gen/providers/aws/backup-vault-policy";
+import { DataAwsCallerIdentity } from "./.gen/providers/aws/data-aws-caller-identity";
 import { DataAwsIamPolicyDocument } from "./.gen/providers/aws/data-aws-iam-policy-document";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
@@ -31,9 +32,10 @@ class MyConvertedCode extends TerraformStack {
     const example = new BackupVault(this, "example", {
       name: "example",
     });
+    const current = new DataAwsCallerIdentity(this, "current", {});
     const dataAwsIamPolicyDocumentExample = new DataAwsIamPolicyDocument(
       this,
-      "example_1",
+      "example_2",
       {
         statement: [
           {
@@ -50,7 +52,7 @@ class MyConvertedCode extends TerraformStack {
             effect: "Allow",
             principals: [
               {
-                identifiers: ["*"],
+                identifiers: [Token.asString(current.accountId)],
                 type: "AWS",
               },
             ],
@@ -63,7 +65,7 @@ class MyConvertedCode extends TerraformStack {
     dataAwsIamPolicyDocumentExample.overrideLogicalId("example");
     const awsBackupVaultPolicyExample = new BackupVaultPolicy(
       this,
-      "example_2",
+      "example_3",
       {
         backupVaultName: example.name,
         policy: Token.asString(dataAwsIamPolicyDocumentExample.json),
@@ -80,6 +82,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `backupVaultName` - (Required) Name of the backup vault to add policy for.
 * `policy` - (Required) The backup vault access policy document in JSON format.
 
@@ -118,4 +121,4 @@ Using `terraform import`, import Backup vault policy using the `name`. For examp
 % terraform import aws_backup_vault_policy.test TestVault
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ab98f99514f38866a517aac446be1f3acb9e1bf25ba0c4567594ea6cc2e401d8 -->
+<!-- cache-key: cdktf-0.20.8 input-0b065288a85561fd455d72eea69bce60772359b09166c1b9e8fb34e54083757b -->

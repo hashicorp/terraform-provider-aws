@@ -55,6 +55,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.
 * `name` - (Required) The name of your filter.
 * `description` - (Optional) Description of the filter.
@@ -80,7 +81,6 @@ The `criterion` block suports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the GuardDuty filter.
-* `id` - A compound field, consisting of the ID of the GuardDuty detector and the name of the filter.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -108,4 +108,4 @@ Using `terraform import`, import GuardDuty filters using the detector ID and fil
 % terraform import aws_guardduty_filter.MyFilter 00b00fd5aecc0ab60a708659477e9617:MyFilter
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1e606d1888ce4c1d9fc3a9cf0b4de2053e508ab6db3e76bc7736c3226909e127 -->
+<!-- cache-key: cdktf-0.20.8 input-b157f201eb1bae13f79f5185c3a9fbefc7cf002f90533c4a28c8f1eb799da090 -->

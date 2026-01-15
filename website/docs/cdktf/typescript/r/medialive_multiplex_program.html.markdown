@@ -86,6 +86,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### Multiple Program Settings
 
 * `programNumber` - (Required) Unique program number.
@@ -115,6 +117,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30s`)
 
 ## Import
 
@@ -148,4 +156,4 @@ Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a
 % terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->
+<!-- cache-key: cdktf-0.20.8 input-cc5cf2659fd9fd6c0983962c7478647dadbec1206da40238188de88c7081b7ba -->

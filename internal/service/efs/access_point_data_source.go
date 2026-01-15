@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs
@@ -102,7 +102,7 @@ func dataSourceAccessPoint() *schema.Resource {
 	}
 }
 
-func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
@@ -117,9 +117,9 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, ap.AccessPointArn)
 	fsID := aws.ToString(ap.FileSystemId)
 	fsARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()

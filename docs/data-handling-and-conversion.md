@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Data Handling and Conversion
 
@@ -122,6 +125,14 @@ To further understand the necessary data conversions used throughout the Terrafo
     - AWS Go SDK whole numeric type is always 64-bit, while the Terraform Plugin SDK type is implementation-specific.
 
     Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
+
+### Default Values
+
+If an AWS API sets a default value on the server side, no default should be set on the provider side.
+Instead, the argument should be marked as `Optional` and `Computed`.
+This avoids potential future conflicts if a server side default value changes.
+
+As a general rule, provider side default values should be avoided unless strictly necessary for a resource to function properly.
 
 ### Zero Value Mapping
 
@@ -279,7 +290,7 @@ type dataSourceReservedCacheNodeOfferingModel struct {
 In some cases, flattening and expanding need conditional handling.
 One important case is new AWS API implementations where the input or output structs make use of [union types](https://smithy.io/2.0/spec/aggregate-types.html#union).
 The AWS implementation uses an interface as the common type, along with various concrete implementations.
-Because the Terraform schema does not support union types (see https://github.com/hashicorp/terraform/issues/32587 for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
+Because the Terraform schema does not support union types (see [this issue](https://github.com/hashicorp/terraform/issues/32587) for discussion), the provider defines nested schemas for each type with a restriction to allow only one.
 
 To override flattening behavior, implement the interface `flex.Flattener` on the model.
 The function should have a pointer receiver, as it will modify the struct in-place.
@@ -1179,7 +1190,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.BoolValue(v)
+            tfMap["nested_attribute_name"] = aws.ToBool(v)
         }
     
         // ...
@@ -1238,7 +1249,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Float64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToFloat64(v)
         }
     
         // ...
@@ -1297,7 +1308,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Int64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToInt64(v)
         }
     
         // ...
@@ -1712,7 +1723,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValue(v)
+            tfMap["nested_attribute_name"] = aws.ToString(v)
         }
     
         // ...
@@ -1788,7 +1799,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.TimeValue(v).Format(time.RFC3339)
+            tfMap["nested_attribute_name"] = aws.ToTime(v).Format(time.RFC3339)
         }
     
         // ...
@@ -1873,7 +1884,7 @@ This helps prevent an immediate plan difference after resource import unless the
 Below is a listing of relevant terms and descriptions for data handling and conversion in the Terraform AWS Provider to establish common conventions throughout this documentation.
 This list is not exhaustive of all concepts of Terraform Plugins, the Terraform AWS Provider, or the data handling that occurs during Terraform runs, but these should generally provide enough context about the topics discussed here.
 
-- **AWS Go SDK**: Library that converts Go code into AWS Service API compatible operations and data types. See [AWS SDK For Go Versions](aws-go-sdk-versions.md) for information on which version to use.
+- **AWS Go SDK**: Library that converts Go code into AWS Service API compatible operations and data types.
 - **AWS Go SDK Model**: AWS Go SDK compatible format of AWS Service API Model.
 - **AWS Go SDK Service**: AWS Service API Go code generated from the AWS Go SDK Model. Generated by the AWS Go SDK code.
 - **AWS Service API**: Logical boundary of an AWS service by API endpoint. Some large AWS services may be marketed with many different product names under the same service API (e.g., VPC functionality is part of the EC2 API) and vice-versa where some services may be marketed with one product name but are split into multiple service APIs (e.g., Single Sign-On functionality is split into the Identity Store and SSO Admin APIs).

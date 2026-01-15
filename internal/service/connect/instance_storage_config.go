@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -184,7 +185,7 @@ func resourceInstanceStorageConfig() *schema.Resource {
 	}
 }
 
-func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -193,7 +194,7 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 	input := &connect.AssociateInstanceStorageConfigInput{
 		InstanceId:    aws.String(instanceID),
 		ResourceType:  resourceType,
-		StorageConfig: expandInstanceStorageConfig(d.Get("storage_config").([]interface{})),
+		StorageConfig: expandInstanceStorageConfig(d.Get("storage_config").([]any)),
 	}
 
 	output, err := conn.AssociateInstanceStorageConfig(ctx, input)
@@ -208,7 +209,7 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceInstanceStorageConfigRead(ctx, d, meta)...)
 }
 
-func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -219,7 +220,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 
 	storageConfig, err := findInstanceStorageConfigByThreePartKey(ctx, conn, instanceID, associationID, resourceType)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Connect Instance Storage Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -239,7 +240,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -255,7 +256,7 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	if d.HasChange("storage_config") {
-		input.StorageConfig = expandInstanceStorageConfig(d.Get("storage_config").([]interface{}))
+		input.StorageConfig = expandInstanceStorageConfig(d.Get("storage_config").([]any))
 	}
 
 	_, err = conn.UpdateInstanceStorageConfig(ctx, input)
@@ -267,7 +268,7 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceInstanceStorageConfigRead(ctx, d, meta)...)
 }
 
-func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
@@ -277,11 +278,12 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 	}
 
 	log.Printf("[DEBUG] Deleting Connect Instance Storage Config: %s", d.Id())
-	_, err = conn.DisassociateInstanceStorageConfig(ctx, &connect.DisassociateInstanceStorageConfigInput{
+	input := connect.DisassociateInstanceStorageConfigInput{
 		AssociationId: aws.String(associationID),
 		InstanceId:    aws.String(instanceID),
 		ResourceType:  resourceType,
-	})
+	}
+	_, err = conn.DisassociateInstanceStorageConfig(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -327,7 +329,7 @@ func findInstanceStorageConfig(ctx context.Context, conn *connect.Client, input 
 	output, err := conn.DescribeInstanceStorageConfig(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -338,18 +340,18 @@ func findInstanceStorageConfig(ctx context.Context, conn *connect.Client, input 
 	}
 
 	if output == nil || output.StorageConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StorageConfig, nil
 }
 
-func expandInstanceStorageConfig(tfList []interface{}) *awstypes.InstanceStorageConfig {
+func expandInstanceStorageConfig(tfList []any) *awstypes.InstanceStorageConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -358,31 +360,31 @@ func expandInstanceStorageConfig(tfList []interface{}) *awstypes.InstanceStorage
 		StorageType: awstypes.StorageType(tfMap[names.AttrStorageType].(string)),
 	}
 
-	if v, ok := tfMap["kinesis_firehose_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_firehose_config"].([]any); ok && len(v) > 0 {
 		apiObject.KinesisFirehoseConfig = expandKinesisFirehoseConfig(v)
 	}
 
-	if v, ok := tfMap["kinesis_stream_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_stream_config"].([]any); ok && len(v) > 0 {
 		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v)
 	}
 
-	if v, ok := tfMap["kinesis_video_stream_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["kinesis_video_stream_config"].([]any); ok && len(v) > 0 {
 		apiObject.KinesisVideoStreamConfig = expandKinesisVideoStreamConfig(v)
 	}
 
-	if v, ok := tfMap["s3_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["s3_config"].([]any); ok && len(v) > 0 {
 		apiObject.S3Config = exapandS3Config(v)
 	}
 
 	return apiObject
 }
 
-func expandKinesisFirehoseConfig(tfList []interface{}) *awstypes.KinesisFirehoseConfig {
+func expandKinesisFirehoseConfig(tfList []any) *awstypes.KinesisFirehoseConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -394,12 +396,12 @@ func expandKinesisFirehoseConfig(tfList []interface{}) *awstypes.KinesisFirehose
 	return apiObject
 }
 
-func expandKinesisStreamConfig(tfList []interface{}) *awstypes.KinesisStreamConfig {
+func expandKinesisStreamConfig(tfList []any) *awstypes.KinesisStreamConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -411,18 +413,18 @@ func expandKinesisStreamConfig(tfList []interface{}) *awstypes.KinesisStreamConf
 	return apiObject
 }
 
-func expandKinesisVideoStreamConfig(tfList []interface{}) *awstypes.KinesisVideoStreamConfig {
+func expandKinesisVideoStreamConfig(tfList []any) *awstypes.KinesisVideoStreamConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.KinesisVideoStreamConfig{
-		EncryptionConfig:     expandEncryptionConfig(tfMap["encryption_config"].([]interface{})),
+		EncryptionConfig:     expandEncryptionConfig(tfMap["encryption_config"].([]any)),
 		Prefix:               aws.String(tfMap[names.AttrPrefix].(string)),
 		RetentionPeriodHours: int32(tfMap["retention_period_hours"].(int)),
 	}
@@ -430,12 +432,12 @@ func expandKinesisVideoStreamConfig(tfList []interface{}) *awstypes.KinesisVideo
 	return apiObject
 }
 
-func exapandS3Config(tfList []interface{}) *awstypes.S3Config {
+func exapandS3Config(tfList []any) *awstypes.S3Config {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -445,19 +447,19 @@ func exapandS3Config(tfList []interface{}) *awstypes.S3Config {
 		BucketPrefix: aws.String(tfMap[names.AttrBucketPrefix].(string)),
 	}
 
-	if v, ok := tfMap["encryption_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["encryption_config"].([]any); ok && len(v) > 0 {
 		apiObject.EncryptionConfig = expandEncryptionConfig(v)
 	}
 
 	return apiObject
 }
 
-func expandEncryptionConfig(tfList []interface{}) *awstypes.EncryptionConfig {
+func expandEncryptionConfig(tfList []any) *awstypes.EncryptionConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -470,12 +472,12 @@ func expandEncryptionConfig(tfList []interface{}) *awstypes.EncryptionConfig {
 	return apiObject
 }
 
-func flattenStorageConfig(apiObject *awstypes.InstanceStorageConfig) []interface{} {
+func flattenStorageConfig(apiObject *awstypes.InstanceStorageConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStorageType: apiObject.StorageType,
 	}
 
@@ -495,39 +497,39 @@ func flattenStorageConfig(apiObject *awstypes.InstanceStorageConfig) []interface
 		tfMap["s3_config"] = flattenS3Config(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKinesisFirehoseConfig(apiObject *awstypes.KinesisFirehoseConfig) []interface{} {
+func flattenKinesisFirehoseConfig(apiObject *awstypes.KinesisFirehoseConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"firehose_arn": aws.ToString(apiObject.FirehoseArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) []interface{} {
+func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrStreamARN: aws.ToString(apiObject.StreamArn),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenKinesisVideoStreamConfig(apiObject *awstypes.KinesisVideoStreamConfig) []interface{} {
+func flattenKinesisVideoStreamConfig(apiObject *awstypes.KinesisVideoStreamConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"encryption_config": flattenEncryptionConfig(apiObject.EncryptionConfig),
 		// API returns <prefix>-connect-<connect_instance_alias>-contact-
 		// DiffSuppressFunc used
@@ -535,15 +537,15 @@ func flattenKinesisVideoStreamConfig(apiObject *awstypes.KinesisVideoStreamConfi
 		"retention_period_hours": apiObject.RetentionPeriodHours,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenS3Config(apiObject *awstypes.S3Config) []interface{} {
+func flattenS3Config(apiObject *awstypes.S3Config) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrBucketName:   aws.ToString(apiObject.BucketName),
 		names.AttrBucketPrefix: aws.ToString(apiObject.BucketPrefix),
 	}
@@ -552,18 +554,18 @@ func flattenS3Config(apiObject *awstypes.S3Config) []interface{} {
 		tfMap["encryption_config"] = flattenEncryptionConfig(v)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenEncryptionConfig(apiObject *awstypes.EncryptionConfig) []interface{} {
+func flattenEncryptionConfig(apiObject *awstypes.EncryptionConfig) []any {
 	if apiObject == nil {
-		return []interface{}{}
+		return []any{}
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"encryption_type": apiObject.EncryptionType,
 		names.AttrKeyID:   aws.ToString(apiObject.KeyId),
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

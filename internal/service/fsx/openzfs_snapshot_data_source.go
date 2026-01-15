@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -63,15 +63,15 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &fsx.DescribeSnapshotsInput{}
 
-	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]any)) > 0 {
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	input.Filters = append(input.Filters, newSnapshotFilterList(
@@ -92,18 +92,14 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(snapshots) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
-				"specific search criteria, or set `most_recent` attribute to true.")
-		}
-
-		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.ToTime(snapshots[i].CreationTime).Unix() > aws.ToTime(snapshots[j].CreationTime).Unix()
-		})
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
+			"specific search criteria, or set `most_recent` attribute to true.")
 	}
 
-	snapshot := snapshots[0]
+	snapshot := slices.MaxFunc(snapshots, func(a, b awstypes.Snapshot) int {
+		return aws.ToTime(a.CreationTime).Compare(aws.ToTime(b.CreationTime))
+	})
 	d.SetId(aws.ToString(snapshot.SnapshotId))
 	arn := aws.ToString(snapshot.ResourceARN)
 	d.Set(names.AttrARN, arn)

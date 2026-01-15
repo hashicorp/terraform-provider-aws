@@ -1,13 +1,13 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
 
 import (
-	"bytes"
 	"context"
-	"fmt"
+	"iter"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -15,18 +15,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +98,7 @@ func resourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceParameterHash,
+				Set: parameterHash,
 			},
 			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
@@ -107,24 +108,22 @@ func resourceParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &rds.CreateDBParameterGroupInput{
+	input := rds.CreateDBParameterGroupInput{
 		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateDBParameterGroup(ctx, input)
+	output, err := conn.CreateDBParameterGroup(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS DB Parameter Group (%s): %s", name, err)
@@ -138,13 +137,13 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	dbParameterGroup, err := findDBParameterGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS DB Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -158,8 +157,9 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
 	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbParameterGroup.DBParameterGroupName)))
 
-	input := &rds.DescribeDBParametersInput{
+	input := rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
@@ -177,7 +177,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		input.Source = aws.String(parameterSourceUser)
 	}
 
-	parameters, err := findDBParameters(ctx, conn, input, tfslices.PredicateTrue[*types.Parameter]())
+	parameters, err := findDBParameters(ctx, conn, &input, tfslices.PredicateTrue[*types.Parameter]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Group (%s) parameters: %s", d.Id(), err)
@@ -236,7 +236,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	const (
 		maxParamModifyChunk = 20
 	)
@@ -247,23 +247,16 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
-			// We can only modify 20 parameters at a time, so walk them until
-			// we've got them all.
-			for parameters != nil {
-				var paramsToModify []types.Parameter
-				paramsToModify, parameters = parameterGroupModifyChunk(parameters, maxParamModifyChunk)
+		for chunk := range parameterChunksForModify(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+			input := rds.ModifyDBParameterGroupInput{
+				DBParameterGroupName: aws.String(d.Id()),
+				Parameters:           chunk,
+			}
 
-				input := &rds.ModifyDBParameterGroupInput{
-					DBParameterGroupName: aws.String(d.Id()),
-					Parameters:           paramsToModify,
-				}
+			_, err := conn.ModifyDBParameterGroup(ctx, &input)
 
-				_, err := conn.ModifyDBParameterGroup(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "modifying RDS DB Parameter Group (%s): %s", d.Id(), err)
-				}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying RDS DB Parameter Group (%s): %s", d.Id(), err)
 			}
 		}
 
@@ -282,26 +275,17 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// Reset parameters that have been removed.
-		if resetParameters := tfmaps.Values(toRemove); len(resetParameters) > 0 {
-			for resetParameters != nil {
-				var paramsToReset []types.Parameter
-				if len(resetParameters) <= maxParamModifyChunk {
-					paramsToReset, resetParameters = resetParameters[:], nil
-				} else {
-					paramsToReset, resetParameters = resetParameters[:maxParamModifyChunk], resetParameters[maxParamModifyChunk:]
-				}
+		for chunk := range slices.Chunk(tfmaps.Values(toRemove), maxParamModifyChunk) {
+			input := rds.ResetDBParameterGroupInput{
+				DBParameterGroupName: aws.String(d.Id()),
+				Parameters:           chunk,
+				ResetAllParameters:   aws.Bool(false),
+			}
 
-				input := &rds.ResetDBParameterGroupInput{
-					DBParameterGroupName: aws.String(d.Id()),
-					Parameters:           paramsToReset,
-					ResetAllParameters:   aws.Bool(false),
-				}
+			_, err := conn.ResetDBParameterGroup(ctx, &input)
 
-				_, err := conn.ResetDBParameterGroup(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "resetting RDS DB Parameter Group (%s): %s", d.Id(), err)
-				}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "resetting RDS DB Parameter Group (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -309,7 +293,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -322,10 +306,11 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenIsA[*types.InvalidDBParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
-		return conn.DeleteDBParameterGroup(ctx, &rds.DeleteDBParameterGroupInput{
-			DBParameterGroupName: aws.String(d.Id()),
-		})
+	input := rds.DeleteDBParameterGroupInput{
+		DBParameterGroupName: aws.String(d.Id()),
+	}
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBParameterGroupStateFault](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteDBParameterGroup(ctx, &input)
 	})
 
 	if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
@@ -340,10 +325,10 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findDBParameterGroupByName(ctx context.Context, conn *rds.Client, name string) (*types.DBParameterGroup, error) {
-	input := &rds.DescribeDBParameterGroupsInput{
+	input := rds.DescribeDBParameterGroupsInput{
 		DBParameterGroupName: aws.String(name),
 	}
-	output, err := findDBParameterGroup(ctx, conn, input, tfslices.PredicateTrue[*types.DBParameterGroup]())
+	output, err := findDBParameterGroup(ctx, conn, &input, tfslices.PredicateTrue[*types.DBParameterGroup]())
 
 	if err != nil {
 		return nil, err
@@ -351,7 +336,7 @@ func findDBParameterGroupByName(ctx context.Context, conn *rds.Client, name stri
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBParameterGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -377,7 +362,7 @@ func findDBParameterGroups(ctx context.Context, conn *rds.Client, input *rds.Des
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -405,7 +390,7 @@ func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.Describe
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -425,74 +410,62 @@ func findDBParameters(ctx context.Context, conn *rds.Client, input *rds.Describe
 	return output, nil
 }
 
-func resourceParameterHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrValue].(string)))
+func parameterHash(v any) int {
+	var str strings.Builder
+	m := v.(map[string]any)
+
+	// Store the value as a lower case string, to match how we store them in FlattenParameters.
+	str.WriteString(strings.ToLower(m[names.AttrName].(string)))
+	str.WriteRune('-')
+	str.WriteString(strings.ToLower(m["apply_method"].(string)))
+	str.WriteRune('-')
+	str.WriteString(m[names.AttrValue].(string))
+	str.WriteRune('-')
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).
-	return create.StringHashcode(buf.String())
+	return create.StringHashcode(str.String())
 }
 
-func parameterGroupModifyChunk(all []types.Parameter, maxChunkSize int) ([]types.Parameter, []types.Parameter) {
-	// Since the hash randomly affect the set "order," this attempts to prioritize important
-	// parameters to go in the first chunk (i.e., charset).
+func parameterChunksForModify(parameters []types.Parameter, maxChunkSize int) iter.Seq[[]types.Parameter] {
+	// Parameters that must be chunked together.
+	// See https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-rds/blob/master/aws-rds-dbclusterparametergroup/src/main/java/software/amazon/rds/dbclusterparametergroup/BaseHandlerStd.java
+	// and https://github.com/aws-cloudformation/aws-cloudformation-resource-providers-rds/blob/master/aws-rds-dbparametergroup/src/main/java/software/amazon/rds/dbparametergroup/BaseHandlerStd.java.
+	dependencies := [][]string{
+		{"collation_server", "character_set_server"},
+		{"gtid-mode", "enforce_gtid_consistency"},
+		{"password_encryption", "rds.accepted_password_auth_method"},
+		{"ssl_max_protocol_version", "ssl_min_protocol_version"},
+		{"rds.change_data_capture_streaming", "binlog_format"},
+		{"aurora_enhanced_binlog", "binlog_backup", "binlog_replication_globaldb"},
+	}
+	dependencyBins := make([][]types.Parameter, len(dependencies))
+	var immediate, pendingReboot []types.Parameter
+	var chunks []iter.Seq[[]types.Parameter]
 
-	if len(all) <= maxChunkSize {
-		return all[:], nil
+parameterLoop:
+	for _, parameter := range parameters {
+		parameterName := aws.ToString(parameter.ParameterName)
+
+		for i, dependency := range dependencies {
+			if slices.Contains(dependency, parameterName) {
+				dependencyBins[i] = append(dependencyBins[i], parameter)
+				continue parameterLoop
+			}
+		}
+
+		if parameter.ApplyMethod == types.ApplyMethodPendingReboot {
+			pendingReboot = append(pendingReboot, parameter)
+		} else {
+			immediate = append(immediate, parameter)
+		}
 	}
 
-	var modifyChunk, remainder []types.Parameter
-
-	// pass 1
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		if strings.Contains(aws.ToString(p.ParameterName), "character_set") && p.ApplyMethod != types.ApplyMethodPendingReboot {
-			modifyChunk = append(modifyChunk, p)
-			continue
-		}
-
-		remainder = append(remainder, p)
+	for _, dependencyBin := range dependencyBins {
+		chunks = append(chunks, slices.Chunk(dependencyBin, maxChunkSize))
 	}
+	chunks = append(chunks, slices.Chunk(immediate, maxChunkSize))
+	chunks = append(chunks, slices.Chunk(pendingReboot, maxChunkSize))
 
-	all = remainder
-	remainder = nil
-
-	// pass 2 - avoid pending reboot
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		if p.ApplyMethod != types.ApplyMethodPendingReboot {
-			modifyChunk = append(modifyChunk, p)
-			continue
-		}
-
-		remainder = append(remainder, p)
-	}
-
-	all = remainder
-	remainder = nil
-
-	// pass 3 - everything else
-	for i, p := range all {
-		if len(modifyChunk) >= maxChunkSize {
-			remainder = append(remainder, all[i:]...)
-			return modifyChunk, remainder
-		}
-
-		modifyChunk = append(modifyChunk, p)
-	}
-
-	return modifyChunk, remainder
+	return tfiter.Concat(chunks...)
 }

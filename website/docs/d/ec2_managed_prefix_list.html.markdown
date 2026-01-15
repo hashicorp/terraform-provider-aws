@@ -19,7 +19,7 @@ customer-managed prefix list in the current region.
 data "aws_region" "current" {}
 
 data "aws_ec2_managed_prefix_list" "example" {
-  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  name = "com.amazonaws.${data.aws_region.current.region}.dynamodb"
 }
 ```
 
@@ -36,13 +36,16 @@ data "aws_ec2_managed_prefix_list" "example" {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-prefix lists. The given filters must match exactly one prefix list
-whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the prefix list to select.
 * `name` - (Optional) Name of the prefix list to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+
+The arguments of this data source act as filters for querying the available
+prefix lists. The given filters must match exactly one prefix list
+whose data will be exported as attributes.
 
 ### filter Configuration Block
 

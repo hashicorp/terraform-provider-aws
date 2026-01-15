@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,20 +31,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent")
+// @FrameworkResource("aws_bedrockagent_agent", name="Agent")
 // @Tags(identifierAttribute="agent_arn")
 func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentResource{}
@@ -55,12 +58,8 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 type agentResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentResourceModel]
 	framework.WithTimeouts
-}
-
-func (*agentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent"
 }
 
 func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -68,6 +67,11 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"agent_arn": framework.ARNAttributeComputedOnly(),
 			"agent_id":  framework.IDAttribute(),
+			"agent_collaboration": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AgentCollaboration](),
+				Optional:   true,
+				Computed:   true,
+			},
 			"agent_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -100,6 +104,19 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
+			"guardrail_configuration": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[guardrailConfigurationModel](ctx),
+				Optional:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[guardrailConfigurationModel](ctx),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Optional: true,
@@ -118,22 +135,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 4000),
+					stringvalidator.UTF8LengthBetween(40, 20000),
 				},
 			},
-			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
-				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
-				Optional:   true,
+			"memory_configuration":          framework.ResourceOptionalComputedListOfObjectsAttribute[memoryConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prompt_override_configuration": framework.ResourceOptionalComputedListOfObjectsAttribute[promptOverrideConfigurationModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+			"prepared_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[promptOverrideConfigurationModel](ctx),
-				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -173,8 +182,8 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.CreateAgentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := bedrockagent.CreateAgentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -182,11 +191,10 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateAgent(ctx, input)
+	output, err := conn.CreateAgent(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent", err.Error())
-
 		return
 	}
 
@@ -194,20 +202,19 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	data.AgentID = fwflex.StringToFramework(ctx, output.Agent.AgentId)
 	data.setID()
 
-	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), timeout)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) create", data.ID.ValueString()), err.Error())
-
 		return
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError("creating Agent", err.Error())
-
 			return
 		}
 	}
@@ -232,7 +239,6 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -241,16 +247,14 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	agentID := data.ID.ValueString()
 	agent, err := findAgentByID(ctx, conn, agentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-
 		return
 	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", agentID), err.Error())
-
 		return
 	}
 
@@ -274,61 +278,83 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !new.AgentName.Equal(old.AgentName) ||
+	if !new.AgentCollaboration.Equal(old.AgentCollaboration) ||
+		!new.AgentName.Equal(old.AgentName) ||
+		!new.AgentResourceRoleARN.Equal(old.AgentResourceRoleARN) ||
 		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
 		!new.Description.Equal(old.Description) ||
 		!new.Instruction.Equal(old.Instruction) ||
+		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
+		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
+		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
-		input := &bedrockagent.UpdateAgentInput{
-			AgentId:                 fwflex.StringFromFramework(ctx, new.AgentID),
-			AgentName:               fwflex.StringFromFramework(ctx, new.AgentName),
-			AgentResourceRoleArn:    fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
-			Description:             fwflex.StringFromFramework(ctx, new.Description),
-			FoundationModel:         fwflex.StringFromFramework(ctx, new.FoundationModel),
-			IdleSessionTTLInSeconds: fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
-			Instruction:             fwflex.StringFromFramework(ctx, new.Instruction),
+		var input bedrockagent.UpdateAgentInput
+		response.Diagnostics.Append(flexExpandForUpdate(ctx, new, &input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
 		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
 			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
 		}
 
-		if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		if !new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) && !new.GuardrailConfiguration.IsNull() {
+			guardrailConfiguration := &awstypes.GuardrailConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.GuardrailConfiguration, guardrailConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			input.GuardrailConfiguration = guardrailConfiguration
+		}
+
+		if !new.MemoryConfiguration.Equal(old.MemoryConfiguration) {
+			memoryConfiguration := &awstypes.MemoryConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.MemoryConfiguration, memoryConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if len(memoryConfiguration.EnabledMemoryTypes) > 0 {
+				input.MemoryConfiguration = memoryConfiguration
+			}
+		}
+
+		if !new.PromptOverrideConfiguration.IsNull() {
 			promptOverrideConfiguration := &awstypes.PromptOverrideConfiguration{}
 			response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, promptOverrideConfiguration)...)
 			if response.Diagnostics.HasError() {
 				return
 			}
 
-			input.PromptOverrideConfiguration = promptOverrideConfiguration
+			if len(promptOverrideConfiguration.PromptConfigurations) > 0 {
+				input.PromptOverrideConfiguration = promptOverrideConfiguration
+			}
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
+		timeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err := updateAgentWithRetry(ctx, conn, input, timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
-
 			return
 		}
 
-		agent, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		agent, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), timeout)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) update", new.ID.ValueString()), err.Error())
-
 			return
 		}
 
 		if new.PrepareAgent.ValueBool() {
-			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), timeout)
 
 			if err != nil {
 				response.Diagnostics.AddError("updating Agent", err.Error())
-
 				return
 			}
 		}
@@ -357,10 +383,12 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	agentID := data.ID.ValueString()
-	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+	input := bedrockagent.DeleteAgentInput{
+		AgentId:                aws.String(agentID),
 		SkipResourceInUseCheck: fwflex.BoolValueFromFramework(ctx, data.SkipResourceInUseCheck),
-	})
+	}
+
+	_, err := conn.DeleteAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -368,33 +396,31 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", agentID), err.Error())
-
 		return
 	}
 
 	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
-
 		return
 	}
 }
 
 func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 	// Set prepare_agent to default value on import
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
-func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	input := &bedrockagent.PrepareAgentInput{
+	input := bedrockagent.PrepareAgentInput{
 		AgentId: aws.String(id),
 	}
 
-	_, err := conn.PrepareAgent(ctx, input)
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.PrepareAgentOutput, error) {
+			return conn.PrepareAgent(ctx, &input)
+		},
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf("preparing Bedrock Agent (%s): %w", id, err)
@@ -409,15 +435,120 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 	return agent, nil
 }
 
+func flexExpandForUpdate(ctx context.Context, value agentResourceModel, apiObject any) diag.Diagnostics {
+	return fwflex.Expand(ctx, value, apiObject, fwflex.WithIgnoredFieldNames([]string{"GuardrailConfiguration", "PromptOverrideConfiguration"}))
+}
+
+func prepareSupervisorToReleaseCollaborator(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) diag.Diagnostics {
+	_, prepareErr := prepareAgent(ctx, conn, id, timeout)
+
+	var diags diag.Diagnostics
+
+	// This occurs when the last Collaborator from a SUPERVISOR Agent has been removed
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](prepareErr, "The AgentCollaboration attribute is set to SUPERVISOR but no agent collaborators are added.") {
+		getAgentInput := bedrockagent.GetAgentInput{
+			AgentId: aws.String(id),
+		}
+
+		getAgentOutput, err := conn.GetAgent(ctx, &getAgentInput)
+		if err != nil {
+			diags.AddError("failed to read agent", err.Error())
+			return diags
+		}
+
+		var state agentResourceModel
+		diags.Append(fwflex.Flatten(ctx, getAgentOutput.Agent, &state)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		var updateInput bedrockagent.UpdateAgentInput
+		diags.Append(flexExpandForUpdate(ctx, state, &updateInput)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// Set Collaboration to DISABLED so the agent can be prepared
+		updateInput.AgentCollaboration = awstypes.AgentCollaborationDisabled
+
+		_, err = updateAgentWithRetry(ctx, conn, updateInput, timeout)
+
+		if err != nil {
+			diags.AddError("failed to update agent", err.Error())
+			return diags
+		}
+
+		_, err = waitAgentUpdated(ctx, conn, id, timeout)
+
+		if err != nil {
+			diags.AddError("failed to wait for agent update", err.Error())
+			return diags
+		}
+
+		// Preparing the agent releases the reference to the collaborators alias
+		_, err = prepareAgent(ctx, conn, id, timeout)
+
+		if err != nil {
+			diags.AddError("failed to prepare agent", err.Error())
+			return diags
+		}
+
+		// Set Collaboration back to SUPERVISOR
+		updateInput.AgentCollaboration = awstypes.AgentCollaborationSupervisor
+		_, err = updateAgentWithRetry(ctx, conn, updateInput, timeout)
+		if err != nil {
+			diags.AddError("failed to update agent", err.Error())
+			return diags
+		}
+
+		_, err = waitAgentUpdated(ctx, conn, id, timeout)
+		if err != nil {
+			diags.AddError("failed to wait for agent update", err.Error())
+			return diags
+		}
+	} else {
+		if prepareErr != nil {
+			diags.AddError("failed to prepare agent", prepareErr.Error())
+		}
+	}
+	return diags
+}
+
+func updateAgentWithRetry(ctx context.Context, conn *bedrockagent.Client, input bedrockagent.UpdateAgentInput, timeout time.Duration) (*bedrockagent.UpdateAgentOutput, error) {
+	return tfresource.RetryWhen(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.UpdateAgentOutput, error) {
+			return conn.UpdateAgent(ctx, &input)
+		},
+		func(err error) (bool, error) {
+			if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Exceeded the number of retries on OptLock failure. Too many concurrent requests. Retry the request later.") {
+				return true, err
+			}
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Update operation can't be performed on Agent when it is in Preparing state. Retry the request when the agent is in a valid state.") {
+				return true, err
+			}
+			return false, err
+		})
+}
+
+// retryOpIfPreparing retries the provided operation when an error message indicates
+// the agent is in a Preparing state
+//
+// Use this to wrap operations which may run concurrently against the same agent.
+func retryOpIfPreparing[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error)) (T, error) {
+	return tfresource.RetryWhenIsAErrorMessageContains[T, *awstypes.ValidationException](ctx, timeout, f,
+		"in Preparing state",
+	)
+}
+
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
-	input := &bedrockagent.GetAgentInput{
+	input := bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
 
-	output, err := conn.GetAgent(ctx, input)
+	output, err := conn.GetAgent(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -428,17 +559,17 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	}
 
 	if output == nil || output.Agent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Agent, nil
 }
 
-func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAgentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -451,7 +582,7 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retr
 }
 
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -461,7 +592,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -470,7 +601,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -480,7 +611,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -489,7 +620,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -499,7 +630,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -508,7 +639,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 }
 
 func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
@@ -518,7 +649,7 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -527,7 +658,7 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
 		Refresh: statusAgent(ctx, conn, id),
@@ -537,7 +668,7 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -562,18 +693,23 @@ func removeDefaultPrompts(agent *awstypes.Agent) {
 }
 
 type agentResourceModel struct {
+	framework.WithRegionModel
 	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
 	AgentID                     types.String                                                      `tfsdk:"agent_id"`
+	AgentCollaboration          fwtypes.StringEnum[awstypes.AgentCollaboration]                   `tfsdk:"agent_collaboration"`
 	AgentName                   types.String                                                      `tfsdk:"agent_name"`
 	AgentResourceRoleARN        fwtypes.ARN                                                       `tfsdk:"agent_resource_role_arn"`
 	AgentVersion                types.String                                                      `tfsdk:"agent_version"`
 	CustomerEncryptionKeyARN    fwtypes.ARN                                                       `tfsdk:"customer_encryption_key_arn"`
 	Description                 types.String                                                      `tfsdk:"description"`
 	FoundationModel             types.String                                                      `tfsdk:"foundation_model"`
+	GuardrailConfiguration      fwtypes.ListNestedObjectValueOf[guardrailConfigurationModel]      `tfsdk:"guardrail_configuration"`
 	ID                          types.String                                                      `tfsdk:"id"`
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
+	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	PreparedAt                  timetypes.RFC3339                                                 `tfsdk:"prepared_at"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`
@@ -589,6 +725,21 @@ func (m *agentResourceModel) InitFromID() error {
 
 func (m *agentResourceModel) setID() {
 	m.ID = m.AgentID
+}
+
+type guardrailConfigurationModel struct {
+	GuardrailIdentifier types.String `tfsdk:"guardrail_identifier"`
+	GuardrailVersion    types.String `tfsdk:"guardrail_version"`
+}
+
+type memoryConfigurationModel struct {
+	EnabledMemoryTypes          fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]]      `tfsdk:"enabled_memory_types"`
+	SessionSummaryConfiguration fwtypes.ListNestedObjectValueOf[sessionSummaryConfigurationModel] `tfsdk:"session_summary_configuration"`
+	StorageDays                 types.Int32                                                       `tfsdk:"storage_days"`
+}
+
+type sessionSummaryConfigurationModel struct {
+	MaxRecentSessions types.Int64 `tfsdk:"max_recent_sessions"`
 }
 
 type promptOverrideConfigurationModel struct {

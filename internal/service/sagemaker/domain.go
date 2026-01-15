@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -6,15 +6,13 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,14 +42,12 @@ func resourceDomain() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"app_network_access_type": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				Default:          awstypes.AppNetworkAccessTypePublicInternetOnly,
 				ValidateDiagFunc: enum.Validate[awstypes.AppNetworkAccessType](),
 			},
 			"app_security_group_management": {
 				Type:             schema.TypeString,
-				ForceNew:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.AppSecurityGroupManagement](),
 			},
@@ -222,6 +219,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -286,6 +326,31 @@ func resourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -381,6 +446,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auto_mount_home_efs": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoMountHomeEFS](),
+						},
 						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -393,6 +464,25 @@ func resourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												names.AttrStatus: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+												},
+											},
+										},
+									},
+									"emr_serverless_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrExecutionRoleARN: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Optional:         true,
@@ -521,6 +611,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -646,6 +779,49 @@ func resourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -710,6 +886,31 @@ func resourceDomain() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -1061,6 +1262,14 @@ func resourceDomain() *schema.Resource {
 											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
 										},
 									},
+									"hidden_instance_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
+										},
+									},
 									"hidden_ml_tools": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -1227,6 +1436,12 @@ func resourceDomain() *schema.Resource {
 				MaxItems: 16,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tag_propagation": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.TagPropagationDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.TagPropagation](),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			names.AttrURL: {
@@ -1239,12 +1454,10 @@ func resourceDomain() *schema.Resource {
 				Required: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1254,59 +1467,58 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		VpcId:                aws.String(d.Get(names.AttrVPCID).(string)),
 		AppNetworkAccessType: awstypes.AppNetworkAccessType(d.Get("app_network_access_type").(string)),
 		SubnetIds:            flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
-		DefaultUserSettings:  expandUserSettings(d.Get("default_user_settings").([]interface{})),
+		DefaultUserSettings:  expandUserSettings(d.Get("default_user_settings").([]any)),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("app_security_group_management"); ok {
+	if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]any)) {
 		input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 	}
 
-	if v, ok := d.GetOk("domain_settings"); ok && len(v.([]interface{})) > 0 {
-		input.DomainSettings = expandDomainSettings(v.([]interface{}))
+	if v, ok := d.GetOk("domain_settings"); ok && len(v.([]any)) > 0 {
+		input.DomainSettings = expandDomainSettings(v.([]any))
 	}
 
-	if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]interface{})) > 0 {
-		input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
+	if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]any)) > 0 {
+		input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] SageMaker Domain create config: %#v", *input)
+	if v, ok := d.GetOk("tag_propagation"); ok {
+		input.TagPropagation = awstypes.TagPropagation(v.(string))
+	}
+
+	log.Printf("[DEBUG] SageMaker AI Domain create config: %#v", *input)
 	output, err := conn.CreateDomain(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain: %s", err)
 	}
 
-	domainArn := aws.ToString(output.DomainArn)
-	domainID, err := decodeDomainID(domainArn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): %s", d.Id(), err)
-	}
-
+	domainID := aws.ToString(output.DomainId)
 	d.SetId(domainID)
 
 	if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Domain (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Domain (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	domain, err := findDomainByName(ctx, conn, d.Id())
 	if err != nil {
-		if !d.IsNewResource() && tfresource.NotFound(err) {
+		if !d.IsNewResource() && retry.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker Domain (%s); removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker AI Domain (%s); removing from state", d.Id())
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_network_access_type", domain.AppNetworkAccessType)
@@ -1319,29 +1531,30 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
+	d.Set("tag_propagation", domain.TagPropagation)
 	d.Set(names.AttrURL, domain.Url)
 	d.Set(names.AttrVPCID, domain.VpcId)
 
 	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(domain.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_user_settings", flattenUserSettings(domain.DefaultUserSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_user_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("default_space_settings", flattenDefaultSpaceSettings(domain.DefaultSpaceSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_space_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting default_space_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("domain_settings", flattenDomainSettings(domain.DomainSettings)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_settings for SageMaker AI Domain (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1350,33 +1563,45 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			DomainId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]interface{})) > 0 {
-			input.DefaultUserSettings = expandUserSettings(v.([]interface{}))
+		if v, ok := d.GetOk("app_network_access_type"); ok {
+			input.AppNetworkAccessType = awstypes.AppNetworkAccessType(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_settings"); ok && len(v.([]interface{})) > 0 {
-			input.DomainSettingsForUpdate = expandDomainSettingsUpdate(v.([]interface{}))
+		if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]any)) {
+			input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 		}
 
-		if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]interface{})) > 0 {
-			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]interface{}))
+		if v, ok := d.GetOk("default_user_settings"); ok && len(v.([]any)) > 0 {
+			input.DefaultUserSettings = expandUserSettings(v.([]any))
 		}
 
-		log.Printf("[DEBUG] SageMaker Domain update config: %#v", *input)
+		if v, ok := d.GetOk("domain_settings"); ok && len(v.([]any)) > 0 {
+			input.DomainSettingsForUpdate = expandDomainSettingsUpdate(v.([]any))
+		}
+
+		if v, ok := d.GetOk("default_space_settings"); ok && len(v.([]any)) > 0 {
+			input.DefaultSpaceSettings = expanDefaultSpaceSettings(v.([]any))
+		}
+
+		if v, ok := d.GetOk("tag_propagation"); ok {
+			input.TagPropagation = awstypes.TagPropagation(v.(string))
+		}
+
+		log.Printf("[DEBUG] SageMaker AI Domain update config: %#v", *input)
 		_, err := conn.UpdateDomain(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating SageMaker Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Domain: %s", err)
 		}
 
 		if err := waitDomainInService(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Domain (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -1384,18 +1609,18 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		DomainId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("retention_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetentionPolicy = expandRetentionPolicy(v.([]interface{}))
+	if v, ok := d.GetOk("retention_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RetentionPolicy = expandRetentionPolicy(v.([]any))
 	}
 
 	if _, err := conn.DeleteDomain(ctx, input); err != nil {
 		if !errs.IsA[*awstypes.ResourceNotFound](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Domain (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Domain (%s): %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitDomainDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Domain (%s) to delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Domain (%s) to delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -1409,7 +1634,7 @@ func findDomainByName(ctx context.Context, conn *sagemaker.Client, domainID stri
 	output, err := conn.DescribeDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1420,22 +1645,22 @@ func findDomainByName(ctx context.Context, conn *sagemaker.Client, domainID stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
+func expandDomainSettings(l []any) *awstypes.DomainSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DomainSettings{}
 
-	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["docker_settings"].([]any); ok && len(v) > 0 {
 		config.DockerSettings = expandDockerSettings(v)
 	}
 
@@ -1447,19 +1672,19 @@ func expandDomainSettings(l []interface{}) *awstypes.DomainSettings {
 		config.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettings = expandRStudioServerProDomainSettings(v)
 	}
 
 	return config
 }
 
-func expandDockerSettings(l []interface{}) *awstypes.DockerSettings {
+func expandDockerSettings(l []any) *awstypes.DockerSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DockerSettings{}
 
@@ -1474,12 +1699,12 @@ func expandDockerSettings(l []interface{}) *awstypes.DockerSettings {
 	return config
 }
 
-func expandRStudioServerProDomainSettings(l []interface{}) *awstypes.RStudioServerProDomainSettings {
+func expandRStudioServerProDomainSettings(l []any) *awstypes.RStudioServerProDomainSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.RStudioServerProDomainSettings{}
 
@@ -1495,23 +1720,23 @@ func expandRStudioServerProDomainSettings(l []interface{}) *awstypes.RStudioServ
 		config.RStudioPackageManagerUrl = aws.String(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpdate {
+func expandDomainSettingsUpdate(l []any) *awstypes.DomainSettingsForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DomainSettingsForUpdate{}
 
-	if v, ok := m["docker_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["docker_settings"].([]any); ok && len(v) > 0 {
 		config.DockerSettings = expandDockerSettings(v)
 	}
 
@@ -1523,23 +1748,49 @@ func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpda
 		config.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["r_studio_server_pro_domain_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["r_studio_server_pro_domain_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProDomainSettingsForUpdate = expandRStudioServerProDomainSettingsUpdate(v)
 	}
 
 	return config
 }
 
-func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStudioServerProDomainSettingsForUpdate {
+// rstudioDomainEnabled takes domain_settings and returns true if rstudio is enabled
+func rstudioDomainEnabled(domainSettings []any) bool {
+	if len(domainSettings) == 0 || domainSettings[0] == nil {
+		return false
+	}
+
+	m := domainSettings[0].(map[string]any)
+
+	v, ok := m["r_studio_server_pro_domain_settings"].([]any)
+	if !ok || len(v) < 1 {
+		return false
+	}
+
+	rsspds, ok := v[0].(map[string]any)
+	if !ok || len(rsspds) == 0 {
+		return false
+	}
+
+	domainExecutionRoleArn, ok := rsspds["domain_execution_role_arn"].(string)
+	if !ok || domainExecutionRoleArn == "" {
+		return false
+	}
+
+	return true
+}
+
+func expandRStudioServerProDomainSettingsUpdate(l []any) *awstypes.RStudioServerProDomainSettingsForUpdate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.RStudioServerProDomainSettingsForUpdate{}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1558,12 +1809,12 @@ func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStud
 	return config
 }
 
-func expandRetentionPolicy(l []interface{}) *awstypes.RetentionPolicy {
+func expandRetentionPolicy(l []any) *awstypes.RetentionPolicy {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.RetentionPolicy{}
 
@@ -1574,16 +1825,20 @@ func expandRetentionPolicy(l []interface{}) *awstypes.RetentionPolicy {
 	return config
 }
 
-func expandUserSettings(l []interface{}) *awstypes.UserSettings {
+func expandUserSettings(l []any) *awstypes.UserSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.UserSettings{}
 
-	if v, ok := m["canvas_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["auto_mount_home_efs"].(string); ok && v != "" {
+		config.AutoMountHomeEFS = awstypes.AutoMountHomeEFS(v)
+	}
+
+	if v, ok := m["canvas_app_settings"].([]any); ok && len(v) > 0 {
 		config.CanvasAppSettings = expandCanvasAppSettings(v)
 	}
 
@@ -1595,31 +1850,35 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 		config.DefaultLandingUri = aws.String(v)
 	}
 
-	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["code_editor_app_settings"].([]any); ok && len(v) > 0 {
 		config.CodeEditorAppSettings = expandDomainCodeEditorAppSettings(v)
 	}
 
-	if v, ok := m["custom_file_system_config"].([]interface{}); ok && len(v) > 0 {
-		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	if v, ok := m["custom_file_system_config"].([]any); ok {
+		if len(v) > 0 {
+			config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+		} else {
+			config.CustomFileSystemConfigs = []awstypes.CustomFileSystemConfig{}
+		}
 	}
 
-	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_posix_user_config"].([]any); ok && len(v) > 0 {
 		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
 	}
 
-	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_lab_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterLabAppSettings = expandDomainJupyterLabAppSettings(v)
 	}
 
-	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_server_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_gateway_app_settings"].([]any); ok && len(v) > 0 {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
-	if v, ok := m["r_session_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["r_session_app_settings"].([]any); ok && len(v) > 0 {
 		config.RSessionAppSettings = expandRSessionAppSettings(v)
 	}
 
@@ -1627,7 +1886,7 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 		config.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["sharing_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["sharing_settings"].([]any); ok && len(v) > 0 {
 		config.SharingSettings = expandDomainShareSettings(v)
 	}
 
@@ -1635,31 +1894,31 @@ func expandUserSettings(l []interface{}) *awstypes.UserSettings {
 		config.StudioWebPortal = awstypes.StudioWebPortal(v)
 	}
 
-	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["space_storage_settings"].([]any); ok && len(v) > 0 {
 		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
 	}
 
-	if v, ok := m["tensor_board_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["tensor_board_app_settings"].([]any); ok && len(v) > 0 {
 		config.TensorBoardAppSettings = expandDomainTensorBoardAppSettings(v)
 	}
 
-	if v, ok := m["r_studio_server_pro_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["r_studio_server_pro_app_settings"].([]any); ok && len(v) > 0 {
 		config.RStudioServerProAppSettings = expandRStudioServerProAppSettings(v)
 	}
 
-	if v, ok := m["studio_web_portal_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["studio_web_portal_settings"].([]any); ok && len(v) > 0 {
 		config.StudioWebPortalSettings = expandStudioWebPortalSettings(v)
 	}
 
 	return config
 }
 
-func expandRStudioServerProAppSettings(l []interface{}) *awstypes.RStudioServerProAppSettings {
+func expandRStudioServerProAppSettings(l []any) *awstypes.RStudioServerProAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.RStudioServerProAppSettings{}
 
@@ -1676,12 +1935,12 @@ func expandRStudioServerProAppSettings(l []interface{}) *awstypes.RStudioServerP
 	return config
 }
 
-func expandCustomPOSIXUserConfig(l []interface{}) *awstypes.CustomPosixUserConfig {
+func expandCustomPOSIXUserConfig(l []any) *awstypes.CustomPosixUserConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CustomPosixUserConfig{}
 
@@ -1696,20 +1955,28 @@ func expandCustomPOSIXUserConfig(l []interface{}) *awstypes.CustomPosixUserConfi
 	return config
 }
 
-func expandDomainCodeEditorAppSettings(l []interface{}) *awstypes.CodeEditorAppSettings {
+func expandDomainCodeEditorAppSettings(l []any) *awstypes.CodeEditorAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CodeEditorAppSettings{}
 
-	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
+
+	if v, ok := m["custom_image"].([]any); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1720,24 +1987,32 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *awstypes.CodeEditorAppS
 	return config
 }
 
-func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppSettings {
+func expandDomainJupyterLabAppSettings(l []any) *awstypes.JupyterLabAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.JupyterLabAppSettings{}
+
+	if v, ok := m["app_lifecycle_management"].([]any); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandAppLifecycleManagement(v)
+	}
+
+	if v, ok := m["built_in_lifecycle_config_arn"].(string); ok && v != "" {
+		config.BuiltInLifecycleConfigArn = aws.String(v)
+	}
 
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_image"].([]any); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1745,15 +2020,63 @@ func expandDomainJupyterLabAppSettings(l []interface{}) *awstypes.JupyterLabAppS
 		config.LifecycleConfigArns = flex.ExpandStringValueSet(v)
 	}
 
+	if v, ok := m["emr_settings"].([]any); ok && len(v) > 0 {
+		config.EmrSettings = expandEMRSettings(v)
+	}
+
 	return config
 }
 
-func expandDomainJupyterServerAppSettings(l []interface{}) *awstypes.JupyterServerAppSettings {
+func expandAppLifecycleManagement(l []any) *awstypes.AppLifecycleManagement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
+
+	config := &awstypes.AppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]any); ok && len(v) > 0 {
+		config.IdleSettings = expandIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandIdleSettings(l []any) *awstypes.IdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
+
+	config := &awstypes.IdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["lifecycle_management"].(string); ok && v != "" {
+		config.LifecycleManagement = awstypes.LifecycleManagement(v)
+	}
+
+	if v, ok := m["max_idle_timeout_in_minutes"].(int); ok {
+		config.MaxIdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	if v, ok := m["min_idle_timeout_in_minutes"].(int); ok {
+		config.MinIdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func expandDomainJupyterServerAppSettings(l []any) *awstypes.JupyterServerAppSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
 
 	config := &awstypes.JupyterServerAppSettings{}
 
@@ -1761,7 +2084,7 @@ func expandDomainJupyterServerAppSettings(l []interface{}) *awstypes.JupyterServ
 		config.CodeRepositories = expandCodeRepositories(v.List())
 	}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1772,16 +2095,16 @@ func expandDomainJupyterServerAppSettings(l []interface{}) *awstypes.JupyterServ
 	return config
 }
 
-func expandDomainKernelGatewayAppSettings(l []interface{}) *awstypes.KernelGatewayAppSettings {
+func expandDomainKernelGatewayAppSettings(l []any) *awstypes.KernelGatewayAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.KernelGatewayAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
@@ -1789,55 +2112,55 @@ func expandDomainKernelGatewayAppSettings(l []interface{}) *awstypes.KernelGatew
 		config.LifecycleConfigArns = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_image"].([]any); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
 	return config
 }
 
-func expandRSessionAppSettings(l []interface{}) *awstypes.RSessionAppSettings {
+func expandRSessionAppSettings(l []any) *awstypes.RSessionAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.RSessionAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
-	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_image"].([]any); ok && len(v) > 0 {
 		config.CustomImages = expandDomainCustomImages(v)
 	}
 
 	return config
 }
 
-func expandDefaultSpaceStorageSettings(l []interface{}) *awstypes.DefaultSpaceStorageSettings {
+func expandDefaultSpaceStorageSettings(l []any) *awstypes.DefaultSpaceStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DefaultSpaceStorageSettings{}
 
-	if v, ok := m["default_ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_ebs_storage_settings"].([]any); ok && len(v) > 0 {
 		config.DefaultEbsStorageSettings = expandDefaultEBSStorageSettings(v)
 	}
 
 	return config
 }
 
-func expandDefaultEBSStorageSettings(l []interface{}) *awstypes.DefaultEbsStorageSettings {
+func expandDefaultEBSStorageSettings(l []any) *awstypes.DefaultEbsStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DefaultEbsStorageSettings{}
 
@@ -1852,28 +2175,28 @@ func expandDefaultEBSStorageSettings(l []interface{}) *awstypes.DefaultEbsStorag
 	return config
 }
 
-func expandDomainTensorBoardAppSettings(l []interface{}) *awstypes.TensorBoardAppSettings {
+func expandDomainTensorBoardAppSettings(l []any) *awstypes.TensorBoardAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.TensorBoardAppSettings{}
 
-	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["default_resource_spec"].([]any); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
 
 	return config
 }
 
-func expandResourceSpec(l []interface{}) *awstypes.ResourceSpec {
+func expandResourceSpec(l []any) *awstypes.ResourceSpec {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ResourceSpec{}
 
@@ -1900,12 +2223,32 @@ func expandResourceSpec(l []interface{}) *awstypes.ResourceSpec {
 	return config
 }
 
-func expandDomainShareSettings(l []interface{}) *awstypes.SharingSettings {
+func expandEMRSettings(l []any) *awstypes.EmrSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
+
+	config := &awstypes.EmrSettings{}
+
+	if v, ok := m["assumable_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.AssumableRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := m["execution_role_arns"].(*schema.Set); ok && v.Len() > 0 {
+		config.ExecutionRoleArns = flex.ExpandStringValueSet(v)
+	}
+
+	return config
+}
+
+func expandDomainShareSettings(l []any) *awstypes.SharingSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
 
 	config := &awstypes.SharingSettings{
 		NotebookOutputOption: awstypes.NotebookOutputOption(m["notebook_output_option"].(string)),
@@ -1922,46 +2265,71 @@ func expandDomainShareSettings(l []interface{}) *awstypes.SharingSettings {
 	return config
 }
 
-func expandCanvasAppSettings(l []interface{}) *awstypes.CanvasAppSettings {
+func expandCanvasAppSettings(l []any) *awstypes.CanvasAppSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.CanvasAppSettings{}
 
-	if v, ok := m["direct_deploy_settings"].([]interface{}); ok {
+	if v, ok := m["direct_deploy_settings"].([]any); ok {
 		config.DirectDeploySettings = expandDirectDeploySettings(v)
 	}
-	if v, ok := m["generative_ai_settings"].([]interface{}); ok {
+
+	if v, ok := m["emr_serverless_settings"].([]any); ok {
+		config.EmrServerlessSettings = expandEMRServerlessSettings(v)
+	}
+
+	if v, ok := m["generative_ai_settings"].([]any); ok {
 		config.GenerativeAiSettings = expandGenerativeAiSettings(v)
 	}
-	if v, ok := m["identity_provider_oauth_settings"].([]interface{}); ok {
+	if v, ok := m["identity_provider_oauth_settings"].([]any); ok {
 		config.IdentityProviderOAuthSettings = expandIdentityProviderOAuthSettings(v)
 	}
-	if v, ok := m["kendra_settings"].([]interface{}); ok {
+	if v, ok := m["kendra_settings"].([]any); ok {
 		config.KendraSettings = expandKendraSettings(v)
 	}
-	if v, ok := m["model_register_settings"].([]interface{}); ok {
+	if v, ok := m["model_register_settings"].([]any); ok {
 		config.ModelRegisterSettings = expandModelRegisterSettings(v)
 	}
-	if v, ok := m["time_series_forecasting_settings"].([]interface{}); ok {
+	if v, ok := m["time_series_forecasting_settings"].([]any); ok {
 		config.TimeSeriesForecastingSettings = expandTimeSeriesForecastingSettings(v)
 	}
-	if v, ok := m["workspace_settings"].([]interface{}); ok {
+	if v, ok := m["workspace_settings"].([]any); ok {
 		config.WorkspaceSettings = expandWorkspaceSettings(v)
 	}
 
 	return config
 }
 
-func expandKendraSettings(l []interface{}) *awstypes.KendraSettings {
+func expandEMRServerlessSettings(l []any) *awstypes.EmrServerlessSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
+
+	config := &awstypes.EmrServerlessSettings{}
+
+	if v, ok := m[names.AttrExecutionRoleARN].(string); ok && v != "" {
+		config.ExecutionRoleArn = aws.String(v)
+	}
+
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		config.Status = awstypes.FeatureStatus(v)
+	}
+
+	return config
+}
+
+func expandKendraSettings(l []any) *awstypes.KendraSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]any)
 
 	config := &awstypes.KendraSettings{}
 
@@ -1972,12 +2340,12 @@ func expandKendraSettings(l []interface{}) *awstypes.KendraSettings {
 	return config
 }
 
-func expandDirectDeploySettings(l []interface{}) *awstypes.DirectDeploySettings {
+func expandDirectDeploySettings(l []any) *awstypes.DirectDeploySettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DirectDeploySettings{}
 
@@ -1988,12 +2356,12 @@ func expandDirectDeploySettings(l []interface{}) *awstypes.DirectDeploySettings 
 	return config
 }
 
-func expandGenerativeAiSettings(l []interface{}) *awstypes.GenerativeAiSettings {
+func expandGenerativeAiSettings(l []any) *awstypes.GenerativeAiSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.GenerativeAiSettings{}
 
@@ -2004,11 +2372,11 @@ func expandGenerativeAiSettings(l []interface{}) *awstypes.GenerativeAiSettings 
 	return config
 }
 
-func expandIdentityProviderOAuthSettings(l []interface{}) []awstypes.IdentityProviderOAuthSetting {
+func expandIdentityProviderOAuthSettings(l []any) []awstypes.IdentityProviderOAuthSetting {
 	providers := make([]awstypes.IdentityProviderOAuthSetting, 0, len(l))
 
 	for _, eRaw := range l {
-		data := eRaw.(map[string]interface{})
+		data := eRaw.(map[string]any)
 
 		provider := awstypes.IdentityProviderOAuthSetting{}
 
@@ -2030,12 +2398,12 @@ func expandIdentityProviderOAuthSettings(l []interface{}) []awstypes.IdentityPro
 	return providers
 }
 
-func expandModelRegisterSettings(l []interface{}) *awstypes.ModelRegisterSettings {
+func expandModelRegisterSettings(l []any) *awstypes.ModelRegisterSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.ModelRegisterSettings{}
 
@@ -2050,12 +2418,12 @@ func expandModelRegisterSettings(l []interface{}) *awstypes.ModelRegisterSetting
 	return config
 }
 
-func expandTimeSeriesForecastingSettings(l []interface{}) *awstypes.TimeSeriesForecastingSettings {
+func expandTimeSeriesForecastingSettings(l []any) *awstypes.TimeSeriesForecastingSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.TimeSeriesForecastingSettings{}
 
@@ -2070,12 +2438,12 @@ func expandTimeSeriesForecastingSettings(l []interface{}) *awstypes.TimeSeriesFo
 	return config
 }
 
-func expandWorkspaceSettings(l []interface{}) *awstypes.WorkspaceSettings {
+func expandWorkspaceSettings(l []any) *awstypes.WorkspaceSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.WorkspaceSettings{}
 
@@ -2090,11 +2458,11 @@ func expandWorkspaceSettings(l []interface{}) *awstypes.WorkspaceSettings {
 	return config
 }
 
-func expandDomainCustomImages(l []interface{}) []awstypes.CustomImage {
+func expandDomainCustomImages(l []any) []awstypes.CustomImage {
 	images := make([]awstypes.CustomImage, 0, len(l))
 
 	for _, eRaw := range l {
-		data := eRaw.(map[string]interface{})
+		data := eRaw.(map[string]any)
 
 		image := awstypes.CustomImage{
 			AppImageConfigName: aws.String(data["app_image_config_name"].(string)),
@@ -2111,17 +2479,21 @@ func expandDomainCustomImages(l []interface{}) []awstypes.CustomImage {
 	return images
 }
 
-func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSettings {
+func expandStudioWebPortalSettings(l []any) *awstypes.StudioWebPortalSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.StudioWebPortalSettings{}
 
 	if v, ok := m["hidden_app_types"].(*schema.Set); ok && v.Len() > 0 {
 		config.HiddenAppTypes = flex.ExpandStringyValueSet[awstypes.AppType](v)
+	}
+
+	if v, ok := m["hidden_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		config.HiddenInstanceTypes = flex.ExpandStringyValueSet[awstypes.AppInstanceType](v)
 	}
 
 	if v, ok := m["hidden_ml_tools"].(*schema.Set); ok && v.Len() > 0 {
@@ -2131,12 +2503,14 @@ func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSet
 	return config
 }
 
-func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{} {
+func flattenUserSettings(config *awstypes.UserSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	m["auto_mount_home_efs"] = config.AutoMountHomeEFS
 
 	if config.CanvasAppSettings != nil {
 		m["canvas_app_settings"] = flattenCanvasAppSettings(config.CanvasAppSettings)
@@ -2204,28 +2578,28 @@ func flattenUserSettings(config *awstypes.UserSettings) []map[string]interface{}
 		m["studio_web_portal_settings"] = flattenStudioWebPortalSettings(config.StudioWebPortalSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenRStudioServerProAppSettings(config *awstypes.RStudioServerProAppSettings) []map[string]interface{} {
+func flattenRStudioServerProAppSettings(config *awstypes.RStudioServerProAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"access_status": config.AccessStatus,
 		"user_group":    config.UserGroup,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]interface{} {
+func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrInstanceType: config.InstanceType,
 	}
 
@@ -2245,29 +2619,85 @@ func flattenResourceSpec(config *awstypes.ResourceSpec) []map[string]interface{}
 		m["sagemaker_image_version_arn"] = aws.ToString(config.SageMakerImageVersionArn)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSettings) []map[string]interface{} {
+func flattenAppLifecycleManagement(config *awstypes.AppLifecycleManagement) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenIdleSettings(config *awstypes.IdleSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
+	}
+
+	m["lifecycle_management"] = config.LifecycleManagement
+
+	if config.MaxIdleTimeoutInMinutes != nil {
+		m["max_idle_timeout_in_minutes"] = aws.ToInt32(config.MaxIdleTimeoutInMinutes)
+	}
+
+	if config.MinIdleTimeoutInMinutes != nil {
+		m["min_idle_timeout_in_minutes"] = aws.ToInt32(config.MinIdleTimeoutInMinutes)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenDefaultSpaceStorageSettings(config *awstypes.DefaultSpaceStorageSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
 
 	if config.DefaultEbsStorageSettings != nil {
 		m["default_ebs_storage_settings"] = flattenDefaultEBSStorageSettings(config.DefaultEbsStorageSettings)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDefaultEBSStorageSettings(config *awstypes.DefaultEbsStorageSettings) []map[string]interface{} {
+func flattenEMRSettings(config *awstypes.EmrSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.AssumableRoleArns != nil {
+		m["assumable_role_arns"] = flex.FlattenStringValueSet(config.AssumableRoleArns)
+	}
+
+	if config.ExecutionRoleArns != nil {
+		m["execution_role_arns"] = flex.FlattenStringValueSet(config.ExecutionRoleArns)
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenDefaultEBSStorageSettings(config *awstypes.DefaultEbsStorageSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
 
 	if config.DefaultEbsVolumeSizeInGb != nil {
 		m["default_ebs_volume_size_in_gb"] = aws.ToInt32(config.DefaultEbsVolumeSizeInGb)
@@ -2277,29 +2707,29 @@ func flattenDefaultEBSStorageSettings(config *awstypes.DefaultEbsStorageSettings
 		m["maximum_ebs_volume_size_in_gb"] = aws.ToInt32(config.MaximumEbsVolumeSizeInGb)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainTensorBoardAppSettings(config *awstypes.TensorBoardAppSettings) []map[string]interface{} {
+func flattenDomainTensorBoardAppSettings(config *awstypes.TensorBoardAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenCustomPOSIXUserConfig(config *awstypes.CustomPosixUserConfig) []map[string]interface{} {
+func flattenCustomPOSIXUserConfig(config *awstypes.CustomPosixUserConfig) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.Gid != nil {
 		m["gid"] = aws.ToInt64(config.Gid)
@@ -2309,15 +2739,23 @@ func flattenCustomPOSIXUserConfig(config *awstypes.CustomPosixUserConfig) []map[
 		m["uid"] = aws.ToInt64(config.Uid)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) []map[string]interface{} {
+func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
 
 	if config.CustomImages != nil {
 		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
@@ -2331,15 +2769,23 @@ func flattenDomainCodeEditorAppSettings(config *awstypes.CodeEditorAppSettings) 
 		m["lifecycle_config_arns"] = flex.FlattenStringValueSet(config.LifecycleConfigArns)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) []map[string]interface{} {
+func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenAppLifecycleManagement(config.AppLifecycleManagement)
+	}
+
+	if config.BuiltInLifecycleConfigArn != nil {
+		m["built_in_lifecycle_config_arn"] = aws.ToString(config.BuiltInLifecycleConfigArn)
+	}
 
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
@@ -2357,15 +2803,19 @@ func flattenDomainJupyterLabAppSettings(config *awstypes.JupyterLabAppSettings) 
 		m["lifecycle_config_arns"] = flex.FlattenStringValueSet(config.LifecycleConfigArns)
 	}
 
-	return []map[string]interface{}{m}
-}
-
-func flattenDomainJupyterServerAppSettings(config *awstypes.JupyterServerAppSettings) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+	if config.EmrSettings != nil {
+		m["emr_settings"] = flattenEMRSettings(config.EmrSettings)
 	}
 
-	m := map[string]interface{}{}
+	return []map[string]any{m}
+}
+
+func flattenDomainJupyterServerAppSettings(config *awstypes.JupyterServerAppSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{}
 
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
@@ -2379,15 +2829,15 @@ func flattenDomainJupyterServerAppSettings(config *awstypes.JupyterServerAppSett
 		m["lifecycle_config_arns"] = flex.FlattenStringValueSet(config.LifecycleConfigArns)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainKernelGatewayAppSettings(config *awstypes.KernelGatewayAppSettings) []map[string]interface{} {
+func flattenDomainKernelGatewayAppSettings(config *awstypes.KernelGatewayAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
@@ -2401,15 +2851,15 @@ func flattenDomainKernelGatewayAppSettings(config *awstypes.KernelGatewayAppSett
 		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenRSessionAppSettings(config *awstypes.RSessionAppSettings) []map[string]interface{} {
+func flattenRSessionAppSettings(config *awstypes.RSessionAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
@@ -2419,15 +2869,15 @@ func flattenRSessionAppSettings(config *awstypes.RSessionAppSettings) []map[stri
 		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainShareSettings(config *awstypes.SharingSettings) []map[string]interface{} {
+func flattenDomainShareSettings(config *awstypes.SharingSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"notebook_output_option": config.NotebookOutputOption,
 	}
 
@@ -2439,16 +2889,17 @@ func flattenDomainShareSettings(config *awstypes.SharingSettings) []map[string]i
 		m["s3_output_path"] = aws.ToString(config.S3OutputPath)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenCanvasAppSettings(config *awstypes.CanvasAppSettings) []map[string]interface{} {
+func flattenCanvasAppSettings(config *awstypes.CanvasAppSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"direct_deploy_settings":           flattenDirectDeploySettings(config.DirectDeploySettings),
+		"emr_serverless_settings":          flattenEMRServerlessSettings(config.EmrServerlessSettings),
 		"generative_ai_settings":           flattenGenerativeAiSettings(config.GenerativeAiSettings),
 		"identity_provider_oauth_settings": flattenIdentityProviderOAuthSettings(config.IdentityProviderOAuthSettings),
 		"kendra_settings":                  flattenKendraSettings(config.KendraSettings),
@@ -2457,50 +2908,63 @@ func flattenCanvasAppSettings(config *awstypes.CanvasAppSettings) []map[string]i
 		"workspace_settings":               flattenWorkspaceSettings(config.WorkspaceSettings),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDirectDeploySettings(config *awstypes.DirectDeploySettings) []map[string]interface{} {
+func flattenDirectDeploySettings(config *awstypes.DirectDeploySettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrStatus: config.Status,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenGenerativeAiSettings(config *awstypes.GenerativeAiSettings) []map[string]interface{} {
+func flattenEMRServerlessSettings(config *awstypes.EmrServerlessSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
+		names.AttrExecutionRoleARN: aws.ToString(config.ExecutionRoleArn),
+		names.AttrStatus:           config.Status,
+	}
+
+	return []map[string]any{m}
+}
+
+func flattenGenerativeAiSettings(config *awstypes.GenerativeAiSettings) []map[string]any {
+	if config == nil {
+		return []map[string]any{}
+	}
+
+	m := map[string]any{
 		"amazon_bedrock_role_arn": aws.ToString(config.AmazonBedrockRoleArn),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenKendraSettings(config *awstypes.KendraSettings) []map[string]interface{} {
+func flattenKendraSettings(config *awstypes.KendraSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		names.AttrStatus: config.Status,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenIdentityProviderOAuthSettings(config []awstypes.IdentityProviderOAuthSetting) []map[string]interface{} {
-	providers := make([]map[string]interface{}, 0, len(config))
+func flattenIdentityProviderOAuthSettings(config []awstypes.IdentityProviderOAuthSetting) []map[string]any {
+	providers := make([]map[string]any, 0, len(config))
 
 	for _, raw := range config {
-		provider := make(map[string]interface{})
+		provider := make(map[string]any)
 
 		provider["data_source_name"] = raw.DataSourceName
 
@@ -2516,66 +2980,66 @@ func flattenIdentityProviderOAuthSettings(config []awstypes.IdentityProviderOAut
 	return providers
 }
 
-func flattenModelRegisterSettings(config *awstypes.ModelRegisterSettings) []map[string]interface{} {
+func flattenModelRegisterSettings(config *awstypes.ModelRegisterSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"cross_account_model_register_role_arn": aws.ToString(config.CrossAccountModelRegisterRoleArn),
 		names.AttrStatus:                        config.Status,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenTimeSeriesForecastingSettings(config *awstypes.TimeSeriesForecastingSettings) []map[string]interface{} {
+func flattenTimeSeriesForecastingSettings(config *awstypes.TimeSeriesForecastingSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"amazon_forecast_role_arn": aws.ToString(config.AmazonForecastRoleArn),
 		names.AttrStatus:           config.Status,
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenWorkspaceSettings(config *awstypes.WorkspaceSettings) []map[string]interface{} {
+func flattenWorkspaceSettings(config *awstypes.WorkspaceSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"s3_artifact_path": aws.ToString(config.S3ArtifactPath),
 		"s3_kms_key_id":    aws.ToString(config.S3KmsKeyId),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]interface{} {
+func flattenDomainSettings(config *awstypes.DomainSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"docker_settings":                     flattenDockerSettings(config.DockerSettings),
 		"execution_role_identity_config":      config.ExecutionRoleIdentityConfig,
 		"r_studio_server_pro_domain_settings": flattenRStudioServerProDomainSettings(config.RStudioServerProDomainSettings),
 		names.AttrSecurityGroupIDs:            flex.FlattenStringValueSet(config.SecurityGroupIds),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDockerSettings(config *awstypes.DockerSettings) []map[string]interface{} {
+func flattenDockerSettings(config *awstypes.DockerSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.EnableDockerAccess != "" {
 		m["enable_docker_access"] = config.EnableDockerAccess
@@ -2585,29 +3049,29 @@ func flattenDockerSettings(config *awstypes.DockerSettings) []map[string]interfa
 		m["vpc_only_trusted_accounts"] = flex.FlattenStringValueSet(config.VpcOnlyTrustedAccounts)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenRStudioServerProDomainSettings(config *awstypes.RStudioServerProDomainSettings) []map[string]interface{} {
+func flattenRStudioServerProDomainSettings(config *awstypes.RStudioServerProDomainSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{
+	m := map[string]any{
 		"r_studio_connect_url":         aws.ToString(config.RStudioConnectUrl),
 		"domain_execution_role_arn":    aws.ToString(config.DomainExecutionRoleArn),
 		"r_studio_package_manager_url": aws.ToString(config.RStudioPackageManagerUrl),
 		"default_resource_spec":        flattenResourceSpec(config.DefaultResourceSpec),
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func flattenDomainCustomImages(config []awstypes.CustomImage) []map[string]interface{} {
-	images := make([]map[string]interface{}, 0, len(config))
+func flattenDomainCustomImages(config []awstypes.CustomImage) []map[string]any {
+	images := make([]map[string]any, 0, len(config))
 
 	for _, raw := range config {
-		image := make(map[string]interface{})
+		image := make(map[string]any)
 
 		image["app_image_config_name"] = aws.ToString(raw.AppImageConfigName)
 		image["image_name"] = aws.ToString(raw.ImageName)
@@ -2622,22 +3086,12 @@ func flattenDomainCustomImages(config []awstypes.CustomImage) []map[string]inter
 	return images
 }
 
-func decodeDomainID(id string) (string, error) {
-	domainArn, err := arn.Parse(id)
-	if err != nil {
-		return "", err
-	}
-
-	domainName := strings.TrimPrefix(domainArn.Resource, "domain/")
-	return domainName, nil
-}
-
-func expanDefaultSpaceSettings(l []interface{}) *awstypes.DefaultSpaceSettings {
+func expanDefaultSpaceSettings(l []any) *awstypes.DefaultSpaceSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	config := &awstypes.DefaultSpaceSettings{}
 
@@ -2645,11 +3099,11 @@ func expanDefaultSpaceSettings(l []interface{}) *awstypes.DefaultSpaceSettings {
 		config.ExecutionRole = aws.String(v)
 	}
 
-	if v, ok := m["jupyter_server_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_server_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterServerAppSettings = expandDomainJupyterServerAppSettings(v)
 	}
 
-	if v, ok := m["kernel_gateway_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["kernel_gateway_app_settings"].([]any); ok && len(v) > 0 {
 		config.KernelGatewayAppSettings = expandDomainKernelGatewayAppSettings(v)
 	}
 
@@ -2657,31 +3111,35 @@ func expanDefaultSpaceSettings(l []interface{}) *awstypes.DefaultSpaceSettings {
 		config.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["jupyter_lab_app_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["jupyter_lab_app_settings"].([]any); ok && len(v) > 0 {
 		config.JupyterLabAppSettings = expandDomainJupyterLabAppSettings(v)
 	}
 
-	if v, ok := m["space_storage_settings"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["space_storage_settings"].([]any); ok && len(v) > 0 {
 		config.SpaceStorageSettings = expandDefaultSpaceStorageSettings(v)
 	}
 
-	if v, ok := m["custom_file_system_config"].([]interface{}); ok && len(v) > 0 {
-		config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+	if v, ok := m["custom_file_system_config"].([]any); ok {
+		if len(v) > 0 {
+			config.CustomFileSystemConfigs = expandCustomFileSystemConfigs(v)
+		} else {
+			config.CustomFileSystemConfigs = []awstypes.CustomFileSystemConfig{}
+		}
 	}
 
-	if v, ok := m["custom_posix_user_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["custom_posix_user_config"].([]any); ok && len(v) > 0 {
 		config.CustomPosixUserConfig = expandCustomPOSIXUserConfig(v)
 	}
 
 	return config
 }
 
-func flattenDefaultSpaceSettings(config *awstypes.DefaultSpaceSettings) []map[string]interface{} {
+func flattenDefaultSpaceSettings(config *awstypes.DefaultSpaceSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.ExecutionRole != nil {
 		m["execution_role"] = aws.ToString(config.ExecutionRole)
@@ -2715,10 +3173,10 @@ func flattenDefaultSpaceSettings(config *awstypes.DefaultSpaceSettings) []map[st
 		m["custom_posix_user_config"] = flattenCustomPOSIXUserConfig(config.CustomPosixUserConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }
 
-func expandCodeRepository(tfMap map[string]interface{}) awstypes.CodeRepository {
+func expandCodeRepository(tfMap map[string]any) awstypes.CodeRepository {
 	apiObject := awstypes.CodeRepository{
 		RepositoryUrl: aws.String(tfMap["repository_url"].(string)),
 	}
@@ -2726,7 +3184,7 @@ func expandCodeRepository(tfMap map[string]interface{}) awstypes.CodeRepository 
 	return apiObject
 }
 
-func expandCodeRepositories(tfList []interface{}) []awstypes.CodeRepository {
+func expandCodeRepositories(tfList []any) []awstypes.CodeRepository {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2734,7 +3192,7 @@ func expandCodeRepositories(tfList []interface{}) []awstypes.CodeRepository {
 	var apiObjects []awstypes.CodeRepository
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2746,8 +3204,8 @@ func expandCodeRepositories(tfList []interface{}) []awstypes.CodeRepository {
 	return apiObjects
 }
 
-func flattenCodeRepository(apiObject awstypes.CodeRepository) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenCodeRepository(apiObject awstypes.CodeRepository) map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.RepositoryUrl != nil {
 		tfMap["repository_url"] = aws.ToString(apiObject.RepositoryUrl)
@@ -2756,12 +3214,12 @@ func flattenCodeRepository(apiObject awstypes.CodeRepository) map[string]interfa
 	return tfMap
 }
 
-func flattenCodeRepositories(apiObjects []awstypes.CodeRepository) []interface{} {
+func flattenCodeRepositories(apiObjects []awstypes.CodeRepository) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenCodeRepository(apiObject))
@@ -2770,17 +3228,17 @@ func flattenCodeRepositories(apiObjects []awstypes.CodeRepository) []interface{}
 	return tfList
 }
 
-func expandCustomFileSystemConfig(tfMap map[string]interface{}) awstypes.CustomFileSystemConfig {
+func expandCustomFileSystemConfig(tfMap map[string]any) awstypes.CustomFileSystemConfig {
 	apiObject := &awstypes.CustomFileSystemConfigMemberEFSFileSystemConfig{}
 
-	if v, ok := tfMap["efs_file_system_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Value = expandEFSFileSystemConfig(v[0].(map[string]interface{}))
+	if v, ok := tfMap["efs_file_system_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandEFSFileSystemConfig(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandCustomFileSystemConfigs(tfList []interface{}) []awstypes.CustomFileSystemConfig {
+func expandCustomFileSystemConfigs(tfList []any) []awstypes.CustomFileSystemConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2788,7 +3246,7 @@ func expandCustomFileSystemConfigs(tfList []interface{}) []awstypes.CustomFileSy
 	var apiObjects []awstypes.CustomFileSystemConfig
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -2800,7 +3258,7 @@ func expandCustomFileSystemConfigs(tfList []interface{}) []awstypes.CustomFileSy
 	return apiObjects
 }
 
-func expandEFSFileSystemConfig(tfMap map[string]interface{}) awstypes.EFSFileSystemConfig {
+func expandEFSFileSystemConfig(tfMap map[string]any) awstypes.EFSFileSystemConfig {
 	apiObject := awstypes.EFSFileSystemConfig{}
 
 	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
@@ -2814,12 +3272,12 @@ func expandEFSFileSystemConfig(tfMap map[string]interface{}) awstypes.EFSFileSys
 	return apiObject
 }
 
-func flattenCustomFileSystemConfig(apiObject awstypes.CustomFileSystemConfig) map[string]interface{} {
+func flattenCustomFileSystemConfig(apiObject awstypes.CustomFileSystemConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject, ok := apiObject.(*awstypes.CustomFileSystemConfigMemberEFSFileSystemConfig); ok {
 		tfMap["efs_file_system_config"] = flattenEFSFileSystemConfig(apiObject.Value)
@@ -2828,12 +3286,12 @@ func flattenCustomFileSystemConfig(apiObject awstypes.CustomFileSystemConfig) ma
 	return tfMap
 }
 
-func flattenCustomFileSystemConfigs(apiObjects []awstypes.CustomFileSystemConfig) []interface{} {
+func flattenCustomFileSystemConfigs(apiObjects []awstypes.CustomFileSystemConfig) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenCustomFileSystemConfig(apiObject))
@@ -2842,8 +3300,8 @@ func flattenCustomFileSystemConfigs(apiObjects []awstypes.CustomFileSystemConfig
 	return tfList
 }
 
-func flattenEFSFileSystemConfig(apiObject awstypes.EFSFileSystemConfig) []map[string]interface{} {
-	tfMap := map[string]interface{}{}
+func flattenEFSFileSystemConfig(apiObject awstypes.EFSFileSystemConfig) []map[string]any {
+	tfMap := map[string]any{}
 
 	if apiObject.FileSystemId != nil {
 		tfMap[names.AttrFileSystemID] = aws.ToString(apiObject.FileSystemId)
@@ -2853,23 +3311,27 @@ func flattenEFSFileSystemConfig(apiObject awstypes.EFSFileSystemConfig) []map[st
 		tfMap["file_system_path"] = aws.ToString(apiObject.FileSystemPath)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return []map[string]any{tfMap}
 }
 
-func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []map[string]interface{} {
+func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []map[string]any {
 	if config == nil {
-		return []map[string]interface{}{}
+		return []map[string]any{}
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if config.HiddenAppTypes != nil {
 		m["hidden_app_types"] = flex.FlattenStringyValueSet[awstypes.AppType](config.HiddenAppTypes)
+	}
+
+	if config.HiddenInstanceTypes != nil {
+		m["hidden_instance_types"] = flex.FlattenStringyValueSet[awstypes.AppInstanceType](config.HiddenInstanceTypes)
 	}
 
 	if config.HiddenMlTools != nil {
 		m["hidden_ml_tools"] = flex.FlattenStringyValueSet[awstypes.MlTools](config.HiddenMlTools)
 	}
 
-	return []map[string]interface{}{m}
+	return []map[string]any{m}
 }

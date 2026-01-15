@@ -39,8 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `groupName` - (Required) Name of the Availability Zone Group.
 * `optInStatus` - (Required) Indicates whether to enable or disable Availability Zone Group. Valid values: `opted-in` or `not-opted-in`.
 
@@ -82,4 +83,4 @@ Using `terraform import`, import EC2 Availability Zone Groups using the group na
 % terraform import aws_ec2_availability_zone_group.example us-west-2-lax-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-473f003faaf663001178efaa8445c87b532a38c1e63d75f64ea2c7c9e3600f9b -->
+<!-- cache-key: cdktf-0.20.8 input-6e3c37542dce8eee9aa59f2fcbc99b13b6f94be2c95cee3ace9b23421361d7b6 -->

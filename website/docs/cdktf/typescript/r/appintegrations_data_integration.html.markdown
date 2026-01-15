@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Specifies the description of the Data Integration.
 * `kmsKey` - (Required) Specifies the KMS key Amazon Resource Name (ARN) for the Data Integration.
 * `name` - (Required) Specifies the name of the Data Integration.
@@ -102,4 +103,4 @@ Using `terraform import`, import Amazon AppIntegrations Data Integrations using 
 % terraform import aws_appintegrations_data_integration.example 12345678-1234-1234-1234-123456789123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c453729b63eb0dcd3c4b7bbf7e0c63bfc3f55c4cc0725680004f1efcf202b819 -->
+<!-- cache-key: cdktf-0.20.8 input-1b1be257a2e724276f28693ce23684d27dcfe7906649d141fbf574c024bd16c8 -->

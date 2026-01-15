@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2
@@ -24,33 +24,35 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="View")
-// @Tags(identifierAttribute="id")
-func newResourceView(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceView{}, nil
+// @FrameworkResource("aws_resourceexplorer2_view", name="View")
+// @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v5.100.0")
+func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &viewResource{}, nil
 }
 
-type resourceView struct {
-	framework.ResourceWithConfigure
+type viewResource struct {
+	framework.ResourceWithModel[viewResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceView) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_resourceexplorer2_view"
-}
-
-func (r *resourceView) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *viewResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -64,7 +66,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -74,6 +76,10 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.LengthAtMost(64),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
+			},
+			names.AttrScope: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -110,11 +116,9 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 	}
 }
 
-func (r *resourceView) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *viewResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data viewResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -122,12 +126,12 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	input := &resourceexplorer2.CreateViewInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateView(ctx, input)
@@ -139,6 +143,10 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	}
 
 	arn := aws.ToString(output.View.ViewArn)
+	// Set values for unknowns.
+	data.Scope = types.StringValue(aws.ToString(output.View.Scope))
+	data.ViewARN = types.StringValue(arn)
+	data.setID()
 
 	if data.DefaultView.ValueBool() {
 		input := &resourceexplorer2.AssociateDefaultViewInput{
@@ -148,29 +156,24 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		_, err := conn.AssociateDefaultView(ctx, input)
 
 		if err != nil {
+			response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 			response.Diagnostics.AddError(fmt.Sprintf("setting Resource Explorer View (%s) as the default", arn), err.Error())
 
 			return
 		}
 	}
 
-	// Set values for unknowns.
-	data.ViewARN = types.StringValue(arn)
-	data.setID()
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *viewResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data viewResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
+	if err := data.initFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
@@ -180,7 +183,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 
 	output, err := findViewByARN(ctx, conn, data.ViewARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -213,7 +216,8 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	if view.Filters != nil && len(aws.ToString(view.Filters.FilterString)) == 0 {
 		view.Filters = nil
 	}
-	response.Diagnostics.Append(flex.Flatten(ctx, view, &data)...)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, view, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -225,26 +229,26 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceView) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *viewResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new viewResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-	if response.Diagnostics.HasError() {
-		return
+	if new.Scope.IsUnknown() {
+		new.Scope = types.StringValue(old.Scope.ValueString())
 	}
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
 		input := &resourceexplorer2.UpdateViewInput{}
-		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -261,7 +265,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 	if !new.DefaultView.Equal(old.DefaultView) {
 		if new.DefaultView.ValueBool() {
 			input := &resourceexplorer2.AssociateDefaultViewInput{
-				ViewArn: flex.StringFromFramework(ctx, new.ViewARN),
+				ViewArn: fwflex.StringFromFramework(ctx, new.ViewARN),
 			}
 
 			_, err := conn.AssociateDefaultView(ctx, input)
@@ -287,23 +291,25 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceView) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *viewResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data viewResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteView(ctx, &resourceexplorer2.DeleteViewInput{
-		ViewArn: flex.StringFromFramework(ctx, data.ViewARN),
+		ViewArn: fwflex.StringFromFramework(ctx, data.ViewARN),
 	})
+
+	if errs.IsA[*awstypes.UnauthorizedException](err) {
+		return
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Resource Explorer View (%s)", data.ID.ValueString()), err.Error())
@@ -312,27 +318,21 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 	}
 }
 
-func (r *resourceView) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 // See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
 type viewResourceModel struct {
+	framework.WithRegionModel
 	DefaultView        types.Bool                                             `tfsdk:"default_view"`
 	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
 	ID                 types.String                                           `tfsdk:"id"`
 	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
-	ViewARN            types.String                                           `tfsdk:"arn"`
-	ViewName           types.String                                           `tfsdk:"name"`
+	Scope              types.String                                           `tfsdk:"scope"`
 	Tags               tftags.Map                                             `tfsdk:"tags"`
 	TagsAll            tftags.Map                                             `tfsdk:"tags_all"`
+	ViewARN            types.String                                           `tfsdk:"arn"`
+	ViewName           types.String                                           `tfsdk:"name"`
 }
 
-func (data *viewResourceModel) InitFromID() error {
+func (data *viewResourceModel) initFromID() error {
 	data.ViewARN = data.ID
 	arn, err := arn.Parse(data.ViewARN.ValueString())
 	if err != nil {
@@ -385,7 +385,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	output, err := conn.GetView(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.UnauthorizedException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -396,7 +396,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	}
 
 	if output == nil || output.View == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

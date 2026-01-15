@@ -60,13 +60,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-~> **NOTE:** One of either `instanceId` or `instanceAlias` is required.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceId` - (Optional) Returns information on a specific connect instance by id
-
 * `instanceAlias` - (Optional) Returns information on a specific connect instance by alias
+
+~> **NOTE:** One of either `instanceId` or `instanceAlias` is required.
 
 ## Attribute Reference
 
@@ -85,5 +85,6 @@ This data source exports the following attributes in addition to the arguments a
 * `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `serviceRole` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.
 
-<!-- cache-key: cdktf-0.20.1 input-6d82fb0f3c12ce07d86dbcd93004bece308f5b30f2e7e98c4120132ed9d02711 -->
+<!-- cache-key: cdktf-0.20.8 input-c32a17ecd6c0c47a21038fc69d6955947565ac2871bd485f076d94c78e61056a -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -13,12 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,7 +51,7 @@ func resourceClusterRoleAssociation() *schema.Resource {
 			},
 			"feature_name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrRoleARN: {
@@ -62,22 +64,31 @@ func resourceClusterRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
 	roleARN := d.Get(names.AttrRoleARN).(string)
 	id := clusterRoleAssociationCreateResourceID(dbClusterID, roleARN)
-	input := &rds.AddRoleToDBClusterInput{
+	input := rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
-		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.AddRoleToDBCluster(ctx, input)
-	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+	if v, ok := d.GetOk("feature_name"); ok {
+		input.FeatureName = aws.String(v.(string))
+	}
+
+	_, err := tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
+		return conn.AddRoleToDBCluster(ctx, &input)
+	})
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, errIAMRolePropagationMessage) {
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+			return conn.AddRoleToDBCluster(ctx, &input)
+		}, errCodeInvalidParameterValue, errIAMRolePropagationMessage)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster IAM Role Association (%s): %s", id, err)
@@ -92,7 +103,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceClusterRoleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -103,7 +114,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 
 	output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) IAM Role (%s) Association not found, removing from state", dbClusterID, roleARN)
 		d.SetId("")
 		return diags
@@ -120,7 +131,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -130,10 +141,13 @@ func resourceClusterRoleAssociationDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster IAM Role Association: %s", d.Id())
-	_, err = conn.RemoveRoleFromDBCluster(ctx, &rds.RemoveRoleFromDBClusterInput{
+	input := rds.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
 		RoleArn:             aws.String(roleARN),
+	}
+	_, err = tfresource.RetryWhenIsA[any, *types.InvalidDBClusterStateFault](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.RemoveRoleFromDBCluster(ctx, &input)
 	})
 
 	if errs.IsA[*types.DBClusterNotFoundFault](err) || errs.IsA[*types.DBClusterRoleNotFoundFault](err) {
@@ -186,7 +200,7 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 	}
 
 	if status := aws.ToString(output.Status); status == clusterRoleStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message: status,
 		}
 	}
@@ -194,11 +208,11 @@ func findDBClusterRoleByTwoPartKey(ctx context.Context, conn *rds.Client, dbClus
 	return output, nil
 }
 
-func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findDBClusterRoleByTwoPartKey(ctx, conn, dbClusterID, roleARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -211,7 +225,7 @@ func statusDBClusterRole(ctx context.Context, conn *rds.Client, dbClusterID, rol
 }
 
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string, timeout time.Duration) (*types.DBClusterRole, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusPending},
 		Target:     []string{clusterRoleStatusActive},
 		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),
@@ -230,7 +244,7 @@ func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.Client, 
 }
 
 func waitDBClusterRoleAssociationDeleted(ctx context.Context, conn *rds.Client, dbClusterID, roleARN string, timeout time.Duration) (*types.DBClusterRole, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterRoleStatusActive, clusterRoleStatusPending},
 		Target:     []string{},
 		Refresh:    statusDBClusterRole(ctx, conn, dbClusterID, roleARN),

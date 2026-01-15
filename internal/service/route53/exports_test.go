@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -19,8 +19,6 @@ var (
 	ResourceZone                        = resourceZone
 	ResourceZoneAssociation             = resourceZoneAssociation
 
-	CleanDelegationSetID                        = cleanDelegationSetID
-	CleanRecordName                             = cleanRecordName
 	CleanZoneID                                 = cleanZoneID
 	ExpandRecordName                            = expandRecordName
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
@@ -32,14 +30,13 @@ var (
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
 	FindResourceRecordSetByFourPartKey          = findResourceRecordSetByFourPartKey
+	FindResourceRecordSetsForHostedZone         = findResourceRecordSetsForHostedZone
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
-	FQDN                                        = fqdn
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
-	RecordParseResourceID                       = recordParseResourceID
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync

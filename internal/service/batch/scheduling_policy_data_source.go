@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -18,6 +18,7 @@ import (
 
 // @SDKDataSource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
@@ -68,7 +69,7 @@ func dataSourceSchedulingPolicy() *schema.Resource {
 	}
 }
 
-func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 

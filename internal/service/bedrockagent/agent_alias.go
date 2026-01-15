@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -15,15 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -31,12 +31,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Agent Alias")
+// @FrameworkResource("aws_bedrockagent_agent_alias", name="Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
 func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentAliasResource{}
@@ -49,14 +50,14 @@ func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, err
 }
 
 type agentAliasResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[agentAliasResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (*agentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_bedrockagent_agent_alias"
-}
+const (
+	ResNameAgentAlias = "Agent Alias"
+)
 
 func (r *agentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
@@ -86,9 +87,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 				CustomType: fwtypes.NewListNestedObjectTypeOf[agentAliasRoutingConfigurationListItemModel](ctx),
 				Optional:   true,
 				Computed:   true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -118,8 +116,8 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	input := &bedrockagent.CreateAgentAliasInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := bedrockagent.CreateAgentAliasInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -127,29 +125,44 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateAgentAlias(ctx, input)
+	output, err := conn.CreateAgentAlias(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating Bedrock Agent Alias", err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameAgentAlias, data.AgentAliasName.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
 	// Set values for unknowns.
 	data.AgentAliasID = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameAgentAlias, data.AgentAliasName.String(), err),
+			err.Error(),
+		)
+	}
+	data.ID = types.StringValue(id)
 
 	alias, err := waitAgentAliasCreated(ctx, conn, data.AgentAliasID.ValueString(), data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Alias (%s) create", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForCreation, ResNameAgentAlias, data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
 	if _, err := waitAgentVersioned(ctx, conn, data.AgentID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) version", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), id)...)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForCreation, "Agent Version", data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -179,7 +192,7 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 
 	output, err := findAgentAliasByTwoPartKey(ctx, conn, data.AgentAliasID.ValueString(), data.AgentID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -187,8 +200,10 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Alias (%s)", data.ID.String()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionReading, ResNameAgentAlias, data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -213,28 +228,48 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !new.AgentAliasName.Equal(old.AgentAliasName) ||
-		!new.Description.Equal(old.Description) ||
-		!new.RoutingConfiguration.Equal(old.RoutingConfiguration) {
-		input := &bedrockagent.UpdateAgentAliasInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	diff, d := fwflex.Diff(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := bedrockagent.UpdateAgentAliasInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateAgentAlias(ctx, input)
+		_, err := conn.UpdateAgentAlias(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Alias (%s)", new.ID.String()), err.Error())
-
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameAgentAlias, new.ID.String(), err),
+				err.Error(),
+			)
 			return
 		}
 
-		if _, err := waitAgentAliasUpdated(ctx, conn, new.AgentAliasID.ValueString(), new.AgentID.ValueString(), r.CreateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Alias (%s) update", new.ID.ValueString()), err.Error())
+		out, err := waitAgentAliasUpdated(ctx, conn, new.AgentAliasID.ValueString(), new.AgentID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
 
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameAgentAlias, new.ID.String(), err),
+				err.Error(),
+			)
 			return
 		}
+
+		response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	// set unknowns if a tags only update
+	if new.RoutingConfiguration.IsUnknown() {
+		new.RoutingConfiguration = old.RoutingConfiguration
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -249,24 +284,23 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
-		AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasID),
-		AgentId:      fwflex.StringFromFramework(ctx, data.AgentID),
-	})
+	input := bedrockagent.DeleteAgentAliasInput{
+		AgentAliasId: data.AgentAliasID.ValueStringPointer(),
+		AgentId:      data.AgentID.ValueStringPointer(),
+	}
+	_, err := conn.DeleteAgentAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Alias (%s)", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameAgentAlias, data.ID.String(), err),
+			err.Error(),
+		)
 		return
 	}
-}
-
-func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) (*awstypes.AgentAlias, error) {
@@ -278,7 +312,7 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetAgentAlias(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -289,17 +323,17 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	}
 
 	if output == nil || output.AgentAlias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentAlias, nil
 }
 
-func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAgentAliasByTwoPartKey(ctx, conn, agentAliasID, agentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -312,7 +346,7 @@ func statusAgentAlias(ctx context.Context, conn *bedrockagent.Client, agentAlias
 }
 
 func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
 		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
@@ -329,7 +363,7 @@ func waitAgentAliasCreated(ctx context.Context, conn *bedrockagent.Client, agent
 }
 
 func waitAgentAliasUpdated(ctx context.Context, conn *bedrockagent.Client, agentAliasID, agentID string, timeout time.Duration) (*awstypes.AgentAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
 		Refresh: statusAgentAlias(ctx, conn, agentAliasID, agentID),
@@ -346,6 +380,7 @@ func waitAgentAliasUpdated(ctx context.Context, conn *bedrockagent.Client, agent
 }
 
 type agentAliasResourceModel struct {
+	framework.WithRegionModel
 	AgentAliasARN        types.String                                                                 `tfsdk:"agent_alias_arn"`
 	AgentAliasID         types.String                                                                 `tfsdk:"agent_alias_id"`
 	AgentAliasName       types.String                                                                 `tfsdk:"agent_alias_name"`
@@ -376,8 +411,13 @@ func (m *agentAliasResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *agentAliasResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AgentAliasID.ValueString(), m.AgentID.ValueString()}, agentAliasResourceIDPartCount, false)))
+func (m *agentAliasResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AgentAliasID.ValueString(),
+		m.AgentID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, agentAliasResourceIDPartCount, false)
 }
 
 type agentAliasRoutingConfigurationListItemModel struct {

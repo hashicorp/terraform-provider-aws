@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -6,19 +6,25 @@ package ec2
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+const (
+	launchTemplateFoundStatus = "Found"
+)
+
+func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAvailabilityZoneGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -30,11 +36,11 @@ func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Clien
 	}
 }
 
-func statusCapacityReservation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCapacityReservation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCapacityReservationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -46,11 +52,11 @@ func statusCapacityReservation(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findCarrierGatewayByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -62,14 +68,14 @@ func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
-func statusFleet(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFleet(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
 		output, err := findFleet(ctx, conn, &ec2.DescribeFleetsInput{
 			FleetIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -81,11 +87,11 @@ func statusFleet(ctx context.Context, conn *ec2.Client, id string) retry.StateRe
 	}
 }
 
-func statusHost(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusHost(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findHostByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -97,14 +103,14 @@ func statusHost(ctx context.Context, conn *ec2.Client, id string) retry.StateRef
 	}
 }
 
-func statusInstance(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstance(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call findInstanceByID as it maps useful status codes to NotFoundError.
 		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
 			InstanceIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -116,11 +122,11 @@ func statusInstance(ctx context.Context, conn *ec2.Client, id string) retry.Stat
 	}
 }
 
-func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		instance, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -142,11 +148,11 @@ func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, conn *ec2.Client, id string, expectedValue *awstypes.CapacityReservationSpecification) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, conn *ec2.Client, id string, expectedValue *awstypes.CapacityReservationSpecification) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -158,11 +164,11 @@ func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, c
 	}
 }
 
-func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -178,11 +184,11 @@ func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2
 	}
 }
 
-func statusInstanceMetadataOptions(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceMetadataOptions(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -198,11 +204,11 @@ func statusInstanceMetadataOptions(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -220,11 +226,33 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
-func statusLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIsName bool) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		var output *awstypes.LaunchTemplate
+		var err error
+		if idIsName {
+			output, err = findLaunchTemplateByName(ctx, conn, id)
+		} else {
+			output, err = findLaunchTemplateByID(ctx, conn, id)
+		}
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, launchTemplateFoundStatus, nil
+	}
+}
+
+func statusLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findLocalGatewayRouteByTwoPartKey(ctx, conn, localGatewayRouteTableID, destinationCIDRBlock)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -236,11 +264,11 @@ func statusLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGateway
 	}
 }
 
-func statusLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findLocalGatewayRouteTableVPCAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -252,11 +280,11 @@ func statusLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.C
 	}
 }
 
-func statusManagedPrefixListState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusManagedPrefixListState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findManagedPrefixListByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -268,11 +296,11 @@ func statusManagedPrefixListState(ctx context.Context, conn *ec2.Client, id stri
 	}
 }
 
-func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findPlacementGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -288,11 +316,11 @@ const (
 	securityGroupStatusCreated = "Created"
 )
 
-func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSecurityGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -304,11 +332,27 @@ func statusSecurityGroup(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
-func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSecurityGroupVPCAssociation(ctx context.Context, conn *ec2.Client, groupID, vpcID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, groupID, vpcID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSpotFleetRequestByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -320,14 +364,14 @@ func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusSpotFleetRequest(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSpotFleetRequest(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call FindSpotFleetRequestByID as it maps useful status codes to NotFoundError.
 		output, err := findSpotFleetRequest(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{
 			SpotFleetRequestIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -339,11 +383,11 @@ func statusSpotFleetRequest(ctx context.Context, conn *ec2.Client, id string) re
 	}
 }
 
-func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSpotInstanceRequestByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -355,11 +399,11 @@ func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusSubnetState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -371,11 +415,11 @@ func statusSubnetState(ctx context.Context, conn *ec2.Client, id string) retry.S
 	}
 }
 
-func statusSubnetIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetIPv6CIDRBlockAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -387,11 +431,11 @@ func statusSubnetIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Cl
 	}
 }
 
-func statusSubnetAssignIPv6AddressOnCreation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetAssignIPv6AddressOnCreation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -403,11 +447,11 @@ func statusSubnetAssignIPv6AddressOnCreation(ctx context.Context, conn *ec2.Clie
 	}
 }
 
-func statusSubnetEnableDNS64(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetEnableDNS64(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -419,11 +463,11 @@ func statusSubnetEnableDNS64(ctx context.Context, conn *ec2.Client, id string) r
 	}
 }
 
-func statusSubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -435,11 +479,11 @@ func statusSubnetEnableLniAtDeviceIndex(ctx context.Context, conn *ec2.Client, i
 	}
 }
 
-func statusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -451,11 +495,11 @@ func statusSubnetEnableResourceNameDNSAAAARecordOnLaunch(ctx context.Context, co
 	}
 }
 
-func statusSubnetEnableResourceNameDNSARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetEnableResourceNameDNSARecordOnLaunch(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -467,11 +511,11 @@ func statusSubnetEnableResourceNameDNSARecordOnLaunch(ctx context.Context, conn 
 	}
 }
 
-func statusSubnetMapCustomerOwnedIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetMapCustomerOwnedIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -483,11 +527,11 @@ func statusSubnetMapCustomerOwnedIPOnLaunch(ctx context.Context, conn *ec2.Clien
 	}
 }
 
-func statusSubnetMapPublicIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetMapPublicIPOnLaunch(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -499,11 +543,11 @@ func statusSubnetMapPublicIPOnLaunch(ctx context.Context, conn *ec2.Client, id s
 	}
 }
 
-func statusSubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSubnetByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -515,11 +559,11 @@ func statusSubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.C
 	}
 }
 
-func statusVolume(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVolume(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findEBSVolumeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -531,11 +575,11 @@ func statusVolume(ctx context.Context, conn *ec2.Client, id string) retry.StateR
 	}
 }
 
-func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -547,11 +591,30 @@ func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, ins
 	}
 }
 
-func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVolumeAttachmentInstanceState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
+			InstanceIds: []string{id},
+		})
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State.Name), nil
+	}
+}
+
+func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVolumeModificationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -563,11 +626,11 @@ func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) 
 	}
 }
 
-func statusVPC(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPC(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPCByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -579,11 +642,11 @@ func statusVPC(ctx context.Context, conn *ec2.Client, id string) retry.StateRefr
 	}
 }
 
-func statusVPCCIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCCIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, _, err := findVPCCIDRBlockAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -595,11 +658,11 @@ func statusVPCCIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, i
 	}
 }
 
-func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, _, err := findVPCIPv6CIDRBlockAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -611,11 +674,11 @@ func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id
 	}
 }
 
-func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		attributeValue, err := findVPCAttribute(ctx, conn, id, attribute)
+func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		attributeValue, err := findVPCAttributeByTwoPartKey(ctx, conn, id, attribute)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -627,11 +690,11 @@ func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, a
 	}
 }
 
-func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNetworkInterfaceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -643,11 +706,11 @@ func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) re
 	}
 }
 
-func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNetworkInterfaceAttachmentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -659,11 +722,11 @@ func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointByID(ctx, conn, id)
+func statusNetworkInterfacePermission(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNetworkInterfacePermissionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -671,7 +734,23 @@ func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.S
 			return nil, "", err
 		}
 
-		return output, string(output.State), nil
+		return output, string(output.PermissionState.State), nil
+	}
+}
+
+func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPCEndpointByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strings.ToLower(string(output.State)), nil
 	}
 }
 
@@ -679,11 +758,11 @@ const (
 	routeStatusReady = "ready"
 )
 
-func statusRoute(ctx context.Context, conn *ec2.Client, routeFinder routeFinder, routeTableID, destination string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRoute(ctx context.Context, conn *ec2.Client, routeFinder routeFinder, routeTableID, destination string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := routeFinder(ctx, conn, routeTableID, destination)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -699,11 +778,11 @@ const (
 	routeTableStatusReady = "ready"
 )
 
-func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findRouteTableByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -715,11 +794,11 @@ func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusRouteTableAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRouteTableAssociation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findRouteTableAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -739,14 +818,14 @@ func statusRouteTableAssociation(ctx context.Context, conn *ec2.Client, id strin
 	}
 }
 
-func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
 		output, err := findVPCEndpointServiceConfiguration(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 			ServiceIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -758,11 +837,11 @@ func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id
 	}
 }
 
-func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointServiceConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -778,11 +857,11 @@ const (
 	vpcEndpointRouteTableAssociationStatusReady = "ready"
 )
 
-func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		err := findVPCEndpointRouteTableAssociationExists(ctx, conn, vpcEndpointID, routeTableID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -794,11 +873,11 @@ func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Clien
 	}
 }
 
-func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -806,15 +885,15 @@ func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Clien
 			return nil, "", err
 		}
 
-		return output, string(output.VpcEndpointState), nil
+		return output, strings.ToLower(string(output.VpcEndpointState)), nil
 	}
 }
 
-func statusVPCEndpointServicePrivateDNSNameConfiguration(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCEndpointServicePrivateDNSNameConfiguration(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPCEndpointServicePrivateDNSNameConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -826,14 +905,14 @@ func statusVPCEndpointServicePrivateDNSNameConfiguration(ctx context.Context, co
 	}
 }
 
-func statusVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call findVPCPeeringConnectionByID as it maps useful status codes to NotFoundError.
 		output, err := findVPCPeeringConnection(ctx, conn, &ec2.DescribeVpcPeeringConnectionsInput{
 			VpcPeeringConnectionIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -845,11 +924,11 @@ func statusVPCPeeringConnectionActive(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func statusVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPCPeeringConnectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -861,11 +940,11 @@ func statusVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.Client, id
 	}
 }
 
-func statusClientVPNEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClientVPNEndpoint(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findClientVPNEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -877,11 +956,11 @@ func statusClientVPNEndpoint(ctx context.Context, conn *ec2.Client, id string) r
 	}
 }
 
-func statusClientVPNEndpointClientConnectResponseOptions(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClientVPNEndpointClientConnectResponseOptions(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -893,11 +972,11 @@ func statusClientVPNEndpointClientConnectResponseOptions(ctx context.Context, co
 	}
 }
 
-func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -909,11 +988,11 @@ func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, end
 	}
 }
 
-func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, associationID, endpointID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, associationID, endpointID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findClientVPNNetworkAssociationByTwoPartKey(ctx, conn, associationID, endpointID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -925,11 +1004,11 @@ func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, as
 	}
 }
 
-func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -941,11 +1020,11 @@ func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, tar
 	}
 }
 
-func statusVPNConnection(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPNConnection(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPNConnectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -957,11 +1036,11 @@ func statusVPNConnection(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
-func statusVPNConnectionRoute(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPNConnectionRoute(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -973,11 +1052,11 @@ func statusVPNConnectionRoute(ctx context.Context, conn *ec2.Client, vpnConnecti
 	}
 }
 
-func statusVPNGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPNGateway(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPNGatewayByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -989,11 +1068,11 @@ func statusVPNGateway(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, vpnGatewayID, vpcID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1005,11 +1084,11 @@ func statusVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGat
 	}
 }
 
-func statusCustomerGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findCustomerGatewayByID(ctx, conn, id)
+func statusVPNConcentrator(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPNConcentratorByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1021,11 +1100,27 @@ func statusCustomerGateway(ctx context.Context, conn *ec2.Client, id string) ret
 	}
 }
 
-func statusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusCustomerGateway(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findCustomerGatewayByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.State), nil
+	}
+}
+
+func statusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.Client, internetGatewayID, vpcID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInternetGatewayAttachment(ctx, conn, internetGatewayID, vpcID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1037,11 +1132,11 @@ func statusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-func statusIPAM(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAM(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIPAMByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1053,11 +1148,11 @@ func statusIPAM(ctx context.Context, conn *ec2.Client, id string) retry.StateRef
 	}
 }
 
-func statusIPAMPool(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAMPool(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIPAMPoolByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1069,12 +1164,12 @@ func statusIPAMPool(ctx context.Context, conn *ec2.Client, id string) retry.Stat
 	}
 }
 
-func statusIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, cidrBlock, poolID, poolCIDRID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, cidrBlock, poolID, poolCIDRID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		if cidrBlock == "" {
 			output, err := findIPAMPoolCIDRByPoolCIDRIDAndPoolID(ctx, conn, poolCIDRID, poolID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil, "", nil
 			}
 
@@ -1087,7 +1182,7 @@ func statusIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, cidrBlock, poolID
 
 		output, err := findIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1099,11 +1194,11 @@ func statusIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, cidrBlock, poolID
 	}
 }
 
-func statusIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIPAMResourceDiscoveryByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1115,11 +1210,11 @@ func statusIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, id strin
 	}
 }
 
-func statusIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIPAMResourceDiscoveryAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1131,11 +1226,11 @@ func statusIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Clien
 	}
 }
 
-func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findIPAMScopeByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1147,11 +1242,11 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 	}
 }
 
-func statusImage(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusImage(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findImageByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1163,11 +1258,11 @@ func statusImage(ctx context.Context, conn *ec2.Client, id string) retry.StateRe
 	}
 }
 
-func statusImageBlockPublicAccess(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusImageBlockPublicAccess(ctx context.Context, conn *ec2.Client) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findImageBlockPublicAccessState(ctx, conn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1179,11 +1274,11 @@ func statusImageBlockPublicAccess(ctx context.Context, conn *ec2.Client) retry.S
 	}
 }
 
-func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1195,11 +1290,27 @@ func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
-func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findTransitGatewayAttachmentByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1211,11 +1322,11 @@ func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id strin
 	}
 }
 
-func statusTransitGatewayConnectPeer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayConnectPeer(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayConnectPeerByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1227,11 +1338,11 @@ func statusTransitGatewayConnectPeer(ctx context.Context, conn *ec2.Client, id s
 	}
 }
 
-func statusTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayMulticastDomainByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1243,11 +1354,11 @@ func statusTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Client, 
 	}
 }
 
-func statusTransitGatewayMulticastDomainAssociation(ctx context.Context, conn *ec2.Client, multicastDomainID, attachmentID, subnetID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayMulticastDomainAssociation(ctx context.Context, conn *ec2.Client, multicastDomainID, attachmentID, subnetID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1259,14 +1370,14 @@ func statusTransitGatewayMulticastDomainAssociation(ctx context.Context, conn *e
 	}
 }
 
-func statusTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call findTransitGatewayPeeringAttachmentByID as it maps useful status codes to NotFoundError.
 		output, err := findTransitGatewayPeeringAttachment(ctx, conn, &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
 			TransitGatewayAttachmentIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1278,11 +1389,11 @@ func statusTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client
 	}
 }
 
-func statusTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1294,11 +1405,11 @@ func statusTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Clie
 	}
 }
 
-func statusTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, destination string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1310,11 +1421,11 @@ func statusTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, tran
 	}
 }
 
-func statusTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayRouteTableByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1326,11 +1437,11 @@ func statusTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client, id st
 	}
 }
 
-func statusTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayPolicyTableByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1342,11 +1453,11 @@ func statusTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, id s
 	}
 }
 
-func statusTransitGatewayPolicyTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayPolicyTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayPolicyTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayPolicyTableID, transitGatewayAttachmentID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1358,11 +1469,11 @@ func statusTransitGatewayPolicyTableAssociation(ctx context.Context, conn *ec2.C
 	}
 }
 
-func statusTransitGatewayRouteTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayRouteTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1374,11 +1485,11 @@ func statusTransitGatewayRouteTableAssociation(ctx context.Context, conn *ec2.Cl
 	}
 }
 
-func statusTransitGatewayRouteTablePropagation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, transitGatewayAttachmentID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayRouteTablePropagation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, transitGatewayAttachmentID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1390,14 +1501,14 @@ func statusTransitGatewayRouteTablePropagation(ctx context.Context, conn *ec2.Cl
 	}
 }
 
-func statusTransitGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusTransitGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		// Don't call findTransitGatewayVPCAttachmentByID as it maps useful status codes to NotFoundError.
 		output, err := findTransitGatewayVPCAttachment(ctx, conn, &ec2.DescribeTransitGatewayVpcAttachmentsInput{
 			TransitGatewayAttachmentIds: []string{id},
 		})
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1409,11 +1520,11 @@ func statusTransitGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, id
 	}
 }
 
-func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocationID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, allocationID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1429,11 +1540,27 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocat
 	}
 }
 
-func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshot(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findSnapshotByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findSnapshotTierStatusBySnapshotID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1445,11 +1572,11 @@ func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1461,11 +1588,11 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findVerifiedAccessEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1477,11 +1604,11 @@ func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id stri
 	}
 }
 
-func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabilityZone, snapshotID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabilityZone, snapshotID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, availabilityZone, snapshotID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1493,11 +1620,11 @@ func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabili
 	}
 }
 
-func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusSnapshotImport(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findImportSnapshotTaskByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1509,11 +1636,11 @@ func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) r
 	}
 }
 
-func statusNATGatewayState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNATGatewayState(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNATGatewayByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1525,11 +1652,11 @@ func statusNATGatewayState(ctx context.Context, conn *ec2.Client, id string) ret
 	}
 }
 
-func statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, conn *ec2.Client, natGatewayID, allocationID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNATGatewayAddressByNATGatewayIDAndAllocationID(ctx, conn, natGatewayID, allocationID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1541,11 +1668,11 @@ func statusNATGatewayAddressByNATGatewayIDAndAllocationID(ctx context.Context, c
 	}
 }
 
-func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *ec2.Client, natGatewayID, privateIP string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx, conn, natGatewayID, privateIP)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1557,11 +1684,34 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 	}
 }
 
-func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusNATGatewayAttachedAppliances(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNATGatewayByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Check if there are any attached appliances that are not in detached state
+		if v := tfslices.Filter(output.AttachedAppliances, func(v awstypes.NatGatewayAttachedAppliance) bool {
+			return v.AttachmentState != awstypes.NatGatewayApplianceStateDetached
+		}); len(v) > 0 {
+			return output, string(v[0].AttachmentState), nil
+		}
+
+		return nil, "", nil
+	}
+}
+
+func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findNetworkInsightsAnalysisByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1570,5 +1720,117 @@ func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id str
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPCBlockPublicAccessOptions(ctx, conn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServer(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerAssociation(ctx context.Context, conn *ec2.Client, routeServerID, vpcID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerAssociationByTwoPartKey(ctx, conn, routeServerID, vpcID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerEndpoint(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerEndpointByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPeer(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPeerByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusRouteServerPropagation(ctx context.Context, conn *ec2.Client, routeServerID, routeTableID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findRouteServerPropagationByTwoPartKey(ctx, conn, routeServerID, routeTableID)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
 	}
 }

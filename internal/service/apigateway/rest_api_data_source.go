@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -23,6 +24,7 @@ import (
 
 // @SDKDataSource("aws_api_gateway_rest_api", name="REST API")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
@@ -50,6 +52,10 @@ func dataSourceRestAPI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						names.AttrIPAddressType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"types": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -88,14 +94,15 @@ func dataSourceRestAPI() *schema.Resource {
 	}
 }
 
-func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	name := d.Get(names.AttrName)
-	inputGRAs := &apigateway.GetRestApisInput{}
 
-	match, err := findRestAPI(ctx, conn, inputGRAs, func(v *types.RestApi) bool {
+	inputGRAs := apigateway.GetRestApisInput{}
+	match, err := findRestAPI(ctx, conn, &inputGRAs, func(v *types.RestApi) bool {
 		return aws.ToString(v.Name) == name
 	})
 
@@ -105,13 +112,13 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(match.Id))
 	d.Set("api_key_source", match.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, c, d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 	d.Set(names.AttrDescription, match.Description)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, c, d.Id()))
 	if match.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
@@ -119,18 +126,17 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set(names.AttrPolicy, match.Policy)
 
-	inputGRs := &apigateway.GetResourcesInput{
+	inputGRs := apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
 	}
-
-	rootResource, err := findResource(ctx, conn, inputGRs, func(v *types.Resource) bool {
+	rootResource, err := findResource(ctx, conn, &inputGRs, func(v *types.Resource) bool {
 		return aws.ToString(v.Path) == "/"
 	})
 
 	switch {
 	case err == nil:
 		d.Set("root_resource_id", rootResource.Id)
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("root_resource_id", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)

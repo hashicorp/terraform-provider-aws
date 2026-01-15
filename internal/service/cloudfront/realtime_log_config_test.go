@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,13 +39,13 @@ func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.#", acctest.Ct1),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.role_arn", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.stream_arn", streamResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "fields.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -78,7 +78,7 @@ func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,13 +108,13 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.#", acctest.Ct1),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.role_arn", role1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.stream_arn", stream1ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "fields.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "timestamp"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -125,13 +125,13 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_updated(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.#", acctest.Ct1),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.role_arn", role2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.stream_arn", stream2ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fields.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "fields.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "cs-host"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "sc-status"),
@@ -159,7 +159,7 @@ func testAccCheckRealtimeLogConfigDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfcloudfront.FindRealtimeLogConfigByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -8,25 +8,24 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Zones")
+// @FrameworkDataSource("aws_route53_zones", name="Zones")
 func newZonesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &zonesDataSource{}, nil
 }
 
 type zonesDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*zonesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_route53_zones"
+	framework.DataSourceWithModel[zonesDataSourceModel]
 }
 
 func (d *zonesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -34,6 +33,7 @@ func (d *zonesDataSource) Schema(ctx context.Context, request datasource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIDs: schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -50,30 +50,26 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 
 	conn := d.Meta().Route53Client(ctx)
 
-	var zoneIDs []string
-	input := &route53.ListHostedZonesInput{}
-	pages := route53.NewListHostedZonesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	input := route53.ListHostedZonesInput{}
+	output, err := findHostedZones(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.HostedZone]())
 
-		if err != nil {
-			response.Diagnostics.AddError("listing Route 53 Hosted Zones", err.Error())
+	if err != nil {
+		response.Diagnostics.AddError("reading Route 53 Hosted Zones", err.Error())
 
-			return
-		}
-
-		for _, v := range page.HostedZones {
-			zoneIDs = append(zoneIDs, cleanZoneID(aws.ToString(v.Id)))
-		}
+		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
-	data.ZoneIDs = fwflex.FlattenFrameworkStringValueList(ctx, zoneIDs)
+	zoneIDs := tfslices.ApplyToAll(output, func(v awstypes.HostedZone) string {
+		return cleanZoneID(aws.ToString(v.Id))
+	})
+
+	data.ID = types.StringValue(d.Meta().Region(ctx))
+	data.ZoneIDs = fwflex.FlattenFrameworkStringValueListOfString(ctx, zoneIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type zonesDataSourceModel struct {
-	ID      types.String `tfsdk:"id"`
-	ZoneIDs types.List   `tfsdk:"ids"`
+	ID      types.String         `tfsdk:"id"`
+	ZoneIDs fwtypes.ListOfString `tfsdk:"ids"`
 }

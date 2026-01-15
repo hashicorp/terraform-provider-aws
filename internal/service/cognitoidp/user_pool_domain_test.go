@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -9,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,11 +35,12 @@ func TestAccCognitoIDPUserPoolDomain_basic(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAWSAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution_arn"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "managed_login_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrS3Bucket),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
@@ -67,7 +69,7 @@ func TestAccCognitoIDPUserPoolDomain_disappears(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +86,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 	resourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
@@ -93,7 +95,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 				Config: testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAWSAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
@@ -123,7 +125,7 @@ func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USEast1RegionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
@@ -141,6 +143,74 @@ func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainCertMatches(ctx, cognitoPoolResourceName, acmUpdatedCertResourceName),
 					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmUpdatedCertResourceName, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPoolDomain_managedLoginVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDomainConfig_managedLoginVersion(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "managed_login_version", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolDomainConfig_managedLoginVersion(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "managed_login_version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPoolDomain_customCustomDomainManagedLoginVersionUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	poolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	acmCertResourceName := "aws_acm_certificate.test"
+	cognitoPoolResourceName := "aws_cognito_user_pool_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDomainConfig_customCustomDomainManagedLoginVersionUpdate(rootDomain, domain, poolName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainExists(ctx, cognitoPoolResourceName),
+					resource.TestCheckResourceAttr(cognitoPoolResourceName, "managed_login_version", "1"),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmCertResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccUserPoolDomainConfig_customCustomDomainManagedLoginVersionUpdate(rootDomain, domain, poolName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolDomainCertMatches(ctx, cognitoPoolResourceName, acmCertResourceName),
+					resource.TestCheckResourceAttr(cognitoPoolResourceName, "managed_login_version", "2"),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmCertResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -173,7 +243,7 @@ func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -233,7 +303,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName)
 }
 
-func testAccUserPoolDomainConfig_custom(rootDomain string, domain string, poolName string) string {
+func testAccUserPoolDomainConfig_custom(rootDomain, domain, poolName string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
@@ -271,7 +341,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 `, rootDomain, domain, poolName)
 }
 
-func testAccUserPoolDomainConfig_customCertUpdate(rootDomain string, domain string, poolName string, appliedCertValidation string) string {
+func testAccUserPoolDomainConfig_customCertUpdate(rootDomain, domain, poolName, appliedCertValidation string) string {
 	return fmt.Sprintf(`
 data "aws_route53_zone" "test" {
   name         = %[1]q
@@ -325,4 +395,59 @@ resource "aws_cognito_user_pool_domain" "test" {
   user_pool_id    = aws_cognito_user_pool.test.id
 }
 `, rootDomain, domain, poolName, appliedCertValidation)
+}
+
+func testAccUserPoolDomainConfig_managedLoginVersion(rName string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+
+  managed_login_version = %[2]d
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+`, rName, version)
+}
+
+func testAccUserPoolDomainConfig_customCustomDomainManagedLoginVersionUpdate(rootDomain, domain, poolName string, version int) string {
+	return fmt.Sprintf(`
+data "aws_route53_zone" "test" {
+  name         = %[1]q
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[2]q
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+  certificate_arn         = aws_acm_certificate.test.arn
+  validation_record_fqdns = [aws_route53_record.test.fqdn]
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[3]q
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  certificate_arn = aws_acm_certificate_validation.test.certificate_arn
+  domain          = aws_acm_certificate.test.domain_name
+  user_pool_id    = aws_cognito_user_pool.test.id
+
+  managed_login_version = %[4]d
+}
+`, rootDomain, domain, poolName, version)
 }

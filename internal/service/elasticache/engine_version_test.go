@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct1,
+			version: "1",
 			valid:   false,
 		},
 		{
@@ -279,6 +279,22 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "7.0",
 			valid:   true,
 		},
+
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2.6",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -495,6 +511,10 @@ func (d *mockForceNewDiffer) Id() string {
 
 func (d *mockForceNewDiffer) Get(key string) any {
 	return d.old
+}
+
+func (d *mockForceNewDiffer) GetOk(key string) (any, bool) {
+	return "", false
 }
 
 func (d *mockForceNewDiffer) HasChange(key string) bool {
@@ -775,6 +795,18 @@ func (d *mockChangesDiffer) GetOk(string) (any, bool) {
 	return nil, false
 }
 
+func (d *mockChangesDiffer) GetRawConfig() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawPlan() cty.Value {
+	return cty.NilVal
+}
+
+func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+	return cty.NilVal
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
 }
@@ -787,7 +819,7 @@ func (d *mockChangesDiffer) GetChange(key string) (any, any) {
 	return d.values[key].GetChange()
 }
 
-func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
+func TestParamGroupNameRequiresEngineOrMajorVersionUpgrade(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
@@ -886,7 +918,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				diff.id = "some id"
 			}
 
-			err := tfelasticache.ParamGroupNameRequiresMajorVersionUpgrade(diff)
+			err := tfelasticache.ParamGroupNameRequiresEngineOrMajorVersionUpgrade(diff)
 
 			if testcase.expectError == nil {
 				if err != nil {

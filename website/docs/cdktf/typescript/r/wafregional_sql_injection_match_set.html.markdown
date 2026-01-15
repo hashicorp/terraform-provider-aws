@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name or description of the SizeConstraintSet.
 * `sqlInjectionMatchTuple` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
 
@@ -107,4 +108,4 @@ Using `terraform import`, import WAF Regional Sql Injection Match Set using the 
 % terraform import aws_wafregional_sql_injection_match_set.sql_injection_match_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-adfcd685dca95982844290477cadf9fa51737f4a170db60101e185299508456a -->
+<!-- cache-key: cdktf-0.20.8 input-9d72dcdedd8a99475a57397ba0706f1c78bf7b29fadcedcb44904c31b5002224 -->

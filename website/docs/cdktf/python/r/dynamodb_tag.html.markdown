@@ -56,7 +56,7 @@ class MyConvertedCode(TerraformStack):
             provider=replica,
             resource_arn=Token.as_string(
                 Fn.replace(example.arn,
-                    Token.as_string(current.name),
+                    Token.as_string(current.region),
                     Token.as_string(data_aws_region_replica.name))),
             value="testvalue"
         )
@@ -66,6 +66,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the DynamoDB resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.
@@ -101,4 +102,4 @@ Using `terraform import`, import `aws_dynamodb_tag` using the DynamoDB resource 
 % terraform import aws_dynamodb_tag.example arn:aws:dynamodb:us-east-1:123456789012:table/example,Name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-75e8bd469b3a6122cab5fe6f134e77c1f13bdbca2f2645fd979c4c90c7684f40 -->
+<!-- cache-key: cdktf-0.20.8 input-7910ba6dfb11b119129555c1dcbc2eacf05bc4c743dde142d81e19a3947d61de -->

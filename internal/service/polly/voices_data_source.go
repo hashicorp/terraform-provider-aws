@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package polly
@@ -18,24 +18,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Voices")
-func newDataSourceVoices(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceVoices{}, nil
+// @FrameworkDataSource("aws_polly_voices", name="Voices")
+func newVoicesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &voicesDataSource{}, nil
 }
 
 const (
 	DSNameVoices = "Voices Data Source"
 )
 
-type dataSourceVoices struct {
-	framework.DataSourceWithConfigure
+type voicesDataSource struct {
+	framework.DataSourceWithModel[voicesDataSourceModel]
 }
 
-func (d *dataSourceVoices) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_polly_voices"
-}
-
-func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *voicesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrEngine: schema.StringAttribute{
@@ -87,15 +83,15 @@ func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequ
 		},
 	}
 }
-func (d *dataSourceVoices) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *voicesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().PollyClient(ctx)
 
-	var data dataSourceVoicesData
+	var data voicesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().AccountID)
+	data.ID = types.StringValue(d.Meta().AccountID(ctx))
 
 	input := &polly.DescribeVoicesInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
@@ -134,7 +130,8 @@ func (d *dataSourceVoices) Read(ctx context.Context, req datasource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceVoicesData struct {
+type voicesDataSourceModel struct {
+	framework.WithRegionModel
 	Engine                         fwtypes.StringEnum[awstypes.Engine]         `tfsdk:"engine"`
 	ID                             types.String                                `tfsdk:"id"`
 	IncludeAdditionalLanguageCodes types.Bool                                  `tfsdk:"include_additional_language_codes"`

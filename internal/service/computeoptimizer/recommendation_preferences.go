@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package computeoptimizer
@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -31,11 +30,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Recommendation Preferences")
+// @FrameworkResource("aws_computeoptimizer_recommendation_preferences", name="Recommendation Preferences")
 func newRecommendationPreferencesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &recommendationPreferencesResource{}
 
@@ -43,12 +43,8 @@ func newRecommendationPreferencesResource(context.Context) (resource.ResourceWit
 }
 
 type recommendationPreferencesResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[recommendationPreferencesResourceModel]
 	framework.WithImportByID
-}
-
-func (*recommendationPreferencesResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_computeoptimizer_recommendation_preferences"
 }
 
 func (r *recommendationPreferencesResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -75,7 +71,7 @@ func (r *recommendationPreferencesResource) Schema(ctx context.Context, request 
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance)...),
+					stringvalidator.OneOf(enum.Slice(awstypes.ResourceTypeAutoScalingGroup, awstypes.ResourceTypeEc2Instance, awstypes.ResourceTypeRdsDbInstance, awstypes.ResourceTypeAuroraDbClusterStorage)...),
 				},
 			},
 			"savings_estimation_mode": schema.StringAttribute{
@@ -220,7 +216,12 @@ func (r *recommendationPreferencesResource) Create(ctx context.Context, request 
 	}
 
 	// Set values for unknowns.
-	data.setID(ctx)
+	id, err := data.setID(ctx)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("flattening resource ID Compute Optimizer Recommendation Preferences (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	// Read the resource to get other Computed attribute values.
 	scope := fwdiag.Must(data.Scope.ToPtr(ctx))
@@ -255,7 +256,7 @@ func (r *recommendationPreferencesResource) Read(ctx context.Context, request re
 	scope := fwdiag.Must(data.Scope.ToPtr(ctx))
 	output, err := findRecommendationPreferencesByThreePartKey(ctx, conn, data.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -391,8 +392,7 @@ func findRecommendationPreferenceses(ctx context.Context, conn *computeoptimizer
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -407,6 +407,7 @@ func findRecommendationPreferenceses(ctx context.Context, conn *computeoptimizer
 }
 
 type recommendationPreferencesResourceModel struct {
+	framework.WithRegionModel
 	EnhancedInfrastructureMetrics fwtypes.StringEnum[awstypes.EnhancedInfrastructureMetrics]      `tfsdk:"enhanced_infrastructure_metrics"`
 	ExternalMetricsPreference     fwtypes.ListNestedObjectValueOf[externalMetricsPreferenceModel] `tfsdk:"external_metrics_preference"`
 	ID                            types.String                                                    `tfsdk:"id"`
@@ -439,9 +440,15 @@ func (m *recommendationPreferencesResourceModel) InitFromID(ctx context.Context)
 	return nil
 }
 
-func (m *recommendationPreferencesResourceModel) setID(ctx context.Context) {
+func (m *recommendationPreferencesResourceModel) setID(ctx context.Context) (string, error) {
 	scope := fwdiag.Must(m.Scope.ToPtr(ctx))
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.ResourceType.ValueString(), scope.Name.ValueString(), scope.Value.ValueString()}, recommendationPreferencesResourceIDPartCount, false)))
+	parts := []string{
+		m.ResourceType.ValueString(),
+		scope.Name.ValueString(),
+		scope.Value.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, recommendationPreferencesResourceIDPartCount, false)
 }
 
 type externalMetricsPreferenceModel struct {

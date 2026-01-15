@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -80,6 +80,10 @@ func dataSourceEmailIdentity() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
+			"verification_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -92,9 +96,10 @@ const (
 	dsNameEmailIdentity = "Email Identity Data Source"
 )
 
-func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.SESV2Client(ctx)
 
 	name := d.Get("email_identity").(string)
 
@@ -103,26 +108,23 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameEmailIdentity, name, err)
 	}
 
-	arn := emailIdentityARN(meta, name)
-
 	d.SetId(name)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, emailIdentityARN(ctx, c, name))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", name)
-
 	if out.DkimAttributes != nil {
 		tfMap := flattenDKIMAttributes(out.DkimAttributes)
 		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
-		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dkim_signing_attributes", []any{tfMap}); err != nil {
 			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameEmailIdentity, name, err)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)
 	}
-
-	d.Set("identity_type", string(out.IdentityType))
+	d.Set("identity_type", out.IdentityType)
+	d.Set("verification_status", out.VerificationStatus)
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return diags

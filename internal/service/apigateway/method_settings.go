@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -119,13 +121,13 @@ func resourceMethodSettings() *schema.Resource {
 	}
 }
 
-func flattenMethodSettings(apiObject *types.MethodSetting) []interface{} {
+func flattenMethodSettings(apiObject *types.MethodSetting) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	return []interface{}{
-		map[string]interface{}{
+	return []any{
+		map[string]any{
 			"metrics_enabled":                            apiObject.MetricsEnabled,
 			"logging_level":                              apiObject.LoggingLevel,
 			"data_trace_enabled":                         apiObject.DataTraceEnabled,
@@ -140,13 +142,13 @@ func flattenMethodSettings(apiObject *types.MethodSetting) []interface{} {
 	}
 }
 
-func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	settings, err := findMethodSettingsByThreePartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string), d.Get("method_path").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,7 +165,7 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -175,7 +177,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "metrics/enabled"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.metrics_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.metrics_enabled").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.logging_level") {
@@ -189,14 +191,14 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "logging/dataTrace"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.data_trace_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.data_trace_enabled").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_burst_limit") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "throttling/burstLimit"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.throttling_burst_limit").(int))),
+			Value: aws.String(strconv.Itoa(d.Get("settings.0.throttling_burst_limit").(int))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_rate_limit") {
@@ -210,28 +212,28 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/enabled"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.caching_enabled").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.caching_enabled").(bool))),
 		})
 	}
 	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", v.(int))),
+			Value: aws.String(strconv.Itoa(v.(int))),
 		})
 	}
 	if d.HasChange("settings.0.cache_data_encrypted") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/dataEncrypted"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.cache_data_encrypted").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.cache_data_encrypted").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.require_authorization_for_cache_control") {
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/requireAuthorizationForCacheControl"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.require_authorization_for_cache_control").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("settings.0.require_authorization_for_cache_control").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.unauthorized_cache_control_header_strategy") {
@@ -245,13 +247,13 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	id := apiID + "-" + stageName + "-" + methodPath
-	input := &apigateway.UpdateStageInput{
+	input := apigateway.UpdateStageInput{
 		PatchOperations: ops,
 		RestApiId:       aws.String(apiID),
 		StageName:       aws.String(stageName),
 	}
 
-	_, err := conn.UpdateStage(ctx, input)
+	_, err := conn.UpdateStage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage (%s): %s", id, err)
@@ -264,11 +266,11 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceMethodSettingsRead(ctx, d, meta)...)
 }
 
-func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateStageInput{
+	input := apigateway.UpdateStageInput{
 		PatchOperations: []types.PatchOperation{
 			{
 				Op:   types.OpRemove,
@@ -279,7 +281,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 
-	_, err := conn.UpdateStage(ctx, input)
+	_, err := conn.UpdateStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -297,7 +299,7 @@ func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME/METHOD-PATH", d.Id())
@@ -322,7 +324,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

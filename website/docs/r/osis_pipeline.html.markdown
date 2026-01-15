@@ -45,7 +45,7 @@ resource "aws_osis_pipeline" "example" {
                 - s3:
                     aws:
                       sts_role_arn: "${aws_iam_role.example.arn}"
-                      region: "${data.aws_region.current.name}"
+                      region: "${data.aws_region.current.region}"
                     bucket: "example"
                     threshold:
                       event_collect_timeout: "60s"
@@ -79,9 +79,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `buffer_options` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`buffer_options`](#buffer_options) below.
 * `encryption_at_rest_options` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryption_at_rest_options`](#encryption_at_rest_options) below.
 * `log_publishing_options` - (Optional) Key-value pairs to configure log publishing. See [`log_publishing_options`](#log_publishing_options) below.
+* `pipeline_role_arn` - (Optional) ARN of the IAM role that grants the pipeline permission to access AWS resources.
 * `tags` - (Optional) A map of tags to assign to the pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Container for the values required to configure VPC access for the pipeline. If you don't specify these values, OpenSearch Ingestion creates the pipeline with a public endpoint. See [`vpc_options`](#vpc_options) below.
 
@@ -106,6 +108,7 @@ The following arguments are optional:
 
 * `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoint.
 * `security_group_ids` - (Optional) A list of security groups associated with the VPC endpoint.
+* `vpc_endpoint_management` - (Optional) Whether you or Amazon OpenSearch Ingestion service create and manage the VPC endpoint configured for the pipeline. Valid values are `CUSTOMER` or `SERVICE`
 
 ## Attribute Reference
 

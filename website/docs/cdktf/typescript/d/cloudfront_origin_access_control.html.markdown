@@ -38,12 +38,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `id` (Required) -  The identifier for the origin access control settings. For example: `E2T5VTFBZJ3BJB`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin access control ARN.
 * `description` - A description of the origin access control.
 * `etag` - Current version of the origin access control's information. For example: `E2QWRUHAPOMQZL`.
 * `name` - A name to identify the origin access control.
@@ -51,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `signingBehavior` - Specifies which requests CloudFront signs.
 * `signingProtocol` - The signing protocol of the origin access control, which determines how CloudFront signs (authenticates) requests.
 
-<!-- cache-key: cdktf-0.20.1 input-d5d6bf9fddc15f4e3279f7cb24d7a6a24a6521b6ab3281bd8fa47bc5b7bade5f -->
+<!-- cache-key: cdktf-0.20.8 input-fd1d85f23cc9e9eb5f59a994884187b885d4a31d99715b2293deb94928e6c5a0 -->

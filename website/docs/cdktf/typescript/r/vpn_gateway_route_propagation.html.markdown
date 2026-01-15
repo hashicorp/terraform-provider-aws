@@ -41,8 +41,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `vpnGatewayId` - The id of the `aws_vpn_gateway` to propagate routes from.
 * `routeTableId` - The id of the `aws_route_table` to propagate routes into.
 
@@ -57,4 +58,4 @@ This resource exports no additional attributes.
 - `create` - (Default `2m`)
 - `delete` - (Default `2m`)
 
-<!-- cache-key: cdktf-0.20.1 input-1c3c2e8d2f812de0afe226b6fe030874cca2a61ce5a4b402872d573b9b0adc66 -->
+<!-- cache-key: cdktf-0.20.8 input-7caecf96130f8a679376c032adf125cf28285804b2486f9dc36fc09bb045b365 -->

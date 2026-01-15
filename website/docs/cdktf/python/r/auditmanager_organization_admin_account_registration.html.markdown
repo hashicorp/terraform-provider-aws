@@ -29,14 +29,15 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         AuditmanagerOrganizationAdminAccountRegistration(self, "example",
-            admin_account_id="012345678901"
+            admin_account_id="123456789012"
         )
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `admin_account_id` - (Required) Identifier for the organization administrator account.
 
 ## Attribute Reference
@@ -62,13 +63,13 @@ from imports.aws.auditmanager_organization_admin_account_registration import Aud
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        AuditmanagerOrganizationAdminAccountRegistration.generate_config_for_import(self, "example", "012345678901 ")
+        AuditmanagerOrganizationAdminAccountRegistration.generate_config_for_import(self, "example", "123456789012 ")
 ```
 
 Using `terraform import`, import Audit Manager Organization Admin Account Registration using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_organization_admin_account_registration.example 012345678901 
+% terraform import aws_auditmanager_organization_admin_account_registration.example 123456789012 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-73a8d01ece65d6322ccb932f7e3936fdefadced313d0732bd4dd6da49b4ca658 -->
+<!-- cache-key: cdktf-0.20.8 input-91c7acf4c230e940acb6ae534c7176427645285d63b7be072a89ba2d53dcc2ea -->

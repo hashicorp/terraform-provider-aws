@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -76,6 +76,7 @@ const (
 	errCodeInvalidParameterValue                                   = "InvalidParameterValue"
 	errCodeInvalidPermissionDuplicate                              = "InvalidPermission.Duplicate"
 	errCodeInvalidPermissionNotFound                               = "InvalidPermission.NotFound"
+	errCodeInvalidPermissionIDNotFound                             = "InvalidPermissionID.NotFound"
 	errCodeInvalidPlacementGroupUnknown                            = "InvalidPlacementGroup.Unknown"
 	errCodeInvalidPoolIDNotFound                                   = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                             = "InvalidPrefixListID.NotFound"
@@ -84,6 +85,11 @@ const (
 	errCodeInvalidPublicIpv4PoolIDNotFound                         = "InvalidPublicIpv4PoolID.NotFound" // nosemgrep:ci.caps5-in-const-name,ci.caps5-in-var-name
 	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
+	errCodeInvalidRouteServerEndpointIdNotFound                    = "InvalidRouteServerEndpointId.NotFound"
+	errCodeInvalidRouteServerIdNotAssociated                       = "InvalidRouteServerId.NotAssociated"
+	errCodeInvalidRouteServerIdNotFound                            = "InvalidRouteServerId.NotFound"
+	errCodeInvalidRouteServerIdNotPropagated                       = "InvalidRouteServerId.NotPropagated"
+	errCodeInvalidRouteServerPeerIdNotFound                        = "InvalidRouteServerPeerId.NotFound"
 	errCodeInvalidRouteTableIDNotFound                             = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                             = "InvalidRouteTableId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                          = "InvalidSecurityGroupID.NotFound"
@@ -109,13 +115,17 @@ const (
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound          = "InvalidTransitGatewayMulticastDomainId.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableAssociationNotFound     = "InvalidTransitGatewayPolicyTableAssociation.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound              = "InvalidTransitGatewayPolicyTableId.NotFound"
+	errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound          = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound                = "InvalidVpcCidrBlockAssociationID.NotFound"
+	errCodeInvalidVPCEncryptionControlIdNotFound                   = "InvalidVpcEncryptionControlId.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                            = "InvalidVpcEndpointId.NotFound"
 	errCodeInvalidVPCEndpointNotFound                              = "InvalidVpcEndpoint.NotFound"
 	errCodeInvalidVPCEndpointServiceIdNotFound                     = "InvalidVpcEndpointServiceId.NotFound"
 	errCodeInvalidVPCEndpointServiceNotFound                       = "InvalidVpcEndpointService.NotFound"
 	errCodeInvalidVPCIDNotFound                                    = "InvalidVpcID.NotFound"
 	errCodeInvalidVPCPeeringConnectionIDNotFound                   = "InvalidVpcPeeringConnectionID.NotFound"
+	errCodeInvalidVPNConcentratorIDNotFound                        = "InvalidVpnConcentratorID.NotFound"
+	errCodeInvalidVPNConcentratorIdNotFound                        = "InvalidVpnConcentratorId.NotFound"
 	errCodeInvalidVPNConnectionIDNotFound                          = "InvalidVpnConnectionID.NotFound"
 	errCodeInvalidVPNGatewayAttachmentNotFound                     = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                             = "InvalidVpnGatewayID.NotFound"
@@ -134,6 +144,7 @@ const (
 	errCodeTransitGatewayMulticastGroupMemberNotFound              = "TransitGatewayMulticastGroupMember.NotFound"
 	errCodeTransitGatewayMulticastGroupSourceNotFound              = "TransitGatewayMulticastGroupSource.NotFound"
 	errCodeTransitGatewayRouteTablePropagationNotFound             = "TransitGatewayRouteTablePropagation.NotFound"
+	errCodeUnauthorizedOperation                                   = "UnauthorizedOperation"
 	errCodeUnsupportedOperation                                    = "UnsupportedOperation"
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"

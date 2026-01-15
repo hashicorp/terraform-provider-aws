@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -32,7 +32,7 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetDataSourceConfig_basic(rName, rInt),
@@ -201,7 +201,7 @@ func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
 			{
 				Config: testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", acctest.Ct1),
+					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
 		},

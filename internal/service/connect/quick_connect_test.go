@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,14 +39,14 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/transfer-destination/{quick_connect_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
 
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -62,14 +62,14 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/transfer-destination/{quick_connect_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
 
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -85,14 +85,14 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "connect", "instance/{instance_id}/transfer-destination/{quick_connect_id}"),
 					resource.TestCheckResourceAttrSet(resourceName, "quick_connect_id"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.quick_connect_type", "PHONE_NUMBER"),
-					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678913"),
 
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 		},
@@ -118,7 +118,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 				),
 			},
@@ -131,7 +131,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_tags(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -140,7 +140,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_tagsUpdated(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -167,7 +167,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceQuickConnect(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -207,7 +207,7 @@ func testAccCheckQuickConnectDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfconnect.FindQuickConnectByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["quick_connect_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

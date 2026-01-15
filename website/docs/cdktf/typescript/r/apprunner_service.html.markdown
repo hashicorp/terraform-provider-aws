@@ -160,6 +160,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoScalingConfigurationArn` - ARN of an App Runner automatic scaling configuration resource that you want to associate with your service. If not provided, App Runner associates the latest revision of a default auto scaling configuration.
 * `encryptionConfiguration` - (Forces new resource) An optional custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [Encryption Configuration](#encryption-configuration) below for more details.
 * `healthCheckConfiguration` - Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
@@ -311,6 +312,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_service.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:service/example-app-service/8fe1e10304f84fd2b0df550fe98a71fa"
+  }
+}
+
+resource "aws_apprunner_service" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner service.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner Services using the `arn`. For example:
 
 ```typescript
@@ -341,4 +363,4 @@ Using `terraform import`, import App Runner Services using the `arn`. For exampl
 % terraform import aws_apprunner_service.example arn:aws:apprunner:us-east-1:1234567890:service/example/0a03292a89764e5882c41d8f991c82fe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-49b6751d647a49c3c3492d7fba17d8ea4f9304c7977e4bcce52e5ef6a905c952 -->
+<!-- cache-key: cdktf-0.20.8 input-e81ed236b80ace3693ad0f0b0d4d2448dcd36f51f2c29d05be739b8cec9c2987 -->

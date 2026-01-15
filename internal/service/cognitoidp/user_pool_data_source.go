@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -20,35 +20,20 @@ import (
 
 // @FrameworkDataSource("aws_cognito_user_pool", name="User Pool")
 // @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &userPoolDataSource{}, nil
 }
 
 type userPoolDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*userPoolDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_cognito_user_pool"
+	framework.DataSourceWithModel[userPoolDataSourceModel]
 }
 
 func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"account_recovery_setting": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[accountRecoverySettingTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[accountRecoverySettingTypeModel](ctx),
-				},
-			},
-			"admin_create_user_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[adminCreateUserConfigTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[adminCreateUserConfigTypeModel](ctx),
-				},
-			},
+			"account_recovery_setting": framework.DataSourceComputedListOfObjectAttribute[accountRecoverySettingTypeModel](ctx),
+			"admin_create_user_config": framework.DataSourceComputedListOfObjectAttribute[adminCreateUserConfigTypeModel](ctx),
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
@@ -67,34 +52,16 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			names.AttrDeletionProtection: schema.StringAttribute{
 				Computed: true,
 			},
-			"device_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[deviceConfigurationTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[deviceConfigurationTypeModel](ctx),
-				},
-			},
+			"device_configuration": framework.DataSourceComputedListOfObjectAttribute[deviceConfigurationTypeModel](ctx),
 			names.AttrDomain: schema.StringAttribute{
 				Computed: true,
 			},
-			"email_configuration": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[emailConfigurationTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[emailConfigurationTypeModel](ctx),
-				},
-			},
+			"email_configuration": framework.DataSourceComputedListOfObjectAttribute[emailConfigurationTypeModel](ctx),
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			"lambda_config": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaConfigTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[lambdaConfigTypeModel](ctx),
-				},
-			},
+			names.AttrID:    framework.IDAttribute(),
+			"lambda_config": framework.DataSourceComputedListOfObjectAttribute[lambdaConfigTypeModel](ctx),
 			"last_modified_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -105,13 +72,7 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
 			},
-			"schema_attributes": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[schemaAttributeTypeModel](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[schemaAttributeTypeModel](ctx),
-				},
-			},
+			"schema_attributes": framework.DataSourceComputedListOfObjectAttribute[schemaAttributeTypeModel](ctx),
 			"sms_authentication_message": schema.StringAttribute{
 				Computed: true,
 			},
@@ -121,7 +82,8 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			"sms_verification_message": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:      tftags.TagsAttributeComputedOnly(),
+			"user_pool_add_ons": framework.DataSourceComputedListOfObjectAttribute[userPoolAddOnTypeModel](ctx),
 			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
@@ -162,12 +124,18 @@ func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	data.ID = data.UserPoolID
-	data.Tags = data.UserPoolTags
+
+	// Cannot use Transparent Tagging because of UserPoolTags
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
+	tags := keyValueTags(ctx, output.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	data.UserPoolTags = data.Tags
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type userPoolDataSourceModel struct {
+	framework.WithRegionModel
 	AccountRecoverySetting   fwtypes.ListNestedObjectValueOf[accountRecoverySettingTypeModel] `tfsdk:"account_recovery_setting"`
 	AdminCreateUserConfig    fwtypes.ListNestedObjectValueOf[adminCreateUserConfigTypeModel]  `tfsdk:"admin_create_user_config"`
 	ARN                      types.String                                                     `tfsdk:"arn"`
@@ -189,6 +157,7 @@ type userPoolDataSourceModel struct {
 	SMSConfigurationFailure  types.String                                                     `tfsdk:"sms_configuration_failure"`
 	SMSVerificationMessage   types.String                                                     `tfsdk:"sms_verification_message"`
 	Tags                     tftags.Map                                                       `tfsdk:"tags"`
+	UserPoolAddOns           fwtypes.ListNestedObjectValueOf[userPoolAddOnTypeModel]          `tfsdk:"user_pool_add_ons"`
 	UserPoolID               types.String                                                     `tfsdk:"user_pool_id"`
 	UserPoolTags             tftags.Map                                                       `tfsdk:"user_pool_tags"`
 	UsernameAttributes       fwtypes.ListValueOf[types.String]                                `tfsdk:"username_attributes"`
@@ -268,6 +237,15 @@ type schemaAttributeTypeModel struct {
 	NumberAttributeConstraints fwtypes.ListNestedObjectValueOf[numberAttributeConstraintsTypeModel] `tfsdk:"number_attribute_constraints"`
 	Required                   types.Bool                                                           `tfsdk:"required"`
 	StringAttributeConstraints fwtypes.ListNestedObjectValueOf[stringAttributeConstraintsTypeModel] `tfsdk:"string_attribute_constraints"`
+}
+
+type userPoolAddOnTypeModel struct {
+	AdvancedSecurityAdditionalFlows fwtypes.ListNestedObjectValueOf[advancedSecurityAdditionalFlowsTypeModel] `tfsdk:"advanced_security_additional_flows"`
+	AdvancedSecurityMode            types.String                                                              `tfsdk:"advanced_security_mode"`
+}
+
+type advancedSecurityAdditionalFlowsTypeModel struct {
+	CustomAuthMode types.String `tfsdk:"custom_auth_mode"`
 }
 
 type numberAttributeConstraintsTypeModel struct {

@@ -61,6 +61,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Amazon Resource Name (ARN) of the custom accelerator.
+* `arn` - The Amazon Resource Name (ARN) of the custom accelerator.
 * `dns_name` - The DNS name of the accelerator. For example, `a5d53ff5ee6bca4ce.awsglobalaccelerator.com`.
 * `hosted_zone_id` --  The Global Accelerator Route 53 zone ID that can be used to
   route an [Alias Resource Record Set][1] to the Global Accelerator. This attribute
@@ -83,6 +84,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_custom_routing_accelerator.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  }
+}
+
+resource "aws_globalaccelerator_custom_routing_accelerator" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator custom routing accelerator.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator custom routing accelerators using the `arn`. For example:
 
@@ -107,4 +129,4 @@ Using `terraform import`, import Global Accelerator custom routing accelerators 
 % terraform import aws_globalaccelerator_custom_routing_accelerator.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-765641ba0d03ea8679c57c2c3557a0495cf7d72f403588b6664a9e2b49f09bcd -->
+<!-- cache-key: cdktf-0.20.8 input-b3e4ff483ae5e15a975aa6a6b5d216ec48d57f88a7c910035df7dee6b4d6fd87 -->

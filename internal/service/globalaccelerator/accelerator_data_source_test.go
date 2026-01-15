@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -84,7 +84,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 }
 
 data "aws_globalaccelerator_accelerator" "test_by_arn" {
-  arn = aws_globalaccelerator_accelerator.test.id
+  arn = aws_globalaccelerator_accelerator.test.arn
 }
 
 data "aws_globalaccelerator_accelerator" "test_by_name" {

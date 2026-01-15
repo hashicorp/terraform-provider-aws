@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -17,33 +17,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Snapshot Copy")
-func newResourceSnapshotCopy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceSnapshotCopy{}, nil
+// @FrameworkResource("aws_redshift_snapshot_copy", name="Snapshot Copy")
+func newSnapshotCopyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &snapshotCopyResource{}, nil
 }
 
 const (
 	ResNameSnapshotCopy = "Snapshot Copy"
 )
 
-type resourceSnapshotCopy struct {
-	framework.ResourceWithConfigure
+type snapshotCopyResource struct {
+	framework.ResourceWithModel[snapshotCopyResourceModel]
 }
 
-func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshift_snapshot_copy"
-}
-
-func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *snapshotCopyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrClusterIdentifier: schema.StringAttribute{
@@ -84,10 +79,10 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func (r *resourceSnapshotCopy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *snapshotCopyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan resourceSnapshotCopyData
+	var plan snapshotCopyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -120,17 +115,17 @@ func (r *resourceSnapshotCopy) Create(ctx context.Context, req resource.CreateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSnapshotCopy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *snapshotCopyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceSnapshotCopyData
+	var state snapshotCopyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findSnapshotCopyByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -146,10 +141,10 @@ func (r *resourceSnapshotCopy) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSnapshotCopy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *snapshotCopyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var plan, state resourceSnapshotCopyData
+	var plan, state snapshotCopyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -184,10 +179,10 @@ func (r *resourceSnapshotCopy) Update(ctx context.Context, req resource.UpdateRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *snapshotCopyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RedshiftClient(ctx)
 
-	var state resourceSnapshotCopyData
+	var state snapshotCopyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -212,50 +207,13 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 	}
 }
 
-func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+func (r *snapshotCopyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrClusterIdentifier), req, resp)
 }
 
-func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {
-	in := &redshift.DescribeClustersInput{
-		ClusterIdentifier: aws.String(id),
-	}
-
-	out, err := conn.DescribeClusters(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-	// API should return a ClusterNotFound fault in this case, but check length for
-	// extra safety
-	if len(out.Clusters) == 0 {
-		return nil, &retry.NotFoundError{
-			LastError:   errors.New("not found"),
-			LastRequest: in,
-		}
-	}
-	if out.Clusters[0].ClusterSnapshotCopyStatus == nil {
-		return nil, &retry.NotFoundError{
-			LastError:   errors.New("snapshot copy not enabled"),
-			LastRequest: in,
-		}
-	}
-
-	return out.Clusters[0].ClusterSnapshotCopyStatus, nil
-}
-
-type resourceSnapshotCopyData struct {
+type snapshotCopyResourceModel struct {
+	framework.WithRegionModel
 	ID                            types.String `tfsdk:"id"`
 	ClusterIdentifier             types.String `tfsdk:"cluster_identifier"`
 	DestinationRegion             types.String `tfsdk:"destination_region"`

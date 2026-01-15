@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -15,12 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,14 +34,10 @@ func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWith
 }
 
 type ebsFastSnapshotRestoreResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[ebsFastSnapshotRestoreResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*ebsFastSnapshotRestoreResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ebs_fast_snapshot_restore"
 }
 
 func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -85,12 +80,12 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 
 	availabilityZone := data.AvailabilityZone.ValueString()
 	snapshotID := data.SnapshotID.ValueString()
-	input := &ec2.EnableFastSnapshotRestoresInput{
+	input := ec2.EnableFastSnapshotRestoresInput{
 		AvailabilityZones: []string{availabilityZone},
 		SourceSnapshotIds: []string{snapshotID},
 	}
 
-	output, err := conn.EnableFastSnapshotRestores(ctx, input)
+	output, err := conn.EnableFastSnapshotRestores(ctx, &input)
 
 	if err == nil && output != nil {
 		err = enableFastSnapshotRestoreItemsError(output.Unsuccessful)
@@ -103,7 +98,12 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating EC2 EBS Fast Snapshot Restore", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	v, err := waitFastSnapshotRestoreCreated(ctx, conn, availabilityZone, snapshotID, r.CreateTimeout(ctx, data.Timeouts))
 
@@ -135,7 +135,7 @@ func (r *ebsFastSnapshotRestoreResource) Read(ctx context.Context, request resou
 
 	v, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, data.AvailabilityZone.ValueString(), data.SnapshotID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -164,10 +164,11 @@ func (r *ebsFastSnapshotRestoreResource) Delete(ctx context.Context, request res
 
 	availabilityZone := data.AvailabilityZone.ValueString()
 	snapshotID := data.SnapshotID.ValueString()
-	_, err := conn.DisableFastSnapshotRestores(ctx, &ec2.DisableFastSnapshotRestoresInput{
+	input := ec2.DisableFastSnapshotRestoresInput{
 		AvailabilityZones: []string{availabilityZone},
 		SourceSnapshotIds: []string{snapshotID},
-	})
+	}
+	_, err := conn.DisableFastSnapshotRestores(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 EBS Fast Snapshot Restore (%s)", data.ID.ValueString()), err.Error())
@@ -183,6 +184,7 @@ func (r *ebsFastSnapshotRestoreResource) Delete(ctx context.Context, request res
 }
 
 type ebsFastSnapshotRestoreResourceModel struct {
+	framework.WithRegionModel
 	AvailabilityZone types.String   `tfsdk:"availability_zone"`
 	ID               types.String   `tfsdk:"id"`
 	SnapshotID       types.String   `tfsdk:"snapshot_id"`
@@ -208,6 +210,11 @@ func (data *ebsFastSnapshotRestoreResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *ebsFastSnapshotRestoreResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AvailabilityZone.ValueString(), data.SnapshotID.ValueString()}, ebsFastSnapshotRestoreIDPartCount, false)))
+func (data *ebsFastSnapshotRestoreResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AvailabilityZone.ValueString(),
+		data.SnapshotID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ebsFastSnapshotRestoreIDPartCount, false)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts
@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,24 +36,26 @@ const (
 	ResNameRotation = "Rotation"
 )
 
-// @FrameworkResource(name="Rotation")
+// @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
-func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRotation{}
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
+// Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
+// @Testing(identityRegionOverrideTest=false)
+// @Testing(preIdentityVersion="v5.100.0")
+func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &rotationResource{}
 
 	return r, nil
 }
 
-type resourceRotation struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+type rotationResource struct {
+	framework.ResourceWithModel[rotationResourceModel]
+	framework.WithImportByIdentity
 }
 
-func (r *resourceRotation) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_ssmcontacts_rotation"
-}
-
-func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *rotationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -109,7 +112,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 						"shift_coverages": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[shiftCoveragesData](ctx),
 							PlanModifiers: []planmodifier.List{
-								ShiftCoveragesPlanModifier(),
+								shiftCoveragesPlanModifier(),
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
@@ -187,9 +190,9 @@ func handOffTimeSchema(ctx context.Context, size *int) schema.ListNestedBlock {
 	return listSchema
 }
 
-func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *rotationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var plan resourceRotationData
+	var plan rotationResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 
@@ -237,8 +240,8 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 		ContactIds:       fwflex.ExpandFrameworkStringValueList(ctx, plan.ContactIds),
 		Name:             fwflex.StringFromFramework(ctx, plan.Name),
 		Recurrence: &awstypes.RecurrenceSettings{
-			NumberOfOnCalls:      fwflex.Int32FromFramework(ctx, recurrenceData.NumberOfOnCalls),
-			RecurrenceMultiplier: fwflex.Int32FromFramework(ctx, recurrenceData.RecurrenceMultiplier),
+			NumberOfOnCalls:      fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.NumberOfOnCalls),
+			RecurrenceMultiplier: fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.RecurrenceMultiplier),
 			DailySettings:        dailySettingsOutput.Data,
 			MonthlySettings:      monthlySettingsOutput.Data,
 			ShiftCoverages:       shiftCoverages,
@@ -267,9 +270,9 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRotation) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *rotationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state resourceRotationData
+	var state rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -279,7 +282,7 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 
 	output, err := findRotationByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -293,8 +296,8 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	rc := &recurrenceData{}
-	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFrameworkInt64(ctx, output.Recurrence.NumberOfOnCalls)
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
@@ -327,9 +330,9 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *rotationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state, plan resourceRotationData
+	var state, plan rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -383,8 +386,8 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 		input := &ssmcontacts.UpdateRotationInput{
 			RotationId: fwflex.StringFromFramework(ctx, state.ID),
 			Recurrence: &awstypes.RecurrenceSettings{
-				NumberOfOnCalls:      fwflex.Int32FromFramework(ctx, recurrenceData.NumberOfOnCalls),
-				RecurrenceMultiplier: fwflex.Int32FromFramework(ctx, recurrenceData.RecurrenceMultiplier),
+				NumberOfOnCalls:      fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.NumberOfOnCalls),
+				RecurrenceMultiplier: fwflex.Int32FromFrameworkInt64(ctx, recurrenceData.RecurrenceMultiplier),
 				DailySettings:        dailySettingsOutput.Data,
 				MonthlySettings:      monthlySettingsOutput.Data,
 				ShiftCoverages:       shiftCoverages,
@@ -409,9 +412,9 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *rotationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().SSMContactsClient(ctx)
-	var state resourceRotationData
+	var state rotationResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
@@ -419,7 +422,7 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	tflog.Debug(ctx, "deleting TODO", map[string]any{
 		names.AttrID: state.ID.ValueString(),
 	})
 
@@ -440,11 +443,8 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *resourceRotation) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-type resourceRotationData struct {
+type rotationResourceModel struct {
+	framework.WithRegionModel
 	ARN        types.String                                    `tfsdk:"arn"`
 	ContactIds fwtypes.ListValueOf[types.String]               `tfsdk:"contact_ids"`
 	ID         types.String                                    `tfsdk:"id"`
@@ -518,12 +518,12 @@ func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, dia
 
 			cTimes = append(cTimes, awstypes.CoverageTime{
 				End: &awstypes.HandOffTime{
-					HourOfDay:    fwflex.Int32ValueFromFramework(ctx, end.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueFromFramework(ctx, end.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueFromFrameworkInt64(ctx, end.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueFromFrameworkInt64(ctx, end.MinuteOfHour),
 				},
 				Start: &awstypes.HandOffTime{
-					HourOfDay:    fwflex.Int32ValueFromFramework(ctx, start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueFromFramework(ctx, start.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueFromFrameworkInt64(ctx, start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueFromFrameworkInt64(ctx, start.MinuteOfHour),
 				},
 			})
 		}
@@ -549,12 +549,12 @@ func flattenShiftCoverages(ctx context.Context, object map[string][]awstypes.Cov
 		for _, v := range value {
 			ct := coverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
-					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFrameworkInt64(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFrameworkInt64(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)
@@ -574,7 +574,7 @@ func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) 
 	out, err := conn.GetRotation(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -585,7 +585,7 @@ func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -20,19 +20,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_route53_cidr_location", name="CIDR Location")
 func newCIDRLocationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cidrLocationResource{}
 
@@ -40,18 +41,15 @@ func newCIDRLocationResource(context.Context) (resource.ResourceWithConfigure, e
 }
 
 type cidrLocationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[cidrLocationResourceModel]
 	framework.WithImportByID
-}
-
-func (*cidrLocationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_route53_cidr_location"
 }
 
 func (r *cidrLocationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cidr_blocks": schema.SetAttribute{
+				CustomType:  fwtypes.NewSetTypeOf[fwtypes.CIDRBlock](ctx),
 				Required:    true,
 				ElementType: fwtypes.CIDRBlockType,
 			},
@@ -61,7 +59,7 @@ func (r *cidrLocationResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -113,7 +111,12 @@ func (r *cidrLocationResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 CIDR Location (%s)", name), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -135,7 +138,7 @@ func (r *cidrLocationResource) Read(ctx context.Context, request resource.ReadRe
 
 	cidrBlocks, err := findCIDRLocationByTwoPartKey(ctx, conn, data.CIDRCollectionID.ValueString(), data.Name.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -153,9 +156,9 @@ func (r *cidrLocationResource) Read(ctx context.Context, request resource.ReadRe
 		for i, cidrBlock := range cidrBlocks {
 			elems[i] = fwtypes.CIDRBlockValue(cidrBlock)
 		}
-		data.CIDRBlocks = types.SetValueMust(fwtypes.CIDRBlockType, elems)
+		data.CIDRBlocks = fwtypes.NewSetValueOfMust[fwtypes.CIDRBlock](ctx, elems)
 	} else {
-		data.CIDRBlocks = types.SetNull(fwtypes.CIDRBlockType)
+		data.CIDRBlocks = fwtypes.NewSetValueOfNull[fwtypes.CIDRBlock](ctx)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -250,7 +253,7 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 		return
 	}
 
-	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Route 53 CIDR Location", map[string]any{
 		names.AttrID: data.ID.ValueString(),
 	})
 
@@ -278,10 +281,10 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 }
 
 type cidrLocationResourceModel struct {
-	CIDRBlocks       types.Set    `tfsdk:"cidr_blocks"`
-	CIDRCollectionID types.String `tfsdk:"cidr_collection_id"`
-	ID               types.String `tfsdk:"id"`
-	Name             types.String `tfsdk:"name"`
+	CIDRBlocks       fwtypes.SetValueOf[fwtypes.CIDRBlock] `tfsdk:"cidr_blocks"`
+	CIDRCollectionID types.String                          `tfsdk:"cidr_collection_id"`
+	ID               types.String                          `tfsdk:"id"`
+	Name             types.String                          `tfsdk:"name"`
 }
 
 const (
@@ -302,8 +305,13 @@ func (data *cidrLocationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *cidrLocationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.CIDRCollectionID.ValueString(), data.Name.ValueString()}, cidrLocationResourceIDPartCount, false)))
+func (data *cidrLocationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.CIDRCollectionID.ValueString(),
+		data.Name.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, cidrLocationResourceIDPartCount, false)
 }
 
 func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Client, collectionID, locationName string) ([]string, error) {
@@ -314,7 +322,7 @@ func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Client, col
 	output, err := findCIDRBlocks(ctx, conn, input)
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -334,7 +342,7 @@ func findCIDRBlocks(ctx context.Context, conn *route53.Client, input *route53.Li
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchCidrCollectionException](err) || errs.IsA[*awstypes.NoSuchCidrLocationException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

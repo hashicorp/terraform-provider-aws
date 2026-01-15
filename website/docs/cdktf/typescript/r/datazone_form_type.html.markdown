@@ -56,7 +56,7 @@ class MyConvertedCode extends TerraformStack {
       ),
       inlinePolicy: [
         {
-          name: "example name",
+          name: "example-policy",
           policy: Token.asString(
             Fn.jsonencode({
               Statement: [
@@ -71,14 +71,14 @@ class MyConvertedCode extends TerraformStack {
           ),
         },
       ],
-      name: "example name",
+      name: "example-role",
     });
     new SecurityGroup(this, "test", {
-      name: "example name",
+      name: "example",
     });
     const awsDatazoneDomainTest = new DatazoneDomain(this, "test_2", {
       domainExecutionRole: domainExecutionRole.arn,
-      name: "example name",
+      name: "example",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsDatazoneDomainTest.overrideLogicalId("test");
@@ -123,6 +123,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of form type. Must have a length of between 1 and 2048 characters.
 * `status` - (Optional) Status of form type. Must be "ENABLED" or "DISABLED" If status is set to "ENABLED" terraform cannot delete the resource until it is manually changed in the AWS console.
 
@@ -169,4 +170,4 @@ Using `terraform import`, import DataZone Form Type using a comma separated valu
 % terraform import aws_datazone_form_type.example domain_identifier,name,revision
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c3a2e042d80bbd96635e77f1e4358067efee9896b85ead15bd6a7ce0f445304f -->
+<!-- cache-key: cdktf-0.20.8 input-dd37033481b57e0fb41401abdf539fef10f9af2b6742525f5f5365667ea9ad30 -->

@@ -41,6 +41,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `dbProxyEndpointName` - (Required) The identifier for the proxy endpoint. An identifier must begin with a letter and must contain only ASCII letters, digits, and hyphens; it can't end with a hyphen or contain two consecutive hyphens.
 * `dbProxyName` - (Required) The name of the DB proxy associated with the DB proxy endpoint that you create.
 * `vpcSubnetIds` - (Required) One or more VPC subnet IDs to associate with the new proxy.
@@ -94,4 +95,4 @@ Using `terraform import`, import DB proxy endpoints using the `DB-PROXY-NAME/DB-
 % terraform import aws_db_proxy_endpoint.example example/example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-350a8a6ad58a9a637252ca5d1e91e374fee3e01e2e35b79ea8ea63a3a00e8a4d -->
+<!-- cache-key: cdktf-0.20.8 input-a5350876b6c93a97ec6242805f1af4ce1eb54597fc5298d49aa311b388cabcef -->

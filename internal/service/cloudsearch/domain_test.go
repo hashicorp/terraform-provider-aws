@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch_test
@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudsearch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,32 +26,32 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := testAccDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_options.0.tls_security_policy"),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "0"),
 				),
 			},
 			{
@@ -68,21 +69,21 @@ func TestAccCloudSearchDomain_disappears(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := testAccDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudsearch.ResourceDomain(), resourceName),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudsearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,25 +97,25 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := testAccDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_indexFields(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct2),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: acctest.Ct2,
+						names.AttrDefaultValue: "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName: "literal_test",
@@ -132,8 +133,8 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 			{
 				Config: testAccDomainConfig_indexFieldsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct4),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "literal_test",
 						names.AttrType:         "literal",
@@ -172,31 +173,31 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := testAccDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_sourceFields(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct3),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: acctest.Ct2,
+						names.AttrDefaultValue: "2",
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test_2",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: acctest.Ct4,
+						names.AttrDefaultValue: "4",
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
@@ -214,18 +215,18 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 			{
 				Config: testAccDomainConfig_sourceFieldsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct4),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: acctest.Ct2,
+						names.AttrDefaultValue: "2",
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test_2",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: acctest.Ct4,
+						names.AttrDefaultValue: "4",
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
@@ -251,36 +252,36 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain.test"
 	rName := testAccDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_allOptions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.tls_security_policy", "Policy-Min-TLS-1-0-2019-07"),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName: "latlon_test",
 						names.AttrType: "latlon",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", "search.small"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "1"),
 				),
 			},
 			{
@@ -291,13 +292,13 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 			{
 				Config: testAccDomainConfig_allOptionsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					testAccDomainExists(ctx, t, resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.tls_security_policy", "Policy-Min-TLS-1-2-2019-07"),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:    "text_array_test",
 						names.AttrType:    "text-array",
@@ -306,10 +307,10 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", "search.medium"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "2"),
 				),
 			},
 		},
@@ -320,14 +321,31 @@ func testAccDomainName() string {
 	return acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 }
 
-func testAccDomainExists(ctx context.Context, n string, v *types.DomainStatus) resource.TestCheckFunc {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := acctest.ProviderMeta(ctx, t).CloudSearchClient(ctx)
+
+	input := cloudsearch.ListDomainNamesInput{}
+	_, err := conn.ListDomainNames(ctx, &input)
+
+	if tfawserr.ErrMessageContains(err, "NotAuthorized", "New domain creation not supported on this account") {
+		t.Skip("skipping tests; this AWS account does not support new CloudSearch domain creation")
+	}
+
+	if err != nil {
+		t.Fatalf("listing CloudSearch Domain Names: %s", err)
+	}
+}
+
+func testAccDomainExists(ctx context.Context, t *testing.T, n string, v *types.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudSearchClient(ctx)
 
 		output, err := tfcloudsearch.FindDomainByName(ctx, conn, rs.Primary.ID)
 
@@ -341,18 +359,18 @@ func testAccDomainExists(ctx context.Context, n string, v *types.DomainStatus) r
 	}
 }
 
-func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudsearch_domain" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).CloudSearchClient(ctx)
 
 			_, err := tfcloudsearch.FindDomainByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

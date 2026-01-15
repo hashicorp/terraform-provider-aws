@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `comment` - (Optional) Comment describing the delegation request.
 
 ## Attribute Reference
@@ -79,7 +80,7 @@ class MyConvertedCode extends TerraformStack {
     AuditmanagerAssessmentDelegation.generateConfigForImport(
       this,
       "example",
-      "abcdef-123456,arn:aws:iam::012345678901:role/example,example"
+      "abcdef-123456,arn:aws:iam::123456789012:role/example,example"
     );
   }
 }
@@ -89,7 +90,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import Audit Manager Assessment Delegation using the `id`. For example:
 
 ```console
-% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
+% terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::123456789012:role/example,example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->
+<!-- cache-key: cdktf-0.20.8 input-a79c875ad4fd03d89be9d5dd9ec74ff4deed50ddd73a04bd26e198f2d314cd32 -->

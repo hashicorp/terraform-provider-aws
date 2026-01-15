@@ -211,10 +211,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `approvalRule` - (Optional) Set of rules used to include patches in the baseline. Up to 10 approval rules can be specified. See [`approvalRule`](#approval_rule-block) below.
 * `approvedPatchesComplianceLevel` - (Optional) Compliance level for approved patches. This means that if an approved patch is reported as missing, this is the severity of the compliance violation. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `approvedPatchesEnableNonSecurity` - (Optional) Whether the list of approved patches includes non-security updates that should be applied to the instances. Applies to Linux instances only.
 * `approvedPatches` - (Optional) List of explicitly approved patches for the baseline. Cannot be specified with `approvalRule`.
+* `availableSecurityUpdatesComplianceStatus` - (Optional) Indicates the compliance status of managed nodes for which security-related patches are available but were not approved. Supported for Windows Server managed nodes only. Valid values are `COMPLIANT`, `NON_COMPLIANT`.
 * `description` - (Optional) Description of the patch baseline.
 * `globalFilter` - (Optional) Set of global filters used to exclude patches from the baseline. Up to 4 global filters can be specified using Key/Value pairs. Valid Keys are `PRODUCT`, `CLASSIFICATION`, `MSRC_SEVERITY`, and `PATCH_ID`.
 * `operatingSystem` - (Optional) Operating system the patch baseline applies to. Valid values are `ALMA_LINUX`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `AMAZON_LINUX_2022`, `AMAZON_LINUX_2023`, `CENTOS`, `DEBIAN`, `MACOS`, `ORACLE_LINUX`, `RASPBIAN`, `REDHAT_ENTERPRISE_LINUX`, `ROCKY_LINUX`, `SUSE`, `UBUNTU`, and `WINDOWS`. The default value is `WINDOWS`.
@@ -227,7 +229,7 @@ The following arguments are optional:
 
 The `approvalRule` block supports:
 
-* `approveAfterDays` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 100. Conflicts with `approveUntilDate`.
+* `approveAfterDays` - (Optional) Number of days after the release date of each patch matched by the rule the patch is marked as approved in the patch baseline. Valid Range: 0 to 360. Conflicts with `approveUntilDate`.
 * `approveUntilDate` - (Optional) Cutoff date for auto approval of released patches. Any patches released on or before this date are installed automatically. Date is formatted as `YYYY-MM-DD`. Conflicts with `approveAfterDays`
 * `complianceLevel` - (Optional) Compliance level for patches approved by this rule. Valid values are `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFORMATIONAL`, and `UNSPECIFIED`. The default value is `UNSPECIFIED`.
 * `enableNonSecurity` - (Optional) Boolean enabling the application of non-security updates. The default value is `false`. Valid for Linux instances only.
@@ -251,6 +253,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_patch_baseline.example
+  identity = {
+    id = "pb-12345678"
+  }
+}
+
+resource "aws_ssm_patch_baseline" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the patch baseline.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Patch Baselines using their baseline ID. For example:
 
@@ -278,4 +306,4 @@ Using `terraform import`, import SSM Patch Baselines using their baseline ID. Fo
 % terraform import aws_ssm_patch_baseline.example pb-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3403922bc06ff4f62f3ffe3bf7e9d76ae029bc21b0161947d37ec181e0694f39 -->
+<!-- cache-key: cdktf-0.20.8 input-94387a30bc11dfbdb19ce1ccfaa3d6957e74ca8bcd4b01b6d6296789b1187934 -->

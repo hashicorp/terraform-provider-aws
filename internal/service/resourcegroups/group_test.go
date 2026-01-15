@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourcegroups_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfresourcegroups "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,8 +55,9 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -91,7 +92,7 @@ func TestAccResourceGroupsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfresourcegroups.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +117,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -129,7 +130,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags2(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -138,7 +139,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -171,11 +172,11 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -192,11 +193,11 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 				),
 			},
 			{
@@ -234,12 +235,12 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct2),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.1.parameters.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.1.parameters.#", "0"),
 				),
 			},
 			{
@@ -270,9 +271,9 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "resource-groups", "group/{name}"),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),
 				),
 			},
@@ -317,7 +318,7 @@ func testAccCheckResourceGroupDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfresourcegroups.FindGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

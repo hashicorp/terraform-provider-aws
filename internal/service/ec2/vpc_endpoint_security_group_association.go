@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -15,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,6 +26,9 @@ func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 		CreateWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSecurityGroupAssociationRead,
 		DeleteWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceVPCEndpointSecurityGroupAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"replace_default_association": {
@@ -47,7 +51,7 @@ func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -109,7 +113,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 	return append(diags, resourceVPCEndpointSecurityGroupAssociationRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -120,7 +124,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 
 	err := findVPCEndpointSecurityGroupAssociationExists(ctx, conn, vpcEndpointID, securityGroupID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Security Group Association (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -133,7 +137,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 	return diags
 }
 
-func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -206,4 +210,22 @@ func deleteVPCEndpointSecurityGroupAssociation(ctx context.Context, conn *ec2.Cl
 	}
 
 	return nil
+}
+
+func resourceVPCEndpointSecurityGroupAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/security-group-id'", d.Id())
+	}
+
+	endpointID := parts[0]
+	securityGroupID := parts[1]
+	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Security Group (%s) Association", endpointID, securityGroupID)
+
+	d.SetId(vpcEndpointSecurityGroupAssociationCreateID(endpointID, securityGroupID))
+	d.Set(names.AttrVPCEndpointID, endpointID)
+	d.Set("security_group_id", securityGroupID)
+	d.Set("replace_default_association", false)
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint
@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,6 +57,11 @@ func resourceEmailChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"orchestration_sending_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -69,7 +75,7 @@ func resourceEmailChannel() *schema.Resource {
 	}
 }
 
-func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -80,6 +86,10 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	params.FromAddress = aws.String(d.Get("from_address").(string))
 	params.Identity = aws.String(d.Get("identity").(string))
+
+	if v, ok := d.GetOk("orchestration_sending_role_arn"); ok {
+		params.OrchestrationSendingRoleArn = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		params.RoleArn = aws.String(v.(string))
@@ -104,7 +114,7 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceEmailChannelRead(ctx, d, meta)...)
 }
 
-func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -112,7 +122,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findEmailChannelByApplicationId(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Pinpoint Email Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,6 +136,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("from_address", output.FromAddress)
 	d.Set("identity", output.Identity)
+	d.Set("orchestration_sending_role_arn", output.OrchestrationSendingRoleArn)
 	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("configuration_set", output.ConfigurationSet)
 	d.Set("messages_per_second", output.MessagesPerSecond)
@@ -133,7 +144,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEmailChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
@@ -159,7 +170,7 @@ func findEmailChannelByApplicationId(ctx context.Context, conn *pinpoint.Client,
 
 	output, err := conn.GetEmailChannel(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -169,7 +180,7 @@ func findEmailChannelByApplicationId(ctx context.Context, conn *pinpoint.Client,
 	}
 
 	if output == nil || output.EmailChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmailChannelResponse, nil

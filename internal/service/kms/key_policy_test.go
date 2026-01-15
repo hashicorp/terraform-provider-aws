@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -68,7 +68,7 @@ func TestAccKMSKeyPolicy_disappears(t *testing.T) {
 				Config: testAccKeyPolicyConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, attachmentResourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceKey(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceKey(), attachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -238,27 +238,6 @@ func TestAccKMSKeyPolicy_iamRoleOrder(t *testing.T) {
 					testAccCheckKeyExists(ctx, keyResourceName, &key),
 				),
 			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccKeyPolicyConfig_policyIAMMultiRole(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, keyResourceName, &key),
-				),
-				PlanOnly: true,
-			},
 		},
 	})
 }
@@ -313,7 +292,9 @@ func testAccKeyPolicyConfig_policy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
+
 resource "aws_kms_key_policy" "test" {
   key_id = aws_kms_key.test.id
   policy = jsonencode({
@@ -340,6 +321,7 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key_policy" "test" {
@@ -398,6 +380,7 @@ resource "aws_iam_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key_policy" "test" {
@@ -557,6 +540,7 @@ data "aws_iam_policy_document" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key_policy" "test" {
@@ -580,6 +564,7 @@ resource "aws_iam_service_linked_role" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_key_policy" "test" {
@@ -629,7 +614,9 @@ data "aws_partition" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
+
 resource "aws_kms_key_policy" "test" {
   key_id = aws_kms_key.test.id
   policy = jsonencode({
@@ -679,6 +666,7 @@ func testAccKeyPolicyConfig_removedPolicy(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `, rName)
 }
@@ -689,8 +677,10 @@ data "aws_caller_identity" "current" {}
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
   is_enabled              = %[2]t
 }
+
 resource "aws_kms_key_policy" "test" {
   key_id = aws_kms_key.test.id
   policy = jsonencode({

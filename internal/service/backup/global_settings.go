@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,15 +13,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_backup_global_settings")
-func ResourceGlobalSettings() *schema.Resource {
+// @SDKResource("aws_backup_global_settings", name="Global Settings")
+// @Region(global=true)
+func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
 		UpdateWithoutTimeout: resourceGlobalSettingsUpdate,
 		ReadWithoutTimeout:   resourceGlobalSettingsRead,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -35,36 +40,61 @@ func ResourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]any)),
 	}
 
 	_, err := conn.UpdateGlobalSettings(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting Backup Global Settings (%s): %s", meta.(*conns.AWSClient).AccountID, err)
+		return sdkdiag.AppendErrorf(diags, "updating Backup Global Settings: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
+	}
 
 	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
 
-func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeGlobalSettings(ctx, &backup.DescribeGlobalSettingsInput{})
+	output, err := findGlobalSettings(ctx, conn)
+
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Backup Global Settings (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Global Settings (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("global_settings", resp.GlobalSettings); err != nil {
+	if err := d.Set("global_settings", output); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_settings: %s", err)
 	}
 
 	return diags
+}
+
+func findGlobalSettings(ctx context.Context, conn *backup.Client) (map[string]string, error) {
+	input := &backup.DescribeGlobalSettingsInput{}
+	output, err := conn.DescribeGlobalSettings(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GlobalSettings == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.GlobalSettings, nil
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -30,6 +30,10 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -51,9 +55,8 @@ func dataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -64,8 +67,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(name)
-	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set(names.AttrCreationTime, logGroup.CreationTime)
+	d.Set("deletion_protection_enabled", logGroup.DeletionProtectionEnabled)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)

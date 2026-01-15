@@ -151,6 +151,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `config` - (Optional) The target group configuration.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -226,4 +227,4 @@ Using `terraform import`, import VPC Lattice Target Group using the `id`. For ex
 % terraform import aws_vpclattice_target_group.example tg-0c11d4dc16ed96bdb
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8b0f63dce846bb387e0c2e47e763aeda9a0b71702c33c2b21f0f39c8cf773e37 -->
+<!-- cache-key: cdktf-0.20.8 input-0d2ace5da4cce6c457c2fd1dbcd1e62539f1f88ca070b6403e16af17433fa544 -->

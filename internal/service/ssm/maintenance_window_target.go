@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -14,36 +14,32 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_maintenance_window_target", name="Maintenance Window Target")
+// @IdentityAttribute("window_id")
+// @IdentityAttribute("id")
+// @ImportIDHandler("maintenanceWindowTargetImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;types.MaintenanceWindowTarget")
+// @Testing(preIdentityVersion="v6.10.0")
+// @Testing(importStateIdFunc="testAccMaintenanceWindowTargetImportStateIdFunc")
 func resourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTargetCreate,
 		ReadWithoutTimeout:   resourceMaintenanceWindowTargetRead,
 		UpdateWithoutTimeout: resourceMaintenanceWindowTargetUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTargetDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("unexpected format of ID (%s), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
-				}
-				d.Set("window_id", idParts[0])
-				d.SetId(idParts[1])
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrDescription: {
@@ -101,13 +97,13 @@ func resourceMaintenanceWindowTarget() *schema.Resource {
 	}
 }
 
-func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	input := &ssm.RegisterTargetWithMaintenanceWindowInput{
 		ResourceType: awstypes.MaintenanceWindowResourceType(d.Get(names.AttrResourceType).(string)),
-		Targets:      expandTargets(d.Get("targets").([]interface{})),
+		Targets:      expandTargets(d.Get("targets").([]any)),
 		WindowId:     aws.String(d.Get("window_id").(string)),
 	}
 
@@ -134,14 +130,14 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceMaintenanceWindowTargetRead(ctx, d, meta)...)
 }
 
-func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	windowID := d.Get("window_id").(string)
 	target, err := findMaintenanceWindowTargetByTwoPartKey(ctx, conn, windowID, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Target %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,12 +159,12 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	input := &ssm.UpdateMaintenanceWindowTargetInput{
-		Targets:        expandTargets(d.Get("targets").([]interface{})),
+		Targets:        expandTargets(d.Get("targets").([]any)),
 		WindowId:       aws.String(d.Get("window_id").(string)),
 		WindowTargetId: aws.String(d.Id()),
 	}
@@ -194,7 +190,7 @@ func resourceMaintenanceWindowTargetUpdate(ctx context.Context, d *schema.Resour
 	return diags
 }
 
-func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceMaintenanceWindowTargetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -247,7 +243,7 @@ func findMaintenanceWindowTargets(ctx context.Context, conn *ssm.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DoesNotExistException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -261,4 +257,27 @@ func findMaintenanceWindowTargets(ctx context.Context, conn *ssm.Client, input *
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = maintenanceWindowTargetImportID{}
+
+type maintenanceWindowTargetImportID struct{}
+
+func (maintenanceWindowTargetImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (maintenanceWindowTargetImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) != 2 {
+		return id, nil, fmt.Errorf("maintenance_window_target id must be of the form <window_id>/<target_id>")
+	}
+
+	windowID := parts[0]
+	targetID := parts[1]
+
+	result := map[string]string{
+		"window_id": windowID,
+	}
+	return targetID, result, nil
 }

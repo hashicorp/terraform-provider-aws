@@ -18,9 +18,9 @@ Manages an individual ECS resource tag. This resource should only be used in cas
 
 ```terraform
 resource "aws_batch_compute_environment" "example" {
-  compute_environment_name = "example"
-  service_role             = aws_iam_role.example.arn
-  type                     = "UNMANAGED"
+  name         = "example"
+  service_role = aws_iam_role.example.arn
+  type         = "UNMANAGED"
 }
 
 resource "aws_ecs_tag" "example" {
@@ -34,6 +34,7 @@ resource "aws_ecs_tag" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the ECS resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.

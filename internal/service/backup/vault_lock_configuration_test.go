@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,7 +35,7 @@ func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_retention_days", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "min_retention_days", "7"),
 				),
@@ -67,7 +67,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultLockConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVaultLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,9 +83,9 @@ func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -100,26 +100,22 @@ func testAccCheckVaultLockConfigurationDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckVaultLockConfigurationExists(ctx context.Context, name string, vault *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
+func testAccCheckVaultLockConfigurationExists(ctx context.Context, n string, v *backup.DescribeBackupVaultOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
+		output, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*vault = *output
+		*v = *output
 
 		return nil
 	}

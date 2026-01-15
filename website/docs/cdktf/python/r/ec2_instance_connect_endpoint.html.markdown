@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `preserve_client_ip` - (Optional) Indicates whether your client's IP address is preserved as the source. Default: `true`.
 * `security_group_ids` - (Optional) One or more security groups to associate with the endpoint. If you don't specify a security group, the default security group for the VPC will be associated with the endpoint.
 * `subnet_id` - (Required) The ID of the subnet in which to create the EC2 Instance Connect Endpoint.
@@ -85,4 +86,4 @@ Using `terraform import`, import EC2 Instance Connect Endpoints using the `id`. 
 % terraform import aws_ec2_instance_connect_endpoint.example eice-012345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b6a7a4118c37b347c22b70a637e3a2dec2ab1a881d2fb350da6ffa550807522b -->
+<!-- cache-key: cdktf-0.20.8 input-3f47dc4f6eafd82943c86299e5012c5dc982c12b0a9d721573b7425091207d99 -->

@@ -49,6 +49,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
 * `description` - (Optional) Description of the workgroup.
@@ -61,19 +62,25 @@ This resource supports the following arguments:
 * `bytesScannedCutoffPerQuery` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
 * `enforceWorkgroupConfiguration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `engineVersion` - (Optional) Configuration block for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). See [Engine Version](#engine-version) below.
-* `executionRole` - (Optional) Role used in a notebook session for accessing the user's resources.
+* `executionRole` - (Optional) Role used to access user resources in notebook sessions and IAM Identity Center enabled workgroups. The property is required for IAM Identity Center enabled workgroups.
+* `identityCenterConfiguration` - (Optional) Configuration block to set up an IAM Identity Center enabled workgroup. See [Identity Center Configuration](#identity-center-configuration) below.
 * `publishCloudwatchMetricsEnabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
-* `resultConfiguration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `requesterPaysEnabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
+* `resultConfiguration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 
 #### Engine Version
 
 * `selectedEngineVersion` - (Optional) Requested engine version. Defaults to `AUTO`.
 
+#### Identity Center Configuration
+
+* `enableIdentityCenter` - (Optional) Specifies whether the workgroup is IAM Identity Center supported.
+* `identityCenterInstanceArn` - (Optional) The IAM Identity Center instance ARN that the workgroup associates to.
+
 #### Result Configuration
 
-* `encryptionConfiguration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `aclConfiguration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
+* `encryptionConfiguration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `expectedBucketOwner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `outputLocation` - (Optional) Location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 
@@ -125,4 +132,4 @@ Using `terraform import`, import Athena Workgroups using their name. For example
 % terraform import aws_athena_workgroup.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c130731e53530304eb8b07566132f6c077365dfdbf8f6396690cec4300991bd4 -->
+<!-- cache-key: cdktf-0.20.8 input-4ad7a4de774f9cd3e034bbfb8927fb5a2ef4fb95ab54ec038669c7a27a96df20 -->

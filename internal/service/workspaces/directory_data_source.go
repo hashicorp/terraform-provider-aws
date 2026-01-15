@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -6,25 +6,56 @@ package workspaces
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_workspaces_directory")
-func DataSourceDirectory() *schema.Resource {
+// @SDKDataSource("aws_workspaces_directory", name="Directory")
+// @Tags(identifierAttribute="id")
+func dataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
+			"active_directory_config": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDomainName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"service_account_secret_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"customer_user_name": {
 				Type:     schema.TypeString,
@@ -60,6 +91,26 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"saml_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state_parameter_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_access_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -93,7 +144,15 @@ func DataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_identity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -162,7 +221,19 @@ func DataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
+			"workspace_directory_description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"workspace_directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"workspace_security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"workspace_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,63 +241,51 @@ func DataSourceDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
+	directory, err := findDirectoryByID(ctx, conn, directoryID)
 
-	rawOutput, state, err := StatusDirectoryState(ctx, conn, directoryID)()
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting WorkSpaces Directory (%s): %s", directoryID, err)
-	}
-	if state == string(types.WorkspaceDirectoryStateDeregistered) {
-		return sdkdiag.AppendErrorf(diags, "WorkSpaces directory %s was not found", directoryID)
+		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 
 	d.SetId(directoryID)
-
-	directory := rawOutput.(*types.WorkspaceDirectory)
+	if err := d.Set("active_directory_config", flattenActiveDirectoryConfig(directory.ActiveDirectoryConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting active_directory_config: %s", err)
+	}
+	d.Set(names.AttrAlias, directory.Alias)
+	if err := d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directory.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
+	}
 	d.Set("directory_id", directory.DirectoryId)
-	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
-	d.Set("iam_role_id", directory.IamRoleId)
-	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set(names.AttrAlias, directory.Alias)
-
-	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
-	}
-
-	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
+	d.Set("dns_ip_addresses", directory.DnsIpAddresses)
+	d.Set("iam_role_id", directory.IamRoleId)
+	d.Set("ip_group_ids", directory.IpGroupIds)
+	d.Set("registration_code", directory.RegistrationCode)
+	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
-
-	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
+	if err := d.Set("saml_properties", flattenSAMLProperties(directory.SamlProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
+	}
+	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
+	d.Set("user_identity_type", directory.UserIdentityType)
+	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
-
-	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
-
-	if err := d.Set("ip_group_ids", flex.FlattenStringValueSet(directory.IpGroupIds)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
-	}
-
-	if err := d.Set("dns_ip_addresses", flex.FlattenStringValueSet(directory.DnsIpAddresses)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
-	}
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	d.Set("workspace_directory_description", directory.WorkspaceDirectoryDescription)
+	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
+	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
+	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }

@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional, Forces new resource) A summary description of the worker configuration.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -85,4 +86,4 @@ Using `terraform import`, import MSK Connect Worker Configuration using the plug
 % terraform import aws_mskconnect_worker_configuration.example 'arn:aws:kafkaconnect:eu-central-1:123456789012:worker-configuration/example/8848493b-7fcc-478c-a646-4a52634e3378-4'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-636518bb950dc126d61f198f20edb87d205b9ff5d5e7c3a6c7ba631c4b79b4a7 -->
+<!-- cache-key: cdktf-0.20.8 input-9b4934fbdfb40b608084da99dba529dda76c37ce676f792b7ae426d6a01ddc99 -->

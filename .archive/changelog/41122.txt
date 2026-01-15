@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudwatch_log_delivery: Mark `field_delimiter` as Computed
+```
+
+```release-note:bug
+resource/aws_cloudwatch_log_delivery: Fix `Provider produced inconsistent result after apply` errors for `s3_delivery_configuration.enable_hive_compatible_path`
+```

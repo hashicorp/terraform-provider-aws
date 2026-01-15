@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -12,11 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,7 +53,7 @@ func resourceInviteAccepter() *schema.Resource {
 	}
 }
 
-func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -60,7 +61,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	masterAccountID := d.Get("master_account_id").(string)
 
 	inputLI := &guardduty.ListInvitationsInput{}
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*awstypes.Invitation, error) {
 		return findInvitation(ctx, conn, inputLI, func(v *awstypes.Invitation) bool {
 			return aws.ToString(v.AccountId) == masterAccountID
 		})
@@ -70,7 +71,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Invitation (%s): %s", masterAccountID, err)
 	}
 
-	invitationID := aws.ToString(outputRaw.(*awstypes.Invitation).InvitationId)
+	invitationID := aws.ToString(output.InvitationId)
 	inputAI := &guardduty.AcceptInvitationInput{
 		DetectorId:   aws.String(detectorID),
 		InvitationId: aws.String(invitationID),
@@ -88,13 +89,13 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }
 
-func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
 	master, err := findMasterAccountByDetectorID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -110,7 +111,7 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -172,7 +173,7 @@ func findMasterAccount(ctx context.Context, conn *guardduty.Client, input *guard
 	output, err := conn.GetMasterAccount(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The request is rejected because the input detectorId is not owned by the current account.") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -183,7 +184,7 @@ func findMasterAccount(ctx context.Context, conn *guardduty.Client, input *guard
 	}
 
 	if output == nil || output.Master == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Master, nil

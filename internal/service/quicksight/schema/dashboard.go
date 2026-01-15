@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -7,9 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +35,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, enum.Validate[awstypes.ColumnRole]()),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -48,11 +46,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, enum.Validate[awstypes.CrossDatasetTypes]()),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, enum.Validate[awstypes.Status]()),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -77,17 +75,12 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								Computed:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.SheetContentType](),
-							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -98,11 +91,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -284,11 +277,7 @@ func DashboardSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -298,26 +287,26 @@ func DashboardSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandDashboardSourceEntity(tfList []interface{}) *awstypes.DashboardSourceEntity {
+func ExpandDashboardSourceEntity(tfList []any) *awstypes.DashboardSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DashboardSourceEntity{}
 
-	if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SourceTemplate = expandDashboardSourceTemplate(v[0].(map[string]interface{}))
+	if v, ok := tfMap["source_template"].([]any); ok && len(v) > 0 {
+		apiObject.SourceTemplate = expandDashboardSourceTemplate(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandDashboardSourceTemplate(tfMap map[string]interface{}) *awstypes.DashboardSourceTemplate {
+func expandDashboardSourceTemplate(tfMap map[string]any) *awstypes.DashboardSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -327,97 +316,97 @@ func expandDashboardSourceTemplate(tfMap map[string]interface{}) *awstypes.Dashb
 	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_references"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetReferences = expandDataSetReferences(v)
 	}
 
 	return apiObject
 }
 
-func ExpandDashboardDefinition(tfList []interface{}) *awstypes.DashboardVersionDefinition {
+func ExpandDashboardDefinition(tfList []any) *awstypes.DashboardVersionDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DashboardVersionDefinition{}
 
-	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["analysis_defaults"].([]any); ok && len(v) > 0 {
 		apiObject.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
 	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CalculatedFields = expandCalculatedFields(v.List())
 	}
-	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["column_configurations"].([]any); ok && len(v) > 0 {
 		apiObject.ColumnConfigurations = expandColumnConfigurations(v)
 	}
-	if v, ok := tfMap["data_set_identifiers_declarations"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["data_set_identifiers_declarations"].([]any); ok && len(v) > 0 {
 		apiObject.DataSetIdentifierDeclarations = expandDataSetIdentifierDeclarations(v)
 	}
-	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["filter_groups"].([]any); ok && len(v) > 0 {
 		apiObject.FilterGroups = expandFilterGroups(v)
 	}
 	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
-	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["sheets"].([]any); ok && len(v) > 0 {
 		apiObject.Sheets = expandSheetDefinitions(v)
 	}
 
 	return apiObject
 }
 
-func ExpandDashboardPublishOptions(tfList []interface{}) *awstypes.DashboardPublishOptions {
+func ExpandDashboardPublishOptions(tfList []any) *awstypes.DashboardPublishOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
 	apiObject := &awstypes.DashboardPublishOptions{}
 
-	if v, ok := tfMap["ad_hoc_filtering_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AdHocFilteringOption = expandAdHocFilteringOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ad_hoc_filtering_option"].([]any); ok && len(v) > 0 {
+		apiObject.AdHocFilteringOption = expandAdHocFilteringOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["data_point_drill_up_down_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DataPointDrillUpDownOption = expandDataPointDrillUpDownOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["data_point_drill_up_down_option"].([]any); ok && len(v) > 0 {
+		apiObject.DataPointDrillUpDownOption = expandDataPointDrillUpDownOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["data_point_menu_label_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DataPointMenuLabelOption = expandDataPointMenuLabelOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["data_point_menu_label_option"].([]any); ok && len(v) > 0 {
+		apiObject.DataPointMenuLabelOption = expandDataPointMenuLabelOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["data_point_tooltip_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DataPointTooltipOption = expandDataPointTooltipOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["data_point_tooltip_option"].([]any); ok && len(v) > 0 {
+		apiObject.DataPointTooltipOption = expandDataPointTooltipOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["export_to_csv_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ExportToCSVOption = expandExportToCSVOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["export_to_csv_option"].([]any); ok && len(v) > 0 {
+		apiObject.ExportToCSVOption = expandExportToCSVOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["export_with_hidden_fields_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ExportWithHiddenFieldsOption = expandExportWithHiddenFieldsOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["export_with_hidden_fields_option"].([]any); ok && len(v) > 0 {
+		apiObject.ExportWithHiddenFieldsOption = expandExportWithHiddenFieldsOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["sheet_controls_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SheetControlsOption = expandSheetControlsOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sheet_controls_option"].([]any); ok && len(v) > 0 {
+		apiObject.SheetControlsOption = expandSheetControlsOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["sheet_layout_element_maximization_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SheetLayoutElementMaximizationOption = expandSheetLayoutElementMaximizationOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sheet_layout_element_maximization_option"].([]any); ok && len(v) > 0 {
+		apiObject.SheetLayoutElementMaximizationOption = expandSheetLayoutElementMaximizationOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["visual_axis_sort_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VisualAxisSortOption = expandVisualAxisSortOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["visual_axis_sort_option"].([]any); ok && len(v) > 0 {
+		apiObject.VisualAxisSortOption = expandVisualAxisSortOption(v[0].(map[string]any))
 	}
-	if v, ok := tfMap["visual_menu_option"].([]interface{}); ok && len(v) > 0 {
-		apiObject.VisualMenuOption = expandVisualMenuOption(v[0].(map[string]interface{}))
+	if v, ok := tfMap["visual_menu_option"].([]any); ok && len(v) > 0 {
+		apiObject.VisualMenuOption = expandVisualMenuOption(v[0].(map[string]any))
 	}
 
 	return apiObject
 }
 
-func expandAdHocFilteringOption(tfMap map[string]interface{}) *awstypes.AdHocFilteringOption {
+func expandAdHocFilteringOption(tfMap map[string]any) *awstypes.AdHocFilteringOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -431,7 +420,7 @@ func expandAdHocFilteringOption(tfMap map[string]interface{}) *awstypes.AdHocFil
 	return apiObject
 }
 
-func expandDataPointDrillUpDownOption(tfMap map[string]interface{}) *awstypes.DataPointDrillUpDownOption {
+func expandDataPointDrillUpDownOption(tfMap map[string]any) *awstypes.DataPointDrillUpDownOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -445,7 +434,7 @@ func expandDataPointDrillUpDownOption(tfMap map[string]interface{}) *awstypes.Da
 	return apiObject
 }
 
-func expandDataPointMenuLabelOption(tfMap map[string]interface{}) *awstypes.DataPointMenuLabelOption {
+func expandDataPointMenuLabelOption(tfMap map[string]any) *awstypes.DataPointMenuLabelOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -459,7 +448,7 @@ func expandDataPointMenuLabelOption(tfMap map[string]interface{}) *awstypes.Data
 	return apiObject
 }
 
-func expandDataPointTooltipOption(tfMap map[string]interface{}) *awstypes.DataPointTooltipOption {
+func expandDataPointTooltipOption(tfMap map[string]any) *awstypes.DataPointTooltipOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -473,7 +462,7 @@ func expandDataPointTooltipOption(tfMap map[string]interface{}) *awstypes.DataPo
 	return apiObject
 }
 
-func expandExportToCSVOption(tfMap map[string]interface{}) *awstypes.ExportToCSVOption {
+func expandExportToCSVOption(tfMap map[string]any) *awstypes.ExportToCSVOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -487,7 +476,7 @@ func expandExportToCSVOption(tfMap map[string]interface{}) *awstypes.ExportToCSV
 	return apiObject
 }
 
-func expandExportWithHiddenFieldsOption(tfMap map[string]interface{}) *awstypes.ExportWithHiddenFieldsOption {
+func expandExportWithHiddenFieldsOption(tfMap map[string]any) *awstypes.ExportWithHiddenFieldsOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -501,7 +490,7 @@ func expandExportWithHiddenFieldsOption(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func expandSheetLayoutElementMaximizationOption(tfMap map[string]interface{}) *awstypes.SheetLayoutElementMaximizationOption {
+func expandSheetLayoutElementMaximizationOption(tfMap map[string]any) *awstypes.SheetLayoutElementMaximizationOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -515,7 +504,7 @@ func expandSheetLayoutElementMaximizationOption(tfMap map[string]interface{}) *a
 	return apiObject
 }
 
-func expandSheetControlsOption(tfMap map[string]interface{}) *awstypes.SheetControlsOption {
+func expandSheetControlsOption(tfMap map[string]any) *awstypes.SheetControlsOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -529,7 +518,7 @@ func expandSheetControlsOption(tfMap map[string]interface{}) *awstypes.SheetCont
 	return apiObject
 }
 
-func expandVisualAxisSortOption(tfMap map[string]interface{}) *awstypes.VisualAxisSortOption {
+func expandVisualAxisSortOption(tfMap map[string]any) *awstypes.VisualAxisSortOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -543,7 +532,7 @@ func expandVisualAxisSortOption(tfMap map[string]interface{}) *awstypes.VisualAx
 	return apiObject
 }
 
-func expandVisualMenuOption(tfMap map[string]interface{}) *awstypes.VisualMenuOption {
+func expandVisualMenuOption(tfMap map[string]any) *awstypes.VisualMenuOption {
 	if tfMap == nil {
 		return nil
 	}
@@ -557,12 +546,12 @@ func expandVisualMenuOption(tfMap map[string]interface{}) *awstypes.VisualMenuOp
 	return apiObject
 }
 
-func FlattenDashboardDefinition(apiObject *awstypes.DashboardVersionDefinition) []interface{} {
+func FlattenDashboardDefinition(apiObject *awstypes.DashboardVersionDefinition) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AnalysisDefaults != nil {
 		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
@@ -586,15 +575,15 @@ func FlattenDashboardDefinition(apiObject *awstypes.DashboardVersionDefinition) 
 		tfMap["sheets"] = flattenSheetDefinitions(apiObject.Sheets)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func FlattenDashboardPublishOptions(apiObject *awstypes.DashboardPublishOptions) []interface{} {
+func FlattenDashboardPublishOptions(apiObject *awstypes.DashboardPublishOptions) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if apiObject.AdHocFilteringOption != nil {
 		tfMap["ad_hoc_filtering_option"] = flattenAdHocFilteringOption(apiObject.AdHocFilteringOption)
@@ -627,125 +616,125 @@ func FlattenDashboardPublishOptions(apiObject *awstypes.DashboardPublishOptions)
 		tfMap["visual_menu_option"] = flattenVisualMenuOption(apiObject.VisualMenuOption)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenAdHocFilteringOption(apiObject *awstypes.AdHocFilteringOption) []interface{} {
+func flattenAdHocFilteringOption(apiObject *awstypes.AdHocFilteringOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataPointDrillUpDownOption(apiObject *awstypes.DataPointDrillUpDownOption) []interface{} {
+func flattenDataPointDrillUpDownOption(apiObject *awstypes.DataPointDrillUpDownOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataPointMenuLabelOption(apiObject *awstypes.DataPointMenuLabelOption) []interface{} {
+func flattenDataPointMenuLabelOption(apiObject *awstypes.DataPointMenuLabelOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenDataPointTooltipOption(apiObject *awstypes.DataPointTooltipOption) []interface{} {
+func flattenDataPointTooltipOption(apiObject *awstypes.DataPointTooltipOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExportToCSVOption(apiObject *awstypes.ExportToCSVOption) []interface{} {
+func flattenExportToCSVOption(apiObject *awstypes.ExportToCSVOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenExportWithHiddenFieldsOption(apiObject *awstypes.ExportWithHiddenFieldsOption) []interface{} {
+func flattenExportWithHiddenFieldsOption(apiObject *awstypes.ExportWithHiddenFieldsOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSheetControlsOption(apiObject *awstypes.SheetControlsOption) []interface{} {
+func flattenSheetControlsOption(apiObject *awstypes.SheetControlsOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"visibility_state": apiObject.VisibilityState,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenSheetLayoutElementMaximizationOption(apiObject *awstypes.SheetLayoutElementMaximizationOption) []interface{} {
+func flattenSheetLayoutElementMaximizationOption(apiObject *awstypes.SheetLayoutElementMaximizationOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisualAxisSortOption(apiObject *awstypes.VisualAxisSortOption) []interface{} {
+func flattenVisualAxisSortOption(apiObject *awstypes.VisualAxisSortOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }
 
-func flattenVisualMenuOption(apiObject *awstypes.VisualMenuOption) []interface{} {
+func flattenVisualMenuOption(apiObject *awstypes.VisualMenuOption) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"availability_status": apiObject.AvailabilityStatus,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

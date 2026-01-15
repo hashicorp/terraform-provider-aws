@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -76,7 +75,7 @@ func main() {
 	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceFilename)
 	d := g.NewGoFileDestination(resourceFilename)
 
-	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
+	if err := d.BufferTemplate("taggen", resourceTemplateBody, templateData); err != nil {
 		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
@@ -87,7 +86,7 @@ func main() {
 	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceTestFilename)
 	d = g.NewGoFileDestination(resourceTestFilename)
 
-	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
+	if err := d.BufferTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
 		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
 	}
 
@@ -96,8 +95,8 @@ func main() {
 	}
 }
 
-//go:embed resource.tmpl
+//go:embed resource.go.gtpl
 var resourceTemplateBody string
 
-//go:embed tests.tmpl
+//go:embed tests.go.gtpl
 var resourceTestTemplateBody string

@@ -38,10 +38,13 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are optional:
 
-* `id` - (Required) ID of the collection. Either `id` or `name` must be provided.
-* `name` - (Required) Name of the collection. Either `name` or `id` must be provided.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `id` - (Optional) ID of the collection.
+* `name` - (Optional) Name of the collection.
+
+~> Exactly one of `id` or `name` is required.
 
 ## Attribute Reference
 
@@ -52,10 +55,12 @@ This data source exports the following attributes in addition to the arguments a
 * `createdDate` - Date the Collection was created.
 * `dashboardEndpoint` - Collection-specific endpoint used to access OpenSearch Dashboards.
 * `description` - Description of the collection.
+* `failureCode` - A failure code associated with the collection.
+* `failureReason` - A failure reason associated with the collection.
 * `kmsKeyArn` - The ARN of the Amazon Web Services KMS key used to encrypt the collection.
 * `lastModifiedDate` - Date the Collection was last modified.
 * `standbyReplicas` - Indicates whether standby replicas should be used for a collection.
 * `tags` - A map of tags to assign to the collection.
 * `type` - Type of collection.
 
-<!-- cache-key: cdktf-0.20.1 input-79e6c503e86fe55805958b61d9a2c695b0a69c2339520c66ae6030c95e6cff54 -->
+<!-- cache-key: cdktf-0.20.8 input-6073cb0e683097ba3f5c043592179682637605534db023aa3bf046c05569f14e -->

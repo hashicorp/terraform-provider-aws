@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -31,16 +31,17 @@ func dataSourceEBSDefaultKMSKey() *schema.Resource {
 		},
 	}
 }
-func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	res, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+	input := ec2.GetEbsDefaultKmsKeyIdInput{}
+	res, err := conn.GetEbsDefaultKmsKeyId(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("key_arn", res.KmsKeyId)
 
 	return diags

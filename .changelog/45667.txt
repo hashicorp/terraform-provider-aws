@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_capacity_provider: Add `managed_instances_provider.instance_launch_template.capacity_option_type` argument
+```

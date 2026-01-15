@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_media_packagev2_channel_group
+```

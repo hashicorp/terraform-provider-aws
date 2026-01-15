@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `abort_statement` - (Required) The message that Amazon Lex uses to abort a conversation. Attributes are documented under [statement](#statement).
 * `child_directed` - (Required) By specifying true, you confirm that your use of Amazon Lex is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to COPPA. For more information see the [Amazon Lex FAQ](https://aws.amazon.com/lex/faqs#data-security) and the [Amazon Lex PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-childDirected).
 * `clarification_prompt` - (Required) The message that Amazon Lex uses when it doesn't understand the user's request. Attributes are documented under [prompt](#prompt).
@@ -168,4 +169,4 @@ Using `terraform import`, import bots using their name. For example:
 % terraform import aws_lex_bot.order_flowers_bot OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e97de4060b2ca18f867fded9294c619effbd503e7c58dacacd804ae26ee28522 -->
+<!-- cache-key: cdktf-0.20.8 input-cd69fa3c56cd15afa03fc5e7b6dfeb2ecc1fa9e6e46f855e71f37a231bf07a4e -->

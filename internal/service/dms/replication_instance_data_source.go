@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_dms_replication_instance", name="Replication Instance")
+// @Tags(identifierAttribute="replication_instance_arn")
 func dataSourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
@@ -96,11 +97,9 @@ func dataSourceReplicationInstance() *schema.Resource {
 	}
 }
 
-func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rID := d.Get("replication_instance_id").(string)
 	instance, err := findReplicationInstanceByID(ctx, conn, rID)
@@ -130,19 +129,6 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return aws.ToString(sg.VpcSecurityGroupId)
 	})
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Instance (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

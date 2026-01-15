@@ -46,17 +46,17 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `instanceId` - (Optional) Specify the exact Instance ID with which to populate the data source.
 * `instanceTags` - (Optional) Map of tags, each pair of which must
 exactly match a pair on the desired Instance.
-
-* `filter` - (Optional) One or more name/value pairs to use as filters. There are
-several valid keys, for a full reference, check out
-[describe-instances in the AWS CLI reference][1].
-
+* `filter` - (Optional) One or more filters to apply to the search.
+  If multiple `filter` blocks are provided, they all must be true.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  See [`filter` Block](#filter-block) below.
 * `getPasswordData` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `passwordData` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
-
 * `getUserData` - (Optional) Retrieve Base64 encoded User Data contents into the `userDataBase64` attribute. A SHA-1 hash of the User Data contents will always be present in the `userData` attribute. Defaults to `false`.
 
 ~> **NOTE:** At least one of `filter`, `instanceTags`, or `instanceId` must be specified.
@@ -64,6 +64,14 @@ several valid keys, for a full reference, check out
 ~> **NOTE:** If anything other than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+* `values` - (Required) One or more values to match.
 
 ## Attribute Reference
 
@@ -104,7 +112,7 @@ interpolation.
 * `instanceType` - Type of the Instance.
 * `ipv6Addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `keyName` - Key name of the Instance.
-* `launch_time` - Time the instance was launched.
+* `launchTime` - Time the instance was launched.
 * `maintenanceOptions` - Maintenance and recovery options for the instance.
     * `autoRecovery` - Automatic recovery behavior of the instance.
 * `metadataOptions` - Metadata options of the Instance.
@@ -118,6 +126,7 @@ interpolation.
 * `outpostArn` - ARN of the Outpost.
 * `passwordData` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `getPasswordData` is true. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `placementGroup` - Placement group of the Instance.
+* `placementGroupId` - Placement group ID of the Instance.
 * `placementPartitionNumber` - Number of the partition the instance is in.
 * `privateDns` - Private DNS name assigned to the Instance. Can only be used inside the Amazon EC2, and only available if you've enabled DNS hostnames for your VPC.
 * `privateDnsNameOptions` - Options for the instance hostname.
@@ -154,4 +163,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.20.1 input-0360e36bcd653291899c63abe79b8fb1fd576446cfbc317105b63e631c4e981b -->
+<!-- cache-key: cdktf-0.20.8 input-ed6e521db41b817385667c08fd033cfa8c8a6d0d71f3b15abc6035031718d8b8 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -11,13 +11,11 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,20 +23,20 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
@@ -56,8 +54,8 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeyConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/+.`)),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey2),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apikeys/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
@@ -75,18 +73,18 @@ func TestAccAPIGatewayAPIKey_customerID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_customerID(rName, "cid1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", "cid1"),
 				),
 			},
@@ -98,7 +96,7 @@ func TestAccAPIGatewayAPIKey_customerID(t *testing.T) {
 			{
 				Config: testAccAPIKeyConfig_customerID(rName, "cid2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
 					resource.TestCheckResourceAttr(resourceName, "customer_id", "cid2"),
 				),
@@ -111,18 +109,18 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -134,7 +132,7 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
@@ -147,18 +145,18 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
@@ -170,7 +168,7 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 			{
 				Config: testAccAPIKeyConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey2),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey2),
 					testAccCheckAPIKeyNotRecreated(&apiKey1, &apiKey2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
@@ -183,18 +181,18 @@ func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_value(rName, `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				),
 			},
@@ -211,19 +209,19 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceAPIKey(), resourceName),
+					testAccCheckAPIKeyExists(ctx, t, resourceName, &apiKey1),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceAPIKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -231,14 +229,14 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.GetApiKeyOutput) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetApiKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
 
@@ -252,9 +250,9 @@ func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.GetAp
 	}
 }
 
-func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIKeyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_api_key" {
@@ -263,7 +261,7 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

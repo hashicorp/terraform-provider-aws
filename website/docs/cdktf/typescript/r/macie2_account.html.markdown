@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `findingPublishingFrequency` -  (Optional) Specifies how often to publish updates to policy findings for the account. This includes publishing updates to AWS Security Hub and Amazon EventBridge (formerly called Amazon CloudWatch Events). Valid values are `FIFTEEN_MINUTES`, `ONE_HOUR` or `SIX_HOURS`.
 * `status` - (Optional) Specifies the status for the account. To enable Amazon Macie and start all Macie activities for the account, set this value to `ENABLED`. Valid values are `ENABLED` or `PAUSED`.
 
@@ -79,4 +80,4 @@ Using `terraform import`, import `aws_macie2_account` using the id. For example:
 % terraform import aws_macie2_account.example abcd1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3bb36e9a7bd0b8871e777a031ed1a58fdb5d221c7af202cb42579fd8023356ae -->
+<!-- cache-key: cdktf-0.20.8 input-a89dd3c6798b104daebd1488f952e9335b6d267f5a2a6c5a088c2ab8406d4edd -->

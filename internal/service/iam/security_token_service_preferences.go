@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -34,7 +34,7 @@ func resourceSecurityTokenServicePreferences() *schema.Resource {
 	}
 }
 
-func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -49,13 +49,13 @@ func resourceSecurityTokenServicePreferencesUpsert(ctx context.Context, d *schem
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).AccountID)
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	}
 
 	return append(diags, resourceSecurityTokenServicePreferencesRead(ctx, d, meta)...)
 }
 
-func resourceSecurityTokenServicePreferencesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSecurityTokenServicePreferencesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 

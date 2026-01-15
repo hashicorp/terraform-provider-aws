@@ -89,12 +89,22 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `computeConfiguration` - (Optional) The compute configuration of the compute fleet. This is only required if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE` or `CUSTOM_INSTANCE_TYPE`. See [`computeConfiguration`](#compute_configuration) below.
 * `fleetServiceRole` - (Optional) The service role associated with the compute fleet.
 * `imageId` - (Optional) The Amazon Machine Image (AMI) of the compute fleet.
 * `overflowBehavior` - (Optional) Overflow behavior for compute fleet. Valid values: `ON_DEMAND`, `QUEUE`.
-* `scalingConfiguration` - (Optional) Configuration block. Detailed below. This option is only valid when your overflow behavior is `QUEUE`.
+* `scalingConfiguration` - (Optional) Configuration block. This option is only valid when your overflow behavior is `QUEUE`. See [`scalingConfiguration`](#scaling_configuration) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpcConfig` - (Optional) Configuration block. Detailed below.
+* `vpcConfig` - (Optional) Configuration block. See [`vpcConfig`](#vpc_config) below.
+
+### compute_configuration
+
+* `disk` - (Optional) Amount of disk space of the instance type included in the fleet.
+* `instanceType` - (Optional) EC2 instance type to be launched in the fleet. Specify only if `computeType` is set to `CUSTOM_INSTANCE_TYPE`. See [Supported instance families](https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html#environment-reserved-capacity.instance-types).
+* `machineType` - (Optional) Machine type of the instance type included in the fleet. Valid values: `GENERAL`, `NVME`. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
+* `memory` - (Optional) Amount of memory of the instance type included in the fleet. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
+* `vcpu` - (Optional) Number of vCPUs of the instance type included in the fleet. Specify only if `computeType` is set to `ATTRIBUTE_BASED_COMPUTE`.
 
 ### scaling_configuration
 
@@ -128,6 +138,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_fleet.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:fleet/example-fleet"
+  }
+}
+
+resource "aws_codebuild_fleet" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild fleet.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Fleet using the `name` or the `arn`. For example:
 
 ```typescript
@@ -154,4 +185,4 @@ Using `terraform import`, import CodeBuild Fleet using the `name`. For example:
 % terraform import aws_codebuild_fleet.name fleet-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-dbb44325b5d2cbb2ee98f3f444c59256fc8b2cadc1771f7659fa4b8a95a92cc4 -->
+<!-- cache-key: cdktf-0.20.8 input-bf96a61c804499e1ad65792db9b1f90cfd3a977e022d7a03fb487d0fdf52b927 -->

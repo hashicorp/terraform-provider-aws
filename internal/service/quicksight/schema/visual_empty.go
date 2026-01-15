@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -19,7 +18,7 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"data_set_identifier": stringLenBetweenSchema(attrRequired, 1, 2048),
 				"visual_id":           idSchema(),
 				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
@@ -27,12 +26,12 @@ func emptyVisualSchema() *schema.Schema {
 	}
 }
 
-func expandEmptyVisual(tfList []interface{}) *awstypes.EmptyVisual {
+func expandEmptyVisual(tfList []any) *awstypes.EmptyVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := tfList[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -45,19 +44,19 @@ func expandEmptyVisual(tfList []interface{}) *awstypes.EmptyVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		apiObject.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]any); ok && len(v) > 0 {
 		apiObject.Actions = expandVisualCustomActions(v)
 	}
 
 	return apiObject
 }
 
-func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []interface{} {
+func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
@@ -66,5 +65,5 @@ func flattenEmptyVisual(apiObject *awstypes.EmptyVisual) []interface{} {
 		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

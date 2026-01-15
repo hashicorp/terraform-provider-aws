@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,7 +44,7 @@ func TestAccQuickSightTemplateAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alias_name", aliasName),
 					resource.TestCheckResourceAttrPair(resourceName, "template_id", resourceTemplateName, "template_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "template_version_number", resourceTemplateName, "version_number"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("template/%[1]s/alias/%[2]s", rId, aliasName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("template/%[1]s/alias/%[2]s", rId, aliasName)),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccQuickSightTemplateAlias_disappears(t *testing.T) {
 				Config: testAccTemplateAliasConfig_basic(rId, rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateAliasExists(ctx, resourceName, &templateAlias),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTemplateAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceTemplateAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func testAccCheckTemplateAliasDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfquicksight.FindTemplateAliasByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["template_id"], rs.Primary.Attributes["alias_name"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `protocol` - (Optional) The tunnel protocol. Valid values: `gre`. Default is `gre`.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Connect. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitGatewayDefaultRouteTableAssociation` - (Optional) Boolean whether the Connect should be associated with the EC2 Transit Gateway association default route table. This cannot be configured or perform drift detection with Resource Access Manager shared EC2 Transit Gateways. Default value: `true`.
@@ -99,4 +100,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_connect` using the EC2
 % terraform import aws_ec2_transit_gateway_connect.example tgw-attach-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3587ce9a543683c2a7be3dfe58f86b578cf760c76595adf37a9f30c13a13e9b9 -->
+<!-- cache-key: cdktf-0.20.8 input-91a2c1773e79e29389cb2453e47a8576567df737eb1c2737d01821cef5020d21 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -34,17 +34,17 @@ func dataSourceAuthorizers() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizersRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
-	input := &apigateway.GetAuthorizersInput{
+	input := apigateway.GetAuthorizersInput{
 		RestApiId: aws.String(apiID),
 	}
 	var ids []*string
 
-	err := getAuthorizersPages(ctx, conn, input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
+	err := getAuthorizersPages(ctx, conn, &input, func(page *apigateway.GetAuthorizersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_codeconnections_connection
+```
+
+```release-note:new-resource
+aws_codeconnections_host
+```

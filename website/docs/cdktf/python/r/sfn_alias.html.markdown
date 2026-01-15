@@ -53,6 +53,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name for the alias you are creating.
 * `description` - (Optional) Description of the alias.
 * `routing_configuration` - (Required) The StateMachine alias' route configuration settings. Fields documented below
@@ -70,6 +71,21 @@ This resource exports the following attributes in addition to the arguments abov
 * `creation_date` - The date the state machine alias was created.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_alias.example
+  identity = {
+    "arn" = "arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo"
+  }
+}
+
+resource "aws_sfn_alias" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SFN (Step Functions) Alias using the `arn`. For example:
 
@@ -94,4 +110,4 @@ Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For
 % terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfd0b99447354a387498343e81e37140646e8c656cabd51886388e3b57f53683 -->
+<!-- cache-key: cdktf-0.20.8 input-5a9fde9454f62390dc42992e9e95e18de271bd1808bb8c17b4e3144e06a9ec9b -->

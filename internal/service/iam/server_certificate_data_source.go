@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -6,7 +6,7 @@ package iam
 import (
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -87,21 +87,7 @@ func dataSourceServerCertificate() *schema.Resource {
 	}
 }
 
-type CertificateByExpiration []awstypes.ServerCertificateMetadata
-
-func (m CertificateByExpiration) Len() int {
-	return len(m)
-}
-
-func (m CertificateByExpiration) Swap(i, j int) {
-	m[i], m[j] = m[j], m[i]
-}
-
-func (m CertificateByExpiration) Less(i, j int) bool {
-	return m[i].Expiration.After(*m[j].Expiration)
-}
-
-func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -136,15 +122,13 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	if len(metadatas) == 0 {
 		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned no results")
 	}
-	if len(metadatas) > 1 {
-		if !d.Get("latest").(bool) {
-			return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
-		}
-
-		sort.Sort(CertificateByExpiration(metadatas))
+	if len(metadatas) > 1 && !d.Get("latest").(bool) {
+		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
 	}
 
-	metadata := metadatas[0]
+	metadata := slices.MaxFunc(metadatas, func(a, b awstypes.ServerCertificateMetadata) int {
+		return a.Expiration.Compare(aws.ToTime(b.Expiration))
+	})
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
 	d.Set(names.AttrARN, metadata.Arn)
 	d.Set(names.AttrPath, metadata.Path)

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package location
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_location_place_index")
+// @SDKDataSource("aws_location_place_index", name="Place Index")
 func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
@@ -65,7 +65,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 	}
 }
 
-func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
@@ -90,7 +90,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
-		d.Set("data_source_configuration", []interface{}{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
+		d.Set("data_source_configuration", []any{flattenDataSourceConfiguration(output.DataSourceConfiguration)})
 	} else {
 		d.Set("data_source_configuration", nil)
 	}
@@ -98,7 +98,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
-	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set(names.AttrTags, keyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)).Map())
 	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	return diags

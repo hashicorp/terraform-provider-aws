@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,7 +57,7 @@ func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -84,7 +84,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *s
 	return append(diags, resourceTransitGatewayRouteTablePropagationRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -95,7 +95,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 
 	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,7 +113,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 	return diags
 }
 
-func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -123,10 +123,11 @@ func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *s
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table Propagation: %s", d.Id())
-	_, err = conn.DisableTransitGatewayRouteTablePropagation(ctx, &ec2.DisableTransitGatewayRouteTablePropagationInput{
+	input := ec2.DisableTransitGatewayRouteTablePropagationInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
-	})
+	}
+	_, err = conn.DisableTransitGatewayRouteTablePropagation(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeTransitGatewayRouteTablePropagationNotFound) {
 		return diags
@@ -154,7 +155,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		if enable {
 			input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),

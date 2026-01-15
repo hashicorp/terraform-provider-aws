@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,9 +39,9 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 				),
 			},
@@ -72,7 +72,7 @@ func testAccVoiceConnectorTermination_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorTermination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorTermination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,8 +104,8 @@ func testAccVoiceConnectorTermination_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_phone_number", ""),
@@ -193,7 +193,7 @@ func testAccCheckVoiceConnectorTerminationDestroy(ctx context.Context) resource.
 				return tfchime.FindVoiceConnectorTerminationByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

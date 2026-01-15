@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Partition")
+// @FrameworkDataSource("aws_partition", name="Partition")
+// @Region(overrideEnabled=false)
 func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &partitionDataSource{}
 
@@ -22,11 +23,7 @@ func newPartitionDataSource(context.Context) (datasource.DataSourceWithConfigure
 }
 
 type partitionDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*partitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_partition"
+	framework.DataSourceWithModel[partitionDataSourceModel]
 }
 
 func (d *partitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -57,8 +54,8 @@ func (d *partitionDataSource) Read(ctx context.Context, request datasource.ReadR
 	}
 
 	data.DNSSuffix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().DNSSuffix(ctx))
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
-	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
+	data.Partition = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	data.ReverseDNSPrefix = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

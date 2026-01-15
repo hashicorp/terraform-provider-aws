@@ -1,69 +1,64 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 )
 
+// cleanDelegationSetID is used to remove the leading "/delegationset/" from a
+// delegation set ID
 func cleanDelegationSetID(id string) string {
 	return strings.TrimPrefix(id, "/delegationset/")
 }
 
-// Route 53 stores certain characters with the octal equivalent in ASCII format.
-// This function converts all of these characters back into the original character.
-// E.g. "*" is stored as "\\052" and "@" as "\\100"
-func cleanRecordName(name string) string {
-	str := name
-	s, err := strconv.Unquote(`"` + str + `"`)
-	if err != nil {
-		return str
-	}
-	return s
+// cleanZoneID is used to remove the leading "/hostedzone/" from a hosted zone ID
+func cleanZoneID(id string) string {
+	return strings.TrimPrefix(id, "/hostedzone/")
 }
 
-// CleanZoneID is used to remove the leading /hostedzone/
-func cleanZoneID(ID string) string {
-	return strings.TrimPrefix(ID, "/hostedzone/")
-}
-
-func normalizeAliasName(alias interface{}) string {
-	output := strings.ToLower(alias.(string))
-	return cleanRecordName(strings.TrimSuffix(output, "."))
-}
-
-// normalizeZoneName is used to remove the trailing period
-// and apply consistent casing to "name" or "domain name"
-// attributes returned from the Route53 API or provided as
-// user input.
+// normalizeAliasDomainName is a wrapper around the shared dns package normalization
+// function which handles interface types for Plugin SDK V2 based resources
 //
-// The single dot (".") domain name is returned as-is.
-// Uppercase letters are converted to lowercase.
-func normalizeZoneName(v interface{}) string {
-	var str string
-	switch value := v.(type) {
+// The only difference between this helper and normalizeDomainName is that the single
+// dot (".") domain name is not passed through as-is.
+func normalizeAliasDomainName(v any) string {
+	var s string
+	switch v := v.(type) {
 	case *string:
-		str = aws.ToString(value)
+		s = aws.ToString(v)
 	case string:
-		str = value
+		s = v
 	default:
 		return ""
 	}
 
-	if str == "." {
-		return str
-	}
-
-	return strings.ToLower(strings.TrimSuffix(str, "."))
+	return dns.Normalize(strings.TrimSuffix(s, "."))
 }
 
+// normalizeDomainName is a wrapper around the shared dns package normalization
+// function which handles interface values from Plugin SDK V2 based resources
+func normalizeDomainName(v any) string {
+	var s string
+	switch v := v.(type) {
+	case *string:
+		s = aws.ToString(v)
+	case string:
+		s = v
+	default:
+		return ""
+	}
+
+	return dns.Normalize(s)
+}
+
+// fqdn appends a single dot (".") to the input string if necessary
 func fqdn(name string) string {
-	n := len(name)
-	if n == 0 || name[n-1] == '.' {
+	if n := len(name); n == 0 || name[n-1] == '.' {
 		return name
 	} else {
 		return name + "."

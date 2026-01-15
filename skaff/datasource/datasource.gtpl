@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}
@@ -31,11 +31,9 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
@@ -47,14 +45,10 @@ import (
 	"regexp"
 	"strings"
 	"time"
-{{ if .AWSGoSDKV2 }}
+
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -63,6 +57,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 {{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 {{- end }}
@@ -117,7 +112,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		{{- end }}
 		Schema: map[string]*schema.Schema{
-			"arn": { {{- if .IncludeComments }} // TIP: Many, but not all, data sources have an `arn` attribute.{{- end }}
+			names.AttrARN: { {{- if .IncludeComments }} // TIP: Many, but not all, data sources have an `arn` attribute.{{- end }}
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +139,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 				},
 			},
 			{{- if .IncludeTags }}
-			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
+			names.AttrTags: tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
 			{{- end }}
 		},
 	}
@@ -154,7 +149,7 @@ const (
 	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
-func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	{{- if .IncludeComments }}
 	// TIP: ==== RESOURCE READ ====
@@ -172,7 +167,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get information about a resource from AWS using an API Get,
 	// List, or Describe-type function, or, better yet, using a finder. Data
@@ -180,11 +175,12 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// elements. However, a data source will have perhaps one or a few arguments
 	// that are key to finding the relevant information, such as 'name' below.
 	{{- end }}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
+		smerr.Append(ctx, diags, err, smerr.ID, name)
+		return diags
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Set the ID
@@ -202,7 +198,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//
 	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
 	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
-	// d.Set("arn", out.Arn) is sufficient. No error or nil checking is
+	// d.Set(names.AttrARN, out.Arn) is sufficient. No error or nil checking is
 	// necessary.
 	//
 	// However, there are some situations where more handling is needed.
@@ -212,27 +208,30 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	{{- end }}
-	d.Set("arn", out.ARN)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.ARN)
+	d.Set(names.AttrName, out.Name)
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 
 	d.Set("policy", p)
@@ -245,11 +244,11 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// where possible.
 	{{- end }}
 	{{- if .IncludeTags }}
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
+	if err := d.Set(names.AttrTags, KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		smerr.Append(ctx, diags, err, smerr.ID, d.Id())
+		return diags
 	}
 	{{- end }}
 	{{ if .IncludeComments }}

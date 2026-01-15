@@ -113,6 +113,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `kms_key_id` - (Optional, Forces new resource) The AWS KMS key identifier for encryption of the replicated automated backups. The KMS key ID is the Amazon Resource Name (ARN) for the KMS encryption key in the destination AWS Region, for example, `arn:aws:kms:us-east-1:123456789012:key/AKIAIOSFODNN7EXAMPLE`.
 * `pre_signed_url` - (Optional, Forces new resource) A URL that contains a [Signature Version 4](https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html) signed request for the [`StartDBInstanceAutomatedBackupsReplication`](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartDBInstanceAutomatedBackupsReplication.html) action to be called in the AWS Region of the source DB instance.
 * `retention_period` - (Optional, Forces new resource) The retention period for the replicated automated backups, defaults to `7`.
@@ -156,4 +157,4 @@ Using `terraform import`, import RDS instance automated backups replication usin
 % terraform import aws_db_instance_automated_backups_replication.default arn:aws:rds:us-east-1:123456789012:auto-backup:ab-faaa2mgdj1vmp4xflr7yhsrmtbtob7ltrzzz2my
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a1a4df51ceeb0b407d09f3cecea4189146c75a1f96880f39dc75e22abd29cc11 -->
+<!-- cache-key: cdktf-0.20.8 input-86d5a341f2b6e0e6dc20f413ad700d89d529ce6d89a096a44c0a483c2fa2cd0a -->

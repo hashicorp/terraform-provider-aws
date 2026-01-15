@@ -1,23 +1,27 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,6 +30,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 	var group identitystore.DescribeGroupOutput
 	resourceName := "aws_identitystore_group.test"
 	displayName := "Acceptance Test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -38,11 +43,15 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(displayName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectGlobalARNNoAccountIDFormat(resourceName, tfjsonpath.New(names.AttrARN), "identitystore", "group/{group_id}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("group_id"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("identity_store_id"), "data.aws_ssoadmin_instances.test", tfjsonpath.New("identity_store_ids").AtSliceIndex(0), compare.ValuesSame()),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
-					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),
 			},
 			{
@@ -74,7 +83,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfidentitystore.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,16 +110,79 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_description(description1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(description1)),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccGroupConfig_description(description2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact(description2)),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIdentityStoreGroup_displayNameChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group identitystore.DescribeGroupOutput
+	displayName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	displayName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_displayName(displayName1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName1)),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+				),
+			},
+			{
+				Config: testAccGroupConfig_displayName(displayName2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDisplayName), knownvalue.StringExact(displayName2)),
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
 				),
 			},
 		},
@@ -128,7 +200,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -138,6 +210,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			return fmt.Errorf("IdentityStore Group %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -146,16 +219,13 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *identitystore.Des
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)
 
 		output, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
+
 		if err != nil {
 			return err
 		}
@@ -168,22 +238,35 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *identitystore.Des
 
 func testAccGroupConfig_basic(displayName string) string {
 	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.identity_store_ids[0]
   display_name      = %[1]q
-  description       = "Example description"
 }
+
+data "aws_ssoadmin_instances" "test" {}
 `, displayName)
 }
 
 func testAccGroupConfig_description(description string) string {
 	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   display_name      = "Test display name"
   description       = %[1]q
 }
+
+data "aws_ssoadmin_instances" "test" {}
 `, description)
+}
+
+func testAccGroupConfig_displayName(displayName string) string {
+	return fmt.Sprintf(`
+resource "aws_identitystore_group" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = %[1]q
+  description       = "Test description"
+}
+
+data "aws_ssoadmin_instances" "test" {}
+`, displayName)
 }

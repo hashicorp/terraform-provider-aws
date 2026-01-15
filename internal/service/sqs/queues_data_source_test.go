@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -30,7 +30,7 @@ func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
 				Config: testAccQueuesDataSourceConfig_queueNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "queue_urls.0", resourceName, names.AttrURL),
 				),
 			},

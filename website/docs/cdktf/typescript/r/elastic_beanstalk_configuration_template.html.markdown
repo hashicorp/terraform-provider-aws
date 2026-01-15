@@ -47,14 +47,15 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) A unique name for this Template.
-* `application` – (Required) name of the application to associate with this configuration template
+* `application` - (Required) name of the application to associate with this configuration template
 * `description` - (Optional) Short description of the Template
-* `environmentId` – (Optional) The ID of the environment used with this configuration template
-* `setting` – (Optional) Option settings to configure the new Environment. These
+* `environmentId` - (Optional) The ID of the environment used with this configuration template
+* `setting` - (Optional) Option settings to configure the new Environment. These
   override specific values that are set as defaults. The format is detailed
   below in [Option Settings](#option-settings)
-* `solutionStackName` – (Optional) A solution stack to base your Template
+* `solutionStackName` - (Optional) A solution stack to base your Template
 off of. Example stacks can be found in the [Amazon API documentation][1]
 
 ## Option Settings
@@ -79,4 +80,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
 
-<!-- cache-key: cdktf-0.20.1 input-abd91b17373f96fef9bb9422def3ab0d77d4ca67c22d5b83904d54987db262f7 -->
+<!-- cache-key: cdktf-0.20.8 input-50750d484999c3e01ed1e6a16f8c74965ffd9b70240fa0809571eeef98cd6493 -->

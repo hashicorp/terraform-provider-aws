@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin
@@ -14,20 +14,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment")
-func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_ssoadmin_customer_managed_policy_attachment", name="Customer Managed Policy Attachment")
+func resourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceCustomerManagedPolicyAttachmentRead,
@@ -82,11 +83,11 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
+	tfMap := d.Get("customer_managed_policy_reference").([]any)[0].(map[string]any)
 	policyName := tfMap[names.AttrName].(string)
 	policyPath := tfMap[names.AttrPath].(string)
 	instanceARN := d.Get("instance_arn").(string)
@@ -114,7 +115,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 	return append(diags, resourceCustomerManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -123,9 +124,9 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policy, err := FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
+	policy, err := findCustomerManagedPolicyByFourPartKey(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +136,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "reading SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("customer_managed_policy_reference", []interface{}{flattenCustomerManagedPolicyReference(policy)}); err != nil {
+	if err := d.Set("customer_managed_policy_reference", []any{flattenCustomerManagedPolicyReference(policy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting customer_managed_policy_reference: %s", err)
 	}
 	d.Set("instance_arn", instanceARN)
@@ -144,7 +145,7 @@ func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.
 	return diags
 }
 
-func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
@@ -200,7 +201,7 @@ func CustomerManagedPolicyAttachmentParseResourceID(id string) (string, string, 
 	return "", "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CUSTOMER_MANAGED_POLICY_NAME%[2]sCUSTOMER_MANAGED_POLICY_PATH%[2]sPERMISSION_SET_ARN%[2]sINSTANCE_ARN", id, customerManagedPolicyAttachmentIDSeparator)
 }
 
-func FindCustomerManagedPolicy(ctx context.Context, conn *ssoadmin.Client, policyName, policyPath, permissionSetARN, instanceARN string) (*awstypes.CustomerManagedPolicyReference, error) {
+func findCustomerManagedPolicyByFourPartKey(ctx context.Context, conn *ssoadmin.Client, policyName, policyPath, permissionSetARN, instanceARN string) (*awstypes.CustomerManagedPolicyReference, error) {
 	input := &ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
@@ -239,7 +240,7 @@ func findCustomerManagedPolicyReferences(
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -259,7 +260,7 @@ func findCustomerManagedPolicyReferences(
 	return output, nil
 }
 
-func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstypes.CustomerManagedPolicyReference {
+func expandCustomerManagedPolicyReference(tfMap map[string]any) *awstypes.CustomerManagedPolicyReference {
 	if tfMap == nil {
 		return nil
 	}
@@ -277,12 +278,12 @@ func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPolicyReference) map[string]interface{} {
+func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPolicyReference) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
 		tfMap[names.AttrName] = aws.ToString(v)

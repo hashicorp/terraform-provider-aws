@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -6,18 +6,16 @@ package ses_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,9 +32,12 @@ func TestAccSESDomainIdentity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					testAccCheckDomainIdentityARN("aws_ses_domain_identity.test", domain),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ses", "identity/{domain}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrSet(resourceName, "verification_token"),
 				),
 			},
 		},
@@ -56,9 +57,9 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityConfig_basic(domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +98,7 @@ func testAccCheckDomainIdentityDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -124,27 +125,6 @@ func testAccCheckDomainIdentityExists(ctx context.Context, n string) resource.Te
 		_, err := tfses.FindIdentityVerificationAttributesByIdentity(ctx, conn, rs.Primary.ID)
 
 		return err
-	}
-}
-
-func testAccCheckDomainIdentityARN(n string, domain string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs := s.RootModule().Resources[n]
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-
-		expected := arn.ARN{
-			AccountID: awsClient.AccountID,
-			Partition: awsClient.Partition,
-			Region:    awsClient.Region,
-			Resource:  fmt.Sprintf("identity/%s", strings.TrimSuffix(domain, ".")),
-			Service:   "ses",
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
-		}
-
-		return nil
 	}
 }
 

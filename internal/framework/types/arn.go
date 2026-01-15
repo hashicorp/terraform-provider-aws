@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -52,12 +52,9 @@ func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.
 		return ARNUnknown(), diags
 	}
 
-	valueString := in.ValueString()
-	if _, err := arn.Parse(valueString); err != nil {
-		return ARNUnknown(), diags // Must not return validation errors.
-	}
-
-	return ARNValue(valueString), diags
+	// The ValidateAttribute method will surface errors if the value is an invalid
+	// ARN. This method simply passes the value through.
+	return ARNValue(in.ValueString()), diags
 }
 
 func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

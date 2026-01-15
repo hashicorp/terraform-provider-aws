@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -8,34 +8,45 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_imagebuilder_image_recipe", name="Image Recipe")
 // @Tags(identifierAttribute="id")
-func ResourceImageRecipe() *schema.Resource {
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
+func resourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
 		ReadWithoutTimeout:   resourceImageRecipeRead,
 		UpdateWithoutTimeout: resourceImageRecipeUpdate,
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
+			"ami_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,7 +88,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(100, 10000),
+										ValidateFunc: validation.IntBetween(100, 100000),
 									},
 									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
@@ -95,7 +106,7 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,
@@ -104,10 +115,10 @@ func ResourceImageRecipe() *schema.Resource {
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
 									names.AttrVolumeType: {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.EbsVolumeType](),
 									},
 								},
 							},
@@ -118,6 +129,7 @@ func ResourceImageRecipe() *schema.Resource {
 							// this is not compatible with TypeString's zero value.
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 						names.AttrVirtualName: {
@@ -235,26 +247,28 @@ func ResourceImageRecipe() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateImageRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("ami_tags"); ok {
+		input.AmiTags = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
-		input.Components = expandComponentConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("component"); ok && len(v.([]any)) > 0 {
+		input.Components = expandComponentConfigurations(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -269,15 +283,15 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.ParentImage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
-			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
+	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AdditionalInstanceConfiguration = &awstypes.AdditionalInstanceConfiguration{
+			SystemsManagerAgent: expandSystemsManagerAgent(v.([]any)[0].(map[string]any)),
 		}
 	}
 
 	if v, ok := d.GetOk("user_data_base64"); ok {
 		if input.AdditionalInstanceConfiguration == nil {
-			input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{}
+			input.AdditionalInstanceConfiguration = &awstypes.AdditionalInstanceConfiguration{}
 		}
 		input.AdditionalInstanceConfiguration.UserDataOverride = aws.String(v.(string))
 	}
@@ -289,71 +303,66 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.WorkingDirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateImageRecipeWithContext(ctx, input)
+	output, err := conn.CreateImageRecipe(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Recipe: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image Recipe: empty response")
-	}
-
-	d.SetId(aws.StringValue(output.ImageRecipeArn))
+	d.SetId(aws.ToString(output.ImageRecipeArn))
 
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
-func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageRecipeInput{
-		ImageRecipeArn: aws.String(d.Id()),
-	}
+	imageRecipe, err := findImageRecipeByARN(ctx, conn, d.Id())
 
-	output, err := conn.GetImageRecipeWithContext(ctx, input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Recipe (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.ImageRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Recipe (%s): empty response", d.Id())
-	}
-
-	imageRecipe := output.ImageRecipe
 
 	d.Set(names.AttrARN, imageRecipe.Arn)
-	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
-	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
+	if err := d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting block_device_mapping: %s", err)
+	}
+	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
+	}
+
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
+	}
+
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
 	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-
-	setTagsOut(ctx, imageRecipe.Tags)
-
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
-		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})
+		if err := d.Set("systems_manager_agent", []any{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting systems_manager_agent: %s", err)
+		}
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
 	}
-
 	d.Set(names.AttrVersion, imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
+
+	setTagsOut(ctx, imageRecipe.Tags)
 
 	return diags
 }
 
-func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -361,17 +370,16 @@ func resourceImageRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceImageRecipeRead(ctx, d, meta)...)
 }
 
-func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.DeleteImageRecipeInput{
+	log.Printf("[DEBUG] Deleting Image Builder Image Recipe: %s", d.Id())
+	_, err := conn.DeleteImageRecipe(ctx, &imagebuilder.DeleteImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteImageRecipeWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -382,12 +390,37 @@ func resourceImageRecipeDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.ComponentConfiguration {
+func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.ImageRecipe, error) {
+	input := &imagebuilder.GetImageRecipeInput{
+		ImageRecipeArn: aws.String(arn),
+	}
+
+	output, err := conn.GetImageRecipe(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImageRecipe == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.ImageRecipe, nil
+}
+
+func expandComponentConfiguration(tfMap map[string]any) *awstypes.ComponentConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.ComponentConfiguration{}
+	apiObject := &awstypes.ComponentConfiguration{}
 
 	if v, ok := tfMap["component_arn"].(string); ok && v != "" {
 		apiObject.ComponentArn = aws.String(v)
@@ -400,15 +433,15 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.Co
 	return apiObject
 }
 
-func expandComponentParameters(tfList []interface{}) []*imagebuilder.ComponentParameter {
+func expandComponentParameters(tfList []any) []awstypes.ComponentParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.ComponentParameter
+	var apiObjects []awstypes.ComponentParameter
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -420,18 +453,18 @@ func expandComponentParameters(tfList []interface{}) []*imagebuilder.ComponentPa
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.ComponentParameter {
+func expandComponentParameter(tfMap map[string]any) *awstypes.ComponentParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.ComponentParameter{}
+	apiObject := &awstypes.ComponentParameter{}
 
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
@@ -440,21 +473,21 @@ func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.Compon
 	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		apiObject.Value = aws.StringSlice([]string{v})
+		apiObject.Value = []string{v}
 	}
 
 	return apiObject
 }
 
-func expandComponentConfigurations(tfList []interface{}) []*imagebuilder.ComponentConfiguration {
+func expandComponentConfigurations(tfList []any) []awstypes.ComponentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.ComponentConfiguration
+	var apiObjects []awstypes.ComponentConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -466,18 +499,18 @@ func expandComponentConfigurations(tfList []interface{}) []*imagebuilder.Compone
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *imagebuilder.EbsInstanceBlockDeviceSpecification {
+func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]any) *awstypes.EbsInstanceBlockDeviceSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
+	apiObject := &awstypes.EbsInstanceBlockDeviceSpecification{}
 
 	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
@@ -488,7 +521,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 	}
 
 	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
-		apiObject.Iops = aws.Int64(int64(v))
+		apiObject.Iops = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
@@ -500,33 +533,29 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 	}
 
 	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
-		apiObject.Throughput = aws.Int64(int64(v))
+		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
-		apiObject.VolumeSize = aws.Int64(int64(v))
+		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
-		apiObject.VolumeType = aws.String(v)
+		apiObject.VolumeType = awstypes.EbsVolumeType(v)
 	}
 
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilder.InstanceBlockDeviceMapping {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &imagebuilder.InstanceBlockDeviceMapping{}
+func expandInstanceBlockDeviceMapping(tfMap map[string]any) awstypes.InstanceBlockDeviceMapping {
+	apiObject := awstypes.InstanceBlockDeviceMapping{}
 
 	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["ebs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["ebs"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Ebs = expandEBSInstanceBlockDeviceSpecification(v[0].(map[string]any))
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
@@ -540,38 +569,32 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilde
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMappings(tfList []any) []awstypes.InstanceBlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.InstanceBlockDeviceMapping
+	var apiObjects []awstypes.InstanceBlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
 		}
 
-		apiObject := expandInstanceBlockDeviceMapping(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, expandInstanceBlockDeviceMapping(tfMap))
 	}
 
 	return apiObjects
 }
 
-func expandSystemsManagerAgent(tfMap map[string]interface{}) *imagebuilder.SystemsManagerAgent {
+func expandSystemsManagerAgent(tfMap map[string]any) *awstypes.SystemsManagerAgent {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.SystemsManagerAgent{}
+	apiObject := &awstypes.SystemsManagerAgent{}
 
 	if v, ok := tfMap["uninstall_after_build"].(bool); ok {
 		apiObject.UninstallAfterBuild = aws.Bool(v)
@@ -580,15 +603,11 @@ func expandSystemsManagerAgent(tfMap map[string]interface{}) *imagebuilder.Syste
 	return apiObject
 }
 
-func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.ComponentArn; v != nil {
-		tfMap["component_arn"] = aws.StringValue(v)
+		tfMap["component_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Parameters; v != nil {
@@ -598,117 +617,99 @@ func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguratio
 	return tfMap
 }
 
-func flattenComponentParameters(apiObjects []*imagebuilder.ComponentParameter) []interface{} {
+func flattenComponentParameters(apiObjects []awstypes.ComponentParameter) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenComponentParameter(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenComponentParameter(apiObject *imagebuilder.ComponentParameter) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		tfMap[names.AttrValue] = aws.StringValueSlice(v)[0]
+		tfMap[names.AttrValue] = aws.StringSlice(v)[0]
 	}
 
 	return tfMap
 }
 
-func flattenComponentConfigurations(apiObjects []*imagebuilder.ComponentConfiguration) []interface{} {
+func flattenComponentConfigurations(apiObjects []awstypes.ComponentConfiguration) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenComponentConfiguration(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInstanceBlockDeviceSpecification) map[string]interface{} {
+func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceBlockDeviceSpecification) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.ToBool(v))
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.ToBool(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap[names.AttrIOPS] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
-		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Throughput; v != nil {
-		tfMap[names.AttrThroughput] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.VolumeType; v != nil {
-		tfMap[names.AttrVolumeType] = aws.StringValue(v)
-	}
+	tfMap[names.AttrVolumeType] = apiObject.VolumeType
 
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDeviceMapping) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
+func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMapping) map[string]any {
+	tfMap := map[string]any{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap[names.AttrDeviceName] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
-		tfMap["ebs"] = []interface{}{flattenEBSInstanceBlockDeviceSpecification(v)}
+		tfMap["ebs"] = []any{flattenEBSInstanceBlockDeviceSpecification(v)}
 	}
 
 	if v := apiObject.NoDevice; v != nil {
@@ -716,39 +717,35 @@ func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDevi
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap[names.AttrVirtualName] = aws.StringValue(v)
+		tfMap[names.AttrVirtualName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlockDeviceMapping) []interface{} {
+func flattenInstanceBlockDeviceMappings(apiObjects []awstypes.InstanceBlockDeviceMapping) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenInstanceBlockDeviceMapping(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenSystemsManagerAgent(apiObject *imagebuilder.SystemsManagerAgent) map[string]interface{} {
+func flattenSystemsManagerAgent(apiObject *awstypes.SystemsManagerAgent) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.UninstallAfterBuild; v != nil {
-		tfMap["uninstall_after_build"] = aws.BoolValue(v)
+		tfMap["uninstall_after_build"] = aws.ToBool(v)
 	}
 
 	return tfMap

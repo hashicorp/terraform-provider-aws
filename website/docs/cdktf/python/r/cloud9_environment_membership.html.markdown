@@ -51,6 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `environment_id` - (Required) The ID of the environment that contains the environment member you want to add.
 * `permissions` - (Required) The type of environment member permissions you want to associate with this environment member. Allowed values are `read-only` and `read-write` .
 * `user_arn` - (Required) The Amazon Resource Name (ARN) of the environment member you want to add.
@@ -87,4 +88,4 @@ Using `terraform import`, import Cloud9 environment membership using the `enviro
 % terraform import aws_cloud9_environment_membership.test environment-id#user-arn
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f6c7f63736e4a4ab1919a0e37f40bbf3bc5529ed6b2575d33fc736d43e14e65f -->
+<!-- cache-key: cdktf-0.20.8 input-a66bbc9bc1b158809825d949cf10d3fd55c288456f1a9afe49f39261d2e18c2f -->

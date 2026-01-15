@@ -1,6 +1,20 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!---
 See what makes a good Pull Request at: https://hashicorp.github.io/terraform-provider-aws/raising-a-pull-request/
 --->
+
+<!-- heimdall_github_prtemplate:grc-pci_dss-2024-01-05 -->
+
+## Rollback Plan
+
+If a change needs to be reverted, we will publish an updated version of the library.
+
+## Changes to Security Controls
+
+Are there any changes to security controls (access controls, encryption, logging) in this pull request? If so, explain.
+
 ### Description
 <!---
 Please provide a helpful description of what change this pull request will introduce.

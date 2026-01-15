@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -6,161 +6,276 @@ package s3
 import (
 	"context"
 	"fmt"
-	"log"
+	"reflect"
 	"slices"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/boolplanmodifier"
+	tfint32planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int32planmodifier"
+	tfint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/int64planmodifier"
+	tfstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/stringplanmodifier"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
-func resourceBucketLifecycleConfiguration() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
-		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
-		UpdateWithoutTimeout: resourceBucketLifecycleConfigurationUpdate,
-		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
+// @FrameworkResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
+func newBucketLifecycleConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &bucketLifecycleConfigurationResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	r.SetDefaultCreateTimeout(3 * time.Minute)
+	r.SetDefaultUpdateTimeout(3 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(3 * time.Minute),
-			Update: schema.DefaultTimeout(3 * time.Minute),
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			names.AttrRule: {
-				Type:     schema.TypeList,
+var (
+	_ resource.ResourceWithUpgradeState = &bucketLifecycleConfigurationResource{}
+)
+
+type bucketLifecycleConfigurationResource struct {
+	framework.ResourceWithModel[bucketLifecycleConfigurationResourceModel]
+	framework.WithTimeouts
+}
+
+// Schema returns the schema for this resource.
+func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Version: 1,
+		Attributes: map[string]schema.Attribute{
+			names.AttrBucket: schema.StringAttribute{
 				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"abort_incomplete_multipart_upload": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"days_after_initiation": {
-										Type:     schema.TypeInt,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+				},
+			},
+			names.AttrExpectedBucketOwner: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					fwvalidators.AWSAccountID(),
+				},
+			},
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
+			"transition_default_minimum_object_size": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.TransitionDefaultMinimumObjectSize](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					transitionDefaultMinimumObjectSizeDefault(),
+				},
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrRule: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleRuleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrID: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 255),
+							},
+						},
+						names.AttrPrefix: schema.StringAttribute{
+							Optional:           true,
+							Computed:           true, // Because of Legacy value handling
+							DeprecationMessage: "Specify a prefix using 'filter' instead",
+							PlanModifiers: []planmodifier.String{
+								tfstringplanmodifier.LegacyValue(),
+							},
+						},
+						names.AttrStatus: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(lifecycleRuleStatus_Values()...),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"abort_incomplete_multipart_upload": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[abortIncompleteMultipartUploadModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"days_after_initiation": schema.Int32Attribute{
 										Optional: true,
 									},
 								},
 							},
 						},
-						"expiration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidUTCTimestamp,
+						"expiration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleExpirationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"date": schema.StringAttribute{
+										CustomType: timetypes.RFC3339Type{},
+										Optional:   true,
 									},
-									"days": {
-										Type:     schema.TypeInt,
+									"days": schema.Int32Attribute{
 										Optional: true,
-										Default:  0, // API returns 0
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											tfint32planmodifier.LegacyValue(),
+										},
 									},
-									"expired_object_delete_marker": {
-										Type:     schema.TypeBool,
+									"expired_object_delete_marker": schema.BoolAttribute{
 										Optional: true,
-										Computed: true, // API returns false; conflicts with date and days
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Bool{
+											tfboolplanmodifier.LegacyValue(),
+										},
 									},
+								},
+								Validators: []validator.Object{
+									tfobjectvalidator.WarnExactlyOneOfChildren(
+										path.MatchRelative().AtName("date"),
+										path.MatchRelative().AtName("days"),
+										path.MatchRelative().AtName("expired_object_delete_marker"),
+									),
 								},
 							},
 						},
-						names.AttrFilter: {
-							Type:     schema.TypeList,
-							Optional: true,
-							// If neither the filter block nor the prefix parameter in the rule are specified,
-							// we apply the Default behavior from v3.x of the provider (Filter with empty string Prefix),
-							// which will thus return a Filter in the GetBucketLifecycleConfiguration request and
-							// require diff suppression.
-							DiffSuppressFunc: suppressMissingFilterConfigurationBlock,
-							MaxItems:         1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"and": {
-										Type:     schema.TypeList,
+						names.AttrFilter: schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleRuleFilterModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.WarnAtMostOneOfChildren(
+										path.MatchRelative().AtName("object_size_greater_than"),
+										path.MatchRelative().AtName("object_size_less_than"),
+										path.MatchRelative().AtName(names.AttrPrefix),
+										path.MatchRelative().AtName("and"),
+										path.MatchRelative().AtName("tag"),
+									),
+								},
+								PlanModifiers: []planmodifier.Object{
+									emptyFilterPlanModifier(),
+								},
+								Attributes: map[string]schema.Attribute{
+									"object_size_greater_than": schema.Int64Attribute{
 										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"object_size_greater_than": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(0),
-												},
-												"object_size_less_than": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntAtLeast(1),
-												},
-												names.AttrPrefix: {
-													Type:     schema.TypeString,
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int64{
+											tfint64planmodifier.NullValue(),
+										},
+									},
+									"object_size_less_than": schema.Int64Attribute{
+										Optional: true,
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int64{
+											tfint64planmodifier.NullValue(),
+										},
+									},
+									names.AttrPrefix: schema.StringAttribute{
+										Optional: true,
+										Computed: true, // Because of Legacy value handling
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"and": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[lifecycleRuleAndOperatorModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"object_size_greater_than": schema.Int64Attribute{
 													Optional: true,
+													Computed: true, // Because of Legacy value handling
+													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
+													},
+													Validators: []validator.Int64{
+														int64validator.AtLeast(0),
+													},
 												},
-												names.AttrTags: tftags.TagsSchema(),
+												"object_size_less_than": schema.Int64Attribute{
+													Optional: true,
+													Computed: true, // Because of Legacy value handling
+													PlanModifiers: []planmodifier.Int64{
+														tfint64planmodifier.LegacyValue(),
+													},
+													Validators: []validator.Int64{
+														int64validator.AtLeast(1),
+													},
+												},
+												names.AttrPrefix: schema.StringAttribute{
+													Optional: true,
+													Computed: true, // Because of Legacy value handling
+													PlanModifiers: []planmodifier.String{
+														tfstringplanmodifier.LegacyValue(),
+													},
+												},
+												names.AttrTags: schema.MapAttribute{
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.Map{
+														mapvalidator.SizeAtLeast(1),
+													},
+												},
 											},
 										},
 									},
-									"object_size_greater_than": {
-										Type:     nullable.TypeNullableInt,
-										Optional: true,
-									},
-									"object_size_less_than": {
-										Type:     nullable.TypeNullableInt,
-										Optional: true,
-									},
-									names.AttrPrefix: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"tag": {
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:     schema.TypeString,
+									"tag": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[tagModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrKey: schema.StringAttribute{
 													Required: true,
 												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
+												names.AttrValue: schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -169,82 +284,84 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						names.AttrID: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"noncurrent_version_expiration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"newer_noncurrent_versions": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
+						"noncurrent_version_expiration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[noncurrentVersionExpirationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"newer_noncurrent_versions": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
-									"noncurrent_days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
+									"noncurrent_days": schema.Int32Attribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
 								},
 							},
 						},
-						"noncurrent_version_transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"newer_noncurrent_versions": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(1),
+						"noncurrent_version_transition": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[noncurrentVersionTransitionModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"newer_noncurrent_versions": schema.Int32Attribute{
+										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.AtLeast(1),
+										},
 									},
-									"noncurrent_days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
+									"noncurrent_days": schema.Int32Attribute{
+										Required: true,
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+									names.AttrStorageClass: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.TransitionStorageClass](),
+										Required:   true,
 									},
 								},
 							},
 						},
-						names.AttrPrefix: {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "Use filter instead",
-						},
-						names.AttrStatus: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(lifecycleRuleStatus_Values(), false),
-						},
-						"transition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"date": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidUTCTimestamp,
+						"transition": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[transitionModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								PlanModifiers: []planmodifier.Object{
+									ruleTransitionForUnknownDays(),
+								},
+								Validators: []validator.Object{
+									ruleTransitionExactlyOneOfChildren(),
+								},
+								Attributes: map[string]schema.Attribute{
+									"date": schema.StringAttribute{
+										CustomType: timetypes.RFC3339Type{},
+										Optional:   true,
 									},
-									"days": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(0),
+									"days": schema.Int32Attribute{
+										Optional: true,
+										Computed: true, // Because of Legacy value handling
+										PlanModifiers: []planmodifier.Int32{
+											int32planmodifier.UseStateForUnknown(),
+										},
+										Validators: []validator.Int32{
+											int32validator.AtLeast(0),
+										},
 									},
-									names.AttrStorageClass: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
+									names.AttrStorageClass: schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.TransitionStorageClass](),
+										Required:   true,
 									},
 								},
 							},
@@ -252,220 +369,260 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 		},
 	}
 }
 
-func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
-
-	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
-	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
-	input := &s3.PutBucketLifecycleConfigurationInput{
-		Bucket: aws.String(bucket),
-		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
-			Rules: rules,
-		},
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data bucketLifecycleConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return conn.PutBucketLifecycleConfiguration(ctx, input)
+	conn := r.Meta().S3Client(ctx)
+	bucket := data.Bucket.ValueString()
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+
+	var input s3.PutBucketLifecycleConfigurationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var rules []awstypes.LifecycleRule
+	response.Diagnostics.Append(fwflex.Expand(ctx, data.Rules, &rules)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	lifecycleConfiguraton := awstypes.BucketLifecycleConfiguration{
+		Rules: rules,
+	}
+
+	input.LifecycleConfiguration = &lifecycleConfiguraton
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.PutBucketLifecycleConfiguration(ctx, &input)
 	}, errCodeNoSuchBucket)
-
 	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "LifecycleConfiguration is not valid, expected CreateBucketConfiguration") {
 		err = errDirectoryBucket(err)
 	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
+		return
 	}
 
-	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
-
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate))
-
+	expectedBucketOwner := data.ExpectedBucketOwner.ValueString()
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	output, err := waitLifecycleConfigEquals(ctx, conn, bucket, expectedBucketOwner, input.TransitionDefaultMinimumObjectSize, input.LifecycleConfiguration.Rules, createTimeout)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
+		return
 	}
 
-	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+
+	data.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
+	data.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
-
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data bucketLifecycleConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
+	conn := r.Meta().S3Client(ctx)
+	bucket := data.Bucket.ValueString()
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+
+	expectedBucketOwner := data.ExpectedBucketOwner.ValueString()
+
 	const (
-		lifecycleConfigurationExtraRetryDelay    = 5 * time.Second
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
-	var lastOutput, output []types.LifecycleRule
-
-	err = retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
+	err := tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
-		time.Sleep(lifecycleConfigurationExtraRetryDelay)
-
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
-
-		if d.IsNewResource() && tfresource.NotFound(err) {
-			return retry.RetryableError(err)
-		}
-
+		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
-		if lastOutput == nil || !lifecycleRulesEqual(lastOutput, output) {
+		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
-			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", d.Id()))
+			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
 	}
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] S3 Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Bucket Lifecycle Configuration (%s)", data.Bucket.ValueString()), err.Error())
+		return
 	}
 
-	d.Set(names.AttrBucket, bucket)
-	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
-	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return diags
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
+func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new bucketLifecycleConfigurationResourceModel
 
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
-	input := &s3.PutBucketLifecycleConfigurationInput{
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().S3Client(ctx)
+	bucket := new.Bucket.ValueString()
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+
+	var input s3.PutBucketLifecycleConfigurationInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var rules []awstypes.LifecycleRule
+	response.Diagnostics.Append(fwflex.Expand(ctx, new.Rules, &rules)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	lifecycleConfiguraton := awstypes.BucketLifecycleConfiguration{
+		Rules: rules,
+	}
+
+	input.LifecycleConfiguration = &lifecycleConfiguraton
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.PutBucketLifecycleConfiguration(ctx, &input)
+	}, errCodeNoSuchBucket)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), err.Error())
+		return
+	}
+
+	expectedBucketOwner := new.ExpectedBucketOwner.ValueString()
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+	output, err := waitLifecycleConfigEquals(ctx, conn, bucket, expectedBucketOwner, input.TransitionDefaultMinimumObjectSize, input.LifecycleConfiguration.Rules, updateTimeout)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating S3 Bucket (%s) Lifecycle Configuration", bucket), fmt.Sprintf("While waiting: %s", err.Error()))
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+
+	new.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
+	new.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data bucketLifecycleConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().S3Client(ctx)
+	bucket := data.Bucket.ValueString()
+	if isDirectoryBucket(bucket) {
+		conn = r.Meta().S3ExpressClient(ctx)
+	}
+
+	input := s3.DeleteBucketLifecycleInput{
 		Bucket: aws.String(bucket),
-		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
-			Rules: rules,
+	}
+	expectedBucketOwner := data.ExpectedBucketOwner.ValueString()
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	_, err := conn.DeleteBucketLifecycle(ctx, &input)
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeMethodNotAllowed) {
+		return
+	}
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Bucket Lifecycle Configuration (%s)", data.Bucket.ValueString()), err.Error())
+		return
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Bucket Lifecycle Configuration (%s)", data.Bucket.ValueString()), fmt.Sprintf("While waiting: %s", err.Error()))
+		return
+	}
+}
+
+func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	bucket, expectedBucketOwner, err := parseResourceID(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError("Resource Import Invalid ID", err.Error())
+		return
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrBucket), bucket)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrExpectedBucketOwner), expectedBucketOwner)...)
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+}
+
+func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := bucketLifeCycleConfigurationSchemaV0(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeBucketLifeCycleConfigurationResourceStateFromV0,
 		},
 	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return conn.PutBucketLifecycleConfiguration(ctx, input)
-	}, errCodeNoSuchLifecycleConfiguration)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
-	}
-
-	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
-	}
-
-	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Client(ctx)
-
-	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	input := &s3.DeleteBucketLifecycleInput{
+func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketLifecycleConfigurationOutput, error) {
+	input := s3.GetBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
 	if expectedBucketOwner != "" {
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = conn.DeleteBucketLifecycle(ctx, input)
+	output, err := conn.GetBucketLifecycleConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
-	}
-
-	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
-	}
-
-	return diags
-}
-
-// suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted
-// filter configuration block and one returned from the S3 API.
-// To work around the issue, https://github.com/hashicorp/terraform-plugin-sdk/issues/743,
-// this method only looks for changes in the "filter.#" value and not its nested fields
-// which are incorrectly suppressed when using the verify.SuppressMissingOptionalConfigurationBlock method.
-func suppressMissingFilterConfigurationBlock(k, old, new string, d *schema.ResourceData) bool {
-	if strings.HasSuffix(k, "filter.#") {
-		oraw, nraw := d.GetChange(k)
-		o, n := oraw.(int), nraw.(int)
-
-		if o == 1 && n == 0 {
-			return true
-		}
-
-		if o == 1 && n == 1 {
-			return old == "1" && new == "0"
-		}
-
-		return false
-	}
-	return false
-}
-
-func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.LifecycleRule, error) {
-	input := &s3.GetBucketLifecycleConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketLifecycleConfiguration(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -476,21 +633,24 @@ func findLifecycleRules(ctx context.Context, conn *s3.Client, bucket, expectedBu
 	}
 
 	if output == nil || len(output.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output.Rules, nil
+	return output, nil
 }
 
-func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
+func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumObjectSize, rules1 []awstypes.LifecycleRule, transitionMinSize2 awstypes.TransitionDefaultMinimumObjectSize, rules2 []awstypes.LifecycleRule) bool {
+	if transitionMinSize1 != transitionMinSize2 {
+		return false
+	}
+
 	if len(rules1) != len(rules2) {
 		return false
 	}
 
 	for _, rule1 := range rules1 {
-		// We consider 2 LifecycleRules equal if their IDs and Statuses are equal.
-		if !slices.ContainsFunc(rules2, func(rule2 types.LifecycleRule) bool {
-			return aws.ToString(rule1.ID) == aws.ToString(rule2.ID) && rule1.Status == rule2.Status
+		if !slices.ContainsFunc(rules2, func(rule2 awstypes.LifecycleRule) bool {
+			return reflect.DeepEqual(rule1, rule2)
 		}) {
 			return false
 		}
@@ -499,11 +659,11 @@ func lifecycleRulesEqual(rules1, rules2 []types.LifecycleRule) bool {
 	return true
 }
 
-func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
+func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -511,23 +671,24 @@ func statusLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, ex
 			return nil, "", err
 		}
 
-		return output, strconv.FormatBool(lifecycleRulesEqual(output, rules)), nil
+		return output, strconv.FormatBool(lifecycleConfigEqual(output.TransitionDefaultMinimumObjectSize, output.Rules, transitionMinSize, rules)), nil
 	}
 }
 
-func waitLifecycleRulesEquals(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string, rules []types.LifecycleRule, timeout time.Duration) ([]types.LifecycleRule, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Target:                    []string{strconv.FormatBool(true)},
-		Refresh:                   statusLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		ContinuousTargetOccurence: 3,
-		NotFoundChecks:            20,
+func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Target:  []string{strconv.FormatBool(true)},
+		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
+		// ContinuousTargetOccurence of 3 works in, e.g. us-west-2, but larger values are required in, e.g. eu-west-2
+		ContinuousTargetOccurence: 10,
+		PollInterval:              5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.([]types.LifecycleRule); ok {
+	if output, ok := outputRaw.(*s3.GetBucketLifecycleConfigurationOutput); ok {
 		return output, err
 	}
 
@@ -546,519 +707,556 @@ func lifecycleRuleStatus_Values() []string {
 	}
 }
 
-func expandLifecycleRules(ctx context.Context, l []interface{}) []types.LifecycleRule {
-	if len(l) == 0 || l[0] == nil {
-		return nil
+type bucketLifecycleConfigurationResourceModel struct {
+	framework.WithRegionModel
+	Bucket                             types.String                                                    `tfsdk:"bucket"`
+	ExpectedBucketOwner                types.String                                                    `tfsdk:"expected_bucket_owner" autoflex:",legacy"`
+	ID                                 types.String                                                    `tfsdk:"id"`
+	Rules                              fwtypes.ListNestedObjectValueOf[lifecycleRuleModel]             `tfsdk:"rule"`
+	TransitionDefaultMinimumObjectSize fwtypes.StringEnum[awstypes.TransitionDefaultMinimumObjectSize] `tfsdk:"transition_default_minimum_object_size" autoflex:",legacy"`
+	Timeouts                           timeouts.Value                                                  `tfsdk:"timeouts"`
+}
+
+var (
+	_ fwflex.Expander  = lifecycleRuleModel{}
+	_ fwflex.Flattener = &lifecycleRuleModel{}
+)
+
+type lifecycleRuleModel struct {
+	AbortIncompleteMultipartUpload fwtypes.ListNestedObjectValueOf[abortIncompleteMultipartUploadModel] `tfsdk:"abort_incomplete_multipart_upload"`
+	Expiration                     fwtypes.ListNestedObjectValueOf[lifecycleExpirationModel]            `tfsdk:"expiration"`
+	Filter                         fwtypes.ListNestedObjectValueOf[lifecycleRuleFilterModel]            `tfsdk:"filter"`
+	ID                             types.String                                                         `tfsdk:"id"`
+	NoncurrentVersionExpirations   fwtypes.ListNestedObjectValueOf[noncurrentVersionExpirationModel]    `tfsdk:"noncurrent_version_expiration"`
+	NoncurrentVersionTransitions   fwtypes.SetNestedObjectValueOf[noncurrentVersionTransitionModel]     `tfsdk:"noncurrent_version_transition"`
+	Prefix                         types.String                                                         `tfsdk:"prefix"`
+	Status                         fwtypes.StringEnum[awstypes.ExpirationStatus]                        `tfsdk:"status"`
+	Transitions                    fwtypes.SetNestedObjectValueOf[transitionModel]                      `tfsdk:"transition"`
+}
+
+func (m lifecycleRuleModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.LifecycleRule
+
+	d := fwflex.Expand(ctx, m.AbortIncompleteMultipartUpload, &r.AbortIncompleteMultipartUpload)
+	diags.Append(d...)
+	if d.HasError() {
+		return nil, diags
 	}
 
-	var results []types.LifecycleRule
+	d = fwflex.Expand(ctx, m.Expiration, &r.Expiration)
+	diags.Append(d...)
+	if d.HasError() {
+		return nil, diags
+	}
 
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+	// For legacy-mode reasons, `prefix` may be empty, but should be treated as `nil`
+	prefix := fwflex.EmptyStringAsNull(m.Prefix)
 
-		if !ok {
-			continue
+	// The AWS API requires a value for `filter` unless `prefix` is set. If `filter` is set, only one of
+	// `and`, `object_size_greater_than`, `object_size_less_than`, `prefix`, or `tags` can be set,
+	// and an empty `filter` is valid. Setting `filter.prefix` to "" is equivalent to an empty `filter`.
+	// However, the provider historically has allowed `filter` to be null, empty, or have one child value set.
+	// (Setting multiple elements would result in a run-time error)
+	// For null `filter`, send an empty LifecycleRuleFilter
+	if m.Filter.IsUnknown() || m.Filter.IsNull() {
+		if prefix.IsUnknown() || prefix.IsNull() {
+			filter := awstypes.LifecycleRuleFilter{}
+			r.Filter = &filter
 		}
-
-		result := types.LifecycleRule{}
-
-		if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v[0].(map[string]interface{}))
+	} else {
+		filter, d := m.Filter.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
 		}
-
-		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
-			result.Expiration = expandLifecycleExpiration(v)
+		if filter == nil {
+			diags.AddError(
+				"Unexpected Error",
+				"An unexpected error occurred while preparing request. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					`Expanding "lifecycleRuleModel": "Filter" has value, but returned nil`,
+			)
+			return nil, diags
 		}
-
-		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
-			result.Filter = expandLifecycleRuleFilter(ctx, v)
-		}
-
-		if v, ok := tfMap[names.AttrPrefix].(string); ok && result.Filter == nil {
-			// If neither the filter block nor the prefix are specified,
-			// apply the Default behavior from v3.x of the provider;
-			// otherwise, set the prefix as specified in Terraform.
-			if v == "" {
-				result.Filter = &types.LifecycleRuleFilterMemberPrefix{
-					Value: v,
-				}
-			} else {
-				result.Prefix = aws.String(v)
+		if isFilterModelZero(filter) {
+			filter := awstypes.LifecycleRuleFilter{
+				Prefix: aws.String(""),
+			}
+			r.Filter = &filter
+		} else {
+			d = fwflex.Expand(ctx, m.Filter, &r.Filter)
+			diags.Append(d...)
+			if d.HasError() {
+				return nil, diags
 			}
 		}
-
-		if v, ok := tfMap[names.AttrID].(string); ok {
-			result.ID = aws.String(v)
-		}
-
-		if v, ok := tfMap["noncurrent_version_expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.NoncurrentVersionExpiration = expandNoncurrentVersionExpiration(v[0].(map[string]interface{}))
-		}
-
-		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.NoncurrentVersionTransitions = expandNoncurrentVersionTransitions(v.List())
-		}
-
-		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-			result.Status = types.ExpirationStatus(v)
-		}
-
-		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.Transitions = expandTransitions(v.List())
-		}
-
-		results = append(results, result)
 	}
 
-	return results
+	r.ID = fwflex.StringFromFramework(ctx, m.ID)
+
+	d = fwflex.Expand(ctx, m.NoncurrentVersionExpirations, &r.NoncurrentVersionExpiration)
+	diags.Append(d...)
+	if d.HasError() {
+		return nil, diags
+	}
+
+	d = fwflex.Expand(ctx, m.NoncurrentVersionTransitions, &r.NoncurrentVersionTransitions)
+	diags.Append(d...)
+	if d.HasError() {
+		return nil, diags
+	}
+
+	r.Prefix = fwflex.StringFromFramework(ctx, prefix)
+
+	r.Status = m.Status.ValueEnum()
+
+	d = fwflex.Expand(ctx, m.Transitions, &r.Transitions)
+	diags.Append(d...)
+	if d.HasError() {
+		return nil, diags
+	}
+
+	return &r, diags
 }
 
-func expandAbortIncompleteMultipartUpload(m map[string]interface{}) *types.AbortIncompleteMultipartUpload {
-	if len(m) == 0 {
-		return nil
+func isFilterModelZero(v *lifecycleRuleFilterModel) bool {
+	if !v.And.IsNull() {
+		return false
 	}
 
-	result := &types.AbortIncompleteMultipartUpload{}
-
-	if v, ok := m["days_after_initiation"].(int); ok {
-		result.DaysAfterInitiation = aws.Int32(int32(v))
+	if !v.ObjectSizeGreaterThan.IsUnknown() {
+		return false
 	}
 
-	return result
+	if !v.ObjectSizeLessThan.IsUnknown() {
+		return false
+	}
+
+	if !v.Prefix.IsUnknown() && !v.Prefix.IsNull() {
+		return false
+	}
+
+	if !v.Tag.IsNull() {
+		return false
+	}
+
+	return true
 }
 
-func expandLifecycleExpiration(l []interface{}) *types.LifecycleExpiration {
-	if len(l) == 0 {
-		return nil
+func (m *lifecycleRuleModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	rule, ok := v.(awstypes.LifecycleRule)
+	if !ok {
+		diags.Append(fwflex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(v), reflect.TypeFor[lifecycleRuleModel]()))
+		return diags
 	}
 
-	result := &types.LifecycleExpiration{}
-
-	if l[0] == nil {
-		return result
+	d := fwflex.Flatten(ctx, rule.AbortIncompleteMultipartUpload, &m.AbortIncompleteMultipartUpload)
+	diags.Append(d...)
+	if d.HasError() {
+		return diags
 	}
 
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["date"].(string); ok && v != "" {
-		t, _ := time.Parse(time.RFC3339, v)
-		result.Date = aws.Time(t)
+	d = fwflex.Flatten(ctx, rule.Expiration, &m.Expiration)
+	diags.Append(d...)
+	if d.HasError() {
+		return diags
 	}
 
-	if v, ok := m["days"].(int); ok && v > 0 {
-		result.Days = aws.Int32(int32(v))
+	// If Filter has no values set, the value in the configuration was null
+	if isLifecycleRuleFilterZero(rule.Filter) {
+		m.Filter = fwtypes.NewListNestedObjectValueOfNull[lifecycleRuleFilterModel](ctx)
+	} else {
+		d = fwflex.Flatten(ctx, rule.Filter, &m.Filter)
+		diags.Append(d...)
+		if d.HasError() {
+			return diags
+		}
 	}
 
-	// This cannot be specified with Days or Date
-	if v, ok := m["expired_object_delete_marker"].(bool); ok && result.Date == nil && aws.ToInt32(result.Days) == 0 {
-		result.ExpiredObjectDeleteMarker = aws.Bool(v)
+	m.ID = fwflex.StringToFramework(ctx, rule.ID)
+
+	d = fwflex.Flatten(ctx, rule.NoncurrentVersionExpiration, &m.NoncurrentVersionExpirations)
+	diags.Append(d...)
+	if d.HasError() {
+		return diags
 	}
 
-	return result
+	d = fwflex.Flatten(ctx, rule.NoncurrentVersionTransitions, &m.NoncurrentVersionTransitions)
+	diags.Append(d...)
+	if d.HasError() {
+		return diags
+	}
+
+	m.Prefix = fwflex.StringToFrameworkLegacy(ctx, rule.Prefix)
+
+	m.Status = fwtypes.StringEnumValue(rule.Status)
+
+	d = fwflex.Flatten(ctx, rule.Transitions, &m.Transitions)
+	diags.Append(d...)
+	if d.HasError() {
+		return diags
+	}
+
+	return diags
 }
 
-func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.LifecycleRuleFilter {
-	if len(l) == 0 {
-		return nil
-	}
-
-	var result types.LifecycleRuleFilter
-
-	if l[0] == nil {
-		return result
-	}
-
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["and"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandLifecycleRuleFilterMemberAnd(ctx, v[0].(map[string]interface{}))
-	}
-
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
-		result = &types.LifecycleRuleFilterMemberObjectSizeGreaterThan{
-			Value: v,
-		}
-	}
-
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
-		result = &types.LifecycleRuleFilterMemberObjectSizeLessThan{
-			Value: v,
-		}
-	}
-
-	if v, ok := m["tag"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result = expandLifecycleRuleFilterMemberTag(v[0].(map[string]interface{}))
-	}
-
-	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
-	// Specifying more than one of the listed parameters results in a MalformedXML error.
-	// In practice, this also includes ObjectSizeGreaterThan and ObjectSizeLessThan.
-	if v, ok := m[names.AttrPrefix].(string); ok && result == nil {
-		result = &types.LifecycleRuleFilterMemberPrefix{
-			Value: v,
-		}
-	}
-
-	return result
+func isLifecycleRuleFilterZero(v *awstypes.LifecycleRuleFilter) bool {
+	return v == nil ||
+		(v.And == nil &&
+			v.ObjectSizeGreaterThan == nil &&
+			v.ObjectSizeLessThan == nil &&
+			v.Prefix == nil &&
+			v.Tag == nil)
 }
 
-func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interface{}) *types.LifecycleRuleFilterMemberAnd {
-	if len(m) == 0 {
-		return nil
-	}
-
-	result := &types.LifecycleRuleFilterMemberAnd{
-		Value: types.LifecycleRuleAndOperator{},
-	}
-
-	if v, ok := m["object_size_greater_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeGreaterThan = aws.Int64(int64(v))
-	}
-
-	if v, ok := m["object_size_less_than"].(int); ok && v > 0 {
-		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
-	}
-
-	if v, ok := m[names.AttrPrefix].(string); ok {
-		result.Value.Prefix = aws.String(v)
-	}
-
-	if v, ok := m[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
-		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
-		if len(tags) > 0 {
-			result.Value.Tags = tags
-		}
-	}
-
-	return result
+type abortIncompleteMultipartUploadModel struct {
+	DaysAfterInitiation types.Int32 `tfsdk:"days_after_initiation"`
 }
 
-func expandLifecycleRuleFilterMemberTag(m map[string]interface{}) *types.LifecycleRuleFilterMemberTag {
-	if len(m) == 0 {
-		return nil
-	}
+var (
+	_ fwflex.Expander = lifecycleExpirationModel{}
+)
 
-	result := &types.LifecycleRuleFilterMemberTag{
-		Value: types.Tag{},
-	}
-
-	if key, ok := m[names.AttrKey].(string); ok {
-		result.Value.Key = aws.String(key)
-	}
-
-	if value, ok := m[names.AttrValue].(string); ok {
-		result.Value.Value = aws.String(value)
-	}
-
-	return result
+type lifecycleExpirationModel struct {
+	Date                      timetypes.RFC3339 `tfsdk:"date"`
+	Days                      types.Int32       `tfsdk:"days" autoflex:",legacy"`
+	ExpiredObjectDeleteMarker types.Bool        `tfsdk:"expired_object_delete_marker" autoflex:",legacy"`
 }
 
-func expandNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
-	if len(m) == 0 {
-		return nil
+func (m lifecycleExpirationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.LifecycleExpiration
+
+	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
+
+	// For legacy-mode reasons, `days` may be zero, but should be treated as `nil`
+	days := fwflex.ZeroInt32AsNull(m.Days)
+
+	r.Days = fwflex.Int32FromFramework(ctx, days)
+
+	if m.ExpiredObjectDeleteMarker.IsUnknown() || m.ExpiredObjectDeleteMarker.IsNull() {
+		if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
+			r.ExpiredObjectDeleteMarker = aws.Bool(false)
+		}
+	} else if (m.Date.IsUnknown() || m.Date.IsNull()) && (days.IsUnknown() || days.IsNull()) {
+		r.ExpiredObjectDeleteMarker = fwflex.BoolFromFramework(ctx, m.ExpiredObjectDeleteMarker)
+	} else {
+		r.ExpiredObjectDeleteMarker = nil
 	}
 
-	result := &types.NoncurrentVersionExpiration{}
-
-	if v, null, _ := nullable.Int(m["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
-		result.NewerNoncurrentVersions = aws.Int32(v)
-	}
-
-	if v, ok := m["noncurrent_days"].(int); ok {
-		result.NoncurrentDays = aws.Int32(int32(v))
-	}
-
-	return result
+	return &r, diags
 }
 
-func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersionTransition {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	var results []types.NoncurrentVersionTransition
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		transition := types.NoncurrentVersionTransition{}
-
-		if v, null, _ := nullable.Int(tfMap["newer_noncurrent_versions"].(string)).ValueInt32(); !null && v > 0 {
-			transition.NewerNoncurrentVersions = aws.Int32(v)
-		}
-
-		if v, ok := tfMap["noncurrent_days"].(int); ok {
-			transition.NoncurrentDays = aws.Int32(int32(v))
-		}
-
-		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
-		}
-
-		results = append(results, transition)
-	}
-
-	return results
+type lifecycleRuleFilterModel struct {
+	And                   fwtypes.ListNestedObjectValueOf[lifecycleRuleAndOperatorModel] `tfsdk:"and"`
+	ObjectSizeGreaterThan types.Int64                                                    `tfsdk:"object_size_greater_than"`
+	ObjectSizeLessThan    types.Int64                                                    `tfsdk:"object_size_less_than"`
+	Prefix                types.String                                                   `tfsdk:"prefix"`
+	Tag                   fwtypes.ListNestedObjectValueOf[tagModel]                      `tfsdk:"tag"`
 }
 
-func expandTransitions(l []interface{}) []types.Transition {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	var results []types.Transition
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		transition := types.Transition{}
-
-		if v, ok := tfMap["date"].(string); ok && v != "" {
-			t, _ := time.Parse(time.RFC3339, v)
-			transition.Date = aws.Time(t)
-		}
-
-		// Only one of "date" and "days" can be configured
-		// so only set the transition.Days value when transition.Date is nil
-		// By default, tfMap["days"] = 0 if not explicitly configured in terraform.
-		if v, ok := tfMap["days"].(int); ok && v >= 0 && transition.Date == nil {
-			transition.Days = aws.Int32(int32(v))
-		}
-
-		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
-			transition.StorageClass = types.TransitionStorageClass(v)
-		}
-
-		results = append(results, transition)
-	}
-
-	return results
+type noncurrentVersionExpirationModel struct {
+	NewerNoncurrentVersions types.Int32 `tfsdk:"newer_noncurrent_versions"`
+	NoncurrentDays          types.Int32 `tfsdk:"noncurrent_days"`
 }
 
-func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []interface{} {
-	if len(rules) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, rule := range rules {
-		m := map[string]interface{}{
-			names.AttrStatus: rule.Status,
-		}
-
-		if rule.AbortIncompleteMultipartUpload != nil {
-			m["abort_incomplete_multipart_upload"] = flattenAbortIncompleteMultipartUpload(rule.AbortIncompleteMultipartUpload)
-		}
-
-		if rule.Expiration != nil {
-			m["expiration"] = flattenLifecycleExpiration(rule.Expiration)
-		}
-
-		if rule.Filter != nil {
-			m[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, rule.Filter)
-		}
-
-		if rule.ID != nil {
-			m[names.AttrID] = aws.ToString(rule.ID)
-		}
-
-		if rule.NoncurrentVersionExpiration != nil {
-			m["noncurrent_version_expiration"] = flattenNoncurrentVersionExpiration(rule.NoncurrentVersionExpiration)
-		}
-
-		if rule.NoncurrentVersionTransitions != nil {
-			m["noncurrent_version_transition"] = flattenNoncurrentVersionTransitions(rule.NoncurrentVersionTransitions)
-		}
-
-		if rule.Prefix != nil {
-			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
-		}
-
-		if rule.Transitions != nil {
-			m["transition"] = flattenTransitions(rule.Transitions)
-		}
-
-		results = append(results, m)
-	}
-
-	return results
+type noncurrentVersionTransitionModel struct {
+	NewerNoncurrentVersions types.Int32                                         `tfsdk:"newer_noncurrent_versions"`
+	NoncurrentDays          types.Int32                                         `tfsdk:"noncurrent_days"`
+	StorageClass            fwtypes.StringEnum[awstypes.TransitionStorageClass] `tfsdk:"storage_class"`
 }
 
-func flattenAbortIncompleteMultipartUpload(u *types.AbortIncompleteMultipartUpload) []interface{} {
-	if u == nil {
-		return []interface{}{}
-	}
+var (
+	_ fwflex.Expander = transitionModel{}
+)
 
-	m := make(map[string]interface{})
-
-	if u.DaysAfterInitiation != nil {
-		m["days_after_initiation"] = aws.ToInt32(u.DaysAfterInitiation)
-	}
-
-	return []interface{}{m}
+type transitionModel struct {
+	Date         timetypes.RFC3339                                   `tfsdk:"date"`
+	Days         types.Int32                                         `tfsdk:"days"`
+	StorageClass fwtypes.StringEnum[awstypes.TransitionStorageClass] `tfsdk:"storage_class"`
 }
 
-func flattenLifecycleExpiration(expiration *types.LifecycleExpiration) []interface{} {
-	if expiration == nil {
-		return []interface{}{}
-	}
+func (m transitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.Transition
 
-	m := make(map[string]interface{})
+	r.Date = fwflex.TimeFromFramework(ctx, m.Date)
 
-	if expiration.Date != nil {
-		m["date"] = expiration.Date.Format(time.RFC3339)
-	}
-
-	if expiration.Days != nil {
-		m["days"] = aws.ToInt32(expiration.Days)
-	}
-
-	if expiration.ExpiredObjectDeleteMarker != nil {
-		m["expired_object_delete_marker"] = aws.ToBool(expiration.ExpiredObjectDeleteMarker)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenLifecycleRuleFilter(ctx context.Context, filter types.LifecycleRuleFilter) []interface{} {
-	if filter == nil {
-		return nil
-	}
-
-	m := make(map[string]interface{})
-
-	switch v := filter.(type) {
-	case *types.LifecycleRuleFilterMemberAnd:
-		m["and"] = flattenLifecycleRuleFilterMemberAnd(ctx, v)
-	case *types.LifecycleRuleFilterMemberObjectSizeGreaterThan:
-		m["object_size_greater_than"] = strconv.FormatInt(v.Value, 10)
-	case *types.LifecycleRuleFilterMemberObjectSizeLessThan:
-		m["object_size_less_than"] = strconv.FormatInt(v.Value, 10)
-	case *types.LifecycleRuleFilterMemberPrefix:
-		m[names.AttrPrefix] = v.Value
-	case *types.LifecycleRuleFilterMemberTag:
-		m["tag"] = flattenLifecycleRuleFilterMemberTag(v)
-	default:
-		return nil
-	}
-
-	return []interface{}{m}
-}
-
-func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.LifecycleRuleFilterMemberAnd) []interface{} {
-	if andOp == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"object_size_greater_than": andOp.Value.ObjectSizeGreaterThan,
-		"object_size_less_than":    andOp.Value.ObjectSizeLessThan,
-	}
-
-	if v := andOp.Value.Prefix; v != nil {
-		m[names.AttrPrefix] = aws.ToString(v)
-	}
-
-	if v := andOp.Value.Tags; v != nil {
-		m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
-	}
-
-	return []interface{}{m}
-}
-
-func flattenLifecycleRuleFilterMemberTag(op *types.LifecycleRuleFilterMemberTag) []interface{} {
-	if op == nil {
-		return nil
-	}
-
-	m := make(map[string]interface{})
-
-	if v := op.Value.Key; v != nil {
-		m[names.AttrKey] = aws.ToString(v)
-	}
-
-	if v := op.Value.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenNoncurrentVersionExpiration(expiration *types.NoncurrentVersionExpiration) []interface{} {
-	if expiration == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if expiration.NewerNoncurrentVersions != nil {
-		m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(expiration.NewerNoncurrentVersions)), 10)
-	}
-
-	if expiration.NoncurrentDays != nil {
-		m["noncurrent_days"] = aws.ToInt32(expiration.NoncurrentDays)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTransition) []interface{} {
-	if len(transitions) == 0 {
-		return []interface{}{}
-	}
-
-	var results []interface{}
-
-	for _, transition := range transitions {
-		m := map[string]interface{}{
-			names.AttrStorageClass: transition.StorageClass,
+	if m.Days.IsUnknown() || m.Days.IsNull() {
+		if m.Date.IsUnknown() || m.Date.IsNull() {
+			r.Days = aws.Int32(0)
 		}
-
-		if transition.NewerNoncurrentVersions != nil {
-			m["newer_noncurrent_versions"] = strconv.FormatInt(int64(aws.ToInt32(transition.NewerNoncurrentVersions)), 10)
-		}
-
-		if transition.NoncurrentDays != nil {
-			m["noncurrent_days"] = aws.ToInt32(transition.NoncurrentDays)
-		}
-
-		results = append(results, m)
+	} else {
+		r.Days = fwflex.Int32FromFramework(ctx, m.Days)
 	}
 
-	return results
+	r.StorageClass = m.StorageClass.ValueEnum()
+
+	return &r, diags
 }
 
-func flattenTransitions(transitions []types.Transition) []interface{} {
-	if len(transitions) == 0 {
-		return []interface{}{}
+type tagModel struct {
+	Key   types.String `tfsdk:"key"`
+	Value types.String `tfsdk:"value"`
+}
+
+var (
+	_ fwflex.Expander  = lifecycleRuleAndOperatorModel{}
+	_ fwflex.Flattener = &lifecycleRuleAndOperatorModel{}
+)
+
+type lifecycleRuleAndOperatorModel struct {
+	ObjectSizeGreaterThan types.Int64  `tfsdk:"object_size_greater_than"`
+	ObjectSizeLessThan    types.Int64  `tfsdk:"object_size_less_than"`
+	Prefix                types.String `tfsdk:"prefix"`
+	Tags                  tftags.Map   `tfsdk:"tags"`
+}
+
+func (m lifecycleRuleAndOperatorModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	var r awstypes.LifecycleRuleAndOperator
+
+	r.ObjectSizeGreaterThan = fwflex.Int64FromFramework(ctx, m.ObjectSizeGreaterThan)
+
+	r.ObjectSizeLessThan = fwflex.Int64FromFrameworkLegacy(ctx, m.ObjectSizeLessThan)
+
+	r.Prefix = fwflex.StringFromFramework(ctx, m.Prefix)
+
+	if tags := svcTags(tftags.New(ctx, m.Tags).IgnoreAWS()); len(tags) > 0 {
+		r.Tags = tags
 	}
 
-	var results []interface{}
+	return &r, diags
+}
 
-	for _, transition := range transitions {
-		m := map[string]interface{}{
-			names.AttrStorageClass: transition.StorageClass,
-		}
-
-		if transition.Date != nil {
-			m["date"] = transition.Date.Format(time.RFC3339)
-		}
-
-		if transition.Days != nil {
-			m["days"] = aws.ToInt32(transition.Days)
-		}
-
-		results = append(results, m)
+func (m *lifecycleRuleAndOperatorModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	and, ok := v.(awstypes.LifecycleRuleAndOperator)
+	if !ok {
+		diags.Append(fwflex.DiagFlatteningIncompatibleTypes(reflect.TypeOf(v), reflect.TypeFor[lifecycleRuleAndOperatorModel]()))
+		return diags
 	}
 
-	return results
+	m.ObjectSizeGreaterThan = fwflex.Int64ToFrameworkLegacy(ctx, and.ObjectSizeGreaterThan)
+
+	m.ObjectSizeLessThan = fwflex.Int64ToFrameworkLegacy(ctx, and.ObjectSizeLessThan)
+
+	m.Prefix = fwflex.StringToFrameworkLegacy(ctx, and.Prefix)
+
+	m.Tags = tftags.NewMapFromMapValue(fwflex.FlattenFrameworkStringValueMap(ctx, keyValueTags(ctx, and.Tags).Map()))
+
+	return diags
+}
+
+func transitionDefaultMinimumObjectSizeDefault() planmodifier.String {
+	return transitionDefaultMinimumObjectSizeDefaultModifier{}
+}
+
+type transitionDefaultMinimumObjectSizeDefaultModifier struct{}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) Description(_ context.Context) string {
+	return "Defaults to '" + string(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k) + "' for general purpose buckets, nothing otherwise."
+}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) MarkdownDescription(_ context.Context) string {
+	return "Defaults to `" + string(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k) + "` for general purpose buckets, nothing otherwise."
+}
+
+func (m transitionDefaultMinimumObjectSizeDefaultModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	var bucket types.String
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(names.AttrBucket), &bucket)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if isDirectoryBucket(bucket.ValueString()) {
+		return
+	}
+
+	// There's already a value configured, so do nothing
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+
+	v, d := fwtypes.StringEnumValue(awstypes.TransitionDefaultMinimumObjectSizeAllStorageClasses128k).ToStringValue(ctx)
+	resp.Diagnostics.Append(d...)
+	if d.HasError() {
+		return
+	}
+	resp.PlanValue = v
+}
+
+// ruleTransitionForUnknownDays handles the planned value for `rule.transition.days`
+// * If no value is set
+//   - If `date` isn't set, default to 0
+//   - Otherwise, default to `null`
+//
+// Plan modifier cannot be set on `days` attribute because of https://github.com/hashicorp/terraform-plugin-framework/issues/1122
+func ruleTransitionForUnknownDays() planmodifier.Object {
+	return ruleTransitionForUnknownDaysModifier{}
+}
+
+type ruleTransitionForUnknownDaysModifier struct{}
+
+func (m ruleTransitionForUnknownDaysModifier) Description(_ context.Context) string {
+	return ""
+}
+
+func (m ruleTransitionForUnknownDaysModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m ruleTransitionForUnknownDaysModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var plan transitionModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is a known planned value.
+	if !plan.Days.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.Days.IsUnknown() {
+		return
+	}
+
+	if config.Date.IsNull() {
+		plan.Days = types.Int32Value(0)
+	} else {
+		plan.Days = types.Int32Null()
+	}
+
+	p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+	resp.Diagnostics.Append(d...)
+	if d.HasError() {
+		return
+	}
+
+	resp.PlanValue = p.ObjectValue
+}
+
+// ruleTransitionExactlyOneOfChildren acts similarly to `tfobjectvalidator.ExactlyOneOfChildren` except
+// that if neither is set, it only emits a warning.
+func ruleTransitionExactlyOneOfChildren(expressions ...path.Expression) validator.Object {
+	return warnExactlyOneOfChildrenValidator{
+		pathExpressions: expressions,
+	}
+}
+
+type warnExactlyOneOfChildrenValidator struct {
+	pathExpressions path.Expressions
+}
+
+func (av warnExactlyOneOfChildrenValidator) Description(_ context.Context) string {
+	return ""
+}
+
+func (av warnExactlyOneOfChildrenValidator) MarkdownDescription(ctx context.Context) string {
+	return av.Description(ctx)
+}
+
+func (av warnExactlyOneOfChildrenValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	// If current attribute is unknown, delay validation
+	if req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	var config transitionModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Delay validation until all involved attribute have a known value
+	if config.Date.IsUnknown() || config.Days.IsUnknown() {
+		return
+	}
+
+	paths := path.Paths{
+		req.Path.AtName("date"),
+		req.Path.AtName("days"),
+	}
+	if !config.Date.IsNull() && !config.Days.IsNull() {
+		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("2 attributes specified when one (and only one) of %s is required", paths),
+		))
+	} else if config.Date.IsNull() && config.Days.IsNull() {
+		resp.Diagnostics.Append(fwdiag.WarningInvalidAttributeCombinationDiagnostic(
+			req.Path,
+			fmt.Sprintf("No attribute specified when one (and only one) of %s is required", paths),
+		))
+	}
+}
+
+func emptyFilterPlanModifier() planmodifier.Object {
+	return emptyFilterPlanModifier_{}
+}
+
+type emptyFilterPlanModifier_ struct{}
+
+func (m emptyFilterPlanModifier_) Description(_ context.Context) string {
+	return ""
+}
+
+func (m emptyFilterPlanModifier_) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m emptyFilterPlanModifier_) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
+	var config lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.ConfigValue.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Do nothing if there is an unknown configuration value, otherwise interpolation gets messed up.
+	if config.And.IsUnknown() ||
+		config.ObjectSizeGreaterThan.IsUnknown() ||
+		config.ObjectSizeLessThan.IsUnknown() ||
+		config.Prefix.IsUnknown() ||
+		config.Tag.IsUnknown() {
+		return
+	}
+
+	var plan lifecycleRuleFilterModel
+	resp.Diagnostics.Append(req.PlanValue.As(ctx, &plan, basetypes.ObjectAsOptions{})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !config.And.IsNull() || !config.Tag.IsNull() {
+		plan.Prefix = types.StringNull()
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	// If none are set in config, set Prefix to ""
+	if config.And.IsNull() &&
+		config.ObjectSizeGreaterThan.IsNull() &&
+		config.ObjectSizeLessThan.IsNull() &&
+		config.Prefix.IsNull() &&
+		config.Tag.IsNull() {
+		plan.Prefix = types.StringValue("")
+		p, d := fwtypes.NewObjectValueOf(ctx, &plan)
+		resp.Diagnostics.Append(d...)
+		if d.HasError() {
+			return
+		}
+		resp.PlanValue = p.ObjectValue
+		return
+	}
+
+	resp.PlanValue = req.ConfigValue
 }

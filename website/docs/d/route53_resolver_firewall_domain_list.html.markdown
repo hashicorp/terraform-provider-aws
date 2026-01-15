@@ -24,9 +24,14 @@ data "aws_route53_resolver_firewall_domain_list" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_domain_list_id` - (Required) The ID of the domain list.
 
-The following attribute is additionally exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the firewall domain list.
 * `creation_time` - The date and time that the domain list was created, in Unix time format and Coordinated Universal Time (UTC).

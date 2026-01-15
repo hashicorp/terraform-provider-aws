@@ -46,6 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `fileSystemId` - (Required) The ID of the EFS file system.
 * `backupPolicy` - (Required) A backup_policy object (documented below).
 
@@ -89,4 +90,4 @@ Using `terraform import`, import the EFS backup policies using the `id`. For exa
 % terraform import aws_efs_backup_policy.example fs-6fa144c6
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2eaef1b32aa6d84fbacde458faaad79654ff49b6670f288a4068fb17b6e3960c -->
+<!-- cache-key: cdktf-0.20.8 input-edb2131594081169c813eced70a5fa90a495f6ca171799a3ea9849321846452a -->

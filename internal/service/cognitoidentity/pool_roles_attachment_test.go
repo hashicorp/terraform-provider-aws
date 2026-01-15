@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -76,7 +76,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -85,7 +85,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -108,7 +108,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -131,7 +131,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -206,9 +206,10 @@ func testAccCheckPoolRolesAttachmentExists(ctx context.Context, n string) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+		input := cognitoidentity.GetIdentityPoolRolesInput{
 			IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
-		})
+		}
+		_, err := conn.GetIdentityPoolRoles(ctx, &input)
 
 		return err
 	}
@@ -223,9 +224,10 @@ func testAccCheckPoolRolesAttachmentDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := conn.GetIdentityPoolRoles(ctx, &cognitoidentity.GetIdentityPoolRolesInput{
+			input := cognitoidentity.GetIdentityPoolRolesInput{
 				IdentityPoolId: aws.String(rs.Primary.Attributes["identity_pool_id"]),
-			})
+			}
+			_, err := conn.GetIdentityPoolRoles(ctx, &input)
 
 			if err != nil {
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {

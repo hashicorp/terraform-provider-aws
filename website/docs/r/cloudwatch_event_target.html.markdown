@@ -12,6 +12,12 @@ Provides an EventBridge Target resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
+-> **Note:** In order to be able to have your AWS Lambda function or
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+
 ## Example Usage
 
 ### Kinesis Usage
@@ -448,13 +454,102 @@ resource "aws_cloudwatch_event_target" "example" {
 }
 ```
 
-## Argument Reference
+### AppSync Usage
 
--> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
-   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
+```terraform
+resource "aws_cloudwatch_event_rule" "invoke_appsync_mutation" {
+  name                = "invoke-appsync-mutation"
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "invoke_appsync_mutation" {
+  arn      = replace(aws_appsync_graphql_api.graphql-api.arn, "apis", "endpoints/graphql-api")
+  rule     = aws_cloudwatch_event_rule.invoke_appsync_mutation.id
+  role_arn = aws_iam_role.appsync_mutation_role.arn
+
+  input_transformer {
+    input_paths = {
+      input = "$.detail.input"
+    }
+
+    input_template = <<EOF
+      {
+        "input": <input>
+      }
+    EOF
+  }
+
+  appsync_target {
+    graphql_operation = "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"
+  }
+}
+
+resource "aws_iam_role" "appsync_mutation_role" {
+  name               = "appsync-mutation-role"
+  assume_role_policy = data.aws_iam_policy_document.appsync_mutation_role_trust.json
+}
+
+data "aws_iam_policy_document" "appsync_mutation_role_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "appsync_mutation_role_policy_document" {
+  statement {
+    actions = ["appsync:GraphQL"]
+    effect  = "Allow"
+    resources = [
+      aws_appsync_graphql_api.graphql-api.arn
+    ]
+  }
+}
+
+resource "aws_iam_policy" "appsync_mutation_role_policy" {
+  name   = "appsync-mutation-role-policy"
+  policy = data.aws_iam_policy_document.appsync_mutation_role_policy_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "appsync_mutation_role_attachment" {
+  policy_arn = aws_iam_policy.appsync_mutation_role_policy.arn
+  role       = aws_iam_role.appsync_mutation_role.name
+}
+
+resource "aws_appsync_graphql_api" "graphql-api" {
+  name                = "api"
+  authentication_type = "AWS_IAM"
+  schema              = <<EOF
+    schema {
+      mutation: Mutation
+      query: Query
+    }
+
+    type Query {
+      testQuery: String
+    }
+
+    type Mutation {
+      testMutation(input: MutationInput!): TestMutationResult
+    }
+
+    type TestMutationResult {
+      test: String
+    }
+
+    input MutationInput {
+      testInput: String
+    }
+  EOF
+}
+```
+
+## Argument Reference
 
 The following arguments are required:
 
@@ -463,6 +558,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `appsync_target` - (Optional) Parameters used when you are using the rule to invoke an AppSync GraphQL API mutation. Documented below. A maximum of 1 are allowed.
 * `batch_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Batch Job. Documented below. A maximum of 1 are allowed.
 * `dead_letter_config` - (Optional)  Parameters used when you are providing a dead letter config. Documented below. A maximum of 1 are allowed.
 * `ecs_target` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
@@ -478,7 +575,7 @@ The following arguments are optional:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
-* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker Pipeline. Documented below. A maximum of 1 are allowed.
+* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker AI Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
 
@@ -576,12 +673,16 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ### sagemaker_pipeline_target
 
-* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution.
+* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution.
 
 #### pipeline_parameter_list
 
-* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
-* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+* `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
+
+### appsync_target
+
+* `graphql_operation` - (Optional) Contains the GraphQL mutation to be parsed and executed.
 
 ## Attribute Reference
 
@@ -589,11 +690,41 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_target.example
+  identity = {
+    event_bus_name = "default"
+    rule           = "rule-name"
+    target_id      = "target-id"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `event_bus_name` (String) Event bus name for the target.
+* `rule` (String) Rule name for the target.
+* `target_id` (String) Target ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```terraform
 import {
-  to = aws_cloudwatch_event_target.test-event-target
+  to = aws_cloudwatch_event_target.example
   id = "rule-name/target-id"
 }
 ```
@@ -601,5 +732,5 @@ import {
 Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
  ```console
-% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+% terraform import aws_cloudwatch_event_target.example rule-name/target-id
 ```

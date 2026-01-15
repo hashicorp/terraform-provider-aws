@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,10 +54,10 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
-					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourceResourceShareAccepter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,10 +119,10 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
-					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 		},
@@ -140,7 +140,7 @@ func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.Test
 
 			_, err := tfram.FindResourceShareOwnerOtherAccountsByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

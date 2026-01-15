@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 
@@ -87,4 +88,4 @@ Using `terraform import`, import `aws_neptune_cluster_snapshot` using the cluste
 % terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9b22118c6b5ba9d2b522df8534493a26e09fc274f5e840772d7cfddb43741365 -->
+<!-- cache-key: cdktf-0.20.8 input-3aa5420b74a29395f44564c9180fd469b952bd8401d2600089eea3e6d2b26740 -->

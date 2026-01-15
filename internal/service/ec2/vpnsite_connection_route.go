@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @SDKResource("aws_vpn_connection_route", name="VPN Connection Route")
@@ -41,19 +41,19 @@ func resourceVPNConnectionRoute() *schema.Resource {
 	}
 }
 
-func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
 	id := vpnConnectionRouteCreateResourceID(cidrBlock, vpnConnectionID)
-	input := &ec2.CreateVpnConnectionRouteInput{
+	input := ec2.CreateVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
 		VpnConnectionId:      aws.String(vpnConnectionID),
 	}
 
-	_, err := conn.CreateVpnConnectionRoute(ctx, input)
+	_, err := conn.CreateVpnConnectionRoute(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Connection Route (%s): %s", id, err)
@@ -68,7 +68,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 	return append(diags, resourceVPNConnectionRouteRead(ctx, d, meta)...)
 }
 
-func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -79,7 +79,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 
 	_, err = findVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -95,7 +95,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -105,10 +105,11 @@ func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection Route: %s", d.Id())
-	_, err = conn.DeleteVpnConnectionRoute(ctx, &ec2.DeleteVpnConnectionRouteInput{
+	input := ec2.DeleteVpnConnectionRouteInput{
 		DestinationCidrBlock: aws.String(cidrBlock),
 		VpnConnectionId:      aws.String(vpnConnectionID),
-	})
+	}
+	_, err = conn.DeleteVpnConnectionRoute(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return diags

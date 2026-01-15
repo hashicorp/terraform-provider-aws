@@ -87,7 +87,7 @@ class MyConvertedCode(TerraformStack):
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_ssoadmin_permission_set_example.override_logical_id("example")
-        SsoadminAccountAssignment(self, "account_assignment",
+        aws_ssoadmin_account_assignment_example = SsoadminAccountAssignment(self, "example_3",
             instance_arn=Token.as_string(
                 Fn.lookup_nested(Fn.tolist(example.arns), ["0"])),
             permission_set_arn=Token.as_string(aws_ssoadmin_permission_set_example.arn),
@@ -96,6 +96,8 @@ class MyConvertedCode(TerraformStack):
             target_id="123456789012",
             target_type="AWS_ACCOUNT"
         )
+        # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
+        aws_ssoadmin_account_assignment_example.override_logical_id("example")
         aws_ssoadmin_managed_policy_attachment_example =
         SsoadminManagedPolicyAttachment(self, "example_4",
             depends_on=[aws_ssoadmin_account_assignment_example],
@@ -112,6 +114,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instance_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `managed_policy_arn` - (Required, Forces new resource) The IAM managed policy Amazon Resource Name (ARN) to be attached to the Permission Set.
 * `permission_set_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Permission Set.
@@ -155,4 +158,4 @@ Using `terraform import`, import SSO Managed Policy Attachments using the `manag
 % terraform import aws_ssoadmin_managed_policy_attachment.example arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup,arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-73fefc01b46b4cf4489868580522a20327e26c603ae4140b5374affcfb50ca7b -->
+<!-- cache-key: cdktf-0.20.8 input-22ab452e559c9003212c9c84a47ba7abfd335478f450f25924d4aec42f8d95fb -->

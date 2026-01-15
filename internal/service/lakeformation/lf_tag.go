@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -20,14 +21,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // This value is defined by AWS API
 const lfTagsValuesMaxBatchSize = 50
 
-// @SDKResource("aws_lakeformation_lf_tag")
+// @SDKResource("aws_lakeformation_lf_tag", name="LF Tag")
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLFTagCreate,
@@ -68,7 +68,7 @@ func ResourceLFTag() *schema.Resource {
 	}
 }
 
-func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -78,12 +78,12 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*conns.AWSClient).AccountID
+		catalogID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	id := lfTagCreateResourceID(catalogID, tagKey)
 
 	i := 0
-	for _, chunk := range tfslices.Chunks(tagValues.List(), lfTagsValuesMaxBatchSize) {
+	for chunk := range slices.Chunk(tagValues.List(), lfTagsValuesMaxBatchSize) {
 		if i == 0 {
 			input := &lakeformation.CreateLFTagInput{
 				CatalogId: aws.String(catalogID),
@@ -118,7 +118,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -152,7 +152,7 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
@@ -167,13 +167,13 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	toAdd := ns.Difference(os)
 	toDelete := os.Difference(ns)
 
-	var toAddChunks, toDeleteChunks [][]interface{}
+	var toAddChunks, toDeleteChunks [][]any
 	if len(toAdd.List()) > 0 {
-		toAddChunks = tfslices.Chunks(toAdd.List(), lfTagsValuesMaxBatchSize)
+		toAddChunks = slices.Collect(slices.Chunk(toAdd.List(), lfTagsValuesMaxBatchSize))
 	}
 
 	if len(toDelete.List()) > 0 {
-		toDeleteChunks = tfslices.Chunks(toDelete.List(), lfTagsValuesMaxBatchSize)
+		toDeleteChunks = slices.Collect(slices.Chunk(toDelete.List(), lfTagsValuesMaxBatchSize))
 	}
 
 	for {
@@ -209,7 +209,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceLFTagRead(ctx, d, meta)...)
 }
 
-func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -27,7 +27,7 @@ func TestAccDMSCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCertificateExists(ctx, dataSourceName),
+					testAccCheckCertificateExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "certificate_id"),
 				),
 			},

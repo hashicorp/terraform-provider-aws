@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -29,9 +29,9 @@ func TestAccKafkaBrokerNodesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_info_list.#", resourceName, "number_of_broker_nodes"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.0.broker_id", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.1.broker_id", acctest.Ct2),
-					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.2.broker_id", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.0.broker_id", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.1.broker_id", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_info_list.2.broker_id", "3"),
 				),
 			},
 		},
@@ -42,7 +42,7 @@ func testAccBrokerNodesDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.8.1"
+  kafka_version          = "3.8.x"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

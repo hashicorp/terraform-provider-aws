@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner
@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,40 +18,33 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/apprunner.html
 
 var hostedZoneIDPerRegionMap = map[string]string{
-	names.USEast2RegionID:      "Z0224347AD7KVHMLOX31",
-	names.USEast1RegionID:      "Z01915732ZBZKC8D32TPT",
-	names.USWest2RegionID:      "Z02243383FTQ64HJ5772Q",
-	names.APSouth1RegionID:     "Z00855883LBHKTIC4ODF2",
-	names.APSoutheast1RegionID: "Z09819469CZ3KQ8PWMCL",
-	names.APSoutheast2RegionID: "Z03657752RA8799S0TI5I",
-	names.APNortheast1RegionID: "Z08491812XW6IPYLR6CCA",
-	names.EUCentral1RegionID:   "Z0334911C2FDI2Q9M4FZ",
-	names.EUWest1RegionID:      "Z087551914Z2PCAU0QHMW",
-	names.EUWest2RegionID:      "Z098228427VC6B3IX76ON",
-	names.EUWest3RegionID:      "Z087117439MBKHYM69QS6",
+	endpoints.UsEast2RegionID:      "Z0224347AD7KVHMLOX31",
+	endpoints.UsEast1RegionID:      "Z01915732ZBZKC8D32TPT",
+	endpoints.UsWest2RegionID:      "Z02243383FTQ64HJ5772Q",
+	endpoints.ApSouth1RegionID:     "Z00855883LBHKTIC4ODF2",
+	endpoints.ApSoutheast1RegionID: "Z09819469CZ3KQ8PWMCL",
+	endpoints.ApSoutheast2RegionID: "Z03657752RA8799S0TI5I",
+	endpoints.ApNortheast1RegionID: "Z08491812XW6IPYLR6CCA",
+	endpoints.EuCentral1RegionID:   "Z0334911C2FDI2Q9M4FZ",
+	endpoints.EuWest1RegionID:      "Z087551914Z2PCAU0QHMW",
+	endpoints.EuWest2RegionID:      "Z098228427VC6B3IX76ON",
+	endpoints.EuWest3RegionID:      "Z087117439MBKHYM69QS6",
 }
 
 // @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")
+// @Region(validateOverrideInPartition=false)
 func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &hostedZoneIDDataSource{}, nil
 }
 
 type hostedZoneIDDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *hostedZoneIDDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_apprunner_hosted_zone_id"
+	framework.DataSourceWithModel[hostedZoneIDDataSourceModel]
 }
 
 func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -62,12 +56,7 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 		return
 	}
 
-	var region string
-	if data.Region.IsNull() {
-		region = d.Meta().Region
-	} else {
-		region = data.Region.ValueString()
-	}
+	region := d.Meta().Region(ctx)
 
 	if zoneID, ok := hostedZoneIDPerRegionMap[region]; ok {
 		data.ID = types.StringValue(zoneID)
@@ -82,6 +71,6 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 }
 
 type hostedZoneIDDataSourceModel struct {
-	ID     types.String `tfsdk:"id"`
-	Region types.String `tfsdk:"region"`
+	framework.WithRegionModel
+	ID types.String `tfsdk:"id"`
 }

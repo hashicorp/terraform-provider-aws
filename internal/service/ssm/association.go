@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -16,22 +16,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_association", name="Association")
 // @Tags(identifierAttribute="id", resourceType="Association")
+// @IdentityAttribute("association_id")
+// @Testing(idAttrDuplicates="association_id")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -39,10 +43,6 @@ func resourceAssociation() *schema.Resource {
 		ReadWithoutTimeout:   resourceAssociationRead,
 		UpdateWithoutTimeout: resourceAssociationUpdate,
 		DeleteWithoutTimeout: resourceAssociationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		MigrateState:  associationMigrateState,
 		SchemaVersion: 1,
@@ -74,6 +74,13 @@ func resourceAssociation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
 			},
+			"calendar_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"compliance_severity": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -84,12 +91,6 @@ func resourceAssociation() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`), ""),
-			},
-			names.AttrInstanceID: {
-				Type:       schema.TypeString,
-				ForceNew:   true,
-				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
 			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
@@ -174,12 +175,10 @@ func resourceAssociation() *schema.Resource {
 				Optional: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -201,16 +200,16 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+		input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
 	if v, ok := d.GetOk("compliance_severity"); ok {
 		input.ComplianceSeverity = awstypes.AssociationComplianceSeverity(v.(string))
 	}
 
 	if v, ok := d.GetOk("document_version"); ok {
 		input.DocumentVersion = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrInstanceID); ok {
-		input.InstanceId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_concurrency"); ok {
@@ -222,11 +221,11 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("output_location"); ok {
-		input.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
+		input.OutputLocation = expandAssociationOutputLocation(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = expandParameters(v.(map[string]interface{}))
+		input.Parameters = expandParameters(v.(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
@@ -238,7 +237,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		input.Targets = expandTargets(v.([]interface{}))
+		input.Targets = expandTargets(v.([]any))
 	}
 
 	output, err := conn.CreateAssociation(ctx, input)
@@ -259,13 +258,13 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	association, err := findAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -277,19 +276,19 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("apply_only_at_cron_interval", association.ApplyOnlyAtCronInterval)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ssm",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "association/" + aws.ToString(association.AssociationId),
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrAssociationID, association.AssociationId)
 	d.Set("association_name", association.AssociationName)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
+	d.Set("calendar_names", association.CalendarNames)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("document_version", association.DocumentVersion)
-	d.Set(names.AttrInstanceID, association.InstanceId)
 	d.Set("max_concurrency", association.MaxConcurrency)
 	d.Set("max_errors", association.MaxErrors)
 	d.Set(names.AttrName, association.Name)
@@ -308,7 +307,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -330,6 +329,10 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.AutomationTargetParameterName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("calendar_names"); ok && v.(*schema.Set).Len() > 0 {
+			input.CalendarNames = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+
 		if v, ok := d.GetOk("compliance_severity"); ok {
 			input.ComplianceSeverity = awstypes.AssociationComplianceSeverity(v.(string))
 		}
@@ -347,11 +350,11 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if v, ok := d.GetOk("output_location"); ok {
-			input.OutputLocation = expandAssociationOutputLocation(v.([]interface{}))
+			input.OutputLocation = expandAssociationOutputLocation(v.([]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = expandParameters(v.(map[string]interface{}))
+			input.Parameters = expandParameters(v.(map[string]any))
 		}
 
 		if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
@@ -363,7 +366,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, ok := d.GetOk("targets"); ok {
-			input.Targets = expandTargets(d.Get("targets").([]interface{}))
+			input.Targets = expandTargets(d.Get("targets").([]any))
 		}
 
 		_, err := conn.UpdateAssociation(ctx, input)
@@ -376,7 +379,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -404,7 +407,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	output, err := conn.DescribeAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -415,17 +418,17 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -440,7 +443,7 @@ func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.S
 }
 
 func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.AssociationDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
 		Refresh: statusAssociation(ctx, conn, id),
@@ -451,7 +454,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 
 	if output, ok := outputRaw.(*awstypes.AssociationDescription); ok {
 		if status := awstypes.AssociationStatusName(aws.ToString(output.Overview.Status)); status == awstypes.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
 		}
 
 		return output, err
@@ -460,25 +463,25 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 	return nil, err
 }
 
-func expandParameters(tfMap map[string]interface{}) map[string][]string {
-	return tfmaps.ApplyToAllValues(tfMap, func(v interface{}) []string {
+func expandParameters(tfMap map[string]any) map[string][]string {
+	return tfmaps.ApplyToAllValues(tfMap, func(v any) []string {
 		return []string{v.(string)}
 	})
 }
 
-func flattenParameters(apiObject map[string][]string) map[string]interface{} {
-	return tfmaps.ApplyToAllValues(apiObject, func(v []string) interface{} {
+func flattenParameters(apiObject map[string][]string) map[string]any {
+	return tfmaps.ApplyToAllValues(apiObject, func(v []string) any {
 		return strings.Join(v, ",")
 	})
 }
 
-func expandAssociationOutputLocation(tfList []interface{}) *awstypes.InstanceAssociationOutputLocation {
+func expandAssociationOutputLocation(tfList []any) *awstypes.InstanceAssociationOutputLocation {
 	if tfList == nil {
 		return nil
 	}
 
 	//We only allow 1 Item so we can grab the first in the list only
-	tfMap := tfList[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
 
 	s3OutputLocation := &awstypes.S3OutputLocation{
 		OutputS3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
@@ -497,13 +500,13 @@ func expandAssociationOutputLocation(tfList []interface{}) *awstypes.InstanceAss
 	}
 }
 
-func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOutputLocation) []interface{} {
+func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOutputLocation) []any {
 	if apiObject == nil || apiObject.S3Location == nil {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0)
-	tfMap := make(map[string]interface{})
+	tfList := make([]any, 0)
+	tfMap := make(map[string]any)
 
 	tfMap[names.AttrS3BucketName] = aws.ToString(apiObject.S3Location.OutputS3BucketName)
 

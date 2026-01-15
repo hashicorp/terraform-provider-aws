@@ -82,8 +82,9 @@ resource "aws_transcribe_language_model" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `base_model_name` - (Required) Name of reference base model.
 * `input_data_config` - (Required) The input data config for the LanguageModel. See [Input Data Config](#input-data-config) for more details.
 * `language_code` - (Required) The language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.

@@ -55,14 +55,13 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Managing Redis Engine Versions
+### Managing Redis OOS/Valkey Engine Versions
 
 The initial Redis version is determined by the version set on the primary replication group.
 However, once it is part of a Global Replication Group,
 the Global Replication Group manages the version of all member replication groups.
 
-The member replication groups must have [`lifecycle.ignore_changes[engine_version]`](https://www.terraform.io/language/meta-arguments/lifecycle) set,
-or Terraform will always return a diff.
+The provider is configured to ignore changes to `engine`, `engineVersion` and `parameterGroupName` inside `aws_elasticache_replication_group` resources if they belong to a global replication group.
 
 In this example,
 the primary replication group will be created with Redis 6.0,
@@ -86,9 +85,6 @@ class MyConvertedCode extends TerraformStack {
       description: "primary replication group",
       engine: "redis",
       engineVersion: "6.0",
-      lifecycle: {
-        ignoreChanges: [engineVersion],
-      },
       nodeType: "cache.m5.large",
       numCacheClusters: 1,
       replicationGroupId: "example-primary",
@@ -101,9 +97,6 @@ class MyConvertedCode extends TerraformStack {
     new ElasticacheReplicationGroup(this, "secondary", {
       description: "secondary replication group",
       globalReplicationGroupId: example.globalReplicationGroupId,
-      lifecycle: {
-        ignoreChanges: [engineVersion],
-      },
       numCacheClusters: 1,
       provider: otherRegion,
       replicationGroupId: "example-secondary",
@@ -117,13 +110,19 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `automaticFailoverEnabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
   When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.
 * `cacheNodeType` - (Optional) The instance class used.
   See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html)
   and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
   When creating, by default the Global Replication Group inherits the node type of the primary replication group.
-* `engineVersion` - (Optional) Redis version to use for the Global Replication Group.
+* `engine` - (Optional) The name of the cache engine to be used for the clusters in this global replication group.
+  When creating, by default the Global Replication Group inherits the engine of the primary replication group.
+  If an engine is specified, the Global Replication Group and all member replication groups will be upgraded to this engine.
+  Valid values are `redis` or `valkey`.
+  Default is `redis` if `engineVersion` is specified.
+* `engineVersion` - (Optional) Engine version to use for the Global Replication Group.
   When creating, by default the Global Replication Group inherits the version of the primary replication group.
   If a version is specified, the Global Replication Group and all member replication groups will be upgraded to this version.
   Cannot be downgraded without replacing the Global Replication Group and all member replication groups.
@@ -131,12 +130,12 @@ This resource supports the following arguments:
   When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below.
-* `globalReplicationGroupIdSuffix` – (Required) The suffix name of a Global Datastore. If `globalReplicationGroupIdSuffix` is changed, creates a new resource.
-* `primaryReplicationGroupId` – (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primaryReplicationGroupId` is changed, creates a new resource.
-* `globalReplicationGroupDescription` – (Optional) A user-created description for the global replication group.
+* `globalReplicationGroupIdSuffix` - (Required) The suffix name of a Global Datastore. If `globalReplicationGroupIdSuffix` is changed, creates a new resource.
+* `primaryReplicationGroupId` - (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primaryReplicationGroupId` is changed, creates a new resource.
+* `globalReplicationGroupDescription` - (Optional) A user-created description for the global replication group.
 * `numNodeGroups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameterGroupName` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
-  Required when upgrading a major engine version, but will be ignored if left configured after the upgrade is complete.
+  Required when upgrading an engine or major engine version, but will be ignored if left configured after the upgrade is complete.
   Specifying without a major version upgrade will fail.
   Note that ElastiCache creates a copy of this parameter group for each member replication group.
 
@@ -150,7 +149,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `atRestEncryptionEnabled` - A flag that indicate whether the encryption at rest is enabled.
 * `authTokenEnabled` - A flag that indicate whether AuthToken (password) is enabled.
 * `clusterEnabled` - Indicates whether the Global Datastore is cluster enabled.
-* `engine` - The name of the cache engine to be used for the clusters in this global replication group.
 * `globalReplicationGroupId` - The full ID of the global replication group.
 * `globalNodeGroups` - Set of node groups (shards) on the global replication group.
   Has the values:
@@ -198,4 +196,4 @@ Using `terraform import`, import ElastiCache Global Replication Groups using the
 % terraform import aws_elasticache_global_replication_group.my_global_replication_group okuqm-global-replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-bfdf8fb8151d1dd27e56bf30242603f71120c4ececefd5c623f1f7efab72074a -->
+<!-- cache-key: cdktf-0.20.8 input-159825556e142adc3ab7496f715e0832b86a2fdfc50c1621ffb1838badf13bbc -->

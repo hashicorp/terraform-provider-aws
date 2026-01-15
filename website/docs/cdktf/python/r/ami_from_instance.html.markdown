@@ -52,6 +52,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping
@@ -79,4 +80,4 @@ This resource also exports a full set of attributes corresponding to the argumen
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
-<!-- cache-key: cdktf-0.20.1 input-4fe8c5ccb7949e4e568ee6466ad138d934f82a74818318c1ee9ec048a8d2c352 -->
+<!-- cache-key: cdktf-0.20.8 input-c5687bf0b009245ae8a64984329852de0de12b3f0b85fb7a17e969521c73462f -->

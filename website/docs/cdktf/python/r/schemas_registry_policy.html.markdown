@@ -38,7 +38,7 @@ class MyConvertedCode(TerraformStack):
                     type="AWS"
                 )
                 ],
-                resources=["arn:aws:schemas:us-east-1:012345678901:registry/example", "arn:aws:schemas:us-east-1:012345678901:schema/example*"
+                resources=["arn:aws:schemas:us-east-1:123456789012:registry/example", "arn:aws:schemas:us-east-1:123456789012:schema/example*"
                 ],
                 sid="example"
             )
@@ -54,8 +54,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `registry_name` - (Required) Name of EventBridge Schema Registry
 * `policy` - (Required) Resource Policy for EventBridge Schema Registry
 
@@ -96,4 +97,4 @@ Using `terraform import`, import EventBridge Schema Registry Policy using the `r
 % terraform import aws_schemas_registry_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9012f6db2847612db1042a8a2bfd8eded85a88882cdbccfc86d64bfed094f01b -->
+<!-- cache-key: cdktf-0.20.8 input-2a59c1aac05588dd1450cde7591240ec8d7587b637ac0dffc720e1a4b2bdba67 -->

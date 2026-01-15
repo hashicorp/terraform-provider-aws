@@ -45,6 +45,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `instanceType` - (Optional) Type of instance for which to query Spot Price information.
 * `availabilityZone` - (Optional) Availability zone in which to query Spot price information.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotPriceHistory.html) for supported filters. Detailed below.
@@ -68,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-84288ca39edef310f32dba7504a9418ce015393e96eb2b8cc8a803eca06e4db4 -->
+<!-- cache-key: cdktf-0.20.8 input-e9b9dfd7bc6ff5b480d0b0f0cb7d874b0041eaf3adf19cce410878c7e2866dd6 -->

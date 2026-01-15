@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -63,7 +63,7 @@ func TestAccAutoScalingLaunchConfigurationDataSource_securityGroups(t *testing.T
 			{
 				Config: testAccLaunchConfigurationDataSourceConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "security_groups.#", "1"),
 				),
 			},
 		},

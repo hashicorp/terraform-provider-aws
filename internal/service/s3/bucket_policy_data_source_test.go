@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -60,7 +60,7 @@ func testAccCheckBucketPolicyMatch(nameFirst, keyFirst, nameSecond, keySecond st
 
 		areEquivalent, err := awspolicy.PoliciesAreEquivalent(policy1, policy2)
 		if err != nil {
-			return fmt.Errorf("comparing IAM Policies failed: %s", err)
+			return fmt.Errorf("comparing IAM Policies failed: %w", err)
 		}
 
 		if !areEquivalent {
@@ -102,7 +102,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["${data.aws_service_principal.current.name}"]
+      identifiers = [data.aws_service_principal.current.name]
     }
   }
 }

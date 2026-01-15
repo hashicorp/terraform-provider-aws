@@ -38,16 +38,17 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
-* `imageId` – (Required) ID of the image.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `imageId` - (Required) ID of the image.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `name` – The name of the image.
-* `description` – The description of the image.
-* `os` – The operating system that the image is running.
-* `requiredTenancy` – Specifies whether the image is running on dedicated hardware. When Bring Your Own License (BYOL) is enabled, this value is set to DEDICATED. For more information, see [Bring Your Own Windows Desktop Images](https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
-* `state` – The status of the image.
+* `name` - The name of the image.
+* `description` - The description of the image.
+* `os` - The operating system that the image is running.
+* `requiredTenancy` - Specifies whether the image is running on dedicated hardware. When Bring Your Own License (BYOL) is enabled, this value is set to DEDICATED. For more information, see [Bring Your Own Windows Desktop Images](https://docs.aws.amazon.com/workspaces/latest/adminguide/byol-windows-images.html).
+* `state` - The status of the image.
 
-<!-- cache-key: cdktf-0.20.1 input-e175478c435ceea20dd9a0b224e5ca9b6f41172a6466e59421b4cd7412f5f83d -->
+<!-- cache-key: cdktf-0.20.8 input-4cd58afbd9c55bd1e014ef19622a2d45727d3d26a3ab4c1a116e5b541d802978 -->

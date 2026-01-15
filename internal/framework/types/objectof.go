@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -53,8 +55,7 @@ func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t objectTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("ObjectTypeOf[%T]", zero)
+	return fmt.Sprintf("ObjectTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t objectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
@@ -132,9 +133,16 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	return nil, diags
 }
 
-func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
+func objectTypeNewObjectPtr[T any](ctx context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	return new(T), diags
+
+	t := new(T)
+	diags.Append(NullOutObjectPtrFields(ctx, t)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return t, diags
 }
 
 // NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
@@ -149,13 +157,13 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 
 	val = val.Elem()
 
-	for i := 0; i < typ.NumField(); i++ {
-		val := val.Field(i)
-		if !val.CanInterface() {
+	for field := range tfreflect.StructFields(val.Type()) {
+		fieldVal := val.FieldByIndex(field.Index)
+		if !fieldVal.CanInterface() {
 			continue
 		}
 
-		attrValue, err := NullValueOf(ctx, val.Interface())
+		attrValue, err := NullValueOf(ctx, fieldVal.Interface())
 
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
@@ -166,7 +174,7 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 			continue
 		}
 
-		val.Set(reflect.ValueOf(attrValue))
+		fieldVal.Set(reflect.ValueOf(attrValue))
 	}
 
 	return diags
@@ -207,7 +215,7 @@ func objectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.
 		return nil, diags
 	}
 
-	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
+	diags.Append(val.(ObjectValueOf[T]).As(ctx, ptr, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil, diags
 	}
@@ -242,5 +250,5 @@ func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.
 }
 
 func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
+	return fwdiag.Must(NewObjectValueOf(ctx, t))
 }

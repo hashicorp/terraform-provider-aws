@@ -36,6 +36,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `transit_gateway_attachment_id` - (Required) Identifier of EC2 Transit Gateway Attachment.
 * `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
 
@@ -72,4 +73,4 @@ Using `terraform import`, import `aws_ec2_transit_gateway_route_table_propagatio
 % terraform import aws_ec2_transit_gateway_route_table_propagation.example tgw-rtb-12345678_tgw-attach-87654321
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0296774da3cc7e6a2540fcd890af389ccf67fa4d39cf5ee59832361eca60bcc4 -->
+<!-- cache-key: cdktf-0.20.8 input-f1325b9e21ef70d26573122e40319326ed3b48a6efa82cb2f374b0a4d2ccbb7f -->

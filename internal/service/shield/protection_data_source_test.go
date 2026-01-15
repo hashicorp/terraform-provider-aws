@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -37,7 +37,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, protectionResourceName, names.AttrResourceARN),
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/.+$`)),
 				),
 			},
 			{
@@ -46,7 +46,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, protectionResourceName, names.AttrResourceARN),
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/.+$`)),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 
 resource "aws_shield_protection" "test" {
   name         = %[1]q
-  resource_arn = aws_globalaccelerator_accelerator.test.id
+  resource_arn = aws_globalaccelerator_accelerator.test.arn
 }
 `, rName)
 }

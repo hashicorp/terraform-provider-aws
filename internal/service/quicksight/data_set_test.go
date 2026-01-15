@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,12 +40,12 @@ func TestAccQuickSightDataSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.0.s3_source.0.input_columns.0.type", "STRING"),
 				),
@@ -76,7 +76,7 @@ func TestAccQuickSightDataSet_disappears(t *testing.T) {
 				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,12 +101,46 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 				Config: testAccDataSetConfigColumnGroups(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.country_code", "US"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQuickSightDataSet_columnDescriptionText(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet awstypes.DataSet
+	resourceName := "aws_quicksight_data_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigColumnDescriptionText(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.0.column_description.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.data_transforms.0.tag_column_operation.0.tags.0.column_description.0.text", "Column1 Description"),
 				),
 			},
 			{
@@ -163,7 +197,7 @@ func TestAccQuickSightDataSet_dataSetUsageConfiguration(t *testing.T) {
 				Config: testAccDataSetConfigDataSetUsageConfiguration(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_direct_query_source", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_set_usage_configuration.0.disable_use_as_imported_source", acctest.CtFalse),
 				),
@@ -194,8 +228,8 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 				Config: testAccDataSetConfigFieldFolders(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "field_folders.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "field_folders.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.description", "test"),
 				),
@@ -226,11 +260,11 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 				Config: testAccDataSetConfigLogicalTableMap(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "output_columns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
 				),
 			},
@@ -243,11 +277,11 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 				Config: testAccDataSetConfigUpdateLogicalTableMap(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "output_columns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "output_columns.1.name", "Column2"),
 				),
@@ -278,7 +312,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				Config: testAccDataSetConfigPermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -298,7 +332,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				Config: testAccDataSetConfigUpdatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -323,7 +357,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
 				),
 			},
 		},
@@ -347,7 +381,7 @@ func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
 				Config: testAccDataSetConfigPermissionsMultiple(rId, rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -384,8 +418,8 @@ func TestAccQuickSightDataSet_rowLevelPermissionTagConfiguration(t *testing.T) {
 				Config: testAccDataSetConfigRowLevelPermissionTagConfiguration(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.column_name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.tag_key", "uniquetagkey"),
 					resource.TestCheckResourceAttr(resourceName, "row_level_permission_tag_configuration.0.tag_rules.0.match_all_value", "*"),
@@ -429,12 +463,12 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 				Config: testAccDataSetConfigRefreshProperties(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "refresh_properties.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.column_name", "column1"),
-					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "refresh_properties.0.refresh_configuration.0.incremental_refresh.0.lookback_window.0.size_unit", "DAY"),
 				),
 			},
@@ -442,53 +476,6 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccQuickSightDataSet_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dataSet awstypes.DataSet
-	resourceName := "aws_quicksight_data_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSetConfigTags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDataSetConfigTags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDataSetConfigTags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -512,11 +499,11 @@ func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", "joined"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "j"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.right_operand", "right"),
@@ -566,7 +553,7 @@ func testAccCheckDataSetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindDataSetByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -671,6 +658,49 @@ resource "aws_quicksight_data_set" "test" {
       columns      = ["Column1"]
       country_code = "US"
       name         = "test"
+    }
+  }
+}
+`, rId, rName))
+}
+
+func testAccDataSetConfigColumnDescriptionText(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+      data_source_arn = aws_quicksight_data_source.test.arn
+      input_columns {
+        name = "Column1"
+        type = "STRING"
+      }
+      upload_settings {
+        format = "JSON"
+      }
+    }
+  }
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+    data_transforms {
+      tag_column_operation {
+        column_name = "Column1"
+        tags {
+          column_description {
+            text = "Column1 Description"
+          }
+        }
+      }
     }
   }
 }
@@ -1078,65 +1108,6 @@ resource "aws_quicksight_data_set" "test" {
   }
 }
 `, rId, rName))
-}
-
-func testAccDataSetConfigTags1(rId, rName, key1, value1 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSetConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[1]q
-  name        = %[2]q
-  import_mode = "SPICE"
-
-  physical_table_map {
-    physical_table_map_id = %[1]q
-    s3_source {
-      data_source_arn = aws_quicksight_data_source.test.arn
-      input_columns {
-        name = "Column1"
-        type = "STRING"
-      }
-      upload_settings {
-        format = "JSON"
-      }
-    }
-  }
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rId, rName, key1, value1))
-}
-
-func testAccDataSetConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSetConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[1]q
-  name        = %[2]q
-  import_mode = "SPICE"
-
-  physical_table_map {
-    physical_table_map_id = %[1]q
-    s3_source {
-      data_source_arn = aws_quicksight_data_source.test.arn
-      input_columns {
-        name = "Column1"
-        type = "STRING"
-      }
-      upload_settings {
-        format = "JSON"
-      }
-    }
-  }
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rId, rName, key1, value1, key2, value2))
 }
 
 func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {

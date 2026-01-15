@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_memorydb_cluster: Add `engine` argument
+```
+
+```release-note:enhancement
+resource/aws_memorydb_snapshot: Add `cluster_configuration.engine` attribute
+```
+
+```release-note:enhancement
+data-source/aws_memorydb_cluster: Add `engine` attribute
+```
+
+```release-note:enhancement
+data-source/aws_memorydb_snapshot: Add `cluster_configuration.engine` attribute
+```

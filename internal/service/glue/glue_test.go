@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -14,9 +14,13 @@ func TestAccGlue_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"CatalogTableOptimizer": {
-			acctest.CtBasic:      testAccCatalogTableOptimizer_basic,
-			acctest.CtDisappears: testAccCatalogTableOptimizer_disappears,
-			"update":             testAccCatalogTableOptimizer_update,
+			acctest.CtBasic:                                   testAccCatalogTableOptimizer_basic,
+			"deleteOrphanFileConfiguration":                   testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration,
+			"deleteOrphanFileConfigurationWithRunRateInHours": testAccCatalogTableOptimizer_DeleteOrphanFileConfigurationWithRunRateInHours,
+			acctest.CtDisappears:                              testAccCatalogTableOptimizer_disappears,
+			"retentionConfiguration":                          testAccCatalogTableOptimizer_RetentionConfiguration,
+			"retentionConfigurationWithRunRateInHours":        testAccCatalogTableOptimizer_RetentionConfigurationWithRunRateInHours,
+			"update": testAccCatalogTableOptimizer_update,
 		},
 		"DataCatalogEncryptionSettings": {
 			acctest.CtBasic: testAccDataCatalogEncryptionSettings_basic,
@@ -28,6 +32,7 @@ func TestAccGlue_serial(t *testing.T) {
 			"hybrid":             testAccResourcePolicy_hybrid,
 			acctest.CtDisappears: testAccResourcePolicy_disappears,
 			"equivalent":         testAccResourcePolicy_ignoreEquivalent,
+			"Identity":           testAccGlueResourcePolicy_IdentitySerial,
 		},
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -45,7 +45,7 @@ func TestAccEC2PublicIPv4PoolsDataSource_tags(t *testing.T) {
 			{
 				Config: testPublicIPv4PoolsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", "0"),
 				),
 			},
 		},

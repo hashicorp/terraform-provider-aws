@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_cluster_auth")
+// @SDKDataSource("aws_eks_cluster_auth", name="Cluster Authentication Token")
 func dataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterAuthRead,
@@ -34,7 +34,7 @@ func dataSourceClusterAuth() *schema.Resource {
 	}
 }
 
-func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).STSClient(ctx)
 

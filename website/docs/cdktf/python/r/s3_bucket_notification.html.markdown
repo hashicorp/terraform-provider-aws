@@ -173,7 +173,7 @@ class MyConvertedCode(TerraformStack):
             function_name="example_lambda_name",
             handler="exports.example",
             role=iam_for_lambda.arn,
-            runtime="go1.x"
+            runtime="nodejs20.x"
         )
         allow_bucket = LambdaPermission(self, "allow_bucket",
             action="lambda:InvokeFunction",
@@ -238,7 +238,7 @@ class MyConvertedCode(TerraformStack):
             function_name="example_lambda_name1",
             handler="exports.example",
             role=iam_for_lambda.arn,
-            runtime="go1.x"
+            runtime="nodejs20.x"
         )
         func2 = LambdaFunction(self, "func2",
             filename="your-function2.zip",
@@ -394,6 +394,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Used to configure notifications to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.
@@ -452,4 +453,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ffc8a3d834243776f095d91cbf1034f45496ca04ecab5cc652f8eef56b45e134 -->
+<!-- cache-key: cdktf-0.20.8 input-2ec3bfdddd9338b3258eb0dbb514981f8f3970bb90c8f38e1111afac1b412fda -->

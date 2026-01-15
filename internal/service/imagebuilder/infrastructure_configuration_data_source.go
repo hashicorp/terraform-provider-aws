@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -6,8 +6,7 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_infrastructure_configuration")
-func DataSourceInfrastructureConfiguration() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_infrastructure_configuration", name="Infrastructure Configuration")
+// @Tags
+func dataSourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationRead,
 
@@ -97,6 +97,30 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"host_resource_group_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenancy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrResourceTags: tftags.TagsSchemaComputed(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
@@ -120,56 +144,54 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetInfrastructureConfigurationInput{}
-
-	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.InfrastructureConfigurationArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
+	arn := d.Get(names.AttrARN).(string)
+	infrastructureConfiguration, err := findInfrastructureConfigurationByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configuration (%s): %s", arn, err)
 	}
 
-	if output == nil || output.InfrastructureConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
-	}
-
-	infrastructureConfiguration := output.InfrastructureConfiguration
-
-	d.SetId(aws.StringValue(infrastructureConfiguration.Arn))
+	d.SetId(aws.ToString(infrastructureConfiguration.Arn))
 	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
-
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
-		d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)})
+		if err := d.Set("instance_metadata_options", []any{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_metadata_options: %s", err)
+		}
 	} else {
 		d.Set("instance_metadata_options", nil)
 	}
-
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
-	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
+	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
+		if err := d.Set("logging", []any{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
+		}
 	} else {
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	if infrastructureConfiguration.Placement != nil {
+		if err := d.Set("placement", []any{flattenPlacement(infrastructureConfiguration.Placement)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting placement: %s", err)
+		}
+	} else {
+		d.Set("placement", nil)
+	}
+	d.Set(names.AttrResourceTags, keyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
-	d.Set(names.AttrTags, KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
+
+	setTagsOut(ctx, infrastructureConfiguration.Tags)
 
 	return diags
 }

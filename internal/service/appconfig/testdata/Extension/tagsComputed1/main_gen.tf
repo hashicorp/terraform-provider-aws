@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 provider "null" {}
@@ -20,7 +20,7 @@ resource "aws_appconfig_extension" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name =var.rName
+  name = var.rName
 }
 
 data "aws_iam_policy_document" "test" {

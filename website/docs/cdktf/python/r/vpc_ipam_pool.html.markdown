@@ -33,14 +33,14 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcIpam(self, "example",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
         aws_vpc_ipam_pool_example = VpcIpamPool(self, "example_2",
             address_family="ipv4",
             ipam_scope_id=example.private_default_scope_id,
-            locale=Token.as_string(current.name)
+            locale=Token.as_string(current.region)
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_vpc_ipam_pool_example.override_logical_id("example")
@@ -66,7 +66,7 @@ class MyConvertedCode(TerraformStack):
         current = DataAwsRegion(self, "current")
         example = VpcIpam(self, "example",
             operating_regions=[VpcIpamOperatingRegions(
-                region_name=Token.as_string(current.name)
+                region_name=Token.as_string(current.region)
             )
             ]
         )
@@ -81,7 +81,7 @@ class MyConvertedCode(TerraformStack):
         child = VpcIpamPool(self, "child",
             address_family="ipv4",
             ipam_scope_id=example.private_default_scope_id,
-            locale=Token.as_string(current.name),
+            locale=Token.as_string(current.region),
             source_ipam_pool_id=parent.id
         )
         VpcIpamPoolCidr(self, "child_test",
@@ -94,6 +94,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `address_family` - (Required) The IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
 * `allocation_default_netmask_length` - (Optional) A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) The maximum netmask length that will be required for CIDR allocations in this pool.
@@ -106,7 +107,7 @@ within the CIDR range in the pool.
 * `description` - (Optional) A description for the IPAM pool.
 * `ipam_scope_id` - (Required) The ID of the scope in which you would like to create the IPAM pool.
 * `locale` - (Optional) The locale in which you would like to create the IPAM pool. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. Possible values: Any AWS region, such as `us-east-1`.
-* `publicly_advertisable` - (Optional) Defines whether or not IPv6 pool space is publicly advertisable over the internet. This argument is required if `address_family = "ipv6"` and `public_ip_source = "byoip"`, default is `false`. This option is not available for IPv4 pool space or if `public_ip_source = "amazon"`.
+* `publicly_advertisable` - (Optional) Defines whether or not IPv6 pool space is publicly advertisable over the internet. This argument is required if `address_family = "ipv6"` and `public_ip_source = "byoip"`, default is `false`. This option is not available for IPv4 pool space or if `public_ip_source = "amazon"`. Setting this argument to `true` when it is not available may result in erroneous differences being reported.
 * `public_ip_source` - (Optional) The IP address source for pools in the public scope. Only used for provisioning IP address CIDRs to pools in the public scope. Valid values are `byoip` or `amazon`. Default is `byoip`.
 * `source_ipam_pool_id` - (Optional) The ID of the source IPAM pool. Use this argument to create a child pool within an existing pool.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -145,4 +146,4 @@ Using `terraform import`, import IPAMs using the IPAM pool `id`. For example:
 % terraform import aws_vpc_ipam_pool.example ipam-pool-0958f95207d978e1e
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f924567b50f5873f599d15e473fed2475877459e3c7ba019cc1699e9c5029721 -->
+<!-- cache-key: cdktf-0.20.8 input-5e75736b1363d462eb25f8dfe2ff410a237ca7eea642a77ab07c7c6aa03b5ee4 -->

@@ -171,6 +171,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `desiredNumberOfDomainControllers` - (Optional) The number of domain controllers desired in the replicated directory. Minimum value of `2`.
 * `directoryId` - (Required) The identifier of the directory to which you want to add Region replication.
 * `regionName` - (Required) The name of the Region where you want to add domain controllers for replication.
@@ -228,4 +229,4 @@ Using `terraform import`, import Replicated Regions using directory ID,Region na
 % terraform import aws_directory_service_region.example d-9267651497,us-east-2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20d7af9911cb4ea2ab9c63d5899325921c11d1438c0a0bd4b54c4be7952b8fff -->
+<!-- cache-key: cdktf-0.20.8 input-26f2083c6ce11c6e4852a07af20bc89e96df82f5c2a3a0e11c3c3af8cfe51438 -->

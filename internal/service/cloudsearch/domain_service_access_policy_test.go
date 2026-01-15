@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch_test
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudsearch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,20 +22,20 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain_service_access_policy.test"
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainServiceAccessPolicyExists(ctx, resourceName),
+					testAccDomainServiceAccessPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 				),
 			},
@@ -54,20 +53,20 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	resourceName := "aws_cloudsearch_domain_service_access_policy.test"
 	rName := acctest.ResourcePrefix + "-" + sdkacctest.RandString(28-(len(acctest.ResourcePrefix)+1))
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID)
-			acctest.PreCheckCloudSearchAccountAllowListed(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainServiceAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainServiceAccessPolicyExists(ctx, resourceName),
+					testAccDomainServiceAccessPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 				),
 			},
@@ -79,7 +78,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 			{
 				Config: testAccDomainServiceAccessPolicyConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccDomainServiceAccessPolicyExists(ctx, resourceName),
+					testAccDomainServiceAccessPolicyExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
 				),
 			},
@@ -87,14 +86,14 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccDomainServiceAccessPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccDomainServiceAccessPolicyExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudSearchClient(ctx)
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -102,18 +101,18 @@ func testAccDomainServiceAccessPolicyExists(ctx context.Context, n string) resou
 	}
 }
 
-func testAccCheckDomainServiceAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainServiceAccessPolicyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudsearch_domain_service_access_policy" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchClient(ctx)
+			conn := acctest.ProviderMeta(ctx, t).CloudSearchClient(ctx)
 
 			_, err := tfcloudsearch.FindAccessPolicyByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

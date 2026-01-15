@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -18,6 +18,7 @@ var (
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
 	ResourceProductSubscription            = resourceProductSubscription
 	ResourceStandardsControl               = resourceStandardsControl
+	ResourceStandardsControlAssociation    = newStandardsControlAssociationResource
 	ResourceStandardsSubscription          = resourceStandardsSubscription
 
 	AccountHubARN                                 = accountHubARN
@@ -33,6 +34,7 @@ var (
 	FindMemberByAccountID                         = findMemberByAccountID
 	FindOrganizationConfiguration                 = findOrganizationConfiguration
 	FindProductSubscriptionByARN                  = findProductSubscriptionByARN
+	FindStandardsControlAssociationByTwoPartKey   = findStandardsControlAssociationByTwoPartKey
 	FindStandardsControlByTwoPartKey              = findStandardsControlByTwoPartKey
 	FindStandardsSubscriptionByARN                = findStandardsSubscriptionByARN
 	StandardsControlARNToStandardsSubscriptionARN = standardsControlARNToStandardsSubscriptionARN

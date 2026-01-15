@@ -1,32 +1,32 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/oam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_oam_sink_policy")
-func ResourceSinkPolicy() *schema.Resource {
+// @SDKResource("aws_oam_sink_policy", name="Sink Policy")
+func resourceSinkPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkPolicyPut,
 		ReadWithoutTimeout:   resourceSinkPolicyRead,
@@ -38,6 +38,7 @@ func ResourceSinkPolicy() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			// These aren't used but are retained for backwards compatibility.
 			Create: schema.DefaultTimeout(1 * time.Minute),
 			Update: schema.DefaultTimeout(1 * time.Minute),
 			Delete: schema.DefaultTimeout(1 * time.Minute),
@@ -48,17 +49,7 @@ func ResourceSinkPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.JSONDocumentSchemaRequired(),
 			"sink_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -72,27 +63,23 @@ func ResourceSinkPolicy() *schema.Resource {
 	}
 }
 
-const (
-	ResNameSinkPolicy = "Sink Policy"
-)
-
-func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	in := &oam.PutSinkPolicyInput{
-		SinkIdentifier: aws.String(sinkIdentifier),
+	in := oam.PutSinkPolicyInput{
 		Policy:         aws.String(policy),
+		SinkIdentifier: aws.String(sinkIdentifier),
 	}
 
-	_, err = conn.PutSinkPolicy(ctx, in)
+	_, err = conn.PutSinkPolicy(ctx, &in)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ObservabilityAccessManager Sink Policy (%s): %s", sinkIdentifier, err)
 	}
@@ -104,20 +91,20 @@ func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceSinkPolicyRead(ctx, d, meta)...)
 }
 
-func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkPolicyByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] ObservabilityAccessManager SinkPolicy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] ObservabilityAccessManager Sink Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameSinkPolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Sink Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.SinkArn)
@@ -131,29 +118,34 @@ func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrPolicy, policyToSet)
 
-	return nil
+	return diags
 }
 
 func findSinkPolicyByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetSinkPolicyOutput, error) {
-	in := &oam.GetSinkPolicyInput{
+	in := oam.GetSinkPolicyInput{
 		SinkIdentifier: aws.String(id),
 	}
-	out, err := conn.GetSinkPolicy(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findSinkPolicy(ctx, conn, &in)
+}
+
+func findSinkPolicy(ctx context.Context, conn *oam.Client, input *oam.GetSinkPolicyInput) (*oam.GetSinkPolicyOutput, error) {
+	output, err := conn.GetSinkPolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }

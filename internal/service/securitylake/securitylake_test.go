@@ -1,17 +1,24 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	gluetypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -42,8 +49,9 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			acctest.CtDisappears: testAccDataLake_disappears,
 			"tags":               testAccDataLake_tags,
 			"lifecycle":          testAccDataLake_lifeCycle,
-			"lifecycleUpdate":    testAccDataLake_lifeCycleUpdate,
+			"metaStoreUpdate":    testAccDataLake_metaStoreUpdate,
 			"replication":        testAccDataLake_replication,
+			"Identity":           testAccDataLake_IdentitySerial,
 		},
 		"Subscriber": {
 			"accessType":         testAccSubscriber_accessType,
@@ -84,5 +92,39 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("finding data lakes: %s", err)
+	}
+}
+
+func testAccDeleteGlueDatabases(ctx context.Context, t *testing.T, regions ...string) {
+	t.Helper()
+
+	if os.Getenv(resource.EnvTfAcc) == "" {
+		return
+	}
+
+	// The Context returned by t.Context() is canceled when the test ends.
+	ctx = context.WithoutCancel(ctx)
+
+	for _, region := range regions {
+		deleteGlueDatabase(ctx, t, region)
+	}
+}
+
+func deleteGlueDatabase(ctx context.Context, t *testing.T, region string) {
+	t.Helper()
+
+	// e.g. "amazon_security_lake_glue_db_us-east-1"
+	databaseName := "amazon_security_lake_glue_db_" + strings.ReplaceAll(region, "-", "_")
+	input := glue.DeleteDatabaseInput{
+		Name: aws.String(databaseName),
+	}
+	_, err := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx).DeleteDatabase(ctx, &input, func(o *glue.Options) {
+		o.Region = region
+	})
+	if errs.IsA[*gluetypes.EntityNotFoundException](err) {
+		return
+	}
+	if err != nil {
+		t.Errorf("deleting Glue Database (%s) in %q: %s", databaseName, region, err)
 	}
 }

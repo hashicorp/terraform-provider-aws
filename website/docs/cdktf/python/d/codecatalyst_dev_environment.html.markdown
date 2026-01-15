@@ -36,8 +36,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `env_id` - - (Required) The system-generated unique ID of the Dev Environment for which you want to view information. To retrieve a list of Dev Environment IDs, use [ListDevEnvironments](https://docs.aws.amazon.com/codecatalyst/latest/APIReference/API_ListDevEnvironments.html).
 * `project_name` - (Required) The name of the project in the space.
 * `space_name` - (Required) The name of the space.
@@ -57,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - The current status of the Dev Environment. From: PENDING | RUNNING | STARTING | STOPPING | STOPPED | FAILED | DELETING | DELETED.
 * `status_reason` - The reason for the status.
 
-<!-- cache-key: cdktf-0.20.1 input-c61bba638996c2149ec91b8cd25afae8ff1fa5829987e15f55f2b47440b45e86 -->
+<!-- cache-key: cdktf-0.20.8 input-c9cbd5d22fe7635843e66ffc04f4957e2a89b2166d47b200b4bc013270252c43 -->

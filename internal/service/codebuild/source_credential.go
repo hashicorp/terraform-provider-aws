@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -16,21 +16,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
+// @ArnIdentity
+// @V60SDKv2Fix
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
+// @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
 func resourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,
 		ReadWithoutTimeout:   resourceSourceCredentialRead,
 		DeleteWithoutTimeout: resourceSourceCredentialDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -64,7 +65,7 @@ func resourceSourceCredential() *schema.Resource {
 	}
 }
 
-func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
@@ -90,13 +91,13 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 	return append(diags, resourceSourceCredentialRead(ctx, d, meta)...)
 }
 
-func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	credentials, err := findSourceCredentialsByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Source Credential (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,14 +114,15 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSourceCredentialDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	log.Printf("[INFO] Deleting CodeBuild Source Credential: %s", d.Id())
-	_, err := conn.DeleteSourceCredentials(ctx, &codebuild.DeleteSourceCredentialsInput{
+	input := codebuild.DeleteSourceCredentialsInput{
 		Arn: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSourceCredentials(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
@@ -155,7 +157,7 @@ func findSourceCredentials(ctx context.Context, conn *codebuild.Client, input *c
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.SourceCredentialsInfos {

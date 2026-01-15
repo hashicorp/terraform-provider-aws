@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sfn_test
@@ -11,12 +11,12 @@ import (
 	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,11 +35,11 @@ func TestAccSFNActivity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -64,9 +64,9 @@ func TestAccSFNActivity_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceActivity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsfn.ResourceActivity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,9 +87,9 @@ func TestAccSFNActivity_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -100,18 +100,18 @@ func TestAccSFNActivity_tags(t *testing.T) {
 			},
 			{
 				Config: testAccActivityConfig_basicTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -126,7 +126,7 @@ func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.
 	reusePeriodSeconds := 900
 	kmsKeyResource := "aws_kms_key.kms_key_for_sfn"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -134,9 +134,9 @@ func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_encryptionConfigurationCustomerManagedKMSKey(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
@@ -157,7 +157,7 @@ func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -165,9 +165,9 @@ func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivityConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
 				),
 			},
@@ -205,18 +205,18 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			// Retrying as Read after Delete is not always consistent.
-			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			err := tfresource.Retry(ctx, 1*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 				_, err := tfsfn.FindActivityByARN(ctx, conn, rs.Primary.ID)
 
-				if tfresource.NotFound(err) {
+				if retry.NotFound(err) {
 					return nil
 				}
 
 				if err != nil {
-					return retry.NonRetryableError(err)
+					return tfresource.NonRetryableError(err)
 				}
 
-				return retry.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
+				return tfresource.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
 			})
 
 			return err
@@ -228,7 +228,10 @@ func testAccCheckActivityDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccActivityConfig_kmsBase() string {
 	return `
-resource "aws_kms_key" "kms_key_for_sfn" {}
+resource "aws_kms_key" "kms_key_for_sfn" {
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
 `
 }
 

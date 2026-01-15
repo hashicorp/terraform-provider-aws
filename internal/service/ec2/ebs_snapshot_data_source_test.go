@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -38,6 +38,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVolumeSize, resourceName, names.AttrVolumeSize),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStartTime),
 				),
 			},
 		},

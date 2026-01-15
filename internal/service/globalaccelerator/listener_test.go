@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,9 +35,11 @@ func TestAccGlobalAcceleratorListener_basic(t *testing.T) {
 				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/`+verify.UUIDRegexPattern+`/listener/[a-z0-9]{8}$`)),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "80",
 						"to_port":   "81",
@@ -66,7 +70,7 @@ func TestAccGlobalAcceleratorListener_disappears(t *testing.T) {
 				Config: testAccListenerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglobalaccelerator.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +98,7 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "443",
 						"to_port":   "444",
@@ -136,7 +140,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfglobalaccelerator.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -159,7 +163,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = aws_globalaccelerator_accelerator.example.id
+  accelerator_arn = aws_globalaccelerator_accelerator.example.arn
   protocol        = "TCP"
 
   port_range {
@@ -179,7 +183,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 }
 
 resource "aws_globalaccelerator_listener" "example" {
-  accelerator_arn = aws_globalaccelerator_accelerator.example.id
+  accelerator_arn = aws_globalaccelerator_accelerator.example.arn
   client_affinity = "SOURCE_IP"
   protocol        = "UDP"
 

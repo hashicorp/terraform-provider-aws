@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,7 +50,7 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-filter-rule/tmfr-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "traffic_mirror_filter_id", regexache.MustCompile("tmf-.*")),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", dstCidr),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", action),
@@ -58,9 +58,9 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", "0"),
 				),
 			},
 			// Add all optionals
@@ -75,10 +75,10 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.from_port", strconv.Itoa(dstPortFrom)),
 					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.to_port", strconv.Itoa(dstPortTo)),
-					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.from_port", strconv.Itoa(srcPortFrom)),
 					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.to_port", strconv.Itoa(srcPortTo)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, strconv.Itoa(protocol)),
@@ -96,10 +96,10 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.from_port", strconv.Itoa(dstPortFrom)),
 					resource.TestCheckResourceAttr(resourceName, "destination_port_range.0.to_port", strconv.Itoa(dstPortTo)),
-					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.from_port", strconv.Itoa(srcPortFrom)),
 					resource.TestCheckResourceAttr(resourceName, "source_port_range.0.to_port", strconv.Itoa(srcPortTo)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, strconv.Itoa(protocol)),
@@ -117,9 +117,9 @@ func TestAccVPCTrafficMirrorFilterRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_cidr_block", srcCidr),
 					resource.TestCheckResourceAttr(resourceName, "traffic_direction", direction),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "destination_port_range.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_port_range.#", "0"),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +165,8 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorFilters(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
+	input := ec2.DescribeTrafficMirrorFiltersInput{}
+	_, err := conn.DescribeTrafficMirrorFilters(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror filter rule acceprance test: ", err)
@@ -187,7 +188,7 @@ func testAccCheckTrafficMirrorFilterRuleDestroy(ctx context.Context) resource.Te
 
 			_, err := tfec2.FindTrafficMirrorFilterRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["traffic_mirror_filter_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

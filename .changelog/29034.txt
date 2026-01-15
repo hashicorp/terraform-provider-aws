@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_quicksight_data_source: Support secret_arn as credentials
-```

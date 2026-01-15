@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -11,43 +11,43 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
-	notebookInstanceInServiceTimeout   = 60 * time.Minute
-	notebookInstanceStoppedTimeout     = 10 * time.Minute
-	notebookInstanceDeletedTimeout     = 10 * time.Minute
-	modelPackageGroupCompletedTimeout  = 10 * time.Minute
-	modelPackageGroupDeletedTimeout    = 10 * time.Minute
-	imageCreatedTimeout                = 10 * time.Minute
-	imageDeletedTimeout                = 10 * time.Minute
-	imageVersionCreatedTimeout         = 10 * time.Minute
-	imageVersionDeletedTimeout         = 10 * time.Minute
-	domainInServiceTimeout             = 20 * time.Minute
-	domainDeletedTimeout               = 20 * time.Minute
-	featureGroupCreatedTimeout         = 20 * time.Minute
-	featureGroupDeletedTimeout         = 10 * time.Minute
-	appInServiceTimeout                = 10 * time.Minute
-	appDeletedTimeout                  = 10 * time.Minute
-	flowDefinitionActiveTimeout        = 2 * time.Minute
-	flowDefinitionDeletedTimeout       = 2 * time.Minute
-	projectCreatedTimeout              = 15 * time.Minute
-	projectDeletedTimeout              = 15 * time.Minute
-	workforceActiveTimeout             = 10 * time.Minute
-	workforceDeletedTimeout            = 10 * time.Minute
-	spaceDeletedTimeout                = 10 * time.Minute
-	spaceInServiceTimeout              = 10 * time.Minute
-	monitoringScheduleScheduledTimeout = 2 * time.Minute
-	monitoringScheduleStoppedTimeout   = 2 * time.Minute
+	notebookInstanceInServiceTimeout  = 60 * time.Minute
+	notebookInstanceStoppedTimeout    = 10 * time.Minute
+	notebookInstanceDeletedTimeout    = 10 * time.Minute
+	modelPackageGroupCompletedTimeout = 10 * time.Minute
+	modelPackageGroupDeletedTimeout   = 10 * time.Minute
+	imageCreatedTimeout               = 10 * time.Minute
+	imageDeletedTimeout               = 10 * time.Minute
+	imageVersionCreatedTimeout        = 10 * time.Minute
+	imageVersionDeletedTimeout        = 10 * time.Minute
+	domainInServiceTimeout            = 20 * time.Minute
+	domainDeletedTimeout              = 20 * time.Minute
+	featureGroupCreatedTimeout        = 20 * time.Minute
+	featureGroupDeletedTimeout        = 10 * time.Minute
+	appInServiceTimeout               = 10 * time.Minute
+	appDeletedTimeout                 = 10 * time.Minute
+	flowDefinitionActiveTimeout       = 2 * time.Minute
+	flowDefinitionDeletedTimeout      = 2 * time.Minute
+	projectCreatedTimeout             = 15 * time.Minute
+	projectDeletedTimeout             = 15 * time.Minute
+	workforceActiveTimeout            = 10 * time.Minute
+	workforceDeletedTimeout           = 10 * time.Minute
+	spaceDeletedTimeout               = 10 * time.Minute
+	spaceInServiceTimeout             = 10 * time.Minute
+	mlflowTrackingServerTimeout       = 45 * time.Minute
+	hubTimeout                        = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
 
 func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			notebookInstanceStatusNotFound,
 			awstypes.NotebookInstanceStatusUpdating,
@@ -63,7 +63,7 @@ func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -73,7 +73,7 @@ func waitNotebookInstanceInService(ctx context.Context, conn *sagemaker.Client, 
 }
 
 func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotebookInstanceStatusStopped),
 		Target:  enum.Slice(awstypes.NotebookInstanceStatusInService, awstypes.NotebookInstanceStatusPending),
 		Refresh: statusNotebookInstance(ctx, conn, notebookName),
@@ -84,7 +84,7 @@ func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -94,7 +94,7 @@ func waitNotebookInstanceStarted(ctx context.Context, conn *sagemaker.Client, no
 }
 
 func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, notebookName string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotebookInstanceStatusUpdating, awstypes.NotebookInstanceStatusStopping),
 		Target:  enum.Slice(awstypes.NotebookInstanceStatusStopped),
 		Refresh: statusNotebookInstance(ctx, conn, notebookName),
@@ -105,7 +105,7 @@ func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return err
@@ -115,7 +115,7 @@ func waitNotebookInstanceStopped(ctx context.Context, conn *sagemaker.Client, no
 }
 
 func waitNotebookInstanceDeleted(ctx context.Context, conn *sagemaker.Client, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotebookInstanceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusNotebookInstance(ctx, conn, notebookName),
@@ -126,7 +126,7 @@ func waitNotebookInstanceDeleted(ctx context.Context, conn *sagemaker.Client, no
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
 		if output.NotebookInstanceStatus == awstypes.NotebookInstanceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err
@@ -136,7 +136,7 @@ func waitNotebookInstanceDeleted(ctx context.Context, conn *sagemaker.Client, no
 }
 
 func waitModelPackageGroupCompleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelPackageGroupStatusPending, awstypes.ModelPackageGroupStatusInProgress),
 		Target:  enum.Slice(awstypes.ModelPackageGroupStatusCompleted),
 		Refresh: statusModelPackageGroup(ctx, conn, name),
@@ -153,7 +153,7 @@ func waitModelPackageGroupCompleted(ctx context.Context, conn *sagemaker.Client,
 }
 
 func waitModelPackageGroupDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeModelPackageGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ModelPackageGroupStatusDeleting),
 		Target:  []string{},
 		Refresh: statusModelPackageGroup(ctx, conn, name),
@@ -170,20 +170,28 @@ func waitModelPackageGroupDeleted(ctx context.Context, conn *sagemaker.Client, n
 }
 
 func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusCreating, awstypes.ImageStatusUpdating),
 		Target:  enum.Slice(awstypes.ImageStatusCreated),
 		Refresh: statusImage(ctx, conn, name),
 		Timeout: imageCreatedTimeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); (status == awstypes.ImageStatusCreateFailed || status == awstypes.ImageStatusUpdateFailed) && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return err
+	}
 
 	return err
 }
 
-func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
-	stateConf := &retry.StateChangeConf{
+func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) error {
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusDeleting),
 		Target:  []string{},
 		Refresh: statusImage(ctx, conn, name),
@@ -193,40 +201,52 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
-		return output, err
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); status == awstypes.ImageStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageVersionStatusCreating),
 		Target:  enum.Slice(awstypes.ImageVersionStatusCreated),
-		Refresh: statusImageVersion(ctx, conn, name),
+		Refresh: statusImageVersionByName(ctx, conn, name),
 		Timeout: imageVersionCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusCreateFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name string, version int32) (*sagemaker.DescribeImageVersionOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageVersionStatusDeleting),
 		Target:  []string{},
-		Refresh: statusImageVersion(ctx, conn, name),
+		Refresh: statusImageVersionByID(ctx, conn, name, version),
 		Timeout: imageVersionDeletedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -234,7 +254,7 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 }
 
 func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusPending, awstypes.DomainStatusUpdating),
 		Target:  enum.Slice(awstypes.DomainStatusInService),
 		Refresh: statusDomain(ctx, conn, domainID),
@@ -245,7 +265,7 @@ func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.DomainStatusFailed || status == awstypes.DomainStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -255,7 +275,7 @@ func waitDomainInService(ctx context.Context, conn *sagemaker.Client, domainID s
 }
 
 func waitDomainDeleted(ctx context.Context, conn *sagemaker.Client, domainID string) (*sagemaker.DescribeDomainOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDomain(ctx, conn, domainID),
@@ -266,7 +286,7 @@ func waitDomainDeleted(ctx context.Context, conn *sagemaker.Client, domainID str
 
 	if output, ok := outputRaw.(*sagemaker.DescribeDomainOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.DomainStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -276,7 +296,7 @@ func waitDomainDeleted(ctx context.Context, conn *sagemaker.Client, domainID str
 }
 
 func waitFeatureGroupCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FeatureGroupStatusCreating),
 		Target:  enum.Slice(awstypes.FeatureGroupStatusCreated),
 		Refresh: statusFeatureGroup(ctx, conn, name),
@@ -287,7 +307,7 @@ func waitFeatureGroupCreated(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if status, reason := output.FeatureGroupStatus, aws.ToString(output.FailureReason); status == awstypes.FeatureGroupStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -297,7 +317,7 @@ func waitFeatureGroupCreated(ctx context.Context, conn *sagemaker.Client, name s
 }
 
 func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FeatureGroupStatusDeleting),
 		Target:  []string{},
 		Refresh: statusFeatureGroup(ctx, conn, name),
@@ -308,7 +328,28 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if status, reason := output.FeatureGroupStatus, aws.ToString(output.FailureReason); status == awstypes.FeatureGroupStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LastUpdateStatusValueInProgress),
+		Target:  enum.Slice(awstypes.LastUpdateStatusValueSuccessful),
+		Refresh: statusFeatureGroupUpdate(ctx, conn, name),
+		Timeout: featureGroupDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
+			retry.SetLastError(err, errors.New(*v.FailureReason))
 		}
 
 		return output, err
@@ -318,7 +359,7 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 }
 
 func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppStatusPending),
 		Target:  enum.Slice(awstypes.AppStatusInService),
 		Refresh: statusApp(ctx, conn, domainID, userProfileOrSpaceName, appType, appName),
@@ -329,7 +370,7 @@ func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, use
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.AppStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -339,7 +380,7 @@ func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, use
 }
 
 func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApp(ctx, conn, domainID, userProfileOrSpaceName, appType, appName),
@@ -350,7 +391,7 @@ func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userP
 
 	if output, ok := outputRaw.(*sagemaker.DescribeAppOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.AppStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -360,7 +401,7 @@ func waitAppDeleted(ctx context.Context, conn *sagemaker.Client, domainID, userP
 }
 
 func waitFlowDefinitionActive(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FlowDefinitionStatusInitializing),
 		Target:  enum.Slice(awstypes.FlowDefinitionStatusActive),
 		Refresh: statusFlowDefinition(ctx, conn, name),
@@ -371,7 +412,7 @@ func waitFlowDefinitionActive(ctx context.Context, conn *sagemaker.Client, name 
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
 		if status, reason := output.FlowDefinitionStatus, aws.ToString(output.FailureReason); status == awstypes.FlowDefinitionStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -381,7 +422,7 @@ func waitFlowDefinitionActive(ctx context.Context, conn *sagemaker.Client, name 
 }
 
 func waitFlowDefinitionDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFlowDefinitionOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FlowDefinitionStatusDeleting),
 		Target:  []string{},
 		Refresh: statusFlowDefinition(ctx, conn, name),
@@ -392,7 +433,7 @@ func waitFlowDefinitionDeleted(ctx context.Context, conn *sagemaker.Client, name
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFlowDefinitionOutput); ok {
 		if status, reason := output.FlowDefinitionStatus, aws.ToString(output.FailureReason); status == awstypes.FlowDefinitionStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -402,7 +443,7 @@ func waitFlowDefinitionDeleted(ctx context.Context, conn *sagemaker.Client, name
 }
 
 func waitProjectDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusDeleteInProgress, awstypes.ProjectStatusPending),
 		Target:  []string{},
 		Refresh: statusProject(ctx, conn, name),
@@ -413,7 +454,7 @@ func waitProjectDeleted(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -423,7 +464,7 @@ func waitProjectDeleted(ctx context.Context, conn *sagemaker.Client, name string
 }
 
 func waitProjectCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusPending, awstypes.ProjectStatusCreateInProgress),
 		Target:  enum.Slice(awstypes.ProjectStatusCreateCompleted),
 		Refresh: statusProject(ctx, conn, name),
@@ -434,7 +475,7 @@ func waitProjectCreated(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusCreateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -444,7 +485,7 @@ func waitProjectCreated(ctx context.Context, conn *sagemaker.Client, name string
 }
 
 func waitProjectUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeProjectOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProjectStatusPending, awstypes.ProjectStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.ProjectStatusUpdateCompleted),
 		Refresh: statusProject(ctx, conn, name),
@@ -455,7 +496,7 @@ func waitProjectUpdated(ctx context.Context, conn *sagemaker.Client, name string
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := output.ProjectStatus, aws.ToString(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == awstypes.ProjectStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -465,7 +506,7 @@ func waitProjectUpdated(ctx context.Context, conn *sagemaker.Client, name string
 }
 
 func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkforceStatusInitializing, awstypes.WorkforceStatusUpdating),
 		Target:  enum.Slice(awstypes.WorkforceStatusActive),
 		Refresh: statusWorkforce(ctx, conn, name),
@@ -476,7 +517,7 @@ func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name strin
 
 	if output, ok := outputRaw.(*awstypes.Workforce); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.WorkforceStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -486,7 +527,7 @@ func waitWorkforceActive(ctx context.Context, conn *sagemaker.Client, name strin
 }
 
 func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*awstypes.Workforce, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkforceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusWorkforce(ctx, conn, name),
@@ -497,7 +538,7 @@ func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name stri
 
 	if output, ok := outputRaw.(*awstypes.Workforce); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.WorkforceStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -507,7 +548,7 @@ func waitWorkforceDeleted(ctx context.Context, conn *sagemaker.Client, name stri
 }
 
 func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, name string) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SpaceStatusPending, awstypes.SpaceStatusUpdating),
 		Target:  enum.Slice(awstypes.SpaceStatusInService),
 		Refresh: statusSpace(ctx, conn, domainId, name),
@@ -518,7 +559,7 @@ func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, n
 
 	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.SpaceStatusUpdateFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return err
@@ -528,7 +569,7 @@ func waitSpaceInService(ctx context.Context, conn *sagemaker.Client, domainId, n
 }
 
 func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, name string) (*sagemaker.DescribeSpaceOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SpaceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusSpace(ctx, conn, domainId, name),
@@ -539,7 +580,7 @@ func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, nam
 
 	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.SpaceStatusDeleteFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -548,40 +589,112 @@ func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, nam
 	return nil, err
 }
 
-func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ScheduleStatusPending),
-		Target:  enum.Slice(awstypes.ScheduleStatusScheduled),
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
-		Timeout: monitoringScheduleScheduledTimeout,
+func waitMlflowTrackingServerCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusCreating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusCreated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
-		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
-		}
-
-		return err
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
 	}
 
-	return err
+	return nil, err
 }
 
-func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ScheduleStatusScheduled, awstypes.ScheduleStatusPending, awstypes.ScheduleStatusStopped),
-		Target:  []string{},
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
-		Timeout: monitoringScheduleStoppedTimeout,
+func waitMlflowTrackingServerUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusUpdating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusUpdated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
-		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusDeleting),
+		Target:  []string{},
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusCreating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusCreateFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusDeleting),
+		Target:  []string{},
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusUpdating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusUpdateFailed && reason != "" {
+			retry.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err

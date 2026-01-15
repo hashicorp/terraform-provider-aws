@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessLogSettings` - (Optional) Settings for logging access in this stage.
 Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
 * `autoDeploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`. Applicable for HTTP APIs.
@@ -132,4 +133,4 @@ Using `terraform import`, import `aws_apigatewayv2_stage` using the API identifi
 
 -> **Note:** The API Gateway managed stage created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
 
-<!-- cache-key: cdktf-0.20.1 input-c7cc2d4235ed06a055a36c6327f99044a8a10f0f104b25ba18451743f15b5497 -->
+<!-- cache-key: cdktf-0.20.8 input-8aeacf2be8a4c5ba2d535010601423cf9bd8394d1e82c9b2d2d45333002efc9c -->

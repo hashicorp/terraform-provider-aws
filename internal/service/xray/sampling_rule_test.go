@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray_test
@@ -6,6 +6,7 @@ package xray_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
@@ -14,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,10 +36,10 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "5"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "reservoir_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
@@ -46,8 +47,8 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -77,10 +78,10 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPriority),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
@@ -88,17 +89,17 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
 			},
 			{ // Update attributes
 				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, fmt.Sprintf("%d", updatedPriority)),
-					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, strconv.Itoa(updatedPriority)),
+					resource.TestCheckResourceAttr(resourceName, "reservoir_size", strconv.Itoa(updatedReservoirSize)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
@@ -106,7 +107,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
 			},
 			{
@@ -134,7 +135,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -178,7 +179,7 @@ func testAccCheckSamplingRuleDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfxray.FindSamplingRuleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

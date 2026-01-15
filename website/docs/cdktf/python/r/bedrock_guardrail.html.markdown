@@ -29,19 +29,30 @@ resource "aws_bedrock_guardrail" "example" {
       output_strength = "MEDIUM"
       type            = "HATE"
     }
+    tier_config {
+      tier_name = "STANDARD"
+    }
   }
 
   sensitive_information_policy_config {
     pii_entities_config {
-      action = "BLOCK"
-      type   = "NAME"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "ANONYMIZE"
+      input_enabled  = true
+      output_enabled = true
+      type           = "NAME"
     }
 
     regexes_config {
-      action      = "BLOCK"
-      description = "example regex"
-      name        = "regex_example"
-      pattern     = "^\\d{3}-\\d{2}-\\d{4}$"
+      action         = "BLOCK"
+      input_action   = "BLOCK"
+      output_action  = "BLOCK"
+      input_enabled  = true
+      output_enabled = false
+      description    = "example regex"
+      name           = "regex_example"
+      pattern        = "^\\d{3}-\\d{2}-\\d{4}$"
     }
   }
 
@@ -51,6 +62,9 @@ resource "aws_bedrock_guardrail" "example" {
       examples   = ["Where should I invest my money ?"]
       type       = "DENY"
       definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+    }
+    tier_config {
+      tier_name = "CLASSIC"
     }
   }
 
@@ -75,6 +89,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `content_policy_config` - (Optional) Content policy config for a guardrail. See [Content Policy Config](#content-policy-config) for more information.
 * `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [Contextual Grounding Policy Config](#contextual-grounding-policy-config) for more information.
 * `description` (Optional) Description of the guardrail or its version.
@@ -88,7 +103,9 @@ The following arguments are optional:
 
 The `content_policy_config` configuration block supports the following arguments:
 
-* `filters_config` - (Optional) List of content filter configs in content policy. See [Filters Config](#content-filters-config) for more information.
+* `filters_config` - (Optional) Set of content filter configs in content policy.
+  See [Filters Config](#content-filters-config) for more information.
+* `tier_config` - (Optional) Configuration block for the content policy tier. See [Tier Config](#content-tier-config) for more information.
 
 #### Content Filters Config
 
@@ -97,6 +114,12 @@ The `filters_config` configuration block supports the following arguments:
 * `input_strength` - (Optional) Strength for filters.
 * `output_strength` - (Optional) Strength for filters.
 * `type` - (Optional) Type of filter in content policy.
+
+#### Content Tier Config
+
+The `tier_config` configuration block supports the following arguments:
+
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
 
 ### Contextual Grounding Policy Config
 
@@ -109,8 +132,17 @@ The `filters_config` configuration block supports the following arguments:
 * `threshold` - (Required) The threshold for this filter.
 * `type` - (Required) Type of contextual grounding filter.
 
+### Cross Region Inference
+
+* `cross_region_config` (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [Cross Region Config](#cross-region-config for more information. Note see [available regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region.html) here.
+
+#### Cross Region Config
+
+* `guardrail_profile_identifier` (Required) Guardrail profile ARN.
+
 ### Topic Policy Config
 
+* `tier_config` - (Optional) Configuration block for the topic policy tier. See [Tier Config](#topics-tier-config) for more information.
 * `topics_config` (Required) List of topic configs in topic policy. See [Topics Config](#topics-config) for more information.
 
 #### Topics Config
@@ -120,6 +152,12 @@ The `filters_config` configuration block supports the following arguments:
 * `type` (Required) Type of topic in a policy.
 * `examples` (Optional) List of text examples.
 
+#### Topics Tier Config
+
+The `tier_config` configuration block supports the following arguments:
+
+* `tier_name` - (Required) The name of the content policy tier. Valid values include STANDARD or CLASSIC.
+
 ### Sensitive Information Policy Config
 
 * `pii_entities_config` (Optional) List of entities. See [PII Entities Config](#pii-entities-config) for more information.
@@ -127,13 +165,21 @@ The `filters_config` configuration block supports the following arguments:
 
 #### PII Entities Config
 
-* `action` (Required) Options for sensitive information action.
+* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 * `type` (Required) The currently supported PII entities.
 
 #### Regexes Config
 
-* `action` (Required) Options for sensitive information action.
+* `action` (Required) Options for sensitive information action. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
 * `name` (Required) The regex name.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `ANONYMIZE`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 * `pattern` (Required) The regex pattern.
 * `description` (Optional) The regex description.
 
@@ -145,10 +191,18 @@ The `filters_config` configuration block supports the following arguments:
 #### Managed Word Lists Config
 
 * `type` (Required) Options for managed words.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 #### Words Config
 
 * `text` (Required) The custom word text.
+* `input_action` (Optional) Action to take when harmful content is detected in the input. Valid values: `BLOCK`, `NONE`.
+* `input_enabled` (Optional) Whether to enable guardrail evaluation on the input. When disabled, you aren't charged for the evaluation.
+* `output_action` (Optional) Action to take when harmful content is detected in the output. Valid values: `BLOCK`, `NONE`.
+* `output_enabled` (Optional) Whether to enable guardrail evaluation on the output. When disabled, you aren't charged for the evaluation.
 
 ## Attribute Reference
 
@@ -193,4 +247,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail using using a comma-de
 % terraform import aws_bedrock_guardrail.example guardrail-id-12345678,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-32f1ffb82434765f7f939865f265bce2bc581d70840fa99c7110d5d88a55a5c6 -->
+<!-- cache-key: cdktf-0.20.8 input-062be71fb459b2f31e02302a778df0e0e7f39a17e1a253c860432ead2119fcc9 -->

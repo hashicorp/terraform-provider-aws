@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -8,10 +8,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(map[string]interface{})
+func validEnvironment(v any, k string) (ws []string, errors []error) {
+	value := v.(map[string]any)
 	for envK, envV := range value {
 		if !regexache.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
 			errors = append(errors, fmt.Errorf(
@@ -34,7 +35,7 @@ func validEnvironment(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validImage(v interface{}, k string) (ws []string, errors []error) {
+func validImage(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`[\S]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -48,25 +49,12 @@ func validImage(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validModelDataURL(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must be a valid path: %q",
-			k, value))
-	}
-	if len(value) > 1024 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 1024 characters: %q", k, value))
-	}
-	if !regexache.MustCompile(`^(https|s3)://`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must be a path that starts with either s3 or https: %q", k, value))
-	}
-	return
-}
+var validHTTPSOrS3URI = validation.All(
+	validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`), "must be HTTPS or Amazon S3 URI"),
+	validation.StringLenBetween(0, 1024),
+)
 
-func validName(v interface{}, k string) (ws []string, errors []error) {
+func validName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -84,7 +72,7 @@ func validName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-func validPrefix(v interface{}, k string) (ws []string, errors []error) {
+func validPrefix(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

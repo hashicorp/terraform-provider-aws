@@ -58,6 +58,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired pools.
 
@@ -73,4 +74,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `pool_ids` - List of all the pool IDs found.
 
-<!-- cache-key: cdktf-0.20.1 input-422bc757fd116f1b140b124c51e19d025c4072d60b8ea9e265213b729b246ca5 -->
+<!-- cache-key: cdktf-0.20.8 input-5279f6c42831e42a57d3e1b89b2934863eb85f71dfc289481738a39c48c816f0 -->

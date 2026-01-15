@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -25,14 +23,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,7 +38,10 @@ import (
 
 // @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
+// @ArnIdentity(identityDuplicateAttributes="id")
+// @ArnFormat("job-queue/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobQueueDetail")
+// @Testing(preIdentityVersion="v5.100.0")
 func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := jobQueueResource{}
 
@@ -52,26 +53,17 @@ func newJobQueueResource(_ context.Context) (resource.ResourceWithConfigure, err
 }
 
 type jobQueueResource struct {
-	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.ResourceWithModel[jobQueueResourceModel]
 	framework.WithTimeouts
-}
-
-func (*jobQueueResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_batch_job_queue"
+	framework.WithImportByIdentity
 }
 
 func (r *jobQueueResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
-		Version: 1,
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"compute_environments": schema.ListAttribute{
-				ElementType:        fwtypes.ARNType,
-				Optional:           true,
-				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID:  framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrARN)),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -158,7 +150,7 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 	name := data.JobQueueName.ValueString()
 	input := &batch.CreateJobQueueInput{
 		JobQueueName: aws.String(name),
-		Priority:     fwflex.Int32FromFramework(ctx, data.Priority),
+		Priority:     fwflex.Int32FromFrameworkInt64(ctx, data.Priority),
 		State:        awstypes.JQState(data.State.ValueString()),
 		Tags:         getTagsIn(ctx),
 	}
@@ -168,8 +160,6 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		if response.Diagnostics.HasError() {
 			return
 		}
-	} else {
-		input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, data.ComputeEnvironments)
 	}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data.JobStateTimeLimitActions, &input.JobStateTimeLimitActions)...)
 	if response.Diagnostics.HasError() {
@@ -187,7 +177,6 @@ func (r *jobQueueResource) Create(ctx context.Context, request resource.CreateRe
 		return
 	}
 
-	// Set values for unknowns.
 	data.JobQueueARN = fwflex.StringToFramework(ctx, output.JobQueueArn)
 	data.setID()
 
@@ -208,17 +197,11 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().BatchClient(ctx)
 
 	jobQueue, err := findJobQueueByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -231,25 +214,10 @@ func (r *jobQueueResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	// Set attributes for import.
-	if !data.ComputeEnvironmentOrder.IsNull() {
-		response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.ComputeEnvironmentOrder, &data.ComputeEnvironmentOrder)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	} else {
-		data.ComputeEnvironments = flattenComputeEnvironments(ctx, jobQueue.ComputeEnvironmentOrder)
-	}
-
-	data.JobQueueARN = fwflex.StringToFrameworkLegacy(ctx, jobQueue.JobQueueArn)
-	data.JobQueueName = fwflex.StringToFramework(ctx, jobQueue.JobQueueName)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue.JobStateTimeLimitActions, &data.JobStateTimeLimitActions)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, jobQueue, &data, fwflex.WithFieldNamePrefix("JobQueue"))...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Priority = fwflex.Int32ToFrameworkLegacy(ctx, jobQueue.Priority)
-	data.SchedulingPolicyARN = fwflex.StringToFrameworkARN(ctx, jobQueue.SchedulingPolicyArn)
-	data.State = fwflex.StringValueToFramework(ctx, jobQueue.State)
 
 	setTagsOut(ctx, jobQueue.Tags)
 
@@ -280,11 +248,6 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 		update = true
-	} else {
-		if !new.ComputeEnvironments.Equal(old.ComputeEnvironments) {
-			input.ComputeEnvironmentOrder = expandComputeEnvironments(ctx, new.ComputeEnvironments)
-			update = true
-		}
 	}
 
 	if !new.JobStateTimeLimitActions.Equal(old.JobStateTimeLimitActions) {
@@ -295,7 +258,7 @@ func (r *jobQueueResource) Update(ctx context.Context, request resource.UpdateRe
 		update = true
 	}
 	if !new.Priority.Equal(old.Priority) {
-		input.Priority = fwflex.Int32FromFramework(ctx, new.Priority)
+		input.Priority = fwflex.Int32FromFrameworkInt64(ctx, new.Priority)
 		update = true
 	}
 	if !new.State.Equal(old.State) {
@@ -347,10 +310,11 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().BatchClient(ctx)
 
-	_, err := conn.UpdateJobQueue(ctx, &batch.UpdateJobQueueInput{
+	updateInput := batch.UpdateJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
 		State:    awstypes.JQStateDisabled,
-	})
+	}
+	_, err := conn.UpdateJobQueue(ctx, &updateInput)
 
 	// "An error occurred (ClientException) when calling the UpdateJobQueue operation: ... does not exist".
 	if errs.IsAErrorMessageContains[*awstypes.ClientException](err, "does not exist") {
@@ -370,9 +334,10 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = conn.DeleteJobQueue(ctx, &batch.DeleteJobQueueInput{
+	deleteInput := batch.DeleteJobQueueInput{
 		JobQueue: fwflex.StringFromFramework(ctx, data.ID),
-	})
+	}
+	_, err = conn.DeleteJobQueue(ctx, &deleteInput)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Batch Job Queue (%s)", data.ID.ValueString()), err.Error())
@@ -387,45 +352,36 @@ func (r *jobQueueResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 }
 
-func (r *jobQueueResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-func (r *jobQueueResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("compute_environments"),
-			path.MatchRoot("compute_environment_order"),
-		),
-	}
-}
-
 func (r *jobQueueResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
 	schemaV0 := jobQueueSchema0(ctx)
+	schemaV1 := jobQueueSchema1(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   &schemaV0,
 			StateUpgrader: upgradeJobQueueResourceStateV0toV1,
 		},
+		1: {
+			PriorSchema:   &schemaV1,
+			StateUpgrader: upgradeJobQueueResourceStateV1toV2,
+		},
 	}
 }
 
 func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awstypes.JobQueueDetail, error) {
-	input := &batch.DescribeJobQueuesInput{
+	input := batch.DescribeJobQueuesInput{
 		JobQueues: []string{id},
 	}
 
-	output, err := findJobQueue(ctx, conn, input)
+	output, err := findJobQueue(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if status := output.Status; status == awstypes.JQStatusDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &sdkretry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -433,37 +389,14 @@ func findJobQueueByID(ctx context.Context, conn *batch.Client, id string) (*awst
 }
 
 func findJobQueue(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) (*awstypes.JobQueueDetail, error) {
-	output, err := findJobQueues(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertSingleValueResultIterErr(listJobQueues(ctx, conn, input))
 }
 
-func findJobQueues(ctx context.Context, conn *batch.Client, input *batch.DescribeJobQueuesInput) ([]awstypes.JobQueueDetail, error) {
-	var output []awstypes.JobQueueDetail
-
-	pages := batch.NewDescribeJobQueuesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.JobQueues...)
-	}
-
-	return output, nil
-}
-
-func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusJobQueue(ctx context.Context, conn *batch.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findJobQueueByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -476,7 +409,7 @@ func statusJobQueue(ctx context.Context, conn *batch.Client, id string) retry.St
 }
 
 func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusCreating, awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -488,7 +421,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -497,7 +430,7 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusUpdating),
 		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -509,7 +442,7 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -518,7 +451,7 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.JQStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusJobQueue(ctx, conn, id),
@@ -530,7 +463,7 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -539,7 +472,7 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, tim
 }
 
 type jobQueueResourceModel struct {
-	ComputeEnvironments      types.List                                                    `tfsdk:"compute_environments"`
+	framework.WithRegionModel
 	ComputeEnvironmentOrder  fwtypes.ListNestedObjectValueOf[computeEnvironmentOrderModel] `tfsdk:"compute_environment_order"`
 	ID                       types.String                                                  `tfsdk:"id"`
 	JobQueueARN              types.String                                                  `tfsdk:"arn"`
@@ -551,12 +484,6 @@ type jobQueueResourceModel struct {
 	Tags                     tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
-}
-
-func (model *jobQueueResourceModel) InitFromID() error {
-	model.JobQueueARN = model.ID
-
-	return nil
 }
 
 func (model *jobQueueResourceModel) setID() {
@@ -573,27 +500,4 @@ type jobStateTimeLimitActionModel struct {
 	MaxTimeSeconds types.Int64                                                 `tfsdk:"max_time_seconds"`
 	Reason         types.String                                                `tfsdk:"reason"`
 	State          fwtypes.StringEnum[awstypes.JobStateTimeLimitActionsState]  `tfsdk:"state"`
-}
-
-func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstypes.ComputeEnvironmentOrder {
-	var apiObjects []awstypes.ComputeEnvironmentOrder
-
-	for i, env := range fwflex.ExpandFrameworkStringList(ctx, tfList) {
-		apiObjects = append(apiObjects, awstypes.ComputeEnvironmentOrder{
-			ComputeEnvironment: env,
-			Order:              aws.Int32(int32(i)),
-		})
-	}
-
-	return apiObjects
-}
-
-func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) types.List {
-	sort.Slice(apiObjects, func(i, j int) bool {
-		return aws.ToInt32(apiObjects[i].Order) < aws.ToInt32(apiObjects[j].Order)
-	})
-
-	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {
-		return v.ComputeEnvironment
-	}))
 }

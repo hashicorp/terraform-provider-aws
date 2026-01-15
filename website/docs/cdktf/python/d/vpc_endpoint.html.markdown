@@ -40,19 +40,23 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC endpoints.
-The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Endpoint to retrieve.
-* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_name` - (Optional) Service name of the specific VPC Endpoint to retrieve. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `state` - (Optional) State of the specific VPC Endpoint to retrieve.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the specific VPC Endpoint to retrieve.
 * `vpc_id` - (Optional) ID of the VPC in which the specific VPC Endpoint is used.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC endpoints.
+The given filters must match exactly one VPC endpoint whose data will be exported as attributes.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpoints.html).
@@ -61,7 +65,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above except `filter`, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the VPC endpoint.
 * `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
@@ -75,6 +79,7 @@ In addition to all arguments above except `filter`, the following attributes are
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
+* `service_region` - The AWS region of the VPC Endpoint Service. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
 * `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 
@@ -98,4 +103,4 @@ DNS options (for `dns_options`) support the following attributes:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-cf41a1af88fdcd16967d2fea2f7220a7cac0581c1bfd6c1afb6c5a31ae85ffb1 -->
+<!-- cache-key: cdktf-0.20.8 input-a605677c0f64c9d8f492b0f541857e95c65d914e7e5207ca844a206a7f53aeb2 -->

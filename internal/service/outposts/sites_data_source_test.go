@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package outposts_test
@@ -43,7 +43,7 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["ids.#"]; v == acctest.Ct0 {
+		if v := rs.Primary.Attributes["ids.#"]; v == "0" {
 			return fmt.Errorf("expected at least one ids result, got none")
 		}
 

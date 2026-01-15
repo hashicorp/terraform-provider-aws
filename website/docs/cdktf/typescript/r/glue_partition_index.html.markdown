@@ -121,8 +121,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tableName` - (Required) Name of the table. For Hive compatibility, this must be entirely lowercase.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partitionIndex` - (Required) Configuration block for a partition index. See [`partitionIndex`](#partition_index) below.
@@ -178,4 +179,4 @@ Using `terraform import`, import Glue Partition Indexes using the catalog ID (us
 % terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2c1eca414462f36b306c6c36d0f8b45e95a67975829b6e6678f2b74c1376628b -->
+<!-- cache-key: cdktf-0.20.8 input-22c7f301be1fd7f0745684516fdd4ba56a7f3aaaf133e05c819d530f44bb9541 -->

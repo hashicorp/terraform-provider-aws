@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,16 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_backup_plan")
-func DataSourcePlan() *schema.Resource {
+// @SDKDataSource("aws_backup_plan", name="Plan")
+// @Tags(identifierAttribute="arn")
+func dataSourcePlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlanRead,
 
 		Schema: map[string]*schema.Schema{
-			"plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,6 +29,10 @@ func DataSourcePlan() *schema.Resource {
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"plan_id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			names.AttrRule: {
 				Type:     schema.TypeSet,
@@ -104,12 +104,36 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"scan_action": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"malware_scanner": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"scan_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 						names.AttrSchedule: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"start_window": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"target_logically_air_gapped_backup_vault_arn": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"target_vault_name": {
@@ -118,7 +142,29 @@ func DataSourcePlan() *schema.Resource {
 						},
 					},
 				},
-				Set: planHash,
+			},
+			"scan_setting": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"malware_scanner": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_types": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"scanner_role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrVersion: {
@@ -129,35 +175,27 @@ func DataSourcePlan() *schema.Resource {
 	}
 }
 
-func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("plan_id").(string)
+	output, err := findPlanByID(ctx, conn, id)
 
-	resp, err := conn.GetBackupPlan(ctx, &backup.GetBackupPlanInput{
-		BackupPlanId: aws.String(id),
-	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Backup Plan: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", id, err)
 	}
 
-	d.SetId(aws.ToString(resp.BackupPlanId))
-	d.Set(names.AttrARN, resp.BackupPlanArn)
-	d.Set(names.AttrName, resp.BackupPlan.BackupPlanName)
-	d.Set(names.AttrVersion, resp.VersionId)
-	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
+	d.SetId(aws.ToString(output.BackupPlanId))
+	d.Set(names.AttrARN, output.BackupPlanArn)
+	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
+	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
-
-	tags, err := listTags(ctx, conn, aws.ToString(resp.BackupPlanArn))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
+	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scan_settings: %s", err)
 	}
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	d.Set(names.AttrVersion, output.VersionId)
 
 	return diags
 }

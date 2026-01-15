@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,12 +38,12 @@ func testAccFunction_basic(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &config),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/functions/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/functions/.+")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "max_batch_size", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "sync_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "data_source", "aws_appsync_datasource.test", names.AttrName),
 				),
@@ -83,7 +83,7 @@ func testAccFunction_code(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
 				),
@@ -99,7 +99,7 @@ func testAccFunction_code(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
 				),
@@ -124,7 +124,7 @@ func testAccFunction_syncConfig(t *testing.T) {
 				Config: testAccFunctionConfig_sync(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "sync_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_detection", "VERSION"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_handler", "OPTIMISTIC_CONCURRENCY"),
 				),
@@ -219,7 +219,7 @@ func testAccFunction_disappears(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceFunction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -238,7 +238,7 @@ func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappsync.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes["function_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

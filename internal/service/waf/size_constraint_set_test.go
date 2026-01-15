@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,12 +36,12 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`sizeconstraintset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`sizeconstraintset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSet),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
-						"field_to_match.#":    acctest.Ct1,
+						"field_to_match.#":    "1",
 						names.AttrSize:        "4096",
 						"text_transformation": "NONE",
 					}),
@@ -78,7 +78,7 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSet),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccWAFSizeConstraintSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, sizeConstraintSetNewName),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccWAFSizeConstraintSet_disappears(t *testing.T) {
 				Config: testAccSizeConstraintSetConfig_basic(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceSizeConstraintSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceSizeConstraintSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,10 +139,10 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
-						"field_to_match.#":    acctest.Ct1,
+						"field_to_match.#":    "1",
 						names.AttrSize:        "4096",
 						"text_transformation": "NONE",
 					}),
@@ -157,10 +157,10 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "GE",
-						"field_to_match.#":    acctest.Ct1,
+						"field_to_match.#":    "1",
 						names.AttrSize:        "1024",
 						"text_transformation": "NONE",
 					}),
@@ -196,7 +196,7 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &contraints),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "0"),
 				),
 			},
 			{
@@ -240,7 +240,7 @@ func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfwaf.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

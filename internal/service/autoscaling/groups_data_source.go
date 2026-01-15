@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -59,9 +59,9 @@ func dataSourceGroups() *schema.Resource {
 func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
 	var filters []awstypes.Filter
 	for _, v := range set.List() {
-		m := v.(map[string]interface{})
+		m := v.(map[string]any)
 		var filterValues []string
-		for _, e := range m[names.AttrValues].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]any) {
 			filterValues = append(filterValues, e.(string))
 		}
 
@@ -83,14 +83,14 @@ func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
 	return filters
 }
 
-func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
-	if v, ok := d.GetOk(names.AttrNames); ok && len(v.([]interface{})) > 0 {
-		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrNames); ok && len(v.([]any)) > 0 {
+		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
@@ -110,10 +110,10 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		nms = append(nms, aws.ToString(group.AutoScalingGroupName))
 	}
 
-	sort.Strings(arns)
-	sort.Strings(nms)
+	slices.Sort(arns)
+	slices.Sort(nms)
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, arns)
 	d.Set(names.AttrNames, nms)
 

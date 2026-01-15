@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -452,12 +453,10 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
@@ -473,32 +472,32 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 		roleArn = v.(string)
 	}
 
-	createOpts := &sagemaker.CreateDataQualityJobDefinitionInput{
-		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]interface{})),
-		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]interface{})),
-		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]interface{})),
+	input := sagemaker.CreateDataQualityJobDefinitionInput{
+		DataQualityAppSpecification: expandDataQualityAppSpecification(d.Get("data_quality_app_specification").([]any)),
+		DataQualityJobInput:         expandDataQualityJobInput(d.Get("data_quality_job_input").([]any)),
+		DataQualityJobOutputConfig:  expandMonitoringOutputConfig(d.Get("data_quality_job_output_config").([]any)),
 		JobDefinitionName:           aws.String(name),
-		JobResources:                expandMonitoringResources(d.Get("job_resources").([]interface{})),
+		JobResources:                expandMonitoringResources(d.Get("job_resources").([]any)),
 		RoleArn:                     aws.String(roleArn),
 		Tags:                        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.DataQualityBaselineConfig = expandDataQualityBaselineConfig(v.([]interface{}))
+	if v, ok := d.GetOk("data_quality_baseline_config"); ok && len(v.([]any)) > 0 {
+		input.DataQualityBaselineConfig = expandDataQualityBaselineConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("network_config"); ok && len(v.([]interface{})) > 0 {
-		createOpts.NetworkConfig = expandMonitoringNetworkConfig(v.([]interface{}))
+	if v, ok := d.GetOk("network_config"); ok && len(v.([]any)) > 0 {
+		input.NetworkConfig = expandMonitoringNetworkConfig(v.([]any))
 	}
 
-	if v, ok := d.GetOk("stopping_condition"); ok && len(v.([]interface{})) > 0 {
-		createOpts.StoppingCondition = expandMonitoringStoppingCondition(v.([]interface{}))
+	if v, ok := d.GetOk("stopping_condition"); ok && len(v.([]any)) > 0 {
+		input.StoppingCondition = expandMonitoringStoppingCondition(v.([]any))
 	}
 
-	_, err := conn.CreateDataQualityJobDefinition(ctx, createOpts)
+	_, err := conn.CreateDataQualityJobDefinition(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker Data Quality Job Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Data Quality Job Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -506,57 +505,51 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	jobDefinition, err := findDataQualityJobDefinitionByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SageMaker Data Quality Job Definition (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] SageMaker AI Data Quality Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
-
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification: %s", err)
 	}
-
 	if err := d.Set("data_quality_baseline_config", flattenDataQualityBaselineConfig(jobDefinition.DataQualityBaselineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_baseline_config: %s", err)
 	}
-
 	if err := d.Set("data_quality_job_input", flattenDataQualityJobInput(jobDefinition.DataQualityJobInput)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_input: %s", err)
 	}
-
 	if err := d.Set("data_quality_job_output_config", flattenMonitoringOutputConfig(jobDefinition.DataQualityJobOutputConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting data_quality_job_output_config: %s", err)
 	}
-
 	if err := d.Set("job_resources", flattenMonitoringResources(jobDefinition.JobResources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting job_resources for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting job_resources: %s", err)
 	}
-
+	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 	if err := d.Set("network_config", flattenMonitoringNetworkConfig(jobDefinition.NetworkConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_config for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting network_config: %s", err)
+	}
+	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
+	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting stopping_condition: %s", err)
 	}
 
-	if err := d.Set("stopping_condition", flattenMonitoringStoppingCondition(jobDefinition.StoppingCondition)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting stopping_condition for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
-	}
 	return diags
 }
 
-func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -564,35 +557,40 @@ func resourceDataQualityJobDefinitionUpdate(ctx context.Context, d *schema.Resou
 	return append(diags, resourceDataQualityJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDataQualityJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
-	log.Printf("[INFO] Deleting SageMaker Data Quality Job Definition: %s", d.Id())
-	_, err := conn.DeleteDataQualityJobDefinition(ctx, &sagemaker.DeleteDataQualityJobDefinitionInput{
+	log.Printf("[INFO] Deleting SageMaker AI Data Quality Job Definition: %s", d.Id())
+	input := sagemaker.DeleteDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteDataQualityJobDefinition(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker AI Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
 func findDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
-	input := &sagemaker.DescribeDataQualityJobDefinitionInput{
+	input := sagemaker.DescribeDataQualityJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
 	}
 
+	return findDataQualityJobDefinition(ctx, conn, &input)
+}
+
+func findDataQualityJobDefinition(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeDataQualityJobDefinitionInput) (*sagemaker.DescribeDataQualityJobDefinitionOutput, error) {
 	output, err := conn.DescribeDataQualityJobDefinition(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -603,715 +601,694 @@ func findDataQualityJobDefinitionByName(ctx context.Context, conn *sagemaker.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func flattenDataQualityAppSpecification(config *awstypes.DataQualityAppSpecification) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenDataQualityAppSpecification(apiObject *awstypes.DataQualityAppSpecification) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.ImageUri != nil {
-		m["image_uri"] = aws.ToString(config.ImageUri)
+	if apiObject.Environment != nil {
+		tfMap[names.AttrEnvironment] = apiObject.Environment
 	}
 
-	if config.Environment != nil {
-		m[names.AttrEnvironment] = aws.StringMap(config.Environment)
+	if apiObject.ImageUri != nil {
+		tfMap["image_uri"] = aws.ToString(apiObject.ImageUri)
 	}
 
-	if config.PostAnalyticsProcessorSourceUri != nil {
-		m["post_analytics_processor_source_uri"] = aws.ToString(config.PostAnalyticsProcessorSourceUri)
+	if apiObject.PostAnalyticsProcessorSourceUri != nil {
+		tfMap["post_analytics_processor_source_uri"] = aws.ToString(apiObject.PostAnalyticsProcessorSourceUri)
 	}
 
-	if config.RecordPreprocessorSourceUri != nil {
-		m["record_preprocessor_source_uri"] = aws.ToString(config.RecordPreprocessorSourceUri)
+	if apiObject.RecordPreprocessorSourceUri != nil {
+		tfMap["record_preprocessor_source_uri"] = aws.ToString(apiObject.RecordPreprocessorSourceUri)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenDataQualityBaselineConfig(config *awstypes.DataQualityBaselineConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenDataQualityBaselineConfig(apiObject *awstypes.DataQualityBaselineConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.ConstraintsResource != nil {
-		m["constraints_resource"] = flattenConstraintsResource(config.ConstraintsResource)
+	if apiObject.ConstraintsResource != nil {
+		tfMap["constraints_resource"] = flattenMonitoringConstraintsResource(apiObject.ConstraintsResource)
 	}
 
-	if config.StatisticsResource != nil {
-		m["statistics_resource"] = flattenMonitoringStatisticsResource(config.StatisticsResource)
+	if apiObject.StatisticsResource != nil {
+		tfMap["statistics_resource"] = flattenMonitoringStatisticsResource(apiObject.StatisticsResource)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenConstraintsResource(config *awstypes.MonitoringConstraintsResource) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringConstraintsResource(apiObject *awstypes.MonitoringConstraintsResource) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.S3Uri != nil {
-		m["s3_uri"] = aws.ToString(config.S3Uri)
+	if apiObject.S3Uri != nil {
+		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringStatisticsResource(config *awstypes.MonitoringStatisticsResource) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringStatisticsResource(apiObject *awstypes.MonitoringStatisticsResource) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.S3Uri != nil {
-		m["s3_uri"] = aws.ToString(config.S3Uri)
+	if apiObject.S3Uri != nil {
+		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenDataQualityJobInput(config *awstypes.DataQualityJobInput) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenDataQualityJobInput(apiObject *awstypes.DataQualityJobInput) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.EndpointInput != nil {
-		m["endpoint_input"] = flattenEndpointInput(config.EndpointInput)
+	if apiObject.BatchTransformInput != nil {
+		tfMap["batch_transform_input"] = flattenBatchTransformInput(apiObject.BatchTransformInput)
 	}
 
-	if config.BatchTransformInput != nil {
-		m["batch_transform_input"] = flattenBatchTransformInput(config.BatchTransformInput)
+	if apiObject.EndpointInput != nil {
+		tfMap["endpoint_input"] = flattenEndpointInput(apiObject.EndpointInput)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenBatchTransformInput(config *awstypes.BatchTransformInput) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenBatchTransformInput(apiObject *awstypes.BatchTransformInput) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.LocalPath != nil {
-		m["local_path"] = aws.ToString(config.LocalPath)
+	if apiObject.DataCapturedDestinationS3Uri != nil {
+		tfMap["data_captured_destination_s3_uri"] = aws.ToString(apiObject.DataCapturedDestinationS3Uri)
 	}
 
-	if config.DataCapturedDestinationS3Uri != nil {
-		m["data_captured_destination_s3_uri"] = aws.ToString(config.DataCapturedDestinationS3Uri)
+	if apiObject.DatasetFormat != nil {
+		tfMap["dataset_format"] = flattenMonitoringDatasetFormat(apiObject.DatasetFormat)
 	}
 
-	if config.DatasetFormat != nil {
-		m["dataset_format"] = flattenMonitoringDatasetFormat(config.DatasetFormat)
+	if apiObject.LocalPath != nil {
+		tfMap["local_path"] = aws.ToString(apiObject.LocalPath)
 	}
 
-	m["s3_data_distribution_type"] = config.S3DataDistributionType
+	tfMap["s3_data_distribution_type"] = apiObject.S3DataDistributionType
+	tfMap["s3_input_mode"] = apiObject.S3InputMode
 
-	m["s3_input_mode"] = config.S3InputMode
-
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringDatasetFormat(config *awstypes.MonitoringDatasetFormat) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringDatasetFormat(apiObject *awstypes.MonitoringDatasetFormat) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.Csv != nil {
-		m["csv"] = flattenMonitoringCSVDatasetFormat(config.Csv)
+	if apiObject.Csv != nil {
+		tfMap["csv"] = flattenMonitoringCSVDatasetFormat(apiObject.Csv)
 	}
 
-	if config.Json != nil {
-		m[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(config.Json)
+	if apiObject.Json != nil {
+		tfMap[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(apiObject.Json)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringCSVDatasetFormat(config *awstypes.MonitoringCsvDatasetFormat) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringCSVDatasetFormat(apiObject *awstypes.MonitoringCsvDatasetFormat) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.Header != nil {
-		m[names.AttrHeader] = aws.ToBool(config.Header)
+	if apiObject.Header != nil {
+		tfMap[names.AttrHeader] = aws.ToBool(apiObject.Header)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringJSONDatasetFormat(config *awstypes.MonitoringJsonDatasetFormat) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringJSONDatasetFormat(apiObject *awstypes.MonitoringJsonDatasetFormat) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.Line != nil {
-		m["line"] = aws.ToBool(config.Line)
+	if apiObject.Line != nil {
+		tfMap["line"] = aws.ToBool(apiObject.Line)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenEndpointInput(config *awstypes.EndpointInput) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenEndpointInput(apiObject *awstypes.EndpointInput) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.EndpointName != nil {
-		m["endpoint_name"] = aws.ToString(config.EndpointName)
+	if apiObject.EndpointName != nil {
+		tfMap["endpoint_name"] = aws.ToString(apiObject.EndpointName)
 	}
 
-	if config.LocalPath != nil {
-		m["local_path"] = aws.ToString(config.LocalPath)
+	if apiObject.LocalPath != nil {
+		tfMap["local_path"] = aws.ToString(apiObject.LocalPath)
 	}
 
-	m["s3_data_distribution_type"] = config.S3DataDistributionType
+	tfMap["s3_data_distribution_type"] = apiObject.S3DataDistributionType
+	tfMap["s3_input_mode"] = apiObject.S3InputMode
 
-	m["s3_input_mode"] = config.S3InputMode
-
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringOutputConfig(config *awstypes.MonitoringOutputConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringOutputConfig(apiObject *awstypes.MonitoringOutputConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.ToString(config.KmsKeyId)
+	if apiObject.KmsKeyId != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(apiObject.KmsKeyId)
 	}
 
-	if config.MonitoringOutputs != nil {
-		m["monitoring_outputs"] = flattenMonitoringOutputs(config.MonitoringOutputs)
+	if apiObject.MonitoringOutputs != nil {
+		tfMap["monitoring_outputs"] = flattenMonitoringOutputs(apiObject.MonitoringOutputs)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringOutputs(list []awstypes.MonitoringOutput) []map[string]interface{} {
-	outputs := make([]map[string]interface{}, 0, len(list))
+func flattenMonitoringOutputs(apiObjects []awstypes.MonitoringOutput) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
-	for _, lRaw := range list {
-		m := make(map[string]interface{})
-		m["s3_output"] = flattenMonitoringS3Output(lRaw.S3Output)
-		outputs = append(outputs, m)
+	for _, apiObject := range apiObjects {
+		tfMap := make(map[string]any)
+		tfMap["s3_output"] = flattenMonitoringS3Output(apiObject.S3Output)
+		tfList = append(tfList, tfMap)
 	}
 
-	return outputs
+	return tfList
 }
 
-func flattenMonitoringS3Output(config *awstypes.MonitoringS3Output) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringS3Output(apiObject *awstypes.MonitoringS3Output) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.LocalPath != nil {
-		m["local_path"] = aws.ToString(config.LocalPath)
+	if apiObject.LocalPath != nil {
+		tfMap["local_path"] = aws.ToString(apiObject.LocalPath)
 	}
 
-	m["s3_upload_mode"] = config.S3UploadMode
+	tfMap["s3_upload_mode"] = apiObject.S3UploadMode
 
-	if config.S3Uri != nil {
-		m["s3_uri"] = aws.ToString(config.S3Uri)
+	if apiObject.S3Uri != nil {
+		tfMap["s3_uri"] = aws.ToString(apiObject.S3Uri)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringResources(config *awstypes.MonitoringResources) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringResources(apiObjects *awstypes.MonitoringResources) []any {
+	if apiObjects == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.ClusterConfig != nil {
-		m["cluster_config"] = flattenMonitoringClusterConfig(config.ClusterConfig)
+	if apiObjects.ClusterConfig != nil {
+		tfMap["cluster_config"] = flattenMonitoringClusterConfig(apiObjects.ClusterConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringClusterConfig(config *awstypes.MonitoringClusterConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringClusterConfig(apiObject *awstypes.MonitoringClusterConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.InstanceCount != nil {
-		m[names.AttrInstanceCount] = aws.ToInt32(config.InstanceCount)
+	if apiObject.InstanceCount != nil {
+		tfMap[names.AttrInstanceCount] = aws.ToInt32(apiObject.InstanceCount)
 	}
 
-	m[names.AttrInstanceType] = config.InstanceType
+	tfMap[names.AttrInstanceType] = apiObject.InstanceType
 
-	if config.VolumeKmsKeyId != nil {
-		m["volume_kms_key_id"] = aws.ToString(config.VolumeKmsKeyId)
+	if apiObject.VolumeKmsKeyId != nil {
+		tfMap["volume_kms_key_id"] = aws.ToString(apiObject.VolumeKmsKeyId)
 	}
 
-	if config.VolumeSizeInGB != nil {
-		m["volume_size_in_gb"] = aws.ToInt32(config.VolumeSizeInGB)
+	if apiObject.VolumeSizeInGB != nil {
+		tfMap["volume_size_in_gb"] = aws.ToInt32(apiObject.VolumeSizeInGB)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringNetworkConfig(config *awstypes.MonitoringNetworkConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringNetworkConfig(apiObject *awstypes.MonitoringNetworkConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.EnableInterContainerTrafficEncryption != nil {
-		m["enable_inter_container_traffic_encryption"] = aws.ToBool(config.EnableInterContainerTrafficEncryption)
+	if apiObject.EnableInterContainerTrafficEncryption != nil {
+		tfMap["enable_inter_container_traffic_encryption"] = aws.ToBool(apiObject.EnableInterContainerTrafficEncryption)
 	}
 
-	if config.EnableNetworkIsolation != nil {
-		m["enable_network_isolation"] = aws.ToBool(config.EnableNetworkIsolation)
+	if apiObject.EnableNetworkIsolation != nil {
+		tfMap["enable_network_isolation"] = aws.ToBool(apiObject.EnableNetworkIsolation)
 	}
 
-	if config.VpcConfig != nil {
-		m[names.AttrVPCConfig] = flattenVPCConfig(config.VpcConfig)
+	if apiObject.VpcConfig != nil {
+		tfMap[names.AttrVPCConfig] = flattenVPCConfig(apiObject.VpcConfig)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenVPCConfig(config *awstypes.VpcConfig) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenVPCConfig(apiObject *awstypes.VpcConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
-
-	if config.SecurityGroupIds != nil {
-		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(config.SecurityGroupIds)
+	tfMap := map[string]any{
+		names.AttrSecurityGroupIDs: apiObject.SecurityGroupIds,
+		names.AttrSubnets:          apiObject.Subnets,
 	}
 
-	if config.Subnets != nil {
-		m[names.AttrSubnets] = flex.FlattenStringValueSet(config.Subnets)
-	}
-
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func flattenMonitoringStoppingCondition(config *awstypes.MonitoringStoppingCondition) []map[string]interface{} {
-	if config == nil {
-		return []map[string]interface{}{}
+func flattenMonitoringStoppingCondition(apiObject *awstypes.MonitoringStoppingCondition) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	if config.MaxRuntimeInSeconds != nil {
-		m["max_runtime_in_seconds"] = aws.ToInt32(config.MaxRuntimeInSeconds)
+	if apiObject.MaxRuntimeInSeconds != nil {
+		tfMap["max_runtime_in_seconds"] = aws.ToInt32(apiObject.MaxRuntimeInSeconds)
 	}
 
-	return []map[string]interface{}{m}
+	return []any{tfMap}
 }
 
-func expandDataQualityAppSpecification(configured []interface{}) *awstypes.DataQualityAppSpecification {
-	if len(configured) == 0 {
+func expandDataQualityAppSpecification(tfList []any) *awstypes.DataQualityAppSpecification {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DataQualityAppSpecification{}
 
-	c := &awstypes.DataQualityAppSpecification{}
-
-	if v, ok := m["image_uri"].(string); ok && v != "" {
-		c.ImageUri = aws.String(v)
+	if v, ok := tfMap[names.AttrEnvironment].(map[string]any); ok && len(v) > 0 {
+		apiObject.Environment = flex.ExpandStringValueMap(v)
 	}
 
-	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
-		c.Environment = flex.ExpandStringValueMap(v)
+	if v, ok := tfMap["image_uri"].(string); ok && v != "" {
+		apiObject.ImageUri = aws.String(v)
 	}
 
-	if v, ok := m["post_analytics_processor_source_uri"].(string); ok && v != "" {
-		c.PostAnalyticsProcessorSourceUri = aws.String(v)
+	if v, ok := tfMap["post_analytics_processor_source_uri"].(string); ok && v != "" {
+		apiObject.PostAnalyticsProcessorSourceUri = aws.String(v)
 	}
 
-	if v, ok := m["record_preprocessor_source_uri"].(string); ok && v != "" {
-		c.RecordPreprocessorSourceUri = aws.String(v)
+	if v, ok := tfMap["record_preprocessor_source_uri"].(string); ok && v != "" {
+		apiObject.RecordPreprocessorSourceUri = aws.String(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandDataQualityBaselineConfig(configured []interface{}) *awstypes.DataQualityBaselineConfig {
-	if len(configured) == 0 {
+func expandDataQualityBaselineConfig(tfList []any) *awstypes.DataQualityBaselineConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DataQualityBaselineConfig{}
 
-	c := &awstypes.DataQualityBaselineConfig{}
-
-	if v, ok := m["constraints_resource"].([]interface{}); ok && len(v) > 0 {
-		c.ConstraintsResource = expandMonitoringConstraintsResource(v)
+	if v, ok := tfMap["constraints_resource"].([]any); ok && len(v) > 0 {
+		apiObject.ConstraintsResource = expandMonitoringConstraintsResource(v)
 	}
 
-	if v, ok := m["statistics_resource"].([]interface{}); ok && len(v) > 0 {
-		c.StatisticsResource = expandMonitoringStatisticsResource(v)
+	if v, ok := tfMap["statistics_resource"].([]any); ok && len(v) > 0 {
+		apiObject.StatisticsResource = expandMonitoringStatisticsResource(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringConstraintsResource(configured []interface{}) *awstypes.MonitoringConstraintsResource {
-	if len(configured) == 0 {
+func expandMonitoringConstraintsResource(tfList []any) *awstypes.MonitoringConstraintsResource {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringConstraintsResource{}
 
-	c := &awstypes.MonitoringConstraintsResource{}
-
-	if v, ok := m["s3_uri"].(string); ok && v != "" {
-		c.S3Uri = aws.String(v)
+	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+		apiObject.S3Uri = aws.String(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringStatisticsResource(configured []interface{}) *awstypes.MonitoringStatisticsResource {
-	if len(configured) == 0 {
+func expandMonitoringStatisticsResource(tfList []any) *awstypes.MonitoringStatisticsResource {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringStatisticsResource{}
 
-	c := &awstypes.MonitoringStatisticsResource{}
-
-	if v, ok := m["s3_uri"].(string); ok && v != "" {
-		c.S3Uri = aws.String(v)
+	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+		apiObject.S3Uri = aws.String(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandDataQualityJobInput(configured []interface{}) *awstypes.DataQualityJobInput {
-	if len(configured) == 0 {
+func expandDataQualityJobInput(tfList []any) *awstypes.DataQualityJobInput {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DataQualityJobInput{}
 
-	c := &awstypes.DataQualityJobInput{}
-
-	if v, ok := m["endpoint_input"].([]interface{}); ok && len(v) > 0 {
-		c.EndpointInput = expandEndpointInput(v)
+	if v, ok := tfMap["batch_transform_input"].([]any); ok && len(v) > 0 {
+		apiObject.BatchTransformInput = expandBatchTransformInput(v)
 	}
 
-	if v, ok := m["batch_transform_input"].([]interface{}); ok && len(v) > 0 {
-		c.BatchTransformInput = expandBatchTransformInput(v)
+	if v, ok := tfMap["endpoint_input"].([]any); ok && len(v) > 0 {
+		apiObject.EndpointInput = expandEndpointInput(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandEndpointInput(configured []interface{}) *awstypes.EndpointInput {
-	if len(configured) == 0 {
+func expandEndpointInput(tfList []any) *awstypes.EndpointInput {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.EndpointInput{}
 
-	c := &awstypes.EndpointInput{}
-
-	if v, ok := m["endpoint_name"].(string); ok && v != "" {
-		c.EndpointName = aws.String(v)
+	if v, ok := tfMap["endpoint_name"].(string); ok && v != "" {
+		apiObject.EndpointName = aws.String(v)
 	}
 
-	if v, ok := m["local_path"].(string); ok && v != "" {
-		c.LocalPath = aws.String(v)
+	if v, ok := tfMap["local_path"].(string); ok && v != "" {
+		apiObject.LocalPath = aws.String(v)
 	}
 
-	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
-		c.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
+	if v, ok := tfMap["s3_data_distribution_type"].(string); ok && v != "" {
+		apiObject.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
 	}
 
-	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
-		c.S3InputMode = awstypes.ProcessingS3InputMode(v)
+	if v, ok := tfMap["s3_input_mode"].(string); ok && v != "" {
+		apiObject.S3InputMode = awstypes.ProcessingS3InputMode(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandBatchTransformInput(configured []interface{}) *awstypes.BatchTransformInput {
-	if len(configured) == 0 {
+func expandBatchTransformInput(tfList []any) *awstypes.BatchTransformInput {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.BatchTransformInput{}
 
-	c := &awstypes.BatchTransformInput{}
-
-	if v, ok := m["data_captured_destination_s3_uri"].(string); ok && v != "" {
-		c.DataCapturedDestinationS3Uri = aws.String(v)
+	if v, ok := tfMap["data_captured_destination_s3_uri"].(string); ok && v != "" {
+		apiObject.DataCapturedDestinationS3Uri = aws.String(v)
 	}
 
-	if v, ok := m["dataset_format"].([]interface{}); ok && len(v) > 0 {
-		c.DatasetFormat = expandMonitoringDatasetFormat(v)
+	if v, ok := tfMap["dataset_format"].([]any); ok && len(v) > 0 {
+		apiObject.DatasetFormat = expandMonitoringDatasetFormat(v)
 	}
 
-	if v, ok := m["local_path"].(string); ok && v != "" {
-		c.LocalPath = aws.String(v)
+	if v, ok := tfMap["local_path"].(string); ok && v != "" {
+		apiObject.LocalPath = aws.String(v)
 	}
 
-	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
-		c.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
+	if v, ok := tfMap["s3_data_distribution_type"].(string); ok && v != "" {
+		apiObject.S3DataDistributionType = awstypes.ProcessingS3DataDistributionType(v)
 	}
 
-	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
-		c.S3InputMode = awstypes.ProcessingS3InputMode(v)
+	if v, ok := tfMap["s3_input_mode"].(string); ok && v != "" {
+		apiObject.S3InputMode = awstypes.ProcessingS3InputMode(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringDatasetFormat(configured []interface{}) *awstypes.MonitoringDatasetFormat {
-	if len(configured) == 0 {
+func expandMonitoringDatasetFormat(tfList []any) *awstypes.MonitoringDatasetFormat {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringDatasetFormat{}
 
-	c := &awstypes.MonitoringDatasetFormat{}
-
-	if v, ok := m["csv"].([]interface{}); ok && len(v) > 0 {
-		c.Csv = expandMonitoringCSVDatasetFormat(v)
+	if v, ok := tfMap["csv"].([]any); ok && len(v) > 0 {
+		apiObject.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
-	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
-		c.Json = expandMonitoringJSONDatasetFormat(v)
+	if v, ok := tfMap[names.AttrJSON].([]any); ok && len(v) > 0 {
+		apiObject.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringJSONDatasetFormat(configured []interface{}) *awstypes.MonitoringJsonDatasetFormat {
-	if len(configured) == 0 {
+func expandMonitoringCSVDatasetFormat(tfList []any) *awstypes.MonitoringCsvDatasetFormat {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	c := &awstypes.MonitoringJsonDatasetFormat{}
+	apiObject := &awstypes.MonitoringCsvDatasetFormat{}
 
-	if configured[0] == nil {
-		return c
+	if tfList[0] == nil {
+		return apiObject
 	}
 
-	m := configured[0].(map[string]interface{})
-	if v, ok := m["line"]; ok {
-		c.Line = aws.Bool(v.(bool))
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap[names.AttrHeader]; ok {
+		apiObject.Header = aws.Bool(v.(bool))
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringCSVDatasetFormat(configured []interface{}) *awstypes.MonitoringCsvDatasetFormat {
-	if len(configured) == 0 {
+func expandMonitoringJSONDatasetFormat(tfList []any) *awstypes.MonitoringJsonDatasetFormat {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	c := &awstypes.MonitoringCsvDatasetFormat{}
+	apiObject := &awstypes.MonitoringJsonDatasetFormat{}
 
-	if configured[0] == nil {
-		return c
+	if tfList[0] == nil {
+		return apiObject
 	}
 
-	m := configured[0].(map[string]interface{})
-	if v, ok := m[names.AttrHeader]; ok {
-		c.Header = aws.Bool(v.(bool))
+	tfMap := tfList[0].(map[string]any)
+
+	if v, ok := tfMap["line"]; ok {
+		apiObject.Line = aws.Bool(v.(bool))
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringOutputConfig(configured []interface{}) *awstypes.MonitoringOutputConfig {
-	if len(configured) == 0 {
+func expandMonitoringOutputConfig(tfList []any) *awstypes.MonitoringOutputConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringOutputConfig{}
 
-	c := &awstypes.MonitoringOutputConfig{}
-
-	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
-		c.KmsKeyId = aws.String(v)
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["monitoring_outputs"].([]interface{}); ok && len(v) > 0 {
-		c.MonitoringOutputs = expandMonitoringOutputs(v)
+	if v, ok := tfMap["monitoring_outputs"].([]any); ok && len(v) > 0 {
+		apiObject.MonitoringOutputs = expandMonitoringOutputs(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringOutputs(configured []interface{}) []awstypes.MonitoringOutput {
-	containers := make([]awstypes.MonitoringOutput, 0, len(configured))
+func expandMonitoringOutputs(tfList []any) []awstypes.MonitoringOutput {
+	apiObjects := make([]awstypes.MonitoringOutput, 0, len(tfList))
 
-	for _, lRaw := range configured {
-		data := lRaw.(map[string]interface{})
-
-		l := awstypes.MonitoringOutput{
-			S3Output: expandMonitoringS3Output(data["s3_output"].([]interface{})),
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObject := awstypes.MonitoringOutput{
+			S3Output: expandMonitoringS3Output(tfMap["s3_output"].([]any)),
 		}
-		containers = append(containers, l)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return containers
+	return apiObjects
 }
 
-func expandMonitoringS3Output(configured []interface{}) *awstypes.MonitoringS3Output {
-	if len(configured) == 0 {
+func expandMonitoringS3Output(tfList []any) *awstypes.MonitoringS3Output {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringS3Output{}
 
-	c := &awstypes.MonitoringS3Output{}
-
-	if v, ok := m["local_path"].(string); ok && v != "" {
-		c.LocalPath = aws.String(v)
+	if v, ok := tfMap["local_path"].(string); ok && v != "" {
+		apiObject.LocalPath = aws.String(v)
 	}
 
-	if v, ok := m["s3_upload_mode"].(string); ok && v != "" {
-		c.S3UploadMode = awstypes.ProcessingS3UploadMode(v)
+	if v, ok := tfMap["s3_upload_mode"].(string); ok && v != "" {
+		apiObject.S3UploadMode = awstypes.ProcessingS3UploadMode(v)
 	}
 
-	if v, ok := m["s3_uri"].(string); ok && v != "" {
-		c.S3Uri = aws.String(v)
+	if v, ok := tfMap["s3_uri"].(string); ok && v != "" {
+		apiObject.S3Uri = aws.String(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringResources(configured []interface{}) *awstypes.MonitoringResources {
-	if len(configured) == 0 {
+func expandMonitoringResources(tfList []any) *awstypes.MonitoringResources {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringResources{}
 
-	c := &awstypes.MonitoringResources{}
-
-	if v, ok := m["cluster_config"].([]interface{}); ok && len(v) > 0 {
-		c.ClusterConfig = expandMonitoringClusterConfig(v)
+	if v, ok := tfMap["cluster_config"].([]any); ok && len(v) > 0 {
+		apiObject.ClusterConfig = expandMonitoringClusterConfig(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringClusterConfig(configured []interface{}) *awstypes.MonitoringClusterConfig {
-	if len(configured) == 0 {
+func expandMonitoringClusterConfig(tfList []any) *awstypes.MonitoringClusterConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringClusterConfig{}
 
-	c := &awstypes.MonitoringClusterConfig{}
-
-	if v, ok := m[names.AttrInstanceCount].(int); ok && v > 0 {
-		c.InstanceCount = aws.Int32(int32(v))
+	if v, ok := tfMap[names.AttrInstanceCount].(int); ok && v > 0 {
+		apiObject.InstanceCount = aws.Int32(int32(v))
 	}
 
-	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
-		c.InstanceType = awstypes.ProcessingInstanceType(v)
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
+		apiObject.InstanceType = awstypes.ProcessingInstanceType(v)
 	}
 
-	if v, ok := m["volume_kms_key_id"].(string); ok && v != "" {
-		c.VolumeKmsKeyId = aws.String(v)
+	if v, ok := tfMap["volume_kms_key_id"].(string); ok && v != "" {
+		apiObject.VolumeKmsKeyId = aws.String(v)
 	}
 
-	if v, ok := m["volume_size_in_gb"].(int); ok && v > 0 {
-		c.VolumeSizeInGB = aws.Int32(int32(v))
+	if v, ok := tfMap["volume_size_in_gb"].(int); ok && v > 0 {
+		apiObject.VolumeSizeInGB = aws.Int32(int32(v))
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringNetworkConfig(configured []interface{}) *awstypes.MonitoringNetworkConfig {
-	if len(configured) == 0 {
+func expandMonitoringNetworkConfig(tfList []any) *awstypes.MonitoringNetworkConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringNetworkConfig{}
 
-	c := &awstypes.MonitoringNetworkConfig{}
-
-	if v, ok := m["enable_inter_container_traffic_encryption"]; ok {
-		c.EnableInterContainerTrafficEncryption = aws.Bool(v.(bool))
+	if v, ok := tfMap["enable_inter_container_traffic_encryption"]; ok {
+		apiObject.EnableInterContainerTrafficEncryption = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m["enable_network_isolation"]; ok {
-		c.EnableNetworkIsolation = aws.Bool(v.(bool))
+	if v, ok := tfMap["enable_network_isolation"]; ok {
+		apiObject.EnableNetworkIsolation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 {
-		c.VpcConfig = expandVPCConfig(v)
+	if v, ok := tfMap[names.AttrVPCConfig].([]any); ok && len(v) > 0 {
+		apiObject.VpcConfig = expandVPCConfig(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandVPCConfig(configured []interface{}) *awstypes.VpcConfig {
-	if len(configured) == 0 {
+func expandVPCConfig(tfList []any) *awstypes.VpcConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.VpcConfig{}
 
-	c := &awstypes.VpcConfig{}
-
-	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
-		c.SecurityGroupIds = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
-		c.Subnets = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func expandMonitoringStoppingCondition(configured []interface{}) *awstypes.MonitoringStoppingCondition {
-	if len(configured) == 0 {
+func expandMonitoringStoppingCondition(tfList []any) *awstypes.MonitoringStoppingCondition {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.MonitoringStoppingCondition{}
 
-	c := &awstypes.MonitoringStoppingCondition{}
-
-	if v, ok := m["max_runtime_in_seconds"].(int); ok && v > 0 {
-		c.MaxRuntimeInSeconds = aws.Int32(int32(v))
+	if v, ok := tfMap["max_runtime_in_seconds"].(int); ok && v > 0 {
+		apiObject.MaxRuntimeInSeconds = aws.Int32(int32(v))
 	}
 
-	return c
+	return apiObject
 }

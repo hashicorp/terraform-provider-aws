@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_workspaces_directory: Add `saml_properties` attribute
+```
+
+```release-note:enhancement
+resource/aws_workspaces_directory: Add `saml_properties` configuration block
+```

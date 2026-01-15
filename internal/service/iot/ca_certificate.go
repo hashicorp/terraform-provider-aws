@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -15,13 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -125,7 +126,7 @@ func resourceCACertificate() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if mode := diff.Get("certificate_mode").(string); mode == string(awstypes.CertificateModeDefault) {
 					if v := diff.GetRawConfig().GetAttr("verification_certificate_pem"); v.IsKnown() {
 						if v.IsNull() || v.AsString() == "" {
@@ -136,12 +137,11 @@ func resourceCACertificate() *schema.Resource {
 
 				return nil
 			},
-			verify.SetTagsDiff,
 		),
 	}
 }
 
-func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -153,15 +153,15 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("registration_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RegistrationConfig = expandRegistrationConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("registration_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.RegistrationConfig = expandRegistrationConfig(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("verification_certificate_pem"); ok {
 		input.VerificationCertificate = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.RegisterCACertificate(ctx, input)
 	})
 
@@ -174,13 +174,13 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceCACertificateRead(ctx, d, meta)...)
 }
 
-func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	output, err := findCACertificateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT CA Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -199,14 +199,14 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("customer_version", certificateDescription.CustomerVersion)
 	d.Set("generation_id", certificateDescription.GenerationId)
 	if output.RegistrationConfig != nil {
-		if err := d.Set("registration_config", []interface{}{flattenRegistrationConfig(output.RegistrationConfig)}); err != nil {
+		if err := d.Set("registration_config", []any{flattenRegistrationConfig(output.RegistrationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting registration_config: %s", err)
 		}
 	} else {
 		d.Set("registration_config", nil)
 	}
 	if certificateDescription.Validity != nil {
-		if err := d.Set("validity", []interface{}{flattenCertificateValidity(certificateDescription.Validity)}); err != nil {
+		if err := d.Set("validity", []any{flattenCertificateValidity(certificateDescription.Validity)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting validity: %s", err)
 		}
 	} else {
@@ -216,7 +216,7 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -238,12 +238,12 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.HasChange("registration_config") {
-			if v, ok := d.GetOk("registration_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.RegistrationConfig = expandRegistrationConfig(v.([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("registration_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.RegistrationConfig = expandRegistrationConfig(v.([]any)[0].(map[string]any))
 			}
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateCACertificate(ctx, input)
 		})
 
@@ -255,7 +255,7 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceCACertificateRead(ctx, d, meta)...)
 }
 
-func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
@@ -298,7 +298,7 @@ func findCACertificateByID(ctx context.Context, conn *iot.Client, id string) (*i
 	output, err := conn.DescribeCACertificate(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -309,13 +309,13 @@ func findCACertificateByID(ctx context.Context, conn *iot.Client, id string) (*i
 	}
 
 	if output == nil || output.CertificateDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandRegistrationConfig(tfMap map[string]interface{}) *awstypes.RegistrationConfig {
+func expandRegistrationConfig(tfMap map[string]any) *awstypes.RegistrationConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -337,12 +337,12 @@ func expandRegistrationConfig(tfMap map[string]interface{}) *awstypes.Registrati
 	return apiObject
 }
 
-func flattenRegistrationConfig(apiObject *awstypes.RegistrationConfig) map[string]interface{} {
+func flattenRegistrationConfig(apiObject *awstypes.RegistrationConfig) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.RoleArn; v != nil {
 		tfMap[names.AttrRoleARN] = aws.ToString(v)
@@ -359,12 +359,12 @@ func flattenRegistrationConfig(apiObject *awstypes.RegistrationConfig) map[strin
 	return tfMap
 }
 
-func flattenCertificateValidity(apiObject *awstypes.CertificateValidity) map[string]interface{} {
+func flattenCertificateValidity(apiObject *awstypes.CertificateValidity) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.NotAfter; v != nil {
 		tfMap["not_after"] = aws.ToTime(v).Format(time.RFC3339)

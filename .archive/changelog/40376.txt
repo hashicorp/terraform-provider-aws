@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_memorydb_multi_region_cluster
+```
+
+```release-note:enhancement
+resource/aws_memorydb_cluster: Add `multi_region_cluster_name` argument
+```

@@ -41,6 +41,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the build
 * `operating_system` - (Required) Operating system that the game server binaries are built to run on. Valid values: `WINDOWS_2012`, `AMAZON_LINUX`, `AMAZON_LINUX_2`, `WINDOWS_2016`, `AMAZON_LINUX_2023`.
 * `storage_location` - (Required) Information indicating where your game build files are stored. See below.
@@ -89,4 +90,4 @@ Using `terraform import`, import GameLift Builds using the ID. For example:
 % terraform import aws_gamelift_build.example <build-id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-335047b4beeab94de2f256ae709556edb1ba7d68195b28a0ba7275b83b6af2dc -->
+<!-- cache-key: cdktf-0.20.8 input-ea9cf121b45c7d54fe89cf704fdd158174425731c7fb4dc122a98dbe6cb6677a -->

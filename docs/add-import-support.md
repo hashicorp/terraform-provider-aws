@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding Resource Import Support
 
 Adding import support for Terraform resources will allow existing infrastructure to be managed within Terraform. This type of enhancement generally requires a small to moderate amount of code changes. Comprehensive code examples and information about resource import support can be found in the [Terraform Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/framework/resources/import).

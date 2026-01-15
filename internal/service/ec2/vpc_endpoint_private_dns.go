@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,12 +27,8 @@ func newVPCEndpointPrivateDNSResource(_ context.Context) (resource.ResourceWithC
 }
 
 type vpcEndpointPrivateDNSResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointPrivateDNSResourceModel]
 	framework.WithNoOpDelete
-}
-
-func (*vpcEndpointPrivateDNSResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_endpoint_private_dns"
 }
 
 func (r *vpcEndpointPrivateDNSResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -87,7 +83,7 @@ func (r *vpcEndpointPrivateDNSResource) Read(ctx context.Context, request resour
 
 	vpce, err := findVPCEndpointByID(ctx, conn, data.VPCEndpointID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -135,6 +131,7 @@ func (r *vpcEndpointPrivateDNSResource) ImportState(ctx context.Context, request
 }
 
 type vpcEndpointPrivateDNSResourceModel struct {
+	framework.WithRegionModel
 	PrivateDNSEnabled types.Bool   `tfsdk:"private_dns_enabled"`
 	VPCEndpointID     types.String `tfsdk:"vpc_endpoint_id"`
 }

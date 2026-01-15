@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `log_group_name_prefix` - (Optional) Group prefix of the Cloudwatch log groups to list
 
 ## Attribute Reference
@@ -44,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the Cloudwatch log groups
 * `log_group_names` - Set of names of the Cloudwatch log groups
 
-<!-- cache-key: cdktf-0.20.1 input-de8e9f02351b1211d18fc68d49088b86a691dbdbd63e91089bb0ce365508019e -->
+<!-- cache-key: cdktf-0.20.8 input-4d35c1536a9fbd6bafdbdfb692905409c56a673ad8552ecbaae3277ba11b1f27 -->

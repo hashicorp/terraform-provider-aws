@@ -48,18 +48,18 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsShieldProtection(self, "example",
-            resource_arn="arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+            resource_arn="arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
         )
 ```
 
 ## Argument Reference
 
-~> Exactly one of `protection_id` or `resource_arn` is required.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `protection_id` - (Optional) Unique identifier for the protection.
 * `resource_arn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
+
+~> Exactly one of `protection_id` or `resource_arn` is required.
 
 ## Attribute Reference
 
@@ -68,4 +68,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the protection.
 * `protection_arn` - ARN of the protection.
 
-<!-- cache-key: cdktf-0.20.1 input-75d9f856f14ca87d032548d9404cb36b20ed94a40ec416924f4ee0c3392a6e12 -->
+<!-- cache-key: cdktf-0.20.8 input-66dc62e394597208ae34bc89474728ddcc0aaad829a1ef7e3d313016b8890a8c -->

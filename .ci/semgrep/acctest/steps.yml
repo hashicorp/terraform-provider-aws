@@ -1,0 +1,18 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: checks-with-expecterror
+    languages: [go]
+    message: Checks are ignored when ExpectError is set.
+    patterns:
+      - pattern-inside: "Steps: []resource.TestStep{ ... }"
+      - pattern: |
+          {
+            ...,
+            Check:       $CHECK,
+            ...,
+            ExpectError: $ERR,
+            ...,
+          }
+    severity: ERROR

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,9 +35,9 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", idpEntityId),
 				),
 			},
@@ -67,7 +67,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -92,7 +92,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +117,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_update(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
 				),
 			},
@@ -158,8 +158,8 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_disabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
 				),
 			},
 		},
@@ -177,7 +177,7 @@ func testAccCheckDomainSAMLOptionsDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfelasticsearch.FindDomainSAMLOptionByDomainName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

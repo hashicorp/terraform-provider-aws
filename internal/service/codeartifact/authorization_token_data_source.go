@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeartifact
@@ -55,7 +55,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
@@ -64,7 +64,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)
 	} else {
-		domainOwner = meta.(*conns.AWSClient).AccountID
+		domainOwner = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	input := &codeartifact.GetAuthorizationTokenInput{
 		Domain:      aws.String(domainName),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite
@@ -19,24 +19,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Database")
-func newDataSourceDatabase(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDatabase{}, nil
+// @FrameworkDataSource("aws_timestreamwrite_database", name="Database")
+func newDatabaseDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &databaseDataSource{}, nil
 }
 
-type dataSourceDatabase struct {
-	framework.DataSourceWithConfigure
+type databaseDataSource struct {
+	framework.DataSourceWithModel[databaseDataSourceModel]
 }
 
 const (
 	DSNameDatabase = "Database data source"
 )
 
-func (d *dataSourceDatabase) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_timestreamwrite_database"
-}
-
-func (d *dataSourceDatabase) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *databaseDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
@@ -66,9 +62,9 @@ func (d *dataSourceDatabase) Schema(ctx context.Context, request datasource.Sche
 	}
 }
 
-func (d *dataSourceDatabase) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *databaseDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().TimestreamWriteClient(ctx)
-	var data dsDescribeDatabase
+	var data databaseDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -95,7 +91,8 @@ func (d *dataSourceDatabase) Read(ctx context.Context, req datasource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dsDescribeDatabase struct {
+type databaseDataSourceModel struct {
+	framework.WithRegionModel
 	ARN             types.String      `tfsdk:"arn"`
 	CreatedTime     timetypes.RFC3339 `tfsdk:"created_time"`
 	Name            types.String      `tfsdk:"name"`

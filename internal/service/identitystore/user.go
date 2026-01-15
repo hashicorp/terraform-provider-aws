@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -15,18 +14,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_identitystore_user")
-func ResourceUser() *schema.Resource {
+// @SDKResource("aws_identitystore_user", name="User")
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
@@ -249,106 +249,113 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
-const (
-	ResNameUser = "User"
-)
-
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	in := &identitystore.CreateUserInput{
+	identityStoreID := d.Get("identity_store_id").(string)
+	username := d.Get(names.AttrUserName).(string)
+	input := &identitystore.CreateUserInput{
 		DisplayName:     aws.String(d.Get(names.AttrDisplayName).(string)),
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
+		IdentityStoreId: aws.String(identityStoreID),
+		UserName:        aws.String(username),
 	}
 
-	if v, ok := d.GetOk("addresses"); ok && len(v.([]interface{})) > 0 {
-		in.Addresses = expandAddresses(v.([]interface{}))
+	if v, ok := d.GetOk("addresses"); ok && len(v.([]any)) > 0 {
+		input.Addresses = expandAddresses(v.([]any))
 	}
 
-	if v, ok := d.GetOk("emails"); ok && len(v.([]interface{})) > 0 {
-		in.Emails = expandEmails(v.([]interface{}))
+	if v, ok := d.GetOk("emails"); ok && len(v.([]any)) > 0 {
+		input.Emails = expandEmails(v.([]any))
 	}
 
 	if v, ok := d.GetOk("locale"); ok {
-		in.Locale = aws.String(v.(string))
+		input.Locale = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.Name = expandName(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("phone_numbers"); ok && len(v.([]interface{})) > 0 {
-		in.PhoneNumbers = expandPhoneNumbers(v.([]interface{}))
+	if v, ok := d.GetOk("phone_numbers"); ok && len(v.([]any)) > 0 {
+		input.PhoneNumbers = expandPhoneNumbers(v.([]any))
 	}
 
 	if v, ok := d.GetOk("nickname"); ok {
-		in.NickName = aws.String(v.(string))
+		input.NickName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_language"); ok {
-		in.PreferredLanguage = aws.String(v.(string))
+		input.PreferredLanguage = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("profile_url"); ok {
-		in.ProfileUrl = aws.String(v.(string))
+		input.ProfileUrl = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("timezone"); ok {
-		in.Timezone = aws.String(v.(string))
+		input.Timezone = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("title"); ok {
-		in.Title = aws.String(v.(string))
+		input.Title = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("user_type"); ok {
-		in.UserType = aws.String(v.(string))
+		input.UserType = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateUser(ctx, in)
+	output, err := conn.CreateUser(ctx, input)
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating IdentityStore User (%s): %s", username, err)
 	}
 
-	if out == nil || out.UserId == nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), errors.New("empty output"))
-	}
-
-	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.UserId)))
+	d.SetId(userCreateResourceID(identityStoreID, aws.ToString(output.UserId)))
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	identityStoreId, userId, err := resourceUserParseID(d.Id())
-
+	identityStoreID, userID, err := userParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := FindUserByTwoPartKey(ctx, conn, identityStoreId, userId)
+	out, err := findUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IdentityStore User (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
+	}
 	d.Set(names.AttrDisplayName, out.DisplayName)
+	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting emails: %s", err)
+	}
+	if err := d.Set("external_ids", flattenExternalIDs(out.ExternalIds)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
+	}
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
+	if err := d.Set(names.AttrName, []any{flattenName(out.Name)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
+	}
 	d.Set("nickname", out.NickName)
+	if err := d.Set("phone_numbers", flattenPhoneNumbers(out.PhoneNumbers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting phone_numbers: %s", err)
+	}
 	d.Set("preferred_language", out.PreferredLanguage)
 	d.Set("profile_url", out.ProfileUrl)
 	d.Set("timezone", out.Timezone)
@@ -357,38 +364,21 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrUserName, out.UserName)
 	d.Set("user_type", out.UserType)
 
-	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrName, []interface{}{flattenName(out.Name)}); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("phone_numbers", flattenPhoneNumbers(out.PhoneNumbers)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
-	}
-
 	return diags
 }
 
-func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	in := &identitystore.UpdateUserInput{
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		UserId:          aws.String(d.Get("user_id").(string)),
-		Operations:      nil,
+	identityStoreID, userID, err := userParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	input := &identitystore.UpdateUserInput{
+		IdentityStoreId: aws.String(identityStoreID),
+		UserId:          aws.String(userID),
 	}
 
 	// IMPLEMENTATION NOTE.
@@ -416,7 +406,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		// Expand, when not nil, is used to transform the value of the field
 		// given in Attribute before it's passed to the UpdateOperation.
-		Expand func(interface{}) interface{}
+		Expand func(any) any
 	}{
 		{
 			Attribute: names.AttrDisplayName,
@@ -477,15 +467,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "addresses",
 			Field:     "addresses",
-			Expand: func(value interface{}) interface{} {
-				addresses := expandAddresses(value.([]interface{}))
+			Expand: func(value any) any {
+				addresses := expandAddresses(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no addresses, a nil result is preferable.
 				for _, address := range addresses {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					if v := address.Country; v != nil {
 						m["country"] = v
@@ -526,15 +516,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "emails",
 			Field:     "emails",
-			Expand: func(value interface{}) interface{} {
-				emails := expandEmails(value.([]interface{}))
+			Expand: func(value any) any {
+				emails := expandEmails(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no emails, a nil result is preferable.
 				for _, email := range emails {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					m["primary"] = email.Primary
 
@@ -555,15 +545,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "phone_numbers",
 			Field:     "phoneNumbers",
-			Expand: func(value interface{}) interface{} {
-				emails := expandPhoneNumbers(value.([]interface{}))
+			Expand: func(value any) any {
+				emails := expandPhoneNumbers(value.([]any))
 
-				var result []interface{}
+				var result []any
 
 				// The API requires a null to unset the list, so in the case
 				// of no emails, a nil result is preferable.
 				for _, email := range emails {
-					m := map[string]interface{}{}
+					m := map[string]any{}
 
 					m["primary"] = email.Primary
 
@@ -597,60 +587,85 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				value = nil
 			}
 
-			in.Operations = append(in.Operations, types.AttributeOperation{
+			input.Operations = append(input.Operations, types.AttributeOperation{
 				AttributePath:  aws.String(fieldToUpdate.Field),
 				AttributeValue: document.NewLazyDocument(value),
 			})
 		}
 	}
 
-	if len(in.Operations) > 0 {
-		log.Printf("[DEBUG] Updating IdentityStore User (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateUser(ctx, in)
+	if len(input.Operations) > 0 {
+		_, err := conn.UpdateUser(ctx, input)
+
 		if err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionUpdating, ResNameUser, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IdentityStore User (%s): %s", d.Id(), err)
 		}
 	}
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
-	log.Printf("[INFO] Deleting IdentityStore User %s", d.Id())
+	identityStoreID, userID, err := userParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-	_, err := conn.DeleteUser(ctx, &identitystore.DeleteUserInput{
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		UserId:          aws.String(d.Get("user_id").(string)),
+	log.Printf("[INFO] Deleting IdentityStore User: %s", d.Id())
+	_, err = conn.DeleteUser(ctx, &identitystore.DeleteUserInput{
+		IdentityStoreId: aws.String(identityStoreID),
+		UserId:          aws.String(userID),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionDeleting, ResNameUser, d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IdentityStore User (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {
-	in := &identitystore.DescribeUserInput{
+const userResourceIDSeparator = "/"
+
+func userCreateResourceID(identityStoreID, userID string) string {
+	parts := []string{identityStoreID, userID}
+	id := strings.Join(parts, userResourceIDSeparator)
+
+	return id
+}
+
+func userParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, userResourceIDSeparator)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected identity-store-id%[2]sgroup-id", id, groupResourceIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {
+	input := identitystore.DescribeUserInput{
 		IdentityStoreId: aws.String(identityStoreID),
 		UserId:          aws.String(userID),
 	}
 
-	out, err := conn.DescribeUser(ctx, in)
+	return findUser(ctx, conn, &input)
+}
+
+func findUser(ctx context.Context, conn *identitystore.Client, input *identitystore.DescribeUserInput) (*identitystore.DescribeUserOutput, error) {
+	output, err := conn.DescribeUser(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -658,20 +673,9 @@ func FindUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, ident
 		return nil, err
 	}
 
-	if out == nil || out.UserId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
-}
-
-func resourceUserParseID(id string) (identityStoreId, userId string, err error) {
-	parts := strings.Split(id, "/")
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = errors.New("expected a resource id in the form: identity-store-id/user-id")
-		return
-	}
-
-	return parts[0], parts[1], nil
+	return output, nil
 }

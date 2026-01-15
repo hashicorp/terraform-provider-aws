@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,7 +69,7 @@ func testAccAccountVDMAttributes_disappears(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceAccountVDMAttributes(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceAccountVDMAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,7 +90,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -102,7 +102,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -123,7 +123,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -135,7 +135,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -154,7 +154,7 @@ func testAccCheckAccountVDMAttributesDestroy(ctx context.Context) resource.TestC
 
 			output, err := tfsesv2.FindAccountVDMAttributes(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

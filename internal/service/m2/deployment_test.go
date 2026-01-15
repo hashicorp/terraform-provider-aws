@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +42,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
@@ -77,7 +77,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceDeployment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +108,7 @@ func TestAccM2Deployment_start(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func TestAccM2Deployment_start(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 		},
@@ -150,14 +150,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrApplicationID], rs.Primary.Attributes["deployment_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -231,7 +231,7 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.secretsmanager"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.secretsmanager"
   vpc_endpoint_type = "Interface"
 
   security_group_ids = [

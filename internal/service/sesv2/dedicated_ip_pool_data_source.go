@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2
@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_sesv2_dedicated_ip_pool", name="Dedicated IP Pool")
+// @Tags(identifierAttribute="arn")
 func dataSourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,
@@ -66,7 +67,7 @@ const (
 	dsNameDedicatedIPPool = "Dedicated IP Pool Data Source"
 )
 
-func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
@@ -77,8 +78,8 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 
 	poolName := aws.ToString(out.PoolName)
 	d.SetId(poolName)
+	d.Set(names.AttrARN, dedicatedIPPoolARN(ctx, meta.(*conns.AWSClient), poolName))
 	d.Set("scaling_mode", out.ScalingMode)
-	d.Set(names.AttrARN, dedicatedIPPoolARN(meta, poolName))
 
 	outIP, err := findDedicatedIPsByPoolName(ctx, conn, poolName)
 	if err != nil {
@@ -86,30 +87,17 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP))
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameDedicatedIPPool, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameDedicatedIPPool, d.Id(), err)
-	}
-
 	return diags
 }
 
-func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
+func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var dedicatedIps []interface{}
+	var dedicatedIps []any
 	for _, apiObject := range apiObjects {
-		ip := map[string]interface{}{
+		ip := map[string]any{
 			"ip":                aws.ToString(apiObject.Ip),
 			"warmup_percentage": apiObject.WarmupPercentage,
 			"warmup_status":     string(apiObject.WarmupStatus),
@@ -137,7 +125,7 @@ func findDedicatedIPs(ctx context.Context, conn *sesv2.Client, input *sesv2.GetD
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

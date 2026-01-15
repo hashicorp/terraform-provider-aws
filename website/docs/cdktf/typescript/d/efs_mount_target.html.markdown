@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accessPointId` - (Optional) ID or ARN of the access point whose mount target that you want to find. It must be included if a `fileSystemId` and `mountTargetId` are not included.
 * `fileSystemId` - (Optional) ID or ARN of the file system whose mount target that you want to find. It must be included if an `accessPointId` and `mountTargetId` are not included.
 * `mountTargetId` - (Optional) ID or ARN of the mount target that you want to find. It must be included in your request if an `accessPointId` and `fileSystemId` are not included.
@@ -55,6 +56,8 @@ This data source exports the following attributes in addition to the arguments a
 * `fileSystemArn` - Amazon Resource Name of the file system for which the mount target is intended.
 * `subnetId` - ID of the mount target's subnet.
 * `ipAddress` - Address at which the file system may be mounted via the mount target.
+* `ipAddressType` - IP address type for the mount target.
+* `ipv6Address` - IPv6 address at which the file system may be mounted via the mount target.
 * `securityGroups` - List of VPC security group IDs attached to the mount target.
 * `dnsName` - DNS name for the EFS file system.
 * `mountTargetDnsName` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
@@ -63,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availabilityZoneId` - The unique and consistent identifier of the Availability Zone (AZ) that the mount target resides in.
 * `ownerId` - AWS account ID that owns the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-241585ed69289317f2541ca35ef78442a4e59e0d0ccb4b15a56966c7604251c8 -->
+<!-- cache-key: cdktf-0.20.8 input-ae8b5e7948af26d9e94ec88eac44f7c3b0ed464f5feb77684de3962dc7bec506 -->

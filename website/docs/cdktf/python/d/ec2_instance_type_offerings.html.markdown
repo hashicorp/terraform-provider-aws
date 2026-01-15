@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstanceTypeOfferings.html) for supported filters. Detailed below.
 * `location_type` - (Optional) Location type. Defaults to `region`. Valid values: `availability-zone`, `availability-zone-id`, and `region`.
 
@@ -68,4 +69,4 @@ Note that the indexes of Instance Type Offering instance types, locations and lo
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-b0fad9c4702cf5f0efa96a6a41ce0782d77f7dd1b5e2e01addf5aacedb2df2ba -->
+<!-- cache-key: cdktf-0.20.8 input-109495a650e0393d52c1bf7f100f343e69baefb82c3d6c99d635f49e2df9528c -->

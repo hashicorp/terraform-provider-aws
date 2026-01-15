@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_user"
 description: |-
@@ -60,6 +60,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### authentication_mode Configuration Block
@@ -108,4 +109,4 @@ Using `terraform import`, import a user using the `userName`. For example:
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.
 
-<!-- cache-key: cdktf-0.20.1 input-8c6cc1a5c60698cc0828c16299a72dd453f126f87266657015b604a945f482b4 -->
+<!-- cache-key: cdktf-0.20.8 input-784499a957a32f052a64474efdbb67951ecc0b2d1bc628691e6c85f35037ee5a -->

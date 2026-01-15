@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -12,21 +12,23 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
-	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_inspector2_delegated_admin_account")
-func ResourceDelegatedAdminAccount() *schema.Resource {
+// @SDKResource("aws_inspector2_delegated_admin_account", name="Delegated Admin Account")
+func resourceDelegatedAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDelegatedAdminAccountCreate,
 		ReadWithoutTimeout:   resourceDelegatedAdminAccountRead,
@@ -55,150 +57,141 @@ func ResourceDelegatedAdminAccount() *schema.Resource {
 	}
 }
 
-const (
-	ResNameDelegatedAdminAccount = "Delegated Admin Account"
-)
-
-func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	in := &inspector2.EnableDelegatedAdminAccountInput{
-		DelegatedAdminAccountId: aws.String(d.Get(names.AttrAccountID).(string)),
+	accountID := d.Get(names.AttrAccountID).(string)
+	input := &inspector2.EnableDelegatedAdminAccountInput{
+		DelegatedAdminAccountId: aws.String(accountID),
 		ClientToken:             aws.String(id.UniqueId()),
 	}
 
-	out, err := conn.EnableDelegatedAdminAccount(ctx, in)
+	_, err := conn.EnableDelegatedAdminAccount(ctx, input)
 
-	if err != nil && !errs.MessageContains(err, "ConflictException", "already enabled") {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get(names.AttrAccountID).(string), err)
+	if err != nil && !errs.IsAErrorMessageContains[*awstypes.ConflictException](err, fmt.Sprintf("Delegated administrator %s is already enabled for the organization", accountID)) {
+		return sdkdiag.AppendErrorf(diags, "enabling Inspector2 Delegated Admin Account (%s): %s", accountID, err)
 	}
 
-	if err == nil && (out == nil || out.DelegatedAdminAccountId == nil) {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameDelegatedAdminAccount, d.Get(names.AttrAccountID).(string), errors.New("empty output"))
-	}
+	d.SetId(accountID)
 
-	d.SetId(d.Get(names.AttrAccountID).(string))
-
-	if err := WaitDelegatedAdminAccountEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForCreation, ResNameDelegatedAdminAccount, d.Id(), err)
+	if _, err := waitDelegatedAdminAccountEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Inspector2 Delegated Admin Account (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDelegatedAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	st, ai, err := FindDelegatedAdminAccountStatusID(ctx, conn, d.Id())
+	output, err := findDelegatedAdminAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Inspector Delegated Admin Account (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		log.Printf("[WARN] Inspector2 Delegated Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameDelegatedAdminAccount, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector2 Delegated Admin Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, ai)
-	d.Set("relationship_status", st)
+	d.Set(names.AttrAccountID, output.AccountId)
+	d.Set("relationship_status", output.Status)
 
 	return diags
 }
 
-func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
-	log.Printf("[INFO] Deleting Inspector DelegatedAdminAccount %s", d.Id())
-
+	log.Printf("[INFO] Deleting Inspector2 Delegated Admin Account: %s", d.Id())
 	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Get(names.AttrAccountID).(string)),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
-
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameDelegatedAdminAccount, d.Id(), err)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	if err := WaitDelegatedAdminAccountDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForDeletion, ResNameDelegatedAdminAccount, d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling Inspector2 Delegated Admin Account (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDelegatedAdminAccountDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Inspector2 Delegated Admin Account (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-type DelegatedAccountStatus string
-
-// Enum values for DelegatedAccountStatus
-const (
-	DelegatedAccountStatusDisableInProgress DelegatedAccountStatus = "DISABLE_IN_PROGRESS"
-	DelegatedAccountStatusEnableInProgress  DelegatedAccountStatus = "ENABLE_IN_PROGRESS"
-	DelegatedAccountStatusEnabling          DelegatedAccountStatus = "ENABLING"
+var (
+	errIsDelegatedAdmin = errors.New("is the delegated administrator")
 )
 
-// Values returns all known values for DelegatedAccountStatus.
-func (DelegatedAccountStatus) Values() []DelegatedAccountStatus {
-	return []DelegatedAccountStatus{
-		DelegatedAccountStatusDisableInProgress,
-		DelegatedAccountStatusEnableInProgress,
-		DelegatedAccountStatusEnabling,
-		DelegatedAccountStatus(types.RelationshipStatusAccountSuspended),
-		DelegatedAccountStatus(types.RelationshipStatusCannotCreateDetectorInOrgMaster),
-		DelegatedAccountStatus(types.RelationshipStatusCreated),
-		DelegatedAccountStatus(types.RelationshipStatusDeleted),
-		DelegatedAccountStatus(types.RelationshipStatusDisabled),
-		DelegatedAccountStatus(types.RelationshipStatusEmailVerificationFailed),
-		DelegatedAccountStatus(types.RelationshipStatusEmailVerificationInProgress),
-		DelegatedAccountStatus(types.RelationshipStatusEnabled),
-		DelegatedAccountStatus(types.RelationshipStatusInvited),
-		DelegatedAccountStatus(types.RelationshipStatusRegionDisabled),
-		DelegatedAccountStatus(types.RelationshipStatusRemoved),
-		DelegatedAccountStatus(types.RelationshipStatusResigned),
-	}
-}
+func findDelegatedAdminAccountByID(ctx context.Context, conn *inspector2.Client, accountID string) (*awstypes.DelegatedAdminAccount, error) {
+	input := &inspector2.ListDelegatedAdminAccountsInput{}
+	output, err := findDelegatedAdminAccount(ctx, conn, input, func(v *awstypes.DelegatedAdminAccount) bool {
+		return aws.ToString(v.AccountId) == accountID
+	})
 
-func WaitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatusEnableInProgress, DelegatedAccountStatusEnabling),
-		Target:  enum.Slice(types.RelationshipStatusEnabled),
-		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
-		Timeout: timeout,
+	if errors.Is(err, errIsDelegatedAdmin) {
+		return &awstypes.DelegatedAdminAccount{
+			AccountId: aws.String(accountID),
+			Status:    awstypes.DelegatedAdminStatusEnabled,
+		}, nil
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-func WaitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatus(types.RelationshipStatusCreated), DelegatedAccountStatus(types.RelationshipStatusEnabled)),
-		Target:  []string{},
-		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
-		Timeout: timeout,
+	if err != nil {
+		return nil, err
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
+	return output, nil
 }
 
-func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		s, _, err := FindDelegatedAdminAccountStatusID(ctx, conn, accountID)
+func findDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, input *inspector2.ListDelegatedAdminAccountsInput, filter tfslices.Predicate[*awstypes.DelegatedAdminAccount]) (*awstypes.DelegatedAdminAccount, error) {
+	output, err := findDelegatedAdminAccounts(ctx, conn, input, filter)
 
-		if tfresource.NotFound(err) {
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDelegatedAdminAccounts(ctx context.Context, conn *inspector2.Client, input *inspector2.ListDelegatedAdminAccountsInput, filter tfslices.Predicate[*awstypes.DelegatedAdminAccount]) ([]awstypes.DelegatedAdminAccount, error) {
+	var output []awstypes.DelegatedAdminAccount
+
+	pages := inspector2.NewListDelegatedAdminAccountsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "is the delegated admin") {
+			return nil, errIsDelegatedAdmin
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.DelegatedAdminAccounts {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDelegatedAdminAccountByID(ctx, conn, accountID)
+
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -206,32 +199,50 @@ func statusDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, a
 			return nil, "", err
 		}
 
-		return "", s, nil
+		return output, string(output.Status), nil
 	}
 }
 
-func FindDelegatedAdminAccountStatusID(ctx context.Context, conn *inspector2.Client, accountID string) (string, string, error) {
-	pages := inspector2.NewListDelegatedAdminAccountsPaginator(conn, &inspector2.ListDelegatedAdminAccountsInput{})
+type delegatedAdminStatus string
 
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+const (
+	delegatedAdminStatusDisableInProgress delegatedAdminStatus = delegatedAdminStatus(awstypes.DelegatedAdminStatusDisableInProgress)
+	delegatedAdminStatusEnabling          delegatedAdminStatus = "ENABLING"
+	delegatedAdminStatusEnableInProgress  delegatedAdminStatus = "ENABLE_IN_PROGRESS"
+	delegatedAdminStatusEnabled           delegatedAdminStatus = delegatedAdminStatus(awstypes.DelegatedAdminStatusEnabled)
+	delegatedAdminStatusCreated           delegatedAdminStatus = "CREATED"
+)
 
-		if errs.IsAErrorMessageContains[*types.ValidationException](err, "is the delegated admin") {
-			return string(types.RelationshipStatusEnabled), accountID, nil
-		}
-
-		if err != nil {
-			return "", "", err
-		}
-
-		for _, account := range page.DelegatedAdminAccounts {
-			if aws.ToString(account.AccountId) == accountID {
-				return string(account.Status), aws.ToString(account.AccountId), nil
-			}
-		}
+func waitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusEnableInProgress, delegatedAdminStatusEnabling),
+		Target:  enum.Slice(delegatedAdminStatusEnabled),
+		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
+		Timeout: timeout,
 	}
 
-	return "", "", &retry.NotFoundError{
-		Message: fmt.Sprintf("delegated admin account not found for %s", accountID),
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DelegatedAdminAccount); ok {
+		return output, err
 	}
+
+	return nil, err
+}
+
+func waitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) (*awstypes.DelegatedAdminAccount, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(delegatedAdminStatusDisableInProgress, delegatedAdminStatusCreated, delegatedAdminStatusEnabled),
+		Target:  []string{},
+		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DelegatedAdminAccount); ok {
+		return output, err
+	}
+
+	return nil, err
 }

@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: calling-UpdateTags-in-resource-create
     languages: [go]
     message: Do not call `UpdateTags` inside a resource create function, use `createTags` instead
     paths:
       include:
-        - internal/service/
+        - "/internal/service/"
     patterns:
       - pattern: |
           func $FUNC(...) {
@@ -16,3 +19,11 @@ rules:
           metavariable: "$FUNC"
           regex: "^resource\\w*(Create|Put|Set|Upsert|Enable)$"
     severity: WARNING
+
+  - id: attrtags-in-haschanges
+    languages: [go]
+    message: Do not include `names.AttrTags` in `HasChanges`, use `names.AttrTagsAll`
+    patterns:
+      - pattern: |
+          $D.HasChanges(..., names.AttrTags, ...)
+    severity: ERROR

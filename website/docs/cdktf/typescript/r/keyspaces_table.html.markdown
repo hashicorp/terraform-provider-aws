@@ -59,6 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `capacitySpecification` - (Optional) Specifies the read/write throughput capacity mode for the table.
 * `clientSideTimestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled.
 * `comment` - (Optional) A description of the table.
@@ -168,4 +169,4 @@ Using `terraform import`, import a table using the `keyspaceName` and `tableName
 % terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e2a472d7a9fbc6d115fb0eeeff221a8837a9848972c20cbad7590570183d75aa -->
+<!-- cache-key: cdktf-0.20.8 input-faa0d0893ad0db51c96614e03e6991dd2566d841e3010263138a47dc073a11d2 -->

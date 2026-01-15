@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -9,36 +9,34 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetIntegrationResponseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
+					testAccCheckIntegrationResponseExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "integration.response.body.type"),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ".*"),
@@ -54,10 +52,10 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationResponseConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
+					testAccCheckIntegrationResponseExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_BINARY"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "$input.path('$')"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", ""),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ""),
@@ -71,20 +69,20 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetIntegrationResponseOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationResponseDestroy(ctx),
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceIntegrationResponse(), resourceName),
+					testAccCheckIntegrationResponseExists(ctx, t, resourceName, &conf),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceIntegrationResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,14 +90,14 @@ func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *apigateway.GetIntegrationResponseOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationResponseExists(ctx context.Context, t *testing.T, n string, v *apigateway.GetIntegrationResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
@@ -113,9 +111,9 @@ func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *api
 	}
 }
 
-func testAccCheckIntegrationResponseDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIntegrationResponseDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_integration_response" {
@@ -124,7 +122,7 @@ func testAccCheckIntegrationResponseDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

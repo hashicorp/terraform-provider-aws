@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,15 +60,15 @@ func resourceTableItem() *schema.Resource {
 	}
 }
 
-func validateTableItem(v interface{}, k string) (ws []string, errors []error) {
+func validateTableItem(v any, k string) (ws []string, errors []error) {
 	_, err := expandTableItemAttributes(v.(string))
 	if err != nil {
-		errors = append(errors, fmt.Errorf("Invalid format of %q: %s", k, err))
+		errors = append(errors, fmt.Errorf("Invalid format of %q: %w", k, err))
 	}
 	return
 }
 
-func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -98,7 +98,7 @@ func resourceTableItemCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -112,7 +112,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	key := expandTableItemQueryKey(attributes, hashKey, rangeKey)
 	item, err := findTableItemByTwoPartKey(ctx, conn, tableName, key)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Dynamodb Table Item (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +135,7 @@ func resourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -215,7 +215,7 @@ func resourceTableItemUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceTableItemRead(ctx, d, meta)...)
 }
 
-func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
@@ -227,10 +227,11 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	rangeKey := d.Get("range_key").(string)
 	queryKey := expandTableItemQueryKey(attributes, hashKey, rangeKey)
 
-	_, err = conn.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+	input := dynamodb.DeleteItemInput{
 		Key:       queryKey,
 		TableName: aws.String(d.Get(names.AttrTableName).(string)),
-	})
+	}
+	_, err = conn.DeleteItem(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DynamoDB Table Item (%s): %s", d.Id(), err)
@@ -245,7 +246,7 @@ func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string
 	if v, ok := attrs[hashKey]; ok {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:
@@ -256,7 +257,7 @@ func tableItemCreateResourceID(tableName string, hashKey string, rangeKey string
 	if v, ok := attrs[rangeKey]; ok && rangeKey != "" {
 		switch v := v.(type) {
 		case *awstypes.AttributeValueMemberB:
-			id = append(id, itypes.Base64EncodeOnce(v.Value))
+			id = append(id, inttypes.Base64EncodeOnce(v.Value))
 		case *awstypes.AttributeValueMemberN:
 			id = append(id, v.Value)
 		case *awstypes.AttributeValueMemberS:
@@ -282,8 +283,7 @@ func findTableItem(ctx context.Context, conn *dynamodb.Client, input *dynamodb.G
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -292,7 +292,7 @@ func findTableItem(ctx context.Context, conn *dynamodb.Client, input *dynamodb.G
 	}
 
 	if output == nil || output.Item == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Item, nil

@@ -39,6 +39,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `locationCode` - (Required) Code for the location to retrieve.
 
 ## Attribute Reference
@@ -50,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `availableProviders` - Names of the service providers for the location.
 * `locationName` - Name of the location. This includes the name of the colocation partner and the physical site of the building.
 
-<!-- cache-key: cdktf-0.20.1 input-d889468623dfe6cc7e6edbb487338f8e41ba42d426b71ce13bb577672f6b08e4 -->
+<!-- cache-key: cdktf-0.20.8 input-053068fda1502379702ee516f8ea1243aaf26c82233fc672ef0d41a8db4db268 -->

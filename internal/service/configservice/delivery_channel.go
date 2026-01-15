@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +81,7 @@ func resourceDeliveryChannel() *schema.Resource {
 	}
 }
 
-func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -100,8 +101,8 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 		input.DeliveryChannel.S3KmsKeyArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("snapshot_delivery_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})
+	if v, ok := d.GetOk("snapshot_delivery_properties"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
 
 		if v, ok := tfMap["delivery_frequency"]; ok {
 			input.DeliveryChannel.ConfigSnapshotDeliveryProperties = &types.ConfigSnapshotDeliveryProperties{
@@ -114,7 +115,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 		input.DeliveryChannel.SnsTopicARN = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[any, *types.InsufficientDeliveryPolicyException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.PutDeliveryChannel(ctx, input)
 	})
 
@@ -129,13 +130,13 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceDeliveryChannelRead(ctx, d, meta)...)
 }
 
-func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	channel, err := findDeliveryChannelByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ConfigService Delivery Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -157,7 +158,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
@@ -165,7 +166,7 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 		timeout = 30 * time.Second
 	)
 	log.Printf("[DEBUG] Deleting ConfigService Delivery Channel: %s", d.Id())
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.LastDeliveryChannelDeleteFailedException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteDeliveryChannel(ctx, &configservice.DeleteDeliveryChannelInput{
 			DeliveryChannelName: aws.String(d.Id()),
 		})
@@ -204,7 +205,7 @@ func findDeliveryChannels(ctx context.Context, conn *configservice.Client, input
 	output, err := conn.DescribeDeliveryChannels(ctx, input)
 
 	if errs.IsA[*types.NoSuchDeliveryChannelException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -215,20 +216,20 @@ func findDeliveryChannels(ctx context.Context, conn *configservice.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryChannels, nil
 }
 
-func flattenSnapshotDeliveryProperties(apiObject *types.ConfigSnapshotDeliveryProperties) []interface{} {
+func flattenSnapshotDeliveryProperties(apiObject *types.ConfigSnapshotDeliveryProperties) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		"delivery_frequency": apiObject.DeliveryFrequency,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

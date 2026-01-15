@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -15,13 +14,10 @@ import (
 )
 
 func testAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
+	resourceName := "aws_oam_link.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -36,14 +32,14 @@ func testAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "label"),
-					resource.TestCheckResourceAttr(dataSourceName, "label_template", "$AccountName"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "link_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "label", resourceName, "label"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "label_template", resourceName, "label_template"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "link_id", resourceName, "link_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_arn", resourceName, "sink_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -52,13 +48,10 @@ func testAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 }
 
 func testAccObservabilityAccessManagerLinkDataSource_logGroupConfiguration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
+	resourceName := "aws_oam_link.test"
 	filter := "LogGroupName LIKE 'aws/lambda/%' OR LogGroupName LIKE 'AWSLogs%'"
 
 	resource.Test(t, resource.TestCase{
@@ -74,18 +67,18 @@ func testAccObservabilityAccessManagerLinkDataSource_logGroupConfiguration(t *te
 			{
 				Config: testAccLinkDataSourceConfig_logGroupConfiguration(rName, filter),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "label"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "label", resourceName, "label"),
 					resource.TestCheckResourceAttr(dataSourceName, "label_template", "$AccountName"),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.log_group_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.log_group_configuration.0.filter", filter),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.metric_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttrSet(dataSourceName, "link_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.metric_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "link_id", resourceName, "link_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_types.0", "AWS::Logs::LogGroup"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_arn", resourceName, "sink_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -94,13 +87,10 @@ func testAccObservabilityAccessManagerLinkDataSource_logGroupConfiguration(t *te
 }
 
 func testAccObservabilityAccessManagerLinkDataSource_metricConfiguration(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_link.test"
+	resourceName := "aws_oam_link.test"
 	filter := "Namespace IN ('AWS/EC2', 'AWS/ELB', 'AWS/S3')"
 
 	resource.Test(t, resource.TestCase{
@@ -116,18 +106,18 @@ func testAccObservabilityAccessManagerLinkDataSource_metricConfiguration(t *test
 			{
 				Config: testAccLinkDataSourceConfig_metricConfiguration(rName, filter),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "oam", regexache.MustCompile(`link/+.`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "label"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "label", resourceName, "label"),
 					resource.TestCheckResourceAttr(dataSourceName, "label_template", "$AccountName"),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.log_group_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.metric_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.log_group_configuration.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.metric_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "link_configuration.0.metric_configuration.0.filter", filter),
-					resource.TestCheckResourceAttrSet(dataSourceName, "link_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "link_id", resourceName, "link_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "sink_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "sink_arn", resourceName, "sink_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -158,7 +148,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -182,15 +172,19 @@ resource "aws_oam_sink_policy" "test" {
 resource "aws_oam_link" "test" {
   label_template  = "$AccountName"
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {
-  link_identifier = aws_oam_link.test.id
+  link_identifier = aws_oam_link.test.arn
 }
 `, rName))
 }
@@ -218,7 +212,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -247,15 +241,19 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::Logs::LogGroup"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {
-  link_identifier = aws_oam_link.test.id
+  link_identifier = aws_oam_link.test.arn
 }
 `, rName, filter))
 }
@@ -283,7 +281,7 @@ resource "aws_oam_sink" "test" {
 resource "aws_oam_sink_policy" "test" {
   provider = "awsalternate"
 
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -312,15 +310,19 @@ resource "aws_oam_link" "test" {
     }
   }
   resource_types  = ["AWS::CloudWatch::Metric"]
-  sink_identifier = aws_oam_sink.test.id
+  sink_identifier = aws_oam_sink.test.arn
 
   tags = {
     key1 = "value1"
   }
+
+  depends_on = [
+    aws_oam_sink_policy.test
+  ]
 }
 
 data aws_oam_link "test" {
-  link_identifier = aws_oam_link.test.id
+  link_identifier = aws_oam_link.test.arn
 }
 `, rName, filter))
 }

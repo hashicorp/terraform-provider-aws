@@ -36,17 +36,19 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the log stream.
-* `domain` - (Required) The top-level internet domain name for which your application has administrative authority.
 * `app_monitor_configuration` - (Optional) configuration data for the app monitor. See [app_monitor_configuration](#app_monitor_configuration) below.
-* `cw_log_enabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter  specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
+* `cw_log_enabled` - (Optional) Data collected by RUM is kept by RUM for 30 days and then deleted. This parameter specifies whether RUM sends a copy of this telemetry data to Amazon CloudWatch Logs in your account. This enables you to keep the telemetry data for more than 30 days, but it does incur Amazon CloudWatch Logs charges. Default value is `false`.
 * `custom_events` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. If you omit this parameter, custom events are `DISABLED`. See [custom_events](#custom_events) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### app_monitor_configuration
 
-* `allow_cookies` - (Optional) If you set this to `true`, RUM web client sets two cookies, a session cookie  and a user cookie. The cookies allow the RUM web client to collect data relating to the number of users an application has and the behavior of the application across a sequence of events. Cookies are stored in the top-level domain of the current page.
-* `enable_xray` - (Optional) If you set this to `true`, RUM enables X-Ray tracing for the user sessions  that RUM samples. RUM adds an X-Ray trace header to allowed HTTP requests. It also records an X-Ray segment for allowed HTTP requests.
+* `allow_cookies` - (Optional) If you set this to `true`, RUM web client sets two cookies, a session cookie and a user cookie. The cookies allow the RUM web client to collect data relating to the number of users an application has and the behavior of the application across a sequence of events. Cookies are stored in the top-level domain of the current page.
+* `domain` - (Optional) The top-level internet domain name for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
+* `domain_list` - (Optional) A list of internet domain names for which your application has administrative authority. Exactly one of `domain` or `domain_list` must be specified.
+* `enable_xray` - (Optional) If you set this to `true`, RUM enables X-Ray tracing for the user sessions that RUM samples. RUM adds an X-Ray trace header to allowed HTTP requests. It also records an X-Ray segment for allowed HTTP requests.
 * `excluded_pages` - (Optional) A list of URLs in your website or application to exclude from RUM data collection.
 * `favorite_pages` - (Optional) A list of pages in the CloudWatch RUM console that are to be displayed with a "favorite" icon.
 * `guest_role_arn` - (Optional) The ARN of the guest IAM role that is attached to the Amazon Cognito identity pool that is used to authorize the sending of data to RUM.
@@ -94,4 +96,4 @@ Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. Fo
 % terraform import aws_rum_app_monitor.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b381cc3a01207454edb5a73b4ffe67c1902d1625465d5195b0a31d7bc968ed4e -->
+<!-- cache-key: cdktf-0.20.8 input-b79cc3763c3e90bb4872796d248f7220a9871eaa19f8fdfb9dd75fca3b2e1748 -->

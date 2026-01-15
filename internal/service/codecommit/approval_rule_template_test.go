@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecommit_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,7 +33,7 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
+					testAccCheckApprovalRuleTemplateContent(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "approval_rule_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
@@ -66,7 +66,7 @@ func TestAccCodeCommitApprovalRuleTemplate_disappears(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceApprovalRuleTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
+					testAccCheckApprovalRuleTemplateContent(ctx, resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Config: testAccApprovalRuleTemplateConfig_updateContentAndDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					testAccCheckApprovalRuleTemplateContent(resourceName, 1),
+					testAccCheckApprovalRuleTemplateContent(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
 				),
 			},
@@ -145,10 +145,10 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 	})
 }
 
-func testAccCheckApprovalRuleTemplateContent(resourceName string, numApprovals int) resource.TestCheckFunc {
+func testAccCheckApprovalRuleTemplateContent(ctx context.Context, resourceName string, numApprovals int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedContent := fmt.Sprintf(`{"Version":"2018-11-08","DestinationReferences":["refs/heads/master"],"Statements":[{"Type":"Approvers","NumberOfApprovalsNeeded":%d,"ApprovalPoolMembers":["arn:%s:sts::%s:assumed-role/CodeCommitReview/*"]}]}`,
-			numApprovals, acctest.Partition(), acctest.AccountID(),
+			numApprovals, acctest.Partition(), acctest.AccountID(ctx),
 		)
 		return resource.TestCheckResourceAttr(resourceName, names.AttrContent, expectedContent)(s)
 	}
@@ -180,7 +180,7 @@ func testAccCheckApprovalRuleTemplateDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfcodecommit.FindApprovalRuleTemplateByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

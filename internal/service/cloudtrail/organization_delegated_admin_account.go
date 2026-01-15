@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail
@@ -21,24 +21,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudtrail_organization_delegated_admin_account", name="Organization Delegated Admin Account")
+// @Region(global=true)
 func newOrganizationDelegatedAdminAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &organizationDelegatedAdminAccountResource{}, nil
 }
 
 type organizationDelegatedAdminAccountResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[organizationDelegatedAdminAccountResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (*organizationDelegatedAdminAccountResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_cloudtrail_organization_delegated_admin_account"
 }
 
 func (r *organizationDelegatedAdminAccountResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -140,7 +137,7 @@ func (r *organizationDelegatedAdminAccountResource) Read(ctx context.Context, re
 
 	delegatedAdministrator, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, data.ID.ValueString(), servicePrincipal)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -171,9 +168,10 @@ func (r *organizationDelegatedAdminAccountResource) Delete(ctx context.Context, 
 
 	conn := r.Meta().CloudTrailClient(ctx)
 
-	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &cloudtrail.DeregisterOrganizationDelegatedAdminInput{
+	input := cloudtrail.DeregisterOrganizationDelegatedAdminInput{
 		DelegatedAdminAccountId: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeregisterOrganizationDelegatedAdmin(ctx, &input)
 
 	if errs.IsA[*awstypes.AccountNotRegisteredException](err) {
 		return

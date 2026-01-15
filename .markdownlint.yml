@@ -1,5 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
 
 # Configuration for markdownlint
 # https://github.com/DavidAnson/markdownlint#configuration
@@ -19,6 +19,9 @@ no-inline-html:
   allowed_elements:
     - br
     - sup
+    - details
+    - summary
+    - p
 
 # Disabled Rules
 # https://github.com/DavidAnson/markdownlint/blob/master/doc/Rules.md

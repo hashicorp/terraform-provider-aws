@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +36,7 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func testAccConfigurationRecorder_disappears(t *testing.T) {
 				Config: testAccConfigurationRecorderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigurationRecorder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,17 +89,17 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_frequency", "DAILY"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.recording_frequency", "CONTINUOUS"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.0", "AWS::EC2::Instance"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},
@@ -123,11 +123,11 @@ func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.recording_strategy.0.use_only", "EXCLUSION_BY_RESOURCE_TYPES"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},
@@ -166,7 +166,7 @@ func testAccCheckConfigurationRecorderDestroy(ctx context.Context) resource.Test
 
 			_, err := tfconfig.FindConfigurationRecorderByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

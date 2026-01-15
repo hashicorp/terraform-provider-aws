@@ -34,7 +34,7 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
 * `user` - (Required) Name of the IAM user associated with the access keys.
 
@@ -50,4 +50,4 @@ The elements of the `access_keys` are exported with the following attributes:
 * `create_date` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the access key was created.
 * `status` - Access key status. Possible values are `Active` and `Inactive`.
 
-<!-- cache-key: cdktf-0.20.1 input-e240b2f1389af80ddb006ba0dd0c7ec511aa61dd50acb41a405183fb70ef28d8 -->
+<!-- cache-key: cdktf-0.20.8 input-83003474db7c8974e4a4a379bf890d6a1b17c0f208cd57743588ab45558e1147 -->

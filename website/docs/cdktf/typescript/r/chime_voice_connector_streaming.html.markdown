@@ -144,6 +144,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `voiceConnectorId` - (Required) The Amazon Chime Voice Connector ID.
 * `dataRetention`  - (Required) The retention period, in hours, for the Amazon Kinesis data.
 * `disabled` - (Optional) When true, media streaming to Amazon Kinesis is turned off. Default: `false`
@@ -193,4 +194,4 @@ Using `terraform import`, import Chime Voice Connector Streaming using the `voic
 % terraform import aws_chime_voice_connector_streaming.default abcdef1ghij2klmno3pqr4
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1d6eaf10d1870a1e8fdf049fb6ca121f258d5ffdbe4eae79fe564f39d16ce4f8 -->
+<!-- cache-key: cdktf-0.20.8 input-fa9b96bcbb4d10a6c4e634ce028c03cadcc241d4f2699214d8a8ae4287503fd9 -->

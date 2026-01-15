@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -15,10 +15,6 @@ import (
 )
 
 func testAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_oam_sinks.test"
@@ -35,8 +31,8 @@ func testAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`sink/+.`)),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, "arns.0", "oam", regexache.MustCompile(`sink/.+$`)),
 				),
 			},
 		},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric
@@ -18,13 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,13 +44,8 @@ func newIngestionResource(context.Context) (resource.ResourceWithConfigure, erro
 }
 
 type ingestionResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[ingestionResourceModel]
+	framework.ResourceWithModel[ingestionResourceModel]
 	framework.WithImportByID
-}
-
-func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_appfabric_ingestion"
 }
 
 func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -110,9 +106,14 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric Ingestion", err.Error())
+	}
+
 	// Additional fields.
 	input.AppBundleIdentifier = fwflex.StringFromFramework(ctx, data.AppBundleARN)
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.ClientToken = aws.String(uuid)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestion(ctx, input)
@@ -130,7 +131,12 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Ingestion.Arn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID AppFabric Ingestion", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -151,7 +157,7 @@ func (r *ingestionResource) Read(ctx context.Context, request resource.ReadReque
 
 	ingestion, err := findIngestionByTwoPartKey(ctx, conn, data.AppBundleARN.ValueString(), data.ARN.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -181,10 +187,11 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
+	input := appfabric.DeleteIngestionInput{
 		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
 		IngestionIdentifier: data.ARN.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteIngestion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -197,10 +204,6 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 }
 
-func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleARN, arn string) (*awstypes.Ingestion, error) {
 	input := &appfabric.GetIngestionInput{
 		AppBundleIdentifier: aws.String(appBundleARN),
@@ -210,7 +213,7 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 	output, err := conn.GetIngestion(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -221,13 +224,14 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 	}
 
 	if output == nil || output.Ingestion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Ingestion, nil
 }
 
 type ingestionResourceModel struct {
+	framework.WithRegionModel
 	App           types.String                               `tfsdk:"app"`
 	AppBundleARN  fwtypes.ARN                                `tfsdk:"app_bundle_arn"`
 	ARN           types.String                               `tfsdk:"arn"`
@@ -255,6 +259,11 @@ func (m *ingestionResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *ingestionResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleARN.ValueString(), m.ARN.ValueString()}, ingestionResourceIDPartCount, false)))
+func (m *ingestionResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppBundleARN.ValueString(),
+		m.ARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ingestionResourceIDPartCount, false)
 }

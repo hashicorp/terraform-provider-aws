@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Package names provides constants for AWS service names that are used as keys
@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strings"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -66,13 +66,16 @@ const (
 	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
+	ControlTowerEndpointID                 = "controltower"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
+	DataZoneEndpointID                     = "datazone"
 	DetectiveEndpointID                    = "api.detective"
 	DeviceFarmEndpointID                   = "devicefarm"
 	DevOpsGuruEndpointID                   = "devops-guru"
 	DirectConnectEndpointID                = "directconnect"
 	DLMEndpointID                          = "dlm"
+	DSQLEndpointID                         = "dsql"
 	ECREndpointID                          = "api.ecr"
 	ECSEndpointID                          = "ecs"
 	EFSEndpointID                          = "elasticfilesystem"
@@ -92,11 +95,14 @@ const (
 	IVSEndpointID                          = "ivs"
 	IVSChatEndpointID                      = "ivschat"
 	IdentityStoreEndpointID                = "identitystore"
+	ImageBuilderEndpointID                 = "imagebuilder"
 	Inspector2EndpointID                   = "inspector2"
+	InternetMonitorEndpointID              = "internetmonitor"
 	KMSEndpointID                          = "kms"
 	KafkaConnectEndpointID                 = "kafkaconnect"
 	KendraEndpointID                       = "kendra"
 	KinesisVideoEndpointID                 = "kinesisvideo"
+	LakeFormationEndpointID                = "lakeformation"
 	LambdaEndpointID                       = "lambda"
 	LexModelBuildingServiceEndpointID      = "models.lex"
 	LexV2ModelsEndpointID                  = "models-v2-lex"
@@ -106,6 +112,8 @@ const (
 	Macie2EndpointID                       = "macie2"
 	MediaConvertEndpointID                 = "mediaconvert"
 	MediaLiveEndpointID                    = "medialive"
+	NotificationsEndpointID                = "notifications"
+	NotificationsContactsEndpointID        = "notifications-contacts"
 	ObservabilityAccessManagerEndpointID   = "oam"
 	OpenSearchIngestionEndpointID          = "osis"
 	OpenSearchServerlessEndpointID         = "aoss"
@@ -125,6 +133,7 @@ const (
 	ServiceCatalogEndpointID               = "servicecatalog"
 	SSMEndpointID                          = "ssm"
 	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSMQuickSetupEndpointID                = "ssm-quicksetup"
 	SSOAdminEndpointID                     = "sso"
 	STSEndpointID                          = "sts"
 	SchedulerEndpointID                    = "scheduler"
@@ -140,229 +149,22 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
-	DataZoneEndpointID                     = "datazone"
+	WorkSpacesWebEndpointID                = "workspaces-web"
 )
 
-// These should move to aws-sdk-go-base.
-// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
-const (
-	ChinaPartitionID      = "aws-cn"     // AWS China partition.
-	ISOPartitionID        = "aws-iso"    // AWS ISO (US) partition.
-	ISOBPartitionID       = "aws-iso-b"  // AWS ISOB (US) partition.
-	ISOEPartitionID       = "aws-iso-e"  // AWS ISOE (Europe) partition.
-	ISOFPartitionID       = "aws-iso-f"  // AWS ISOF partition.
-	StandardPartitionID   = "aws"        // AWS Standard partition.
-	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
-)
-
-const (
-	// AWS Standard partition's regions.
-	GlobalRegionID = "aws-global" // AWS Standard global region.
-
-	AFSouth1RegionID     = "af-south-1"     // Africa (Cape Town).
-	APEast1RegionID      = "ap-east-1"      // Asia Pacific (Hong Kong).
-	APNortheast1RegionID = "ap-northeast-1" // Asia Pacific (Tokyo).
-	APNortheast2RegionID = "ap-northeast-2" // Asia Pacific (Seoul).
-	APNortheast3RegionID = "ap-northeast-3" // Asia Pacific (Osaka).
-	APSouth1RegionID     = "ap-south-1"     // Asia Pacific (Mumbai).
-	APSouth2RegionID     = "ap-south-2"     // Asia Pacific (Hyderabad).
-	APSoutheast1RegionID = "ap-southeast-1" // Asia Pacific (Singapore).
-	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
-	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
-	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
-	APSoutheast5RegionID = "ap-southeast-5" // Asia Pacific (Malaysia).
-	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
-	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
-	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
-	EUCentral2RegionID   = "eu-central-2"   // Europe (Zurich).
-	EUNorth1RegionID     = "eu-north-1"     // Europe (Stockholm).
-	EUSouth1RegionID     = "eu-south-1"     // Europe (Milan).
-	EUSouth2RegionID     = "eu-south-2"     // Europe (Spain).
-	EUWest1RegionID      = "eu-west-1"      // Europe (Ireland).
-	EUWest2RegionID      = "eu-west-2"      // Europe (London).
-	EUWest3RegionID      = "eu-west-3"      // Europe (Paris).
-	ILCentral1RegionID   = "il-central-1"   // Israel (Tel Aviv).
-	MECentral1RegionID   = "me-central-1"   // Middle East (UAE).
-	MESouth1RegionID     = "me-south-1"     // Middle East (Bahrain).
-	SAEast1RegionID      = "sa-east-1"      // South America (Sao Paulo).
-	USEast1RegionID      = "us-east-1"      // US East (N. Virginia).
-	USEast2RegionID      = "us-east-2"      // US East (Ohio).
-	USWest1RegionID      = "us-west-1"      // US West (N. California).
-	USWest2RegionID      = "us-west-2"      // US West (Oregon).
-
-	// AWS China partition's regions.
-	CNNorth1RegionID     = "cn-north-1"     // China (Beijing).
-	CNNorthwest1RegionID = "cn-northwest-1" // China (Ningxia).
-
-	// AWS GovCloud (US) partition's regions.
-	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
-	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
-
-	// AWS ISO (US) partition's regions.
-	USISOEast1RegionID = "us-iso-east-1" // US ISO East.
-	USISOWest1RegionID = "us-iso-west-1" // US ISO WEST.
-
-	// AWS ISOB (US) partition's regions.
-	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
-
-	// AWS ISOF partition's regions.
-	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
-)
-
-var allRegionIDs = []string{
-	AFSouth1RegionID,
-	APEast1RegionID,
-	APNortheast1RegionID,
-	APNortheast2RegionID,
-	APNortheast3RegionID,
-	APSouth1RegionID,
-	APSouth2RegionID,
-	APSoutheast1RegionID,
-	APSoutheast2RegionID,
-	APSoutheast3RegionID,
-	APSoutheast4RegionID,
-	APSoutheast5RegionID,
-	CACentral1RegionID,
-	CAWest1RegionID,
-	EUCentral1RegionID,
-	EUCentral2RegionID,
-	EUNorth1RegionID,
-	EUSouth1RegionID,
-	EUSouth2RegionID,
-	EUWest1RegionID,
-	EUWest2RegionID,
-	EUWest3RegionID,
-	ILCentral1RegionID,
-	MECentral1RegionID,
-	MESouth1RegionID,
-	SAEast1RegionID,
-	USEast1RegionID,
-	USEast2RegionID,
-	USWest1RegionID,
-	USWest2RegionID,
-	CNNorth1RegionID,
-	CNNorthwest1RegionID,
-	USGovEast1RegionID,
-	USGovWest1RegionID,
-	USISOEast1RegionID,
-	USISOWest1RegionID,
-	USISOBEast1RegionID,
-	EUISOEWest1RegionID,
-}
-
-func Regions() []string {
-	return slices.Clone(allRegionIDs)
-}
-
-func DNSSuffixForPartition(partition string) string {
-	switch partition {
-	case "":
-		return ""
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	case ISOEPartitionID:
-		return "cloud.adc-e.uk"
-	case ISOFPartitionID:
-		return "csp.hci.ic.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
-func ServicePrincipalSuffixForPartition(partition string) string {
-	switch partition {
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
-// SPN region unique taken from
-// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
-func ServicePrincipalNameForPartition(service string, partition string) string {
-	if service != "" && partition != StandardPartitionID {
-		switch partition {
-		case ISOPartitionID:
-			switch service {
-			case "cloudhsm",
-				"config",
-				"logs",
-				"workspaces":
-				return DNSSuffixForPartition(partition)
-			}
-		case ISOBPartitionID:
-			switch service {
-			case "dms",
-				"logs":
-				return DNSSuffixForPartition(partition)
-			}
-		case ChinaPartitionID:
-			switch service {
-			case "codedeploy",
-				"elasticmapreduce",
-				"logs":
-				return DNSSuffixForPartition(partition)
-			}
-		}
+// PartitionForRegion returns the partition for the given Region.
+// Returns the empty partition if the Region is empty.
+// Returns the standard partition if no known partition includes the Region.
+func PartitionForRegion(region string) endpoints.Partition {
+	if region == "" {
+		return endpoints.Partition{}
 	}
 
-	return "amazonaws.com"
-}
-
-func IsOptInRegion(region string) bool {
-	switch region {
-	case AFSouth1RegionID,
-		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
-		CAWest1RegionID,
-		EUCentral2RegionID,
-		EUSouth1RegionID, EUSouth2RegionID,
-		ILCentral1RegionID,
-		MECentral1RegionID,
-		MESouth1RegionID:
-		return true
-	default:
-		return false
-	}
-}
-
-func PartitionForRegion(region string) string {
-	switch region {
-	case "":
-		return ""
-	case CNNorth1RegionID, CNNorthwest1RegionID:
-		return ChinaPartitionID
-	case USISOEast1RegionID, USISOWest1RegionID:
-		return ISOPartitionID
-	case USISOBEast1RegionID:
-		return ISOBPartitionID
-	case EUISOEWest1RegionID:
-		return ISOEPartitionID
-	case USGovEast1RegionID, USGovWest1RegionID:
-		return USGovCloudPartitionID
-	default:
-		return StandardPartitionID
-	}
-}
-
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
-
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
+		return partition
 	}
 
-	return strings.Join(parts, ".")
+	return PartitionForRegion(endpoints.UsEast1RegionID)
 }
 
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are
@@ -428,10 +230,8 @@ func readHCLIntoServiceData() error {
 
 func ProviderPackageForAlias(serviceAlias string) (string, error) {
 	for k, v := range serviceData {
-		for _, hclKey := range v.aliases {
-			if serviceAlias == hclKey {
-				return k, nil
-			}
+		if slices.Contains(v.aliases, serviceAlias) {
+			return k, nil
 		}
 	}
 
@@ -495,3 +295,11 @@ func HumanFriendly(service string) (string, error) {
 
 	return "", fmt.Errorf("no service data found for %s", service)
 }
+
+const (
+	ResourceTopLevelRegionAttributeDescription     = `Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). ` + topLevelRegionDefaultDescription
+	ListResourceTopLevelRegionAttributeDescription = `Region to [query](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) for resources of this type. ` + topLevelRegionDefaultDescription
+	ActionTopLevelRegionAttributeDescription       = `Region where this action will be [executed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). ` + topLevelRegionDefaultDescription
+
+	topLevelRegionDefaultDescription = `Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).`
+)

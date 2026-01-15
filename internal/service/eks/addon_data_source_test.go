@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -35,6 +35,7 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_values", dataSourceResourceName, "configuration_values"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),
+					resource.TestCheckResourceAttr(resourceName, "pod_identity_associations.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_account_role_arn", dataSourceResourceName, "service_account_role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 				),
@@ -96,11 +97,11 @@ data "aws_eks_addon" "test" {
 func testAccAddonDataSourceConfig_configurationValues(rName, addonName, addonVersion, configurationValues, resolveConflicts string) string {
 	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_addon" "test" {
-  cluster_name         = aws_eks_cluster.test.name
-  addon_name           = %[2]q
-  addon_version        = %[3]q
-  configuration_values = %[4]q
-  resolve_conflicts    = %[5]q
+  cluster_name                = aws_eks_cluster.test.name
+  addon_name                  = %[2]q
+  addon_version               = %[3]q
+  configuration_values        = %[4]q
+  resolve_conflicts_on_create = %[5]q
 }
 
 data "aws_eks_addon" "test" {

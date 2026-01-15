@@ -51,25 +51,27 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available VPC peering connections.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Custom filter block as described below.
-
 * `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
-More complex filters can be expressed using one or more `filter` sub-blocks,
-which take the following arguments:
+The arguments of this data source act as filters for querying the available VPC peering connections.
+
+### `filter`
+
+More complex filters can be expressed using one or more `filter` sub-blocks, which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
-
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - IDs of the VPC Peering Connections.
@@ -80,4 +82,4 @@ All of the argument attributes except `filter` are also exported as result attri
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-a9c5018aed4e1e6786cc7bb5dd8607ab1c1d2ea0787591a3d91d06ccfee33928 -->
+<!-- cache-key: cdktf-0.20.8 input-117d6e1ecbf5d54d2aef0dff75fc4e626930fdf5038dcb8069c3dc17f3dafb2e -->

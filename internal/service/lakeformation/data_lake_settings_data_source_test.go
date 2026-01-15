@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -16,7 +16,10 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -25,11 +28,11 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "admins.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allow_full_table_external_data_access", acctest.CtFalse),
 				),
 			},
@@ -42,7 +45,10 @@ func testAccDataLakeSettingsDataSource_readOnlyAdmins(t *testing.T) {
 	resourceName := "data.aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -51,7 +57,7 @@ func testAccDataLakeSettingsDataSource_readOnlyAdmins(t *testing.T) {
 				Config: testAccDataLakeSettingsDataSourceConfig_readOnlyAdmins,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
-					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "read_only_admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},

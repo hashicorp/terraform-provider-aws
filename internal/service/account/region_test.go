@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account_test
@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,9 +19,9 @@ import (
 func testAccRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRegionDisabled(ctx, t, regionName)
@@ -61,9 +61,9 @@ func testAccRegion_basic(t *testing.T) {
 func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
@@ -104,7 +104,7 @@ func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-nam
 func testAccPreCheckRegionDisabled(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AccountClient(ctx)
 
 	output, err := tfaccount.FindRegionOptStatus(ctx, conn, "", region)
 

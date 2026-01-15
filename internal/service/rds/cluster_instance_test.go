@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +44,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
@@ -65,6 +66,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -98,7 +100,7 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceClusterInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,6 +138,7 @@ func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -172,6 +175,7 @@ func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -198,7 +202,7 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 				Config: testAccClusterInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -208,13 +212,14 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
 				Config: testAccClusterInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -223,7 +228,7 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 				Config: testAccClusterInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -303,6 +308,7 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -339,6 +345,7 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -374,6 +381,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -389,6 +397,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -431,6 +440,7 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -474,6 +484,7 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -509,6 +520,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -522,7 +534,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
 			{
@@ -566,13 +578,14 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
 		},
@@ -609,6 +622,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -650,6 +664,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -693,6 +708,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -729,6 +745,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -767,6 +784,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -803,6 +821,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -846,6 +865,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -900,6 +920,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -936,6 +957,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -944,6 +966,88 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 			},
 		},
 	})
+}
+
+func TestAccRDSClusterInstance_Replica_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var primaryInstance types.DBInstance
+	var replicaInstance types.DBInstance
+	resourceName := "aws_rds_cluster_instance.test"
+	resourceName2 := "aws_rds_cluster_instance.alternate"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// record the initialized providers so that we can use them to
+	// check for the cluster in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckClusterInstanceDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_replicationSource_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExistsWithProvider(ctx, resourceName, &primaryInstance, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterInstanceExistsWithProvider(ctx, resourceName2, &replicaInstance, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckClusterInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckClusterInstanceDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).RDSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster_instance" {
+				continue
+			}
+
+			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Cluster Instance %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 func testAccPerformanceInsightsDefaultVersionPreCheck(ctx context.Context, t *testing.T, engine string) {
@@ -1032,7 +1136,7 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1295,7 +1399,9 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1545,6 +1651,41 @@ resource "aws_rds_cluster_instance" "test" {
 `, rName))
 }
 
+func testAccClusterInstanceConfig_replicationSource_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_replicationSource_base(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "alternate" {
+  provider = "awsalternate"
+
+  cluster_identifier            = "%[1]s-replica"
+  db_subnet_group_name          = aws_db_subnet_group.test.name
+  engine                        = %[2]q
+  kms_key_id                    = aws_kms_key.test.arn
+  storage_encrypted             = true
+  skip_final_snapshot           = true
+  replication_source_identifier = aws_rds_cluster.test.arn
+  source_region                 = data.aws_region.current.region
+
+  depends_on = [
+    aws_rds_cluster_instance.test,
+  ]
+}
+
+resource "aws_rds_cluster_instance" "alternate" {
+  provider = "awsalternate"
+
+  identifier         = "%[1]s-replica"
+  cluster_identifier = aws_rds_cluster.alternate.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  engine             = aws_rds_cluster.alternate.engine
+  engine_version     = aws_rds_cluster.alternate.engine_version
+
+  force_destroy = true
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
 func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraPostgresql(rName, engine string) string {
 	return acctest.ConfigCompose(
 		testAccClusterInstanceConfig_orderableEngineBase(engine, true),
@@ -1575,6 +1716,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName,
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {
@@ -1604,6 +1746,7 @@ func testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rN
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_rds_cluster" "test" {

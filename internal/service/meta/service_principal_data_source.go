@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -16,7 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Service Principal")
+// @FrameworkDataSource("aws_service_principal", name="Service Principal")
+// @Region(validateOverrideInPartition=false)
 func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &servicePrincipalDataSource{}
 
@@ -24,11 +25,7 @@ func newServicePrincipalDataSource(context.Context) (datasource.DataSourceWithCo
 }
 
 type servicePrincipalDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*servicePrincipalDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_service_principal"
+	framework.DataSourceWithModel[servicePrincipalDataSourceModel]
 }
 
 func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -38,10 +35,6 @@ func (d *servicePrincipalDataSource) Schema(ctx context.Context, request datasou
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Computed: true,
-			},
-			names.AttrRegion: schema.StringAttribute{
-				Optional: true,
 				Computed: true,
 			},
 			names.AttrServiceName: schema.StringAttribute{
@@ -61,58 +54,63 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	var region *endpoints.Region
+	name := d.Meta().Region(ctx)
+	region, err := findRegionByName(ctx, name)
 
-	// find the region given by the user
-	if !data.Region.IsNull() {
-		name := data.Region.ValueString()
-		matchingRegion, err := findRegionByName(ctx, name)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
+		return
 	}
 
-	// Default to provider current Region if no other filters matched.
-	if region == nil {
-		name := d.Meta().Region
-		matchingRegion, err := findRegionByName(ctx, name)
+	regionID := region.ID()
+	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
+	sourceServicePrincipal := servicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("finding Region by name (%s)", name), err.Error())
-
-			return
-		}
-
-		region = matchingRegion
-	}
-
-	partition := names.PartitionForRegion(region.ID())
-
-	serviceName := ""
-
-	if !data.ServiceName.IsNull() {
-		serviceName = data.ServiceName.ValueString()
-	}
-
-	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
-
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+region.ID()+"."+sourceServicePrincipal)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+regionID+"."+sourceServicePrincipal)
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
 	data.Suffix = fwflex.StringValueToFrameworkLegacy(ctx, sourceServicePrincipal)
-	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type servicePrincipalDataSourceModel struct {
+	framework.WithRegionModel
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
-	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func servicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
+	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
+		switch partitionID {
+		case endpoints.AwsIsoPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsIsoBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsCnPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }

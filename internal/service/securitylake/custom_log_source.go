@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -21,17 +21,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Log Source")
+// @FrameworkResource("aws_securitylake_custom_log_source", name="Custom Log Source")
 func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customLogSourceResource{}
 
@@ -39,13 +40,9 @@ func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure
 }
 
 type customLogSourceResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[customLogSourceResourceModel]
 	framework.WithNoUpdate
 	framework.WithImportByID
-}
-
-func (r *customLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_securitylake_custom_log_source"
 }
 
 func (r *customLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -188,7 +185,7 @@ func (r *customLogSourceResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateCustomLogSourceOutput, error) {
+	output, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateCustomLogSourceOutput, error) {
 		return conn.CreateCustomLogSource(ctx, input)
 	})
 
@@ -231,7 +228,7 @@ func (r *customLogSourceResource) Read(ctx context.Context, request resource.Rea
 	sourceName := data.SourceName.ValueString()
 	customLogSource, err := findCustomLogSourceBySourceName(ctx, conn, sourceName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -272,7 +269,7 @@ func (r *customLogSourceResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteCustomLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteCustomLogSourceOutput, error) {
 		return conn.DeleteCustomLogSource(ctx, input)
 	})
 
@@ -295,7 +292,7 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -316,10 +313,11 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(sourceName)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 type customLogSourceResourceModel struct {
+	framework.WithRegionModel
 	Attributes      fwtypes.ListNestedObjectValueOf[customLogSourceAttributesModel]    `tfsdk:"attributes"`
 	Configuration   fwtypes.ListNestedObjectValueOf[customLogSourceConfigurationModel] `tfsdk:"configuration"`
 	EventClasses    fwtypes.SetValueOf[types.String]                                   `tfsdk:"event_classes"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -31,12 +31,12 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_name", resourceName, "compute_environment_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "0"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -61,8 +61,8 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 				Config: testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName, 30, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.terminate_jobs_on_update", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
 				),
@@ -118,7 +118,7 @@ resource "aws_subnet" "sample" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = "%[1]s"
+  name = "%[1]s"
 
   compute_resources {
     instance_role = aws_iam_instance_profile.ecs_instance_role.arn
@@ -145,7 +145,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 data "aws_batch_compute_environment" "by_name" {
-  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+  name = aws_batch_compute_environment.test.name
 }
 `, rName)
 }
@@ -153,7 +153,7 @@ data "aws_batch_compute_environment" "by_name" {
 func testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName string, timeout int, terminate bool) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name = %[1]q
+  name = %[1]q
 
   compute_resources {
     allocation_strategy = "BEST_FIT_PROGRESSIVE"
@@ -178,7 +178,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 data "aws_batch_compute_environment" "by_name" {
-  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+  name = aws_batch_compute_environment.test.name
 }
 `, rName, timeout, terminate))
 }

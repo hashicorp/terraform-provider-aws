@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,10 +23,7 @@ const (
 type containerProperties awstypes.ContainerProperties
 
 func (cp *containerProperties) reduce() {
-	// Deal with Environment objects which may be re-ordered in the API.
-	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
-	})
+	cp.sortEnvironment()
 
 	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Command) == 0 {
@@ -108,6 +106,13 @@ func (cp *containerProperties) reduce() {
 	}
 }
 
+func (cp *containerProperties) sortEnvironment() {
+	// Deal with Environment objects which may be re-ordered in the API.
+	slices.SortFunc(cp.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
+	})
+}
+
 // equivalentContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
 func equivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if str1 == "" {
@@ -163,6 +168,8 @@ func flattenContainerProperties(apiObject *awstypes.ContainerProperties) (string
 	if apiObject == nil {
 		return "", nil
 	}
+
+	(*containerProperties)(apiObject).sortEnvironment()
 
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeContainerProperties(apiObject, jsonEncoder.Value)

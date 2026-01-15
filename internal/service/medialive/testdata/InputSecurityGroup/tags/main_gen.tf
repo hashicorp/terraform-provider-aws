@@ -1,4 +1,4 @@
-# Copyright (c) HashiCorp, Inc.
+# Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_medialive_input_security_group" "test" {
@@ -7,12 +7,6 @@ resource "aws_medialive_input_security_group" "test" {
   }
 
   tags = var.resource_tags
-}
-
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
 }
 
 variable "resource_tags" {

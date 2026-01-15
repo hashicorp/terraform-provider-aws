@@ -56,6 +56,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `version` - (Required) Version identifier of the API documentation snapshot.
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `description` - (Optional) Description of the API documentation version.
@@ -89,4 +90,4 @@ Using `terraform import`, import API Gateway documentation versions using `REST-
 % terraform import aws_api_gateway_documentation_version.example 5i4e1ko720/example-version
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a4c3d7281104b3d492a309138d97e039e5bb599759343aa17d6a213ef2be7c75 -->
+<!-- cache-key: cdktf-0.20.8 input-5e94e4571a6c9ce1ca2d9c8d21b44967f5cdd6a3a476b29d6c83ddba19101bef -->

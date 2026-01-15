@@ -50,8 +50,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `encryptionConfiguration` – (Required) Configuration block containing encryption configuration. Detailed below.
-* `name` – (Required) Name of the security configuration.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `encryptionConfiguration` - (Required) Configuration block containing encryption configuration. Detailed below.
+* `name` - (Required) Name of the security configuration.
 
 ### encryption_configuration Argument Reference
 
@@ -112,4 +113,4 @@ Using `terraform import`, import Glue Security Configurations using `name`. For 
 % terraform import aws_glue_security_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-648d5a94dbcbfce0a30b8db8178f35b6d6f0e3b9f5501dfc1bc90378045104ee -->
+<!-- cache-key: cdktf-0.20.8 input-edd7d293c580f05f2cf0451f2ba30348567967168174fb2977a197faeef107fa -->

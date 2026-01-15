@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +30,10 @@ import (
 
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Subnet")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
+// @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.8.0")
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -37,11 +41,6 @@ func resourceSubnet() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetRead,
 		UpdateWithoutTimeout: resourceSubnetUpdate,
 		DeleteWithoutTimeout: resourceSubnetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -160,7 +159,7 @@ func resourceSubnet() *schema.Resource {
 	}
 }
 
-func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -228,15 +227,15 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	subnet, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (*awstypes.Subnet, error) {
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -246,51 +245,12 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	subnet := outputRaw.(*awstypes.Subnet)
-
-	d.Set(names.AttrARN, subnet.SubnetArn)
-	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
-	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
-	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set(names.AttrCIDRBlock, subnet.CidrBlock)
-	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
-	d.Set("enable_dns64", subnet.EnableDns64)
-	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
-	d.Set("ipv6_native", subnet.Ipv6Native)
-	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
-	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
-	d.Set(names.AttrOwnerID, subnet.OwnerId)
-	d.Set(names.AttrVPCID, subnet.VpcId)
-
-	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
-	d.Set("ipv6_cidr_block_association_id", nil)
-	d.Set("ipv6_cidr_block", nil)
-
-	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
-			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
-			break
-		}
-	}
-
-	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
-		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
-		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
-	} else {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
-		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
-		d.Set("private_dns_hostname_type_on_launch", nil)
-	}
-
-	setTagsOut(ctx, subnet.Tags)
+	resourceSubnetFlatten(ctx, subnet, d)
 
 	return diags
 }
 
-func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -364,7 +324,7 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceSubnetRead(ctx, d, meta)...)
 }
 
-func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -376,7 +336,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteSubnet(ctx, &ec2.DeleteSubnetInput{
 			SubnetId: aws.String(d.Id()),
 		})
@@ -684,4 +644,45 @@ func modifySubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.C
 	}
 
 	return nil
+}
+
+func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *schema.ResourceData) {
+	rd.Set(names.AttrARN, subnet.SubnetArn)
+	rd.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	rd.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
+	rd.Set("availability_zone_id", subnet.AvailabilityZoneId)
+	rd.Set(names.AttrCIDRBlock, subnet.CidrBlock)
+	rd.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	rd.Set("enable_dns64", subnet.EnableDns64)
+	rd.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
+	rd.Set("ipv6_native", subnet.Ipv6Native)
+	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
+	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
+	rd.Set("outpost_arn", subnet.OutpostArn)
+	rd.Set(names.AttrOwnerID, subnet.OwnerId)
+	rd.Set(names.AttrVPCID, subnet.VpcId)
+
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
+	rd.Set("ipv6_cidr_block_association_id", nil)
+	rd.Set("ipv6_cidr_block", nil)
+
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			rd.Set("ipv6_cidr_block_association_id", v.AssociationId)
+			rd.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
+			break
+		}
+	}
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		rd.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		rd.Set("private_dns_hostname_type_on_launch", nil)
+	}
+
+	setTagsOut(ctx, subnet.Tags)
 }

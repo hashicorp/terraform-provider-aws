@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -74,39 +74,39 @@ func dataSourceDelegatedAdministrators() *schema.Resource {
 	}
 }
 
-func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.ListDelegatedAdministratorsInput{}
+	input := organizations.ListDelegatedAdministratorsInput{}
 
 	if v, ok := d.GetOk("service_principal"); ok {
 		input.ServicePrincipal = aws.String(v.(string))
 	}
 
-	output, err := findDelegatedAdministrators(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
+	output, err := findDelegatedAdministrators(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrators: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(output)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting delegated_administrators: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]interface{} {
+func flattenDelegatedAdministrators(apiObjects []awstypes.DelegatedAdministrator) []map[string]any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []map[string]interface{}
+	var tfList []map[string]any
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
+		tfList = append(tfList, map[string]any{
 			names.AttrARN:             aws.ToString(apiObject.Arn),
 			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
 			names.AttrEmail:           aws.ToString(apiObject.Email),

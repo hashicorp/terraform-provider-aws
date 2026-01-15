@@ -59,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `networkAclId` - (Required) The ID of the network ACL.
 * `ruleNumber` - (Required) The rule number for the entry (for example, 100). ACL entries are processed in ascending order by rule number.
 * `egress` - (Optional, bool) Indicates whether this is an egress rule (rule is applied to traffic leaving the subnet). Default `false`.
@@ -151,4 +152,4 @@ Using the procotol's decimal value:
 % terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0bee1d657a21ade598a9d4b01c7ed38ce1ada8aeab9c5dd0de56c1ba6dff131d -->
+<!-- cache-key: cdktf-0.20.8 input-3195a6db4fe53cb5760c1e5e23c800fb2f2cb2534cca9f90792a9763a0b64f79 -->

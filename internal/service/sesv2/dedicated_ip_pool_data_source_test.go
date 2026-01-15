@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -33,7 +33,7 @@ func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 		},
@@ -47,8 +47,7 @@ resource "aws_sesv2_dedicated_ip_pool" "test" {
 }
 
 data "aws_sesv2_dedicated_ip_pool" "test" {
-  depends_on = [aws_sesv2_dedicated_ip_pool.test]
-  pool_name  = %[1]q
+  pool_name = aws_sesv2_dedicated_ip_pool.test.pool_name
 }
 `, poolName, poolName)
 }

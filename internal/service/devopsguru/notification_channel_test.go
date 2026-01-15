@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -43,7 +43,7 @@ func testAccNotificationChannel_basic(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
 				),
 			},
@@ -76,7 +76,7 @@ func testAccNotificationChannel_disappears(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdevopsguru.ResourceNotificationChannel, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdevopsguru.ResourceNotificationChannel, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,12 +106,12 @@ func testAccNotificationChannel_filters(t *testing.T) {
 				Config: testAccNotificationChannelConfig_filters(rName, messageType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.0", messageType),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", "3"),
 				),
 			},
 			{
@@ -133,7 +133,7 @@ func testAccCheckNotificationChannelDestroy(ctx context.Context) resource.TestCh
 			}
 
 			_, err := tfdevopsguru.FindNotificationChannelByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*retry.NotFoundError](err) {
+			if errs.IsA[*sdkretry.NotFoundError](err) {
 				return nil
 			}
 			if err != nil {

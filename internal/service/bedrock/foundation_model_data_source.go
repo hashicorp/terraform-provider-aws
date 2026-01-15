@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -17,17 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Model")
+// @FrameworkDataSource("aws_bedrock_foundation_model", name="Foundation Model")
 func newFoundationModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelDataSource{}, nil
 }
 
 type foundationModelDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *foundationModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_model"
+	framework.DataSourceWithModel[foundationModelDataSourceModel]
 }
 
 func (d *foundationModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -50,7 +46,8 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 				Computed:    true,
 			},
 			"model_arn": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
 			},
 			"model_id": schema.StringAttribute{
 				Required: true,
@@ -105,14 +102,15 @@ func (d *foundationModelDataSource) Read(ctx context.Context, request datasource
 }
 
 type foundationModelDataSourceModel struct {
-	CustomizationsSupported    fwtypes.SetValueOf[types.String] `tfsdk:"customizations_supported"`
-	ID                         types.String                     `tfsdk:"id"`
-	InferenceTypesSupported    fwtypes.SetValueOf[types.String] `tfsdk:"inference_types_supported"`
-	InputModalities            fwtypes.SetValueOf[types.String] `tfsdk:"input_modalities"`
-	ModelARN                   types.String                     `tfsdk:"model_arn"`
-	ModelID                    types.String                     `tfsdk:"model_id"`
-	ModelName                  types.String                     `tfsdk:"model_name"`
-	OutputModalities           fwtypes.SetValueOf[types.String] `tfsdk:"output_modalities"`
-	ProviderName               types.String                     `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool                       `tfsdk:"response_streaming_supported"`
+	framework.WithRegionModel
+	CustomizationsSupported    fwtypes.SetOfString `tfsdk:"customizations_supported"`
+	ID                         types.String        `tfsdk:"id"`
+	InferenceTypesSupported    fwtypes.SetOfString `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetOfString `tfsdk:"input_modalities"`
+	ModelARN                   fwtypes.ARN         `tfsdk:"model_arn"`
+	ModelID                    types.String        `tfsdk:"model_id"`
+	ModelName                  types.String        `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetOfString `tfsdk:"output_modalities"`
+	ProviderName               types.String        `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool          `tfsdk:"response_streaming_supported"`
 }

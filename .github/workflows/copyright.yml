@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Copyright Checks
 
 on:
@@ -12,7 +15,6 @@ on:
       - .teamcity/**
       - .release/**
       - infrastructure/repository/labels-service.tf
-      - .goreleaser.yml
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -21,33 +23,17 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
-  copywrite:
-    name: add headers check
-    runs-on: ubuntu-latest
+  copyplop:
+    name: headers check
+    runs-on: custom-ubuntu-22.04-medium
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
-      # See also: https://github.com/actions/setup-go/issues/54
-      - name: go env
-        run: |
-          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: go install github.com/hashicorp/copywrite@latest
-      - run: copywrite headers
+      - run: go install github.com/YakDriver/copyplop@latest
+      - run: copyplop check
       - name: Check for Git Differences
         run: |
           git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after adding copyright headers. Run 'copywrite headers' command and commit."; exit 1)
+            (echo; echo "Unexpected difference in directories after adding copyright headers. Run 'copyplop fix' command and commit."; exit 1)

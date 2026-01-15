@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -55,7 +56,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExpectedBucketOwner, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "parquet_timestamp_in_millisecond", acctest.CtTrue),
@@ -120,7 +121,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExpectedBucketOwner, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "parquet_timestamp_in_millisecond", acctest.CtTrue),
@@ -166,7 +167,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExpectedBucketOwner, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "900000"),
 					resource.TestCheckResourceAttr(resourceName, "parquet_timestamp_in_millisecond", acctest.CtTrue),
@@ -207,8 +208,8 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", ""),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "csv_delimiter", ","),
@@ -216,35 +217,31 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_null_value", ""),
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\n"),
 					resource.TestCheckResourceAttr(resourceName, "data_format", ""),
-					resource.TestCheckResourceAttr(resourceName, "data_page_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "data_page_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_delimiter", ""),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_sequence", ""),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_timezone", ""),
-					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "max_file_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "max_file_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parquet_timestamp_in_millisecond", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "parquet_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "preserve_transactions", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "row_group_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "row_group_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_kms_key_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
-			},
-			{
-				Config:   testAccS3EndpointConfig_simple(rName),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -271,36 +268,32 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", ""),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "csv_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "csv_null_value", ""),
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "data_page_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "data_page_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrSource),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
 					resource.TestCheckResourceAttr(resourceName, "external_table_definition", "{\"TableCount\":1,\"Tables\":[{\"TableColumns\":[{\"ColumnIsPk\":\"true\",\"ColumnName\":\"ID\",\"ColumnNullable\":\"false\",\"ColumnType\":\"INT8\"},{\"ColumnLength\":\"20\",\"ColumnName\":\"LastName\",\"ColumnType\":\"STRING\"}],\"TableColumnsTotal\":\"2\",\"TableName\":\"employee\",\"TableOwner\":\"hr\",\"TablePath\":\"hr/employee/\"}]}"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "max_file_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "max_file_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "row_group_length", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "row_group_length", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", acctest.CtFalse),
 				),
-			},
-			{
-				Config:   testAccS3EndpointConfig_sourceSimple(rName),
-				PlanOnly: true,
 			},
 			{
 				ResourceName:            resourceName,
@@ -334,7 +327,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\r\\n"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrSource),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 
@@ -370,7 +363,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\n"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrSource),
-					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 
@@ -381,7 +374,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", "101"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", "17"),
 					resource.TestCheckResourceAttr(resourceName, "compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "csv_null_value", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "csv_null_value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_page_size", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", "830000"),
@@ -446,6 +439,14 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 	})
 }
 
+func testAccCheckS3EndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return testAccCheckEndpointDestroy(ctx)
+}
+
+func testAccCheckS3EndpointExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return testAccCheckEndpointExists(ctx, n)
+}
+
 func testAccS3EndpointConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -499,7 +500,8 @@ func testAccS3EndpointConfig_basic(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -578,7 +580,8 @@ func testAccS3EndpointConfig_update(rName string) string {
 		testAccS3EndpointConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test2" {
-  description = %[1]q
+  description         = %[1]q
+  enable_key_rotation = true
 
   policy = jsonencode({
     Version = "2012-10-17"

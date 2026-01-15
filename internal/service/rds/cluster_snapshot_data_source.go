@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -113,7 +113,7 @@ func dataSourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
@@ -137,7 +137,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	f := tfslices.PredicateTrue[*types.DBClusterSnapshot]()
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		f = func(v *types.DBClusterSnapshot) bool {
-			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+			return keyValueTags(ctx, v.TagList).ContainsAll(keyValueTags(ctx, tags))
 		}
 	}
 
@@ -151,16 +151,16 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *types.DBClusterSnapshot
-	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
-			snapshot = mostRecentClusterSnapshot(snapshots)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
-		}
-	} else {
-		snapshot = &snapshots[0]
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 	}
+
+	snapshot := slices.MaxFunc(snapshots, func(a, b types.DBClusterSnapshot) int {
+		if a.SnapshotCreateTime == nil || b.SnapshotCreateTime == nil {
+			return 0
+		}
+		return a.SnapshotCreateTime.Compare(aws.ToTime(b.SnapshotCreateTime))
+	})
 
 	d.SetId(aws.ToString(snapshot.DBClusterSnapshotIdentifier))
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
@@ -185,26 +185,4 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
-}
-
-type rdsClusterSnapshotSort []types.DBClusterSnapshot
-
-func (a rdsClusterSnapshotSort) Len() int      { return len(a) }
-func (a rdsClusterSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a rdsClusterSnapshotSort) Less(i, j int) bool {
-	// Snapshot creation can be in progress
-	if a[i].SnapshotCreateTime == nil {
-		return true
-	}
-	if a[j].SnapshotCreateTime == nil {
-		return false
-	}
-
-	return (aws.ToTime(a[i].SnapshotCreateTime)).Before(aws.ToTime(a[j].SnapshotCreateTime))
-}
-
-func mostRecentClusterSnapshot(snapshots []types.DBClusterSnapshot) *types.DBClusterSnapshot {
-	sortedSnapshots := snapshots
-	sort.Sort(rdsClusterSnapshotSort(sortedSnapshots))
-	return &sortedSnapshots[len(sortedSnapshots)-1]
 }

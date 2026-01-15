@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,12 +36,12 @@ func testAccAccessGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
-					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", acctest.Ct0),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "0"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
 					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func testAccAccessGrant_disappears(t *testing.T) {
 				Config: testAccAccessGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessGrant, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3control.ResourceAccessGrant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -91,7 +91,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -104,7 +104,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -113,7 +113,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -136,7 +136,7 @@ func testAccAccessGrant_locationConfiguration(t *testing.T) {
 				Config: testAccAccessGrantConfig_locationConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.0.s3_sub_prefix", "prefix1/prefix2/data.txt"),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix_type", "Object"),
 				),
@@ -162,7 +162,7 @@ func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grant_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -36,13 +36,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-There are no arguments available for this data source.
+This data source supports the following arguments:
 
-## Attributes Reference
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `names` - A list if AWS Elastic Container Registries for the region.
 
-<!-- cache-key: cdktf-0.20.1 input-7e428cb2cac4231451f996e2bdd793475d82b45ae5da0ffb3316ff18dd2de336 -->
+<!-- cache-key: cdktf-0.20.8 input-79fa27f06424cb47273da9dfe85aa1778c00470be1812779baa20a966de4658e -->

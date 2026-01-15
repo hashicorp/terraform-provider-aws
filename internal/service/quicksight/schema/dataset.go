@@ -1,18 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
 
 import (
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func dataSetIdentifierDeclarationsSchema() *schema.Schema {
+var dataSetIdentifierDeclarationsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -20,25 +20,21 @@ func dataSetIdentifierDeclarationsSchema() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn":       stringSchema(false, verify.ValidARN),
-				names.AttrIdentifier: stringSchema(false, validation.StringLenBetween(1, 2048)),
+				"data_set_arn":       arnStringSchema(attrOptional),
+				names.AttrIdentifier: stringLenBetweenSchema(attrOptional, 1, 2048),
 			},
 		},
 	}
-}
+})
 
-func dataSetReferencesSchema() *schema.Schema {
+var dataSetReferencesSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 		Type:     schema.TypeList,
 		Required: true,
 		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+				"data_set_arn": arnStringSchema(attrRequired),
 				"data_set_placeholder": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -46,9 +42,9 @@ func dataSetReferencesSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclarations(tfList []any) []awstypes.DataSetIdentifierDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -56,7 +52,7 @@ func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSe
 	var apiObjects []awstypes.DataSetIdentifierDeclaration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -72,7 +68,7 @@ func expandDataSetIdentifierDeclarations(tfList []interface{}) []awstypes.DataSe
 	return apiObjects
 }
 
-func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *awstypes.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclaration(tfMap map[string]any) *awstypes.DataSetIdentifierDeclaration {
 	if tfMap == nil {
 		return nil
 	}
@@ -89,15 +85,15 @@ func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *awstypes.
 	return apiObject
 }
 
-func flattenDataSetIdentifierDeclarations(apiObject []awstypes.DataSetIdentifierDeclaration) []interface{} {
+func flattenDataSetIdentifierDeclarations(apiObject []awstypes.DataSetIdentifierDeclaration) []any {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObject {
-		tfMap := map[string]interface{}{}
+		tfMap := map[string]any{}
 
 		if apiObject.DataSetArn != nil {
 			tfMap["data_set_arn"] = aws.ToString(apiObject.DataSetArn)

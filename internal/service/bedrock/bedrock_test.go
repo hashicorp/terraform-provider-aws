@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -15,18 +15,22 @@ func TestAccBedrock_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		// Model customization has a non-adjustable maximum concurrency of 2
 		"CustomModel": {
-			acctest.CtBasic:                         testAccBedrockCustomModel_basic,
-			acctest.CtDisappears:                    testAccBedrockCustomModel_disappears,
-			"tags":                                  testAccBedrockCustomModel_tags,
-			"kmsKey":                                testAccBedrockCustomModel_kmsKey,
-			"validationDataConfig":                  testAccBedrockCustomModel_validationDataConfig,
-			"validationDataConfigWaitForCompletion": testAccBedrockCustomModel_validationDataConfigWaitForCompletion,
-			"vpcConfig":                             testAccBedrockCustomModel_vpcConfig,
-			"dataSourceBasic":                       testAccBedrockCustomModelDataSource_basic,
+			acctest.CtBasic:                         testAccCustomModel_basic,
+			acctest.CtDisappears:                    testAccCustomModel_disappears,
+			"tags":                                  testAccBedrockCustomModel_tagsSerial,
+			"kmsKey":                                testAccCustomModel_kmsKey,
+			"validationDataConfig":                  testAccCustomModel_validationDataConfig,
+			"validationDataConfigWaitForCompletion": testAccCustomModel_validationDataConfigWaitForCompletion,
+			"vpcConfig":                             testAccCustomModel_vpcConfig,
+			"singularDataSourceBasic":               testAccCustomModelDataSource_basic,
+			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
+			"Identity":                              testAccBedrockCustomModel_IdentitySerial,
 		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
 			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
+			"upgradeV6.0.0":      testAccModelInvocationLoggingConfiguration_upgrade_V6_0_0,
+			"Identity":           testAccBedrockModelInvocationLoggingConfiguration_IdentitySerial,
 		},
 	}
 

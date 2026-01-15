@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -97,7 +97,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 				Config: testAccPoolProviderPrincipalTagsConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolProviderPrincipalTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidentity.ResourcePoolProviderPrincipalTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,10 +141,11 @@ func testAccCheckPoolProviderPrincipalTagsExists(ctx context.Context, n string) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		_, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+		input := cognitoidentity.GetPrincipalTagAttributeMapInput{
 			IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
 			IdentityProviderName: aws.String(rs.Primary.Attributes["identity_provider_name"]),
-		})
+		}
+		_, err := conn.GetPrincipalTagAttributeMap(ctx, &input)
 
 		return err
 	}
@@ -159,10 +160,11 @@ func testAccCheckPoolProviderPrincipalTagsDestroy(ctx context.Context) resource.
 				continue
 			}
 
-			_, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+			input := cognitoidentity.GetPrincipalTagAttributeMapInput{
 				IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
 				IdentityProviderName: aws.String(rs.Primary.Attributes["identity_provider_name"]),
-			})
+			}
+			_, err := conn.GetPrincipalTagAttributeMap(ctx, &input)
 
 			if err != nil {
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {

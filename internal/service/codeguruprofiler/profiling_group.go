@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeguruprofiler
@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -19,21 +18,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Profiling Group")
+// @FrameworkResource("aws_codeguruprofiler_profiling_group", name="Profiling Group")
 // @Tags(identifierAttribute="arn")
-func newResourceProfilingGroup(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceProfilingGroup{}
+func newProfilingGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &profilingGroupResource{}
 
 	return r, nil
 }
@@ -42,15 +41,12 @@ const (
 	ResNameProfilingGroup = "Profiling Group"
 )
 
-type resourceProfilingGroup struct {
-	framework.ResourceWithConfigure
+type profilingGroupResource struct {
+	framework.ResourceWithModel[profilingGroupResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceProfilingGroup) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_codeguruprofiler_profiling_group"
-}
-
-func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *profilingGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	computePlatform := fwtypes.StringEnumType[awstypes.ComputePlatform]()
 
 	resp.Schema = schema.Schema{
@@ -94,10 +90,10 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceProfilingGroup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *profilingGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CodeGuruProfilerClient(ctx)
 
-	var plan resourceProfilingGroupData
+	var plan profilingGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -139,17 +135,17 @@ func (r *resourceProfilingGroup) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *profilingGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CodeGuruProfilerClient(ctx)
 
-	var state resourceProfilingGroupData
+	var state profilingGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findProfilingGroupByName(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -172,10 +168,10 @@ func (r *resourceProfilingGroup) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceProfilingGroup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *profilingGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CodeGuruProfilerClient(ctx)
 
-	var plan, state resourceProfilingGroupData
+	var plan, state profilingGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -213,10 +209,10 @@ func (r *resourceProfilingGroup) Update(ctx context.Context, req resource.Update
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *profilingGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CodeGuruProfilerClient(ctx)
 
-	var state resourceProfilingGroupData
+	var state profilingGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -241,14 +237,6 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceProfilingGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func (r *resourceProfilingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client, name string) (*awstypes.ProfilingGroupDescription, error) {
 	in := &codeguruprofiler.DescribeProfilingGroupInput{
 		ProfilingGroupName: aws.String(name),
@@ -257,8 +245,7 @@ func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client
 	out, err := conn.DescribeProfilingGroup(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -267,13 +254,14 @@ func findProfilingGroupByName(ctx context.Context, conn *codeguruprofiler.Client
 	}
 
 	if out == nil || out.ProfilingGroup == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfilingGroup, nil
 }
 
-type resourceProfilingGroupData struct {
+type profilingGroupResourceModel struct {
+	framework.WithRegionModel
 	ARN                      types.String                                              `tfsdk:"arn"`
 	AgentOrchestrationConfig fwtypes.ListNestedObjectValueOf[agentOrchestrationConfig] `tfsdk:"agent_orchestration_config"`
 	ComputePlatform          fwtypes.StringEnum[awstypes.ComputePlatform]              `tfsdk:"compute_platform"`

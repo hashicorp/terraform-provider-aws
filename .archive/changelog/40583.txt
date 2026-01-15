@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_vpc_endpoint: Add `service_region` argument
+```
+
+```release-note:enhancement
+data-source/aws_vpc_endpoint: Add `service_region` attribute
+```

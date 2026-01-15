@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
@@ -10,424 +10,421 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenAddress(apiObject *types.Address) map[string]interface{} {
+func flattenAddress(apiObject *types.Address) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Country; v != nil {
-		m["country"] = aws.ToString(v)
+		tfMap["country"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Formatted; v != nil {
-		m["formatted"] = aws.ToString(v)
+		tfMap["formatted"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Locality; v != nil {
-		m["locality"] = aws.ToString(v)
+		tfMap["locality"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PostalCode; v != nil {
-		m["postal_code"] = aws.ToString(v)
+		tfMap["postal_code"] = aws.ToString(v)
 	}
 
-	m["primary"] = apiObject.Primary
+	tfMap["primary"] = apiObject.Primary
 
 	if v := apiObject.Region; v != nil {
-		m[names.AttrRegion] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreetAddress; v != nil {
-		m["street_address"] = aws.ToString(v)
+		tfMap["street_address"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandAddress(tfMap map[string]interface{}) *types.Address {
+func expandAddress(tfMap map[string]any) *types.Address {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.Address{}
+	apiObject := &types.Address{}
 
 	if v, ok := tfMap["country"].(string); ok && v != "" {
-		a.Country = aws.String(v)
+		apiObject.Country = aws.String(v)
 	}
 
 	if v, ok := tfMap["formatted"].(string); ok && v != "" {
-		a.Formatted = aws.String(v)
+		apiObject.Formatted = aws.String(v)
 	}
 
 	if v, ok := tfMap["locality"].(string); ok && v != "" {
-		a.Locality = aws.String(v)
+		apiObject.Locality = aws.String(v)
 	}
 
 	if v, ok := tfMap["postal_code"].(string); ok && v != "" {
-		a.PostalCode = aws.String(v)
+		apiObject.PostalCode = aws.String(v)
 	}
 
-	a.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap["primary"].(bool)
 
 	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
-		a.Region = aws.String(v)
+		apiObject.Region = aws.String(v)
 	}
 
 	if v, ok := tfMap["street_address"].(string); ok && v != "" {
-		a.StreetAddress = aws.String(v)
+		apiObject.StreetAddress = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		a.Type = aws.String(v)
+		apiObject.Type = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenAddresses(apiObjects []types.Address) []interface{} {
+func flattenAddresses(apiObjects []types.Address) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenAddress(&apiObject))
+		tfList = append(tfList, flattenAddress(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func expandAddresses(tfList []interface{}) []types.Address {
-	s := make([]types.Address, 0, len(tfList))
+func expandAddresses(tfList []any) []types.Address {
+	apiObjects := make([]types.Address, 0, len(tfList))
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		a := expandAddress(m)
+		apiObject := expandAddress(tfMap)
 
-		if a == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		s = append(s, *a)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
-func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIdentifier {
+func expandAlternateIdentifier(tfMap map[string]any) types.AlternateIdentifier {
 	if tfMap == nil {
 		return nil
 	}
 
-	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]any)) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
-			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
+			Value: *expandExternalID(v.([]any)[0].(map[string]any)),
 		}
-	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]interface{})) > 0 {
+	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]any)) > 0 {
 		return &types.AlternateIdentifierMemberUniqueAttribute{
-			Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
+			Value: *expandUniqueAttribute(v.([]any)[0].(map[string]any)),
 		}
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
-func flattenEmail(apiObject *types.Email) map[string]interface{} {
+func flattenEmail(apiObject *types.Email) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	m["primary"] = apiObject.Primary
+	tfMap["primary"] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandEmail(tfMap map[string]interface{}) *types.Email {
+func expandEmail(tfMap map[string]any) *types.Email {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.Email{}
+	apiObject := &types.Email{}
 
-	a.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap["primary"].(bool)
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		a.Type = aws.String(v)
+		apiObject.Type = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-		a.Value = aws.String(v)
+		apiObject.Value = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenEmails(apiObjects []types.Email) []interface{} {
+func flattenEmails(apiObjects []types.Email) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenEmail(&apiObject))
+		tfList = append(tfList, flattenEmail(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func expandEmails(tfList []interface{}) []types.Email {
-	s := make([]types.Email, 0, len(tfList))
+func expandEmails(tfList []any) []types.Email {
+	apiObjects := make([]types.Email, 0, len(tfList))
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		a := expandEmail(m)
+		apiObject := expandEmail(tfMap)
 
-		if a == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		s = append(s, *a)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
-func expandExternalId(tfMap map[string]interface{}) *types.ExternalId {
+func expandExternalID(tfMap map[string]any) *types.ExternalId {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.ExternalId{}
+	apiObject := &types.ExternalId{}
 
 	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
-		a.Id = aws.String(v)
+		apiObject.Id = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
-		a.Issuer = aws.String(v)
+		apiObject.Issuer = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
+func flattenExternalID(apiObject *types.ExternalId) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.Id; v != nil {
-		m[names.AttrID] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Issuer; v != nil {
-		m[names.AttrIssuer] = aws.ToString(v)
+		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
+func flattenExternalIDs(apiObjects []types.ExternalId) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenExternalId(&apiObject))
+		tfList = append(tfList, flattenExternalID(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func flattenName(apiObject *types.Name) map[string]interface{} {
+func flattenName(apiObject *types.Name) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.FamilyName; v != nil {
-		m["family_name"] = aws.ToString(v)
+		tfMap["family_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Formatted; v != nil {
-		m["formatted"] = aws.ToString(v)
+		tfMap["formatted"] = aws.ToString(v)
 	}
 
 	if v := apiObject.GivenName; v != nil {
-		m["given_name"] = aws.ToString(v)
+		tfMap["given_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.HonorificPrefix; v != nil {
-		m["honorific_prefix"] = aws.ToString(v)
+		tfMap["honorific_prefix"] = aws.ToString(v)
 	}
 
 	if v := apiObject.HonorificSuffix; v != nil {
-		m["honorific_suffix"] = aws.ToString(v)
+		tfMap["honorific_suffix"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MiddleName; v != nil {
-		m["middle_name"] = aws.ToString(v)
+		tfMap["middle_name"] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandName(tfMap map[string]interface{}) *types.Name {
+func expandName(tfMap map[string]any) *types.Name {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.Name{}
+	apiObject := &types.Name{}
 
 	if v, ok := tfMap["family_name"].(string); ok && v != "" {
-		a.FamilyName = aws.String(v)
+		apiObject.FamilyName = aws.String(v)
 	}
 
 	if v, ok := tfMap["formatted"].(string); ok && v != "" {
-		a.Formatted = aws.String(v)
+		apiObject.Formatted = aws.String(v)
 	}
 
 	if v, ok := tfMap["given_name"].(string); ok && v != "" {
-		a.GivenName = aws.String(v)
+		apiObject.GivenName = aws.String(v)
 	}
 
 	if v, ok := tfMap["honorific_prefix"].(string); ok && v != "" {
-		a.HonorificPrefix = aws.String(v)
+		apiObject.HonorificPrefix = aws.String(v)
 	}
 
 	if v, ok := tfMap["honorific_suffix"].(string); ok && v != "" {
-		a.HonorificSuffix = aws.String(v)
+		apiObject.HonorificSuffix = aws.String(v)
 	}
 
 	if v, ok := tfMap["middle_name"].(string); ok && v != "" {
-		a.MiddleName = aws.String(v)
+		apiObject.MiddleName = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
+func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	tfMap := map[string]any{}
 
-	m["primary"] = apiObject.Primary
+	tfMap["primary"] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
+		tfMap[names.AttrValue] = aws.ToString(v)
 	}
 
-	return m
+	return tfMap
 }
 
-func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
+func expandPhoneNumber(tfMap map[string]any) *types.PhoneNumber {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.PhoneNumber{}
+	apiObject := &types.PhoneNumber{}
 
-	a.Primary = tfMap["primary"].(bool)
+	apiObject.Primary = tfMap["primary"].(bool)
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		a.Type = aws.String(v)
+		apiObject.Type = aws.String(v)
 	}
 
 	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-		a.Value = aws.String(v)
+		apiObject.Value = aws.String(v)
 	}
 
-	return a
+	return apiObject
 }
 
-func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
+func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var l []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
-		l = append(l, flattenPhoneNumber(&apiObject))
+		tfList = append(tfList, flattenPhoneNumber(&apiObject))
 	}
 
-	return l
+	return tfList
 }
 
-func expandPhoneNumbers(tfList []interface{}) []types.PhoneNumber {
-	s := make([]types.PhoneNumber, 0, len(tfList))
+func expandPhoneNumbers(tfList []any) []types.PhoneNumber {
+	apiObjects := make([]types.PhoneNumber, 0, len(tfList))
 
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		a := expandPhoneNumber(m)
+		apiObject := expandPhoneNumber(tfMap)
 
-		if a == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		s = append(s, *a)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
-	return s
+	return apiObjects
 }
 
-func expandUniqueAttribute(tfMap map[string]interface{}) *types.UniqueAttribute {
+func expandUniqueAttribute(tfMap map[string]any) *types.UniqueAttribute {
 	if tfMap == nil {
 		return nil
 	}
 
-	a := &types.UniqueAttribute{}
+	apiObject := &types.UniqueAttribute{}
 
 	if v, ok := tfMap["attribute_path"].(string); ok && v != "" {
-		a.AttributePath = aws.String(v)
+		apiObject.AttributePath = aws.String(v)
 	}
 
 	if v, ok := tfMap["attribute_value"].(string); ok && v != "" {
-		a.AttributeValue = document.NewLazyDocument(v)
+		apiObject.AttributeValue = document.NewLazyDocument(v)
 	}
 
-	return a
+	return apiObject
 }

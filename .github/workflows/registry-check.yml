@@ -1,0 +1,376 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+name: Registry Initialization Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      timeout:
+        description: The number of minutes to wait for Registry ingest
+        required: true
+        default: 120
+      version:
+        description: |
+          The version of the provider to test initialization for (without the preceding 'v'). If unset, will use the version pulled from the latest GitHub release
+        required: false
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  registry-check:
+    name: Check Terraform Registry for Latest Version
+    runs-on: ubuntu-latest
+    outputs:
+      elapsed-time: ${{ steps.registry-ingest.outputs.elapsed-time }}
+      ts: ${{ steps.message.outputs.ts }}
+      version: ${{ steps.registry-ingest.outputs.version }}
+    steps:
+      - name: Get Latest GitHub Release
+        if: inputs.version == ''
+        id: github-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "tag=$(gh release list --repo ${{ github.repository }} --json name,isLatest --jq '.[] | select(.isLatest).name')" >> "$GITHUB_OUTPUT"
+
+      - name: Set Up Initial Slack Message Blocks
+        id: parent
+        env:
+          VERSION: ${{ steps.github-release.outputs.tag || format('v{0}', inputs.version) }}
+        run: |
+          BASE_MESSAGE_BLOCKS=$(jq -nc --arg version $VERSION '[
+            {
+              "type": "header",
+              "text": {
+                "type": "plain_text",
+                "text": ("Initialization Check for aws Version " + $version)
+              }
+            },
+            {
+              "type": "divider"
+            },
+            {
+              "type": "rich_text",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "text",
+                      "text": "\n\nView the "
+                    },
+                    {
+                      "type": "link",
+                      "text": "Run Logs",
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    },
+                    {
+                      "type": "text",
+                      "text": " for additional information.\n\n"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]')
+
+          INITIAL_MESSAGE_ADDITION=$(jq -nc --arg version $VERSION '[
+            {
+              "type": "rich_text",
+              "elements": [
+                {
+                  "type": "rich_text_section",
+                  "elements": [
+                    {
+                      "type": "emoji",
+                      "name": "waiting-spin"
+                    },
+                    {
+                      "type": "text",
+                      "text": (" Waiting on Terraform Registry to ingest version " + $version + "...")
+                    }
+                  ]
+                }
+              ]
+            }
+          ]')
+
+          echo "base-message-blocks=$(echo $BASE_MESSAGE_BLOCKS | jq '. | @json')" >> "$GITHUB_OUTPUT"
+
+          echo "initial-message-blocks=$(echo $BASE_MESSAGE_BLOCKS | jq --argjson addition "$INITIAL_MESSAGE_ADDITION" '. += $addition | @json')" >> "$GITHUB_OUTPUT"
+
+      - name: Post Initial Slack Message
+        id: message
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL }}",
+              "text": "Testing Provider Initialization",
+              "blocks": ${{ fromJSON(steps.parent.outputs.initial-message-blocks) }}
+            }
+
+      - name: Await Ingest
+        id: registry-ingest
+        env:
+          VERSION: ${{ steps.github-release.outputs.tag || format('v{0}', inputs.version) }}
+        run: |
+          SECONDS=0
+
+          while :
+          do
+
+            REGISTRY_DATA=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions" | jq --arg version $VERSION '.data[] | select(.attributes.tag == $version)')
+
+            if ! [[ -z $REGISTRY_DATA ]]; then
+              echo "slack-payload-blocks=$(echo ${{ steps.parent.outputs.base-message-blocks }} | jq --arg version $VERSION '. += [
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "bufo-check"
+                        },
+                        {
+                          "type": "text",
+                          "text": (" Terraform Registry has ingested version " + $version + ". Initialization testing details will be threaded below.")
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              echo "Registry has ingested version $VERSION"
+              echo "elapsed-time=$SECONDS" >> "$GITHUB_OUTPUT"
+              echo "version=$(echo $REGISTRY_DATA | jq -r '.attributes.version')" >> "$GITHUB_OUTPUT"
+              break
+
+            elif [[ $(($SECONDS/60)) -ge ${{ inputs.timeout }} ]]; then
+              echo "slack-payload-blocks=$(echo ${{ steps.parent.outputs.base-message-blocks }} | jq --arg version $VERSION '. += [
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "failure"
+                        },
+                        {
+                          "type": "text",
+                          "text": (" Timed out while waiting for the Terraform Registry to ingest version " + $version)
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              echo "Timed out while waiting for the Terraform Registry to ingest version $VERSION" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+
+            else
+              echo "Terraform Registry has not yet ingested version $VERSION. Continuing to wait for ingest..."
+              sleep 300
+            fi
+          done
+
+      - name: Update Initial Slack Message
+        if: ${{ success() || failure() }}
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.update
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ steps.message.outputs.channel_id }}",
+              "ts": "${{ steps.message.outputs.ts }}",
+              "as_user": true,
+              "blocks": ${{ fromJSON(steps.registry-ingest.outputs.slack-payload-blocks) }}
+            }
+
+  init-check:
+    name: Initialize Provider
+    needs: [registry-check]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Add Status Update Message in Thread
+        id: thread-message
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ secrets.SLACK_CHANNEL }}",
+              "text": "Initialization details for ${{ matrix.os }}",
+              "thread_ts": "${{ needs.registry-check.outputs.ts }}",
+              "blocks": [
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "waiting-spin"
+                        },
+                        {
+                          "type": "text",
+                          "text": " Initialization check on ${{ matrix.os }} is running..."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
+
+      - name: Set Provider Version in Terraform Configuration
+        run: |
+          cat <<EOF > main.tf
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = "${{ needs.registry-check.outputs.version }}"
+              }
+            }
+          }
+
+          provider "aws" {
+            region = "us-east-1"
+          }
+          EOF
+
+      # Explicitly setting '+o pipefail' here, as GitHub uses 'set -eo pipefail' for the bash shell
+      # and we need to capture error messages rather than outright fail
+      # Reference:
+      # https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#defaultsrunshell
+      - name: Initialize
+        id: init
+        run: |
+          set +o pipefail
+
+          SECONDS=${{ fromJSON(needs.registry-check.outputs.elapsed-time) }}
+
+          while :
+          do
+
+            ERROR=$(terraform init -upgrade -json | jq --slurp '.[] | select(.diagnostic.severity == "error")')
+
+            if [[ -z $ERROR ]]; then
+              echo "payload=$(jq -nc '[
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "bufo-check"
+                        },
+                        {
+                          "type": "text",
+                          "text": " Initialization on ${{ matrix.os }} succeeded"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              break
+
+            elif [[ $(($SECONDS/60)) -ge ${{ inputs.timeout }} ]]; then
+              echo "payload=$(echo $ERROR | jq -c '[
+                {
+                  "type": "rich_text",
+                  "elements": [
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "emoji",
+                          "name": "failure"
+                        },
+                        {
+                          "type": "text",
+                          "text": " Initialization on ${{ matrix.os }} failed."
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_section",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": "\n\n The error produced during initialization was:"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rich_text_preformatted",
+                      "elements": [
+                        {
+                          "type": "text",
+                          "text": (.["@message"] + "\n\n" + .diagnostic.detail)
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ] | @json')" >> "$GITHUB_OUTPUT"
+
+              echo "Timeout was reached before a successful initialization." >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo "Error received during initialization:" >> "$GITHUB_STEP_SUMMARY"
+              echo >> "$GITHUB_STEP_SUMMARY"
+              echo '```console' >> "$GITHUB_STEP_SUMMARY"
+              echo $ERROR | jq --raw-output '.["@message"] + "\n\n" + .diagnostic.detail' >> "$GITHUB_STEP_SUMMARY"
+              echo '```' >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+
+            else
+              echo "Provider initialization failed, but timeout has not yet been reached. Trying again..."
+              sleep 60
+            fi
+          done
+
+      - name: Update Threaded Message with Results
+        if: ${{ success() || failure() }}
+        id: thread-message-update
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
+        with:
+          method: chat.update
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            {
+              "channel": "${{ steps.thread-message.outputs.channel_id }}",
+              "as_user": true,
+              "ts": "${{ steps.thread-message.outputs.ts }}",
+              "blocks": ${{ fromJSON(steps.init.outputs.payload) }}
+            }

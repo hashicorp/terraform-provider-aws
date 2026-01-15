@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -34,14 +34,14 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Amazon Linux 2 x86"),
 					resource.TestCheckResourceAttr(dataSourceName, "os_version", "Amazon Linux 2"),
-					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "platform", imagebuilder.PlatformLinux),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "platform", string(awstypes.PlatformLinux)),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),
 				),
 			},
@@ -121,7 +121,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 data "aws_imagebuilder_image" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
 }
 `
 }
@@ -129,7 +129,7 @@ data "aws_imagebuilder_image" "test" {
 func testAccImageDataSourceConfig_arnSelf(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -218,7 +218,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -330,7 +330,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {
@@ -346,7 +346,7 @@ EOF
 
   name           = %[1]q
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
   target_repository {
     repository_name = aws_ecr_repository.test.name

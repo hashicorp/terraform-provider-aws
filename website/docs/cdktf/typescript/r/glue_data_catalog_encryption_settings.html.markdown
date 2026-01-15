@@ -48,8 +48,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `dataCatalogEncryptionSettings` – (Required) The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
-* `catalogId` – (Optional) The ID of the Data Catalog to set the security configuration for. If none is provided, the AWS account ID is used by default.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `dataCatalogEncryptionSettings` - (Required) The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
+* `catalogId` - (Optional) The ID of the Data Catalog to set the security configuration for. If none is provided, the AWS account ID is used by default.
 
 ### data_catalog_encryption_settings
 
@@ -105,4 +106,4 @@ Using `terraform import`, import Glue Data Catalog Encryption Settings using `CA
 % terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-040418b7e00ccc1ca1827417c7cb67e4f7b98b8e95f2923b46ca62ccb70ce840 -->
+<!-- cache-key: cdktf-0.20.8 input-d01c82d2729eb33d6bd59600250ac907b1f6960a12047174ab41f31f1a42e3d9 -->

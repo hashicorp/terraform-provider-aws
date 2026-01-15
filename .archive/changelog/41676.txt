@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_ecs_task_execution: `overrides.inference_accelerator_overrides` is deprecated. AWS no longer provides the Elastic Inference service.
+```

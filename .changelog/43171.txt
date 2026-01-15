@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_alb_target_group: Add resource identity support
+```

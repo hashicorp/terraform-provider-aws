@@ -78,7 +78,7 @@ class MyConvertedCode extends TerraformStack {
       authenticationType: "AMAZON_COGNITO_USER_POOLS",
       name: "example",
       userPoolConfig: {
-        awsRegion: Token.asString(current.name),
+        awsRegion: Token.asString(current.region),
         defaultAction: "DENY",
         userPoolId: Token.asString(awsCognitoUserPoolExample.id),
       },
@@ -368,13 +368,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `authenticationType` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `name` - (Required) User-supplied name for the GraphQL API.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additionalAuthenticationProvider` - (Optional) One or more additional authentication providers for the GraphQL API. See [`additionalAuthenticationProvider` Block](#additional_authentication_provider-block) for details.
 * `apiType` - (Optional) API type. Valid values are `GRAPHQL` or `MERGED`. A `MERGED` type requires `mergedApiExecutionRoleArn` to be set.
 * `enhancedMetricsConfig` - (Optional) Enables and controls the enhanced metrics feature. See [`enhancedMetricsConfig` Block](#enhanced_metrics_config-block) for details.
@@ -480,4 +482,4 @@ Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. F
 % terraform import aws_appsync_graphql_api.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0a2d07c4ff9db43db137b148ef200a76363b1289e3df0b4fbfab4de199028271 -->
+<!-- cache-key: cdktf-0.20.8 input-943ce2dc9c76832d221ecff1595b64160486ad4ed2ea49d95e00d319e15fde15 -->

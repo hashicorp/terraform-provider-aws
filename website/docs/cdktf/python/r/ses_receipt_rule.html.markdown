@@ -50,6 +50,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
 * `after` - (Optional) The name of the rule to place this rule after
@@ -90,6 +91,7 @@ Lambda actions support the following:
 S3 actions support the following:
 
 * `bucket_name` - (Required) The name of the S3 bucket
+* `iam_role_arn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
 * `kms_key_arn` - (Optional) The ARN of the KMS key
 * `object_key_prefix` - (Optional) The key prefix of the S3 bucket
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
@@ -145,4 +147,4 @@ Using `terraform import`, import SES receipt rules using the ruleset name and ru
 % terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ab45199c3afbc7c5a3c72ec3d4ff7c87e01a23be591b82978865a7ece9fb3494 -->
+<!-- cache-key: cdktf-0.20.8 input-ede99f9d8d734260c132a384cb448da749d58142a333452537901de17c4e3ef8 -->

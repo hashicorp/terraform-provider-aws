@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,13 +38,14 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`attachment/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -60,6 +63,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
@@ -78,7 +82,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID1),
 				),
 			},
@@ -91,7 +95,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID2),
 				),
 			},
@@ -113,7 +117,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", "1"),
 				),
 			},
 			{
@@ -124,7 +128,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_resourcesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", "1"),
 				),
 			},
 		},
@@ -147,7 +151,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +176,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -185,7 +189,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -194,7 +198,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -213,7 +217,7 @@ func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfglobalaccelerator.FindCrossAccountAttachmentByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

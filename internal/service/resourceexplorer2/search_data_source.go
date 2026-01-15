@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2
@@ -22,39 +22,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Search")
-func newDataSourceSearch(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSearch{}, nil
+// @FrameworkDataSource("aws_resourceexplorer2_search", name="Search")
+func newSearchDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &searchDataSource{}, nil
 }
 
 const (
 	DSNameSearch = "Search Data Source"
 )
 
-type dataSourceSearch struct {
-	framework.DataSourceWithConfigure
+type searchDataSource struct {
+	framework.DataSourceWithModel[searchDataSourceModel]
 }
 
-func (d *dataSourceSearch) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_resourceexplorer2_search"
-}
-
-func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *searchDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			"query_string": schema.StringAttribute{
 				Required: true,
 			},
-			"resource_count": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
-				Computed:   true,
-			},
-			names.AttrResources: schema.ListAttribute{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
-				ElementType: fwtypes.NewObjectTypeOf[resourcesData](ctx),
-				Computed:    true,
-			},
+			"resource_count":    framework.DataSourceComputedListOfObjectAttribute[countData](ctx),
+			names.AttrResources: framework.DataSourceComputedListOfObjectAttribute[resourcesData](ctx),
 			"view_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -67,10 +56,10 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 	}
 }
 
-func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *searchDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ResourceExplorer2Client(ctx)
 
-	var data dataSourceSearchData
+	var data searchDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,7 +110,8 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceSearchData struct {
+type searchDataSourceModel struct {
+	framework.WithRegionModel
 	Count       fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
 	ID          types.String                                   `tfsdk:"id"`
 	QueryString types.String                                   `tfsdk:"query_string"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -12,14 +12,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-func validResourceServerScopeName(v interface{}, k string) (ws []string, errors []error) {
+func validIdentityProviderName(v any, k string) (ws []string, es []error) {
+	value := v.(string)
+	count := utf8.RuneCountInString(value)
+	if count < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 UTF-8 character", k))
+	}
+
+	if count > 32 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 32 UTF-8 characters", k))
+	}
+	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`, k))
+	}
+	return
+}
+
+func validResourceServerScopeName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 character", k))
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
 	}
 	if !regexache.MustCompile(`[\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(`%q must satisfy regular expression pattern: [\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`, k))
@@ -27,14 +43,15 @@ func validResourceServerScopeName(v interface{}, k string) (ws []string, errors 
 	return
 }
 
-func validUserGroupName(v interface{}, k string) (ws []string, es []error) {
+func validUserGroupName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
-	if len(value) < 1 {
-		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
+	count := utf8.RuneCountInString(value)
+	if count < 1 {
+		es = append(es, fmt.Errorf("%q cannot be less than 1 UTF-8 character", k))
 	}
 
-	if len(value) > 128 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 128 character", k))
+	if count > 128 {
+		es = append(es, fmt.Errorf("%q cannot be longer than 128 UTF-8 characters", k))
 	}
 
 	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
@@ -43,7 +60,7 @@ func validUserGroupName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolEmailVerificationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -60,7 +77,7 @@ func validUserPoolEmailVerificationMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolEmailVerificationSubject(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -77,7 +94,7 @@ func validUserPoolEmailVerificationSubject(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolID(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolID(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if !regexache.MustCompile(`^[\w-]+_[0-9A-Za-z]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q must be the region name followed by an underscore and then alphanumeric pattern", k))
@@ -85,7 +102,7 @@ func validUserPoolID(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func validUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolInviteTemplateEmailMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -106,7 +123,7 @@ func validUserPoolInviteTemplateEmailMessage(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolInviteTemplateSMSMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolInviteTemplateSMSMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -127,14 +144,14 @@ func validUserPoolInviteTemplateSMSMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSchemaName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 1 {
 		es = append(es, fmt.Errorf("%q cannot be less than 1 character", k))
 	}
 
 	if len(value) > 20 {
-		es = append(es, fmt.Errorf("%q cannot be longer than 20 character", k))
+		es = append(es, fmt.Errorf("%q cannot be longer than 20 characters", k))
 	}
 
 	if !regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
@@ -143,7 +160,7 @@ func validUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) 
 	return
 }
 
-func validUserPoolSMSAuthenticationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSMSAuthenticationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -160,7 +177,7 @@ func validUserPoolSMSAuthenticationMessage(v interface{}, k string) (ws []string
 	return
 }
 
-func validUserPoolSMSVerificationMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolSMSVerificationMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -177,7 +194,7 @@ func validUserPoolSMSVerificationMessage(v interface{}, k string) (ws []string, 
 	return
 }
 
-func validUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -194,7 +211,7 @@ func validUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es
 	return
 }
 
-func validUserPoolTemplateEmailMessageByLink(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailMessageByLink(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -211,7 +228,7 @@ func validUserPoolTemplateEmailMessageByLink(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolTemplateEmailSubject(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailSubject(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -228,7 +245,7 @@ func validUserPoolTemplateEmailSubject(v interface{}, k string) (ws []string, es
 	return
 }
 
-func validUserPoolTemplateEmailSubjectByLink(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateEmailSubjectByLink(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 1 {
@@ -245,7 +262,7 @@ func validUserPoolTemplateEmailSubjectByLink(v interface{}, k string) (ws []stri
 	return
 }
 
-func validUserPoolTemplateSMSMessage(v interface{}, k string) (ws []string, es []error) {
+func validUserPoolTemplateSMSMessage(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 	count := utf8.RuneCountInString(value)
 	if count < 6 {
@@ -263,7 +280,7 @@ func validUserPoolTemplateSMSMessage(v interface{}, k string) (ws []string, es [
 }
 
 var userPoolClientIdentityProviderValidator = []validator.String{
-	stringvalidator.LengthBetween(1, 32),
+	stringvalidator.UTF8LengthBetween(1, 32),
 	stringValidatorpLpMpSpNpP,
 }
 
@@ -273,7 +290,7 @@ var userPoolClientNameValidator = []validator.String{
 }
 
 var userPoolClientURLValidator = []validator.String{
-	stringvalidator.LengthBetween(1, 1024),
+	stringvalidator.UTF8LengthBetween(1, 1024),
 	stringValidatorpLpMpSpNpP,
 }
 

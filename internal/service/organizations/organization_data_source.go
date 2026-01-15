@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -37,15 +37,28 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,15 +114,28 @@ func dataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -156,7 +182,7 @@ func dataSourceOrganization() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
@@ -174,7 +200,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
 
-	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID
+	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID(ctx)
 	isDelegatedAdministrator := true
 	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
 

@@ -1,28 +1,24 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package identitystore
 
 import (
 	"context"
-	"errors"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_identitystore_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_identitystore_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -111,7 +107,7 @@ func DataSourceUser() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{names.AttrFilter, "user_id"},
+				ConflictsWith: []string{"user_id"},
 			},
 			names.AttrDisplayName: {
 				Type:     schema.TypeString,
@@ -149,26 +145,6 @@ func DataSourceUser() *schema.Resource {
 						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrFilter: {
-				Deprecated:    "Use the alternate_identifier attribute instead.",
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
-				ConflictsWith: []string{"alternate_identifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"attribute_value": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -265,7 +241,7 @@ func DataSourceUser() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", "user_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
 			names.AttrUserName: {
@@ -280,105 +256,24 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-const (
-	DSNameUser = "User Data Source"
-)
-
-func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 {
-		// Use ListUsers for backwards compat.
-		input := &identitystore.ListUsersInput{
-			Filters:         expandFilters(d.Get(names.AttrFilter).([]interface{})),
-			IdentityStoreId: aws.String(identityStoreID),
-		}
-		paginator := identitystore.NewListUsersPaginator(conn, input)
-		var results []types.User
-
-		for paginator.HasMorePages() {
-			page, err := paginator.NextPage(ctx)
-
-			if err != nil {
-				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
-			}
-
-			for _, user := range page.Users {
-				if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.ToString(user.UserId) {
-					continue
-				}
-
-				results = append(results, user)
-			}
-		}
-
-		if len(results) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria\n%v; try different search", input.Filters)
-		}
-
-		if len(results) > 1 {
-			return sdkdiag.AppendErrorf(diags, "multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
-		}
-
-		user := results[0]
-
-		d.SetId(aws.ToString(user.UserId))
-		d.Set(names.AttrDisplayName, user.DisplayName)
-		d.Set("identity_store_id", user.IdentityStoreId)
-		d.Set("locale", user.Locale)
-		d.Set("nickname", user.NickName)
-		d.Set("preferred_language", user.PreferredLanguage)
-		d.Set("profile_url", user.ProfileUrl)
-		d.Set("timezone", user.Timezone)
-		d.Set("title", user.Title)
-		d.Set("user_id", user.UserId)
-		d.Set(names.AttrUserName, user.UserName)
-		d.Set("user_type", user.UserType)
-
-		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-		}
-
-		return diags
-	}
-
 	var userID string
 
-	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
-		input := &identitystore.GetUserIdInput{
-			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
+	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]any)) > 0 {
+		input := identitystore.GetUserIdInput{
+			AlternateIdentifier: expandAlternateIdentifier(v.([]any)[0].(map[string]any)),
 			IdentityStoreId:     aws.String(identityStoreID),
 		}
 
-		output, err := conn.GetUserId(ctx, input)
+		output, err := conn.GetUserId(ctx, &input)
 
 		if err != nil {
-			var e *types.ResourceNotFoundException
-			if errors.As(err, &e) {
-				return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
-			} else {
-				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
-			}
+			return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", identityStoreID, err)
 		}
 
 		userID = aws.ToString(output.UserId)
@@ -393,22 +288,32 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		userID = v.(string)
 	}
 
-	user, err := FindUserByTwoPartKey(ctx, conn, identityStoreID, userID)
+	user, err := findUserByTwoPartKey(ctx, conn, identityStoreID, userID)
 
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return sdkdiag.AppendErrorf(diags, "no Identity Store User found matching criteria; try different search")
-		}
-
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreID, err)
+		return sdkdiag.AppendErrorf(diags, "reading IdentityStore User (%s): %s", userID, err)
 	}
 
 	d.SetId(aws.ToString(user.UserId))
-
+	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
+	}
 	d.Set(names.AttrDisplayName, user.DisplayName)
+	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting emails: %s", err)
+	}
+	if err := d.Set("external_ids", flattenExternalIDs(user.ExternalIds)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting external_ids: %s", err)
+	}
 	d.Set("identity_store_id", user.IdentityStoreId)
 	d.Set("locale", user.Locale)
+	if err := d.Set(names.AttrName, []any{flattenName(user.Name)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting name: %s", err)
+	}
 	d.Set("nickname", user.NickName)
+	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting phone_numbers: %s", err)
+	}
 	d.Set("preferred_language", user.PreferredLanguage)
 	d.Set("profile_url", user.ProfileUrl)
 	d.Set("timezone", user.Timezone)
@@ -416,26 +321,6 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_id", user.UserId)
 	d.Set(names.AttrUserName, user.UserName)
 	d.Set("user_type", user.UserType)
-
-	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrName, []interface{}{flattenName(user.Name)}); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
-
-	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
-	}
 
 	return diags
 }

@@ -154,17 +154,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `awsAccountId` - (Required) -  Id of the AWS account being used.
 * `awsAccountRegion` - (Required) -  Desired region for environment profile.
 * `domainIdentifier` - (Required) -  Domain Identifier for environment profile.
 * `name` - (Required) -  Name of the environment profile.
 * `environmentBlueprintIdentifier` - (Required) -  ID of the blueprint which the environment will be created with.
 * `projectIdentifier` - (Required) -  Project identifier for environment profile.
-
-The following arguments are optional:
-
 * `description` - (Optional) Description of environment profile.
 * `userParameters` - (Optional) -  Array of user parameters of the environment profile with the following attributes:
     * `name` - (Required) -  Name of the environment profile parameter.
@@ -211,4 +209,4 @@ Using `terraform import`, import DataZone Environment Profile using a comma-deli
 % terraform import aws_datazone_environment_profile.example environment_profile-id-12345678,domain-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b22b2c3dc82f15715181d2eb58f14799fba60665db5e68a9fc727b242fc3031f -->
+<!-- cache-key: cdktf-0.20.8 input-ff319ce2b46fccb99c06f719d5591f874bd44b72e14e06e09480ff93e2781cdf -->

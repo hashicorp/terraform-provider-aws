@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,7 +41,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingestion_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", string(awstypes.IngestionTypeFullRefresh)),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", dataSetName, "data_set_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
 				),
 			},
 			{
@@ -49,6 +49,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"ingestion_status",
 					"ingestion_type",
 				},
 			},
@@ -77,7 +78,7 @@ func TestAccQuickSightIngestion_disappears_dataSet(t *testing.T) {
 				Config: testAccIngestionConfig_basic(rId, rName, string(awstypes.IngestionTypeFullRefresh)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSet(), dataSetName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSet(), dataSetName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +118,7 @@ func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := tfquicksight.FindIngestionByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_set_id"], rs.Primary.Attributes["ingestion_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -27,12 +27,11 @@ func TestAccAppConfigEnvironmentsDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentsDataSourceConfig_basic(appName, rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "environment_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "environment_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "environment_ids.*", "aws_appconfig_environment.test_1", "environment_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "environment_ids.*", "aws_appconfig_environment.test_2", "environment_id"),
 				),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package meta
@@ -15,7 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Default Tags")
+// @FrameworkDataSource("aws_default_tags", name="Default Tags")
+// @Region(overrideEnabled=false)
 func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &defaultTagsDataSource{}
 
@@ -23,11 +24,7 @@ func newDefaultTagsDataSource(context.Context) (datasource.DataSourceWithConfigu
 }
 
 type defaultTagsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*defaultTagsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_default_tags"
+	framework.DataSourceWithModel[defaultTagsDataSourceModel]
 }
 
 func (d *defaultTagsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -49,11 +46,11 @@ func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.Meta().DefaultTagsConfig
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := defaultTagsConfig.GetTags()
 
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

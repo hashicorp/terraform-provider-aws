@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -23,21 +23,18 @@ import (
 // @FrameworkResource("aws_vpc_endpoint_service_private_dns_verification", name="VPC Endpoint Service Private DNS Verification")
 func newVPCEndpointServicePrivateDNSVerificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcEndpointServicePrivateDNSVerificationResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
 type vpcEndpointServicePrivateDNSVerificationResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[vpcEndpointServicePrivateDNSVerificationResourceModel]
 	framework.WithNoOpRead
 	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
-}
-
-func (*vpcEndpointServicePrivateDNSVerificationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_vpc_endpoint_service_private_dns_verification"
 }
 
 func (r *vpcEndpointServicePrivateDNSVerificationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -94,6 +91,7 @@ func (r *vpcEndpointServicePrivateDNSVerificationResource) Create(ctx context.Co
 }
 
 type vpcEndpointServicePrivateDNSVerificationResourceModel struct {
+	framework.WithRegionModel
 	ServiceID           types.String   `tfsdk:"service_id"`
 	Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	WaitForVerification types.Bool     `tfsdk:"wait_for_verification"`

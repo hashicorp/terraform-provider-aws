@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package awsv2
@@ -37,6 +37,22 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "BadRequestException", "not supported") {
 		return true
 	}
+	// Example (GovCloud): ForbiddenException: HTTP status code 403: Access forbidden. You do not have permission to perform this operation. Check your credentials and try your request again
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
+	// Example (GovCloud): HttpConnectionTimeoutException: Failed to connect to ...
+	if tfawserr.ErrMessageContains(err, "HttpConnectionTimeoutException", "Failed to connect to") {
+		return true
+	}
+	// Example (amp): InternalServerErrorException: Internal server error
+	if tfawserr.ErrMessageContains(err, "InternalServerErrorException", "Internal server error") {
+		return true
+	}
+	// Example (GovCloud): InvalidAction: DescribeDBProxies is not available in this region
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not available") {
+		return true
+	}
 	// Example: InvalidAction: InvalidAction: Operation (ListPlatformApplications) is not supported in this region
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
@@ -57,6 +73,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Domain-related APIs are only available in the us-east-1 Region") {
 		return true
 	}
+	// Example (codebuild): InvalidInputException: Unknown operation ListFleets
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+		return true
+	}
 	// For example from us-west-2 Route53 key signing key
 	if tfawserr.ErrMessageContains(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
 		return true
@@ -74,12 +94,36 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterException: The DATA_PROTECTION_POLICY policy type is not supported in this region
+	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "DATA_PROTECTION_POLICY policy type is not supported in this region") {
+		return true
+	}
+	// Example (GovCloud): The AppStream 2.0 user pool feature is not supported in the us-gov-west-1 AWS Region
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "feature is not supported") {
+		return true
+	}
+	// Example (GovCloud): InvalidParameterValueException: This API operation is currently unavailable
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "This API operation is currently unavailable") {
+		return true
+	}
+	// Example (GovCloud): InvalidSignatureException: Credential should be scoped to a valid region
+	if tfawserr.ErrMessageContains(err, "InvalidSignatureException", "Credential should be scoped to a valid region") {
+		return true
+	}
 	// For example from us-west-2 Route53 zone
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
+	// Example (evidently):  NoLongerSupportedException: AWS Evidently has been discontinued.
+	if tfawserr.ErrCodeEquals(err, "NoLongerSupportedException") {
+		return true
+	}
 	// Example (shield): ResourceNotFoundException: The subscription does not exist
 	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
+		return true
+	}
+	// Example (GovCloud): SignatureDoesNotMatch: Credential should be scoped to a valid region
+	if tfawserr.ErrMessageContains(err, "SignatureDoesNotMatch", "Credential should be scoped to a valid region") {
 		return true
 	}
 	// For example from us-gov-east-1 IoT domain configuration
@@ -100,6 +144,10 @@ func SkipSweepError(err error) bool {
 	}
 	//  Example (ec2): UnsupportedOperation: The functionality you requested is not available in this region
 	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "The functionality you requested is not available in this region") {
+		return true
+	}
+	//  Example (fsx): UnsupportedOperation: This operation is unsupported.
+	if tfawserr.ErrMessageContains(err, "UnsupportedOperation", "This operation is unsupported") {
 		return true
 	}
 	// For example from us-west-1 EMR studio

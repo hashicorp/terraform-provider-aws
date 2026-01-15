@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -6,6 +6,7 @@ package elasticache
 const (
 	engineMemcached = "memcached"
 	engineRedis     = "redis"
+	engineValkey    = "valkey"
 )
 
 // engine_Values returns all elements of the Engine enum
@@ -13,6 +14,7 @@ func engine_Values() []string {
 	return []string{
 		engineMemcached,
 		engineRedis,
+		engineValkey,
 	}
 }
 

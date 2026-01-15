@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -82,7 +82,7 @@ func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -266,12 +266,12 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol:  "6",
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
-						"rule_number":       acctest.Ct1,
+						"rule_number":       "1",
 					}),
 				),
 			},
@@ -282,15 +282,15 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol:  "6",
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
-						"rule_number":       acctest.Ct1,
+						"rule_number":       "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
-						names.AttrProtocol:  acctest.Ct4,
+						names.AttrProtocol:  "4",
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
 						"rule_number":       "20",
@@ -304,12 +304,12 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol:  "6",
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
-						"rule_number":       acctest.Ct1,
+						"rule_number":       "1",
 					}),
 				),
 			},
@@ -340,7 +340,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -348,7 +348,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -357,7 +357,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -425,6 +425,7 @@ func testAccKxEnvironmentConfigBase() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 `
 }

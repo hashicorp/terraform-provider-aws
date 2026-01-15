@@ -23,13 +23,13 @@ resource "aws_transfer_server" "example" {
 
 resource "aws_transfer_tag" "zone_id" {
   resource_arn = aws_transfer_server.example.arn
-  key          = "aws:transfer:route53HostedZoneId"
+  key          = "transfer:route53HostedZoneId"
   value        = "/hostedzone/MyHostedZoneId"
 }
 
 resource "aws_transfer_tag" "hostname" {
   resource_arn = aws_transfer_server.example.arn
-  key          = "aws:transfer:customHostname"
+  key          = "transfer:customHostname"
   value        = "example.com"
 }
 ```
@@ -38,6 +38,7 @@ resource "aws_transfer_tag" "hostname" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resource_arn` - (Required) Amazon Resource Name (ARN) of the Transfer Family resource to tag.
 * `key` - (Required) Tag name.
 * `value` - (Required) Tag value.

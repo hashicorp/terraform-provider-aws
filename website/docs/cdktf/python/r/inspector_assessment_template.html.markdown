@@ -44,6 +44,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the assessment template.
 * `target_arn` - (Required) The assessment target ARN to attach the template to.
 * `duration` - (Required) The duration of the inspector run.
@@ -66,6 +67,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_inspector_assessment_template.example
+  identity = {
+    "arn" = "arn:aws:inspector:us-west-2:123456789012:target/0-12345678/template/0-87654321"
+  }
+}
+
+resource "aws_inspector_assessment_template" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Inspector assessment template.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_inspector_assessment_template` using the template assessment ARN. For example:
 
@@ -90,4 +112,4 @@ Using `terraform import`, import `aws_inspector_assessment_template` using the t
 % terraform import aws_inspector_assessment_template.example arn:aws:inspector:us-west-2:123456789012:target/0-9IaAzhGR/template/0-WEcjR8CH
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-8ab910475a5ea18490628aba73cd2f6da8ce0d1a11648cd0f2169486753e2383 -->
+<!-- cache-key: cdktf-0.20.8 input-29da30b0c64b157dd91a34ad5e616c9677774cb79fcc2fb29f965f2209638ff0 -->

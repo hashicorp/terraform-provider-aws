@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -131,6 +131,68 @@ func TestEquivalentNodePropertiesJSON(t *testing.T) {
 	],
 	"numNodes": 2
 }
+`,
+			wantEquivalent: true,
+		},
+		"Single node ECS Properties with multiple containers": {
+			apiJSON: `
+{
+	"mainNode": 1,
+	"nodeRangeProperties": [
+		{
+			"ecsProperties": {
+				"taskProperties": [
+				{
+					"containers": [
+					{
+						"name": "container1",
+						"image": "my_ecr_image1"
+					},
+					{
+						"name": "container2",
+						"image": "my_ecr_image2"
+					}
+					]
+				}
+				]
+			},
+			"targetNodes": "0:",
+			"environment": [],
+			"mountPoints": []
+		}
+	],
+	"numNodes": 1
+}
+`,
+			configurationJSON: `
+{
+  "mainNode": 1,
+  "nodeRangeProperties": [
+    {
+      "ecsProperties": {
+        "taskProperties": [
+          {
+            "containers": [
+              {
+                "name": "container2",
+                "image": "my_ecr_image2"
+              },
+              {
+                "name": "container1",
+                "image": "my_ecr_image1"
+              }
+            ]
+          }
+        ]
+      },
+      "targetNodes": "0:",
+      "environment": [],
+      "mountPoints": []
+    }
+  ],
+  "numNodes": 1
+}
+
 `,
 			wantEquivalent: true,
 		},

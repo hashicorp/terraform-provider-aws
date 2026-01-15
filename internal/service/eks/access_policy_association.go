@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -97,7 +98,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 	}
 }
 
-func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -106,13 +107,13 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	policyARN := d.Get("policy_arn").(string)
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
 	input := &eks.AssociateAccessPolicyInput{
-		AccessScope:  expandAccessScope(d.Get("access_scope").([]interface{})),
+		AccessScope:  expandAccessScope(d.Get("access_scope").([]any)),
 		ClusterName:  aws.String(clusterName),
 		PolicyArn:    aws.String(policyARN),
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *types.ResourceNotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AssociateAccessPolicy(ctx, input)
 	}, "The specified principalArn could not be found")
 
@@ -125,7 +126,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	return append(diags, resourceAccessPolicyAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -136,7 +137,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 
 	output, err := findAccessPolicyAssociationByThreePartKey(ctx, conn, clusterName, principalARN, policyARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EKS Access Policy Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -156,7 +157,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
@@ -231,7 +232,7 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -251,12 +252,12 @@ func findAssociatedAccessPolicies(ctx context.Context, conn *eks.Client, input *
 	return output, nil
 }
 
-func expandAccessScope(l []interface{}) *types.AccessScope {
+func expandAccessScope(l []any) *types.AccessScope {
 	if len(l) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := l[0].(map[string]any)
 
 	accessScope := &types.AccessScope{}
 
@@ -271,15 +272,15 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 	return accessScope
 }
 
-func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
+func flattenAccessScope(apiObject *types.AccessScope) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
+	tfMap := map[string]any{
 		names.AttrType: (*string)(&apiObject.Type),
 		"namespaces":   apiObject.Namespaces,
 	}
 
-	return []interface{}{tfMap}
+	return []any{tfMap}
 }

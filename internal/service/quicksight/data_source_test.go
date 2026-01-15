@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,35 +39,35 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.amazon_elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora_postgresql.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.aws_iot_analytics.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.databricks.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.jira.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.maria_db.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.mysql.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.oracle.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.postgresql.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.presto.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.rds.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.redshift.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.amazon_elasticsearch.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.athena.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aurora_postgresql.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.aws_iot_analytics.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.databricks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.jira.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.maria_db.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.mysql.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.oracle.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.postgresql.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.presto.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.rds.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.redshift.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.service_now.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.snowflake.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.spark.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.sql_server.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.teradata.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.twitter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.service_now.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.snowflake.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.spark.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.sql_server.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.teradata.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.twitter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -96,56 +96,9 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceDataSource(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceDataSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccQuickSightDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dataSource awstypes.DataSource
-	resourceName := "aws_quicksight_data_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDataSourceConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDataSourceConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
 			},
 		},
 	})
@@ -168,7 +121,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 				Config: testAccDataSourceConfig_permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -186,7 +139,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 				Config: testAccDataSourceConfig_updatePermissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permission.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -207,7 +160,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
 				),
 			},
 		},
@@ -244,13 +197,13 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "updated-name"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -276,8 +229,60 @@ func TestAccQuickSightDataSource_secretARN(t *testing.T) {
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AURORA_POSTGRESQL"),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "credentials.0.secret_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQuickSightDataSource_s3RoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource awstypes.DataSource
+	resourceName := "aws_quicksight_data_source.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleResourceName := "aws_iam_role.test"
+	iamRoleResourceNameUpdated := "aws_iam_role.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// change the selector update the data source with the new Role
+			{
+				Config: testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceNameUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "parameters.0.s3.0.role_arn", iamRoleResourceNameUpdated, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.DataSourceTypeS3)),
 				),
 			},
 		},
@@ -316,7 +321,7 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfquicksight.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["data_source_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -411,6 +416,57 @@ EOF
 `, rName)
 }
 
+func testAccDataSourceConfig_baseNoACL(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_object" "test_data" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "%[1]s-test-data.csv"
+  content = <<-EOT
+name,sentiment
+a,happy
+b,happy
+EOT
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = %[1]q
+  content = jsonencode({
+    fileLocations = [
+      {
+        URIs = [
+          "https://${aws_s3_bucket.test.id}.s3.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}/%[1]s-test-data.csv"
+        ]
+      }
+    ]
+    globalUploadSettings = {
+      format         = "CSV"
+      delimiter      = ","
+      textqualifier  = "\""
+      containsHeader = true
+    }
+  })
+}
+`, rName)
+}
+
 func testAccDataSourceConfig_basic(rId, rName string) string {
 	return acctest.ConfigCompose(
 		testAccDataSourceConfig_base(rName),
@@ -431,58 +487,6 @@ resource "aws_quicksight_data_source" "test" {
   type = "S3"
 }
 `, rId, rName))
-}
-
-func testAccDataSourceConfig_tags1(rId, rName, key, value string) string {
-	return acctest.ConfigCompose(
-		testAccDataSourceConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  parameters {
-    s3 {
-      manifest_file_location {
-        bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_object.test.key
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-  }
-
-  type = "S3"
-}
-`, rId, rName, key, value))
-}
-
-func testAccDataSourceConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSourceConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_source" "test" {
-  data_source_id = %[1]q
-  name           = %[2]q
-
-  parameters {
-    s3 {
-      manifest_file_location {
-        bucket = aws_s3_bucket.test.bucket
-        key    = aws_s3_object.test.key
-      }
-    }
-  }
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-  type = "S3"
-}
-`, rId, rName, key1, value1, key2, value2))
 }
 
 func testAccDataSource_UserConfig(rName string) string {
@@ -855,4 +859,103 @@ resource "aws_quicksight_data_source" "test" {
   type = "AURORA_POSTGRESQL"
 }
 `, rId, rName)
+}
+
+func testAccDataSourceConfig_s3RoleARN(rId, rName, rName2, iamRoleResourceName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfig_baseNoACL(rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[2]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "test2" {
+  name = %[3]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "quicksight.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_policy" "test" {
+  name        = %[2]q
+  description = "Policy to allow QuickSight access to S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action   = ["s3:GetObject"],
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.test.arn}/${aws_s3_object.test.key}"
+      },
+      {
+        Action   = ["s3:ListBucket"],
+        Effect   = "Allow",
+        Resource = aws_s3_bucket.test.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_iam_role_policy_attachment" "test2" {
+  policy_arn = aws_iam_policy.test.arn
+  role       = aws_iam_role.test2.name
+}
+
+resource "aws_quicksight_data_source" "test" {
+  data_source_id = %[1]q
+  name           = %[2]q
+
+  parameters {
+    s3 {
+      manifest_file_location {
+        bucket = aws_s3_bucket.test.bucket
+        key    = aws_s3_object.test.key
+      }
+      role_arn = %[4]s.arn
+    }
+  }
+
+  type = "S3"
+
+  depends_on = [
+    aws_iam_role_policy_attachment.test
+  ]
+}
+`, rId, rName, rName2, iamRoleResourceName))
 }

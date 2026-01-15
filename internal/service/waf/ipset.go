@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf
@@ -7,19 +7,20 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -68,12 +69,12 @@ func resourceIPSet() *schema.Resource {
 	}
 }
 
-func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.CreateIPSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -97,13 +98,13 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	ipSet, err := findIPSetByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -113,25 +114,16 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading WAF IPSet (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "ipset/" + d.Id(),
-	}
-	d.Set(names.AttrARN, arn.String())
-
-	var descriptors []map[string]interface{}
-
+	d.Set(names.AttrARN, ipSetARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	var tfList []any
 	for _, descriptor := range ipSet.IPSetDescriptors {
-		d := map[string]interface{}{
-			names.AttrType:  string(descriptor.Type),
+		tfMap := map[string]any{
+			names.AttrType:  descriptor.Type,
 			names.AttrValue: aws.ToString(descriptor.Value),
 		}
-		descriptors = append(descriptors, d)
+		tfList = append(tfList, tfMap)
 	}
-
-	if err := d.Set("ip_set_descriptors", descriptors); err != nil {
+	if err := d.Set("ip_set_descriptors", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_set_descriptors: %s", err)
 	}
 	d.Set(names.AttrName, ipSet.Name)
@@ -139,7 +131,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -154,7 +146,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
 }
 
-func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
@@ -165,7 +157,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting WAF IPSet: %s", d.Id())
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 		input := &waf.DeleteIPSetInput{
 			ChangeToken: token,
 			IPSetId:     aws.String(d.Id()),
@@ -193,7 +185,7 @@ func findIPSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.
 	output, err := conn.GetIPSet(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -204,15 +196,15 @@ func findIPSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.
 	}
 
 	if output == nil || output.IPSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IPSet, nil
 }
 
-func updateIPSet(ctx context.Context, conn *waf.Client, id string, oldD, newD []interface{}) error {
+func updateIPSet(ctx context.Context, conn *waf.Client, id string, oldD, newD []any) error {
 	for _, ipSetUpdates := range diffIPSetDescriptors(oldD, newD) {
-		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (any, error) {
 			input := &waf.UpdateIPSetInput{
 				ChangeToken: token,
 				IPSetId:     aws.String(id),
@@ -230,7 +222,7 @@ func updateIPSet(ctx context.Context, conn *waf.Client, id string, oldD, newD []
 	return nil
 }
 
-func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
+func diffIPSetDescriptors(oldD, newD []any) [][]awstypes.IPSetUpdate {
 	// WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 	const (
 		ipSetUpdatesLimit = 1000
@@ -239,10 +231,10 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	updatesBatches := make([][]awstypes.IPSetUpdate, 0)
 
 	for _, od := range oldD {
-		descriptor := od.(map[string]interface{})
+		descriptor := od.(map[string]any)
 
 		if idx, contains := sliceContainsMap(newD, descriptor); contains {
-			newD = append(newD[:idx], newD[idx+1:]...)
+			newD = slices.Delete(newD, idx, idx+1)
 			continue
 		}
 
@@ -261,7 +253,7 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	}
 
 	for _, nd := range newD {
-		descriptor := nd.(map[string]interface{})
+		descriptor := nd.(map[string]any)
 
 		if len(updates) == ipSetUpdatesLimit {
 			updatesBatches = append(updatesBatches, updates)
@@ -278,4 +270,9 @@ func diffIPSetDescriptors(oldD, newD []interface{}) [][]awstypes.IPSetUpdate {
 	}
 	updatesBatches = append(updatesBatches, updates)
 	return updatesBatches
+}
+
+// See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awswaf.html#awswaf-resources-for-iam-policies.
+func ipSetARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.GlobalARN(ctx, "waf", "ipset/"+id)
 }

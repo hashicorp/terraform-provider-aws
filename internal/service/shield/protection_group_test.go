@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -44,8 +44,8 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aggregation", string(awstypes.ProtectionGroupAggregationMax)),
 					resource.TestCheckNoResourceAttr(resourceName, "members"),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternAll)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 				Config: testAccProtectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfshield.ResourceProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -147,8 +147,8 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternArbitrary)),
-					resource.TestCheckResourceAttr(resourceName, "members.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{
@@ -268,7 +268,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -281,7 +281,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -290,7 +290,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -388,7 +388,7 @@ resource "aws_shield_protection_group" "test" {
   protection_group_id = "%[1]s"
   aggregation         = "MAX"
   pattern             = "ARBITRARY"
-  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
+  members             = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"]
 }
 `, rName))
 }

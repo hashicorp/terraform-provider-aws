@@ -60,15 +60,16 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `themeId` - (Required, Forces new resource) Identifier of the theme.
 * `baseThemeId` - (Required) The ID of the theme that a custom theme will inherit from. All themes inherit from one of the starting themes defined by Amazon QuickSight. For a list of the starting themes, use ListThemes or choose Themes from within an analysis.
-* `name` - (Required) Display name of the theme.
 * `configuration` - (Required) The theme configuration, which contains the theme display properties. See [configuration](#configuration).
+* `name` - (Required) Display name of the theme.
+* `themeId` - (Required, Forces new resource) Identifier of the theme.
 
 The following arguments are optional:
 
-* `awsAccountId` - (Optional, Forces new resource) AWS account ID.
+* `awsAccountId` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `permissions` - (Optional) A set of resource permissions on the theme. Maximum of 64 items. See [permissions](#permissions).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `versionDescription` - (Optional) A description of the current theme version being created/updated.
 
@@ -195,4 +196,4 @@ Using `terraform import`, import a QuickSight Theme using the AWS account ID and
 % terraform import aws_quicksight_theme.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->
+<!-- cache-key: cdktf-0.20.8 input-18bce6eaa1fae56685da23fb4227c000f0962317f6538bcc00a88f93bb10ae79 -->

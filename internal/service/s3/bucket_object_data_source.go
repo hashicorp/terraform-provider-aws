@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -40,7 +40,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrBucket: {
-				Deprecated: "Use the aws_s3_object data source instead",
+				Deprecated: "bucket is deprecated. Use the aws_s3_object data source instead.",
 				Type:       schema.TypeString,
 				Required:   true,
 			},
@@ -141,7 +141,7 @@ func dataSourceBucketObject() *schema.Resource {
 	}
 }
 
-func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
@@ -174,7 +174,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.SetId(id)
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}

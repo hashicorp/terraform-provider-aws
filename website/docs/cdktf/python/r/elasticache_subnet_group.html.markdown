@@ -54,9 +54,10 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` – (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
-* `description` – (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".
-* `subnet_ids` – (Required) List of VPC Subnet IDs for the cache subnet group
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) Name for the cache subnet group. ElastiCache converts this name to lowercase.
+* `description` - (Optional) Description for the cache subnet group. Defaults to "Managed by Terraform".
+* `subnet_ids` - (Required) List of VPC Subnet IDs for the cache subnet group
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -91,4 +92,4 @@ Using `terraform import`, import ElastiCache Subnet Groups using the `name`. For
 % terraform import aws_elasticache_subnet_group.bar tf-test-cache-subnet
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ee752771376a04c8e2e6013e24fd99a2238163ed656cac17fe58b010c87938ca -->
+<!-- cache-key: cdktf-0.20.8 input-2dde36b32f3b5581110a2a19dcfe384c216ec3d3960b45825dacbf20186553f4 -->

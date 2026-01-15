@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional, Forces new resource) The name of the domain. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional, Forces new resource) The domain description.
@@ -78,4 +79,4 @@ Using `terraform import`, import SWF Domains using the `name`. For example:
 % terraform import aws_swf_domain.foo test-domain
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-54abbc51f16eec052393c1102198887c7a517cee82c16898c2f3b8d0f149a603 -->
+<!-- cache-key: cdktf-0.20.8 input-ff425c2cfd85e898d8d8e94c44eb069207bd1c5acbdb45ebb6e97fd514a2ed6a -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -30,17 +30,14 @@ import (
 )
 
 // @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
-// @Testing(tagsTest=true)
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
 
 type jobDefinitionDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *jobDefinitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_batch_job_definition"
+	framework.DataSourceWithModel[jobDefinitionDataSourceModel]
 }
 
 func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -159,7 +156,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		output, err := findJobDefinitions(ctx, conn, input)
 
 		if len(output) == 0 {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {
@@ -182,7 +179,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			})
 
 			if i == -1 {
-				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError(input).Error())
+				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError().Error())
 
 				return
 			}
@@ -198,7 +195,8 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
 	data.ARNPrefix = types.StringValue(arnPrefix)
-	data.Tags = tftags.FlattenStringValueMap(ctx, jd.Tags)
+
+	setTagsOut(ctx, jd.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -213,6 +211,7 @@ func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 }
 
 type jobDefinitionDataSourceModel struct {
+	framework.WithRegionModel
 	ARNPrefix                  types.String                                         `tfsdk:"arn_prefix"`
 	ContainerOrchestrationType types.String                                         `tfsdk:"container_orchestration_type"`
 	EKSProperties              fwtypes.ListNestedObjectValueOf[eksPropertiesModel]  `tfsdk:"eks_properties"`
@@ -234,12 +233,19 @@ type eksPropertiesModel struct {
 }
 
 type eksPodPropertiesModel struct {
-	Containers         fwtypes.ListNestedObjectValueOf[eksContainerModel] `tfsdk:"containers"`
-	DNSPolicy          types.String                                       `tfsdk:"dns_policy"`
-	HostNetwork        types.Bool                                         `tfsdk:"host_network"`
-	Metadata           fwtypes.ListNestedObjectValueOf[eksMetadataModel]  `tfsdk:"metadata"`
-	ServiceAccountName types.Bool                                         `tfsdk:"service_account_name"`
-	Volumes            fwtypes.ListNestedObjectValueOf[eksVolumeModel]    `tfsdk:"volumes"`
+	Containers            fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"containers"`
+	DNSPolicy             types.String                                         `tfsdk:"dns_policy"`
+	HostNetwork           types.Bool                                           `tfsdk:"host_network"`
+	ImagePullSecrets      fwtypes.ListNestedObjectValueOf[eksImagePullSecrets] `tfsdk:"image_pull_secrets"`
+	InitContainers        fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"init_containers"`
+	Metadata              fwtypes.ListNestedObjectValueOf[eksMetadataModel]    `tfsdk:"metadata"`
+	ServiceAccountName    types.String                                         `tfsdk:"service_account_name"`
+	ShareProcessNamespace types.Bool                                           `tfsdk:"share_process_namespace"`
+	Volumes               fwtypes.ListNestedObjectValueOf[eksVolumeModel]      `tfsdk:"volumes"`
+}
+
+type eksImagePullSecrets struct {
+	Name types.String `tfsdk:"name"`
 }
 
 type eksContainerModel struct {
