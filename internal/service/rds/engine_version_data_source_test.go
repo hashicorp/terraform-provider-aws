@@ -171,13 +171,17 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
+					// resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.4\.`)),
+					// As of 2026-01-15, the latest 8.0.x was *created* after the latest 8.4.x, so `latest` unfortunately picks it
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15\.`)),
+					// resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^18\.`)),
+					// As of 2026-01-15, the latest 16.x was *created* after the latest 18.x, so `latest` unfortunately picks it
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^16\.`)),
 				),
 			},
 		},
