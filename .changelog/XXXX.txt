@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_dx_private_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_public_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_transit_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```
+
+```release-note:enhancement
+resource/aws_dx_bgp_peer: Add `bgp_asn_long` argument to support long ASNs (4-byte) with asplain and asdot formats
+```

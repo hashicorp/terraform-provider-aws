@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -49,9 +50,18 @@ func resourceBGPPeer() *schema.Resource {
 				Computed: true,
 			},
 			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ValidateFunc:  validation.IntBetween(1, 2147483647),
+				ConflictsWith: []string{"bgp_asn_long"},
+				ForceNew:      true,
+			},
+			"bgp_asn_long": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validLongASN(),
+				ConflictsWith: []string{"bgp_asn"},
+				ForceNew:      true,
 			},
 			"bgp_auth_key": {
 				Type:     schema.TypeString,
@@ -93,7 +103,17 @@ func resourceBGPPeerCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
+
+	var asn int32
+	if v, ok := d.GetOk("bgp_asn_long"); ok {
+		parsedASN, err := parseASN(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing bgp_asn_long: %s", err)
+		}
+		asn = int32(parsedASN)
+	} else {
+		asn = int32(d.Get("bgp_asn").(int))
+	}
 	input := &directconnect.CreateBGPPeerInput{
 		NewBGPPeer: &awstypes.NewBGPPeer{
 			AddressFamily: addrFamily,
@@ -133,7 +153,17 @@ func resourceBGPPeerRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
+
+	var asn int32
+	if v, ok := d.GetOk("bgp_asn_long"); ok {
+		parsedASN, err := parseASN(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing bgp_asn_long: %s", err)
+		}
+		asn = int32(parsedASN)
+	} else {
+		asn = int32(d.Get("bgp_asn").(int))
+	}
 	bgpPeer, err := findBGPPeerByThreePartKey(ctx, conn, vifID, addrFamily, asn)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -162,7 +192,17 @@ func resourceBGPPeerDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	vifID := d.Get("virtual_interface_id").(string)
 	addrFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	asn := int32(d.Get("bgp_asn").(int))
+
+	var asn int32
+	if v, ok := d.GetOk("bgp_asn_long"); ok {
+		parsedASN, err := parseASN(v.(string))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing bgp_asn_long: %s", err)
+		}
+		asn = int32(parsedASN)
+	} else {
+		asn = int32(d.Get("bgp_asn").(int))
+	}
 
 	log.Printf("[DEBUG] Deleting Direct Connect BGP peer: %s", d.Id())
 	input := directconnect.DeleteBGPPeerInput{
