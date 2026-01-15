@@ -192,7 +192,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 	optFn := func(o *ec2.Options) {}
 	if poolLocale := aws.ToString(ipamPool.Locale); poolLocale != "" && poolLocale != "None" {
-		optFn = func(o *ec2.Options) { o.Region = aws.ToString(ipamPool.IpamRegion) }
+		optFn = func(o *ec2.Options) { o.Region = poolLocale }
 	}
 
 	// Wait for allocations to be released before deprovisioning

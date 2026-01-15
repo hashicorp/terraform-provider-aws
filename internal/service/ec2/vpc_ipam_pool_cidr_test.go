@@ -131,10 +131,6 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) { // nosemgrep:ci.vpc-in-
 
 func TestAccIPAMPoolCIDR_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var cidr awstypes.IpamPoolCidr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
@@ -169,10 +165,6 @@ func TestAccIPAMPoolCIDR_VPCAllocation(t *testing.T) { // nosemgrep:ci.vpc-in-te
 
 func TestAccIPAMPoolCIDR_VPCAllocation_crossRegion(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var cidr awstypes.IpamPoolCidr
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
@@ -408,11 +400,6 @@ resource "aws_vpc" "test" {
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_vpc_ipam_pool_cidr" "vpc" {
-  ipam_pool_id = aws_vpc_ipam_pool.vpc.id
-  cidr         = aws_vpc.test.cidr_block
 }
 `, rName, poolCidr))
 }

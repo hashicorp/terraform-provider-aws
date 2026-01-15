@@ -50,10 +50,6 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-test
 }
 
 func TestAccIPAMPoolDataSource_sourceResourceVPC(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_ipam_pool.vpc"

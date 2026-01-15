@@ -643,10 +643,6 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var subnet awstypes.Subnet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
@@ -679,10 +675,6 @@ func TestAccVPCSubnet_IPAM_ipv4Allocation(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var subnet awstypes.Subnet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_subnet.test"
@@ -715,10 +707,6 @@ func TestAccVPCSubnet_IPAM_ipv6Allocation(t *testing.T) {
 
 func TestAccVPCSubnet_IPAM_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var subnet awstypes.Subnet
 	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
