@@ -116,7 +116,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 					},
 				},
@@ -144,7 +144,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -304,7 +304,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -357,7 +357,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
-							ValidateFunc: verify.ValidAccountID,
+							ValidateFunc: verify.ValidCatalogID,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
