@@ -215,11 +215,11 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errStr := err.Error()
-		if err, ok := errs.As[*json.SyntaxError](err); ok {
-			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+		if syntaxErr, ok := errs.As[*json.SyntaxError](err); ok {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
+		} else {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
 		}
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 

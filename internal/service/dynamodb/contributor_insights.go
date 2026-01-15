@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -193,9 +192,8 @@ func findContributorInsightsByTwoPartKey(ctx context.Context, conn *dynamodb.Cli
 	}
 
 	if status := output.ContributorInsightsStatus; status == awstypes.ContributorInsightsStatusDisabled {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -210,9 +208,8 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	output, err := conn.DescribeContributorInsights(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -227,8 +224,8 @@ func findContributorInsights(ctx context.Context, conn *dynamodb.Client, input *
 	return output, nil
 }
 
-func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, tableName, indexName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusContributorInsights(conn *dynamodb.Client, tableName, indexName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
 
 		if retry.NotFound(err) {
@@ -248,11 +245,11 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.Client, table
 }
 
 func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ContributorInsightsStatusEnabling),
 		Target:  enum.Slice(awstypes.ContributorInsightsStatusEnabled),
 		Timeout: timeout,
-		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+		Refresh: statusContributorInsights(conn, tableName, indexName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -269,11 +266,11 @@ func waitContributorInsightsCreated(ctx context.Context, conn *dynamodb.Client, 
 }
 
 func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*dynamodb.DescribeContributorInsightsOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ContributorInsightsStatusDisabling),
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusContributorInsights(ctx, conn, tableName, indexName),
+		Refresh: statusContributorInsights(conn, tableName, indexName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

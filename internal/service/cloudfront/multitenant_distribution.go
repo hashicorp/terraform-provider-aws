@@ -524,7 +524,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"origin_id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -695,6 +695,10 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
+	// This is needed for S3 origins using Origin Access Control (OAC)
+	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
+
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
 
@@ -818,6 +822,10 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
+		// This is needed for S3 origins using Origin Access Control (OAC)
+		fixOriginConfigs(input.DistributionConfig.Origins)
 
 		// Ensure ConnectionMode remains tenant-only
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -1088,7 +1096,7 @@ type vpcOriginConfigModel struct {
 type originGroupModel struct {
 	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
 	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
-	OriginID         types.String                                           `tfsdk:"origin_id"`
+	ID               types.String                                           `tfsdk:"id"`
 }
 
 type failoverCriteriaModel struct {
@@ -1203,4 +1211,23 @@ type activeTrustedKeyGroupsModel struct {
 type kgKeyPairIDsModel struct {
 	KeyGroupID types.String                      `tfsdk:"key_group_id"`
 	KeyPairIDs fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",xmlwrapper=Items"`
+}
+
+// fixOriginConfigs ensures that each origin has the required S3OriginConfig when no custom or VPC origin config is specified.
+// CloudFront requires S3OriginConfig to be set (even if empty) for S3 origins using Origin Access Control (OAC).
+func fixOriginConfigs(origins *awstypes.Origins) {
+	if origins == nil || origins.Items == nil {
+		return
+	}
+
+	for i := range origins.Items {
+		origin := &origins.Items[i]
+		// If custom, S3, and VPC origin configs are all missing, add an empty S3 origin config
+		// One or the other must be specified, but the S3 origin can be "empty"
+		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
+			origin.S3OriginConfig = &awstypes.S3OriginConfig{
+				OriginAccessIdentity: aws.String(""),
+			}
+		}
+	}
 }

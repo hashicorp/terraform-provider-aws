@@ -5,18 +5,18 @@ package oam
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/oam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,8 +24,8 @@ import (
 )
 
 // @SDKResource("aws_oam_sink", name="Sink")
-// @Tags(identifierAttribute="id")
-func ResourceSink() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+func resourceSink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSinkCreate,
 		ReadWithoutTimeout:   resourceSinkRead,
@@ -37,6 +37,7 @@ func ResourceSink() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
+			// These aren't used but are retained for backwards compatibility.
 			Create: schema.DefaultTimeout(1 * time.Minute),
 			Update: schema.DefaultTimeout(1 * time.Minute),
 			Delete: schema.DefaultTimeout(1 * time.Minute),
@@ -62,26 +63,20 @@ func ResourceSink() *schema.Resource {
 	}
 }
 
-const (
-	ResNameSink = "Sink"
-)
-
 func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-	in := &oam.CreateSinkInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
+	name := d.Get(names.AttrName).(string)
+	in := oam.CreateSinkInput{
+		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateSink(ctx, in)
-	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), err)
-	}
+	out, err := conn.CreateSink(ctx, &in)
 
-	if out == nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), errors.New("empty output"))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating ObservabilityAccessManager Sink (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(out.Arn))
@@ -98,18 +93,18 @@ func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ObservabilityAccessManager Sink (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameSink, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ObservabilityAccessManager Sink (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrName, out.Name)
 	d.Set("sink_id", out.Id)
 
-	return nil
+	return diags
 }
 
 func resourceSinkUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -121,44 +116,48 @@ func resourceSinkDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-	log.Printf("[INFO] Deleting ObservabilityAccessManager Sink %s", d.Id())
-
-	_, err := conn.DeleteSink(ctx, &oam.DeleteSinkInput{
+	log.Printf("[INFO] Deleting ObservabilityAccessManager Sink: %s", d.Id())
+	in := oam.DeleteSinkInput{
 		Identifier: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteSink(ctx, &in)
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameSink, d.Id(), err)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ObservabilityAccessManager Sink (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func findSinkByID(ctx context.Context, conn *oam.Client, id string) (*oam.GetSinkOutput, error) {
-	in := &oam.GetSinkInput{
+	in := oam.GetSinkInput{
 		Identifier: aws.String(id),
 	}
-	out, err := conn.GetSink(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findSink(ctx, conn, &in)
+}
+
+func findSink(ctx context.Context, conn *oam.Client, input *oam.GetSinkInput) (*oam.GetSinkOutput, error) {
+	output, err := conn.GetSink(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
+	if output == nil || output.Arn == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
 }

@@ -74,11 +74,11 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func findOrganizationalUnitsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
-	input := &organizations.ListOrganizationalUnitsForParentInput{
+	input := organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(id),
 	}
 
-	return findOrganizationalUnitsForParent(ctx, conn, input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
+	return findOrganizationalUnitsForParent(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
 }
 
 func findOrganizationalUnitForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*awstypes.OrganizationalUnit]) (*awstypes.OrganizationalUnit, error) {

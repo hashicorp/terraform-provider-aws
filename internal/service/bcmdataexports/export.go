@@ -121,6 +121,7 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 				"table_configurations": schema.MapAttribute{
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
+					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
@@ -498,7 +499,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
 }
 
 type s3OutputConfigurations struct {

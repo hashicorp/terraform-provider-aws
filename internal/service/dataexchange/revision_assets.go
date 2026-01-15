@@ -5,7 +5,7 @@ package dataexchange
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- AWS DataExchange API requires MD5 for asset upload integrity checking
 	"errors"
 	"fmt"
 	"io"
@@ -1057,6 +1057,8 @@ type nestedObjectCollectionValue[T any] interface {
 }
 
 func md5Reader(src io.Reader) (string, error) {
+	// MD5 is required by AWS DataExchange API for asset upload integrity checking.
+	// This is not used for cryptographic security purposes.
 	h := md5.New()
 	if _, err := io.Copy(h, src); err != nil {
 		return "", err

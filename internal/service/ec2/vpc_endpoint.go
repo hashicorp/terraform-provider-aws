@@ -124,6 +124,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"network_interface_ids": {

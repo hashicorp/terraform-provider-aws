@@ -11,11 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,19 +27,19 @@ func TestAccAMPScraper_basic(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "aps", "scraper/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
@@ -73,19 +71,19 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfamp.ResourceScraper, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -102,21 +100,21 @@ func TestAccAMPScraper_alias(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	aliasName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	aliasName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	aliasName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	aliasName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_alias(rName, aliasName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName),
 				),
 			},
@@ -128,7 +126,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 			{
 				Config: testAccScraperConfig_alias(rName, aliasName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, aliasName2),
 				),
 			},
@@ -149,19 +147,19 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
 				),
 			},
@@ -181,10 +179,10 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 	}
 
 	var scraper types.ScraperDescription
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_prometheus_scraper.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -192,12 +190,12 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             testAccCheckScraperDestroy(ctx),
+		CheckDestroy:             testAccCheckScraperDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScraperConfig_roleConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.source_role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "role_configuration.0.target_role_arn"),
 				),
@@ -210,7 +208,7 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 			{
 				Config: testAccScraperConfig_alias(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScraperExists(ctx, resourceName, &scraper),
+					testAccCheckScraperExists(ctx, t, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "role_configuration.#", "0"),
 				),
 			},
@@ -223,9 +221,9 @@ func TestAccAMPScraper_roleConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckScraperDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_scraper" {
@@ -249,14 +247,14 @@ func testAccCheckScraperDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDescription) resource.TestCheckFunc {
+func testAccCheckScraperExists(ctx context.Context, t *testing.T, n string, v *types.ScraperDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 		output, err := tfamp.FindScraperByID(ctx, conn, rs.Primary.ID)
 
@@ -271,7 +269,7 @@ func testAccCheckScraperExists(ctx context.Context, n string, v *types.ScraperDe
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).AMPClient(ctx)
 
 	input := amp.ListScrapersInput{}
 

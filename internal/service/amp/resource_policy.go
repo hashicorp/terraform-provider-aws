@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -249,9 +248,8 @@ func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.Descri
 	output, err := conn.DescribeResourcePolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -266,8 +264,8 @@ func findResourcePolicy(ctx context.Context, conn *amp.Client, input *amp.Descri
 	return output, nil
 }
 
-func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourcePolicy(conn *amp.Client, workspaceID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourcePolicyByWorkspaceID(ctx, conn, workspaceID)
 
 		if retry.NotFound(err) {
@@ -283,10 +281,10 @@ func statusResourcePolicy(ctx context.Context, conn *amp.Client, workspaceID str
 }
 
 func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeCreating),
 		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
-		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
+		Refresh: statusResourcePolicy(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -300,10 +298,10 @@ func waitResourcePolicyCreated(ctx context.Context, conn *amp.Client, workspaceI
 }
 
 func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspacePolicyStatusCodeActive),
-		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
+		Refresh: statusResourcePolicy(conn, workspaceID),
 		Timeout: timeout,
 	}
 
@@ -317,10 +315,10 @@ func waitResourcePolicyUpdated(ctx context.Context, conn *amp.Client, workspaceI
 }
 
 func waitResourcePolicyDeleted(ctx context.Context, conn *amp.Client, workspaceID string, timeout time.Duration) (*amp.DescribeResourcePolicyOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspacePolicyStatusCodeDeleting, awstypes.WorkspacePolicyStatusCodeActive),
 		Target:  []string{},
-		Refresh: statusResourcePolicy(ctx, conn, workspaceID),
+		Refresh: statusResourcePolicy(conn, workspaceID),
 		Timeout: timeout,
 	}
 
