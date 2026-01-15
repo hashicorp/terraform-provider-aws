@@ -70,7 +70,7 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
+func TestAccRoute53ZoneAssociation_disappears_VPC(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
@@ -95,7 +95,7 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
+func TestAccRoute53ZoneAssociation_disappears_Zone(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
