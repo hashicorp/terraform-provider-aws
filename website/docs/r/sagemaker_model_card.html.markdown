@@ -57,6 +57,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `model_card_arn` - The Amazon Resource Name (ARN) of the model card.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `delete` - (Default `15m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import model cards using the `model_card_name`. For example:
