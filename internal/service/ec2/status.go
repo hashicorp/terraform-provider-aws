@@ -1264,13 +1264,13 @@ const (
 	ipamPoolCIDRAllocationsReleased = "ipam-cidr-allocations-released"
 )
 
-func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string) sdkretry.StateRefreshFunc {
+func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, optFns ...func(*ec2.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := ec2.GetIpamPoolAllocationsInput{
 			IpamPoolId: aws.String(poolID),
 		}
 
-		allocations, err := findIPAMPoolAllocations(ctx, conn, &input)
+		allocations, err := findIPAMPoolAllocations(ctx, conn, &input, optFns...)
 
 		if retry.NotFound(err) {
 			return poolID, ipamPoolCIDRAllocationsReleased, nil

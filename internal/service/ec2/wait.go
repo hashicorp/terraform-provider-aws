@@ -1270,11 +1270,11 @@ func waitIPAMResourceCIDRManaged(ctx context.Context, conn *ec2.Client, scopeID,
 	return nil, err
 }
 
-func waitIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, timeout time.Duration) error {
+func waitIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, timeout time.Duration, optFns ...func(*ec2.Options)) error {
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{ipamPoolCIDRAllocationsExist},
 		Target:  []string{ipamPoolCIDRAllocationsReleased},
-		Refresh: statusIPAMPoolCIDRAllocationsReleased(ctx, conn, poolID, cidrBlock),
+		Refresh: statusIPAMPoolCIDRAllocationsReleased(ctx, conn, poolID, cidrBlock, optFns...),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

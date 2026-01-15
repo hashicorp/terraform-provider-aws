@@ -1681,8 +1681,8 @@ func findVPCAttributeByTwoPartKey(ctx context.Context, conn *ec2.Client, vpcID s
 	return aws.ToBool(v.Value), nil
 }
 
-func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
-	output, err := findVPCs(ctx, conn, input)
+func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) (*awstypes.Vpc, error) {
+	output, err := findVPCs(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -1691,12 +1691,12 @@ func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
+func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput, optFns ...func(*ec2.Options)) ([]awstypes.Vpc, error) {
 	var output []awstypes.Vpc
 
 	pages := ec2.NewDescribeVpcsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 			return nil, &sdkretry.NotFoundError{
@@ -1715,12 +1715,12 @@ func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInpu
 	return output, nil
 }
 
-func findVPCByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
+func findVPCByID(ctx context.Context, conn *ec2.Client, id string, optFns ...func(*ec2.Options)) (*awstypes.Vpc, error) {
 	input := ec2.DescribeVpcsInput{
 		VpcIds: []string{id},
 	}
 
-	return findVPC(ctx, conn, &input)
+	return findVPC(ctx, conn, &input, optFns...)
 }
 
 func findVPCCIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcCidrBlockAssociation, *awstypes.Vpc, error) {
@@ -4212,8 +4212,8 @@ func findIPAMPoolByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 	return output, nil
 }
 
-func findIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) (*awstypes.IpamPoolAllocation, error) {
-	output, err := findIPAMPoolAllocations(ctx, conn, input)
+func findIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput, optFns ...func(*ec2.Options)) (*awstypes.IpamPoolAllocation, error) {
+	output, err := findIPAMPoolAllocations(ctx, conn, input, optFns...)
 
 	if err != nil {
 		return nil, err
@@ -4222,12 +4222,12 @@ func findIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.Ge
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput, optFns ...func(*ec2.Options)) ([]awstypes.IpamPoolAllocation, error) {
 	var output []awstypes.IpamPoolAllocation
 
 	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolAllocationIdNotFound, errCodeInvalidIPAMPoolIdNotFound) {
 			return nil, &sdkretry.NotFoundError{
@@ -4246,13 +4246,13 @@ func findIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.G
 	return output, nil
 }
 
-func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, allocationID, poolID string) (*awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, allocationID, poolID string, optFns ...func(*ec2.Options)) (*awstypes.IpamPoolAllocation, error) {
 	input := ec2.GetIpamPoolAllocationsInput{
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
 	}
 
-	output, err := findIPAMPoolAllocation(ctx, conn, &input)
+	output, err := findIPAMPoolAllocation(ctx, conn, &input, optFns...)
 
 	if err != nil {
 		return nil, err

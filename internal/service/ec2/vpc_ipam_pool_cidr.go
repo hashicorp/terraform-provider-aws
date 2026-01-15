@@ -102,7 +102,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
-	input := &ec2.ProvisionIpamPoolCidrInput{
+	input := ec2.ProvisionIpamPoolCidrInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
@@ -118,7 +118,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.ProvisionIpamPoolCidr(ctx, input)
+	output, err := conn.ProvisionIpamPoolCidr(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
@@ -189,21 +189,14 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 
 	// VPC / Subnet allocations take upto 20m to be released after resource deletion.
 	// Set up correct region/conn for checking allocations
-	var allocationCtx context.Context
-	var allocationConn *ec2.Client
 
-	poolLocale := aws.ToString(ipamPool.Locale)
-	ipamRegion := aws.ToString(ipamPool.IpamRegion)
-	if poolLocale != "" && poolLocale != "None" {
-		allocationCtx = conns.NewResourceContext(ctx, names.EC2ServiceID, "IPAM Pool CIDR", "aws_vpc_ipam_pool_cidr", ipamRegion)
-		allocationConn = meta.(*conns.AWSClient).EC2Client(allocationCtx)
-	} else {
-		allocationCtx = ctx
-		allocationConn = conn
+	optFn := func(o *ec2.Options) {}
+	if poolLocale := aws.ToString(ipamPool.Locale); poolLocale != "" && poolLocale != "None" {
+		optFn = func(o *ec2.Options) { o.Region = aws.ToString(ipamPool.IpamRegion) }
 	}
 
 	// Wait for allocations to be released before deprovisioning
-	if err := waitIPAMPoolCIDRAllocationsReleased(allocationCtx, allocationConn, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitIPAMPoolCIDRAllocationsReleased(ctx, conn, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete), optFn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) allocations to be released: %s", poolID, err)
 	}
 
@@ -226,6 +219,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	if _, err := waitIPAMPoolCIDRDeleted(ctx, conn, d.Get("ipam_pool_cidr_id").(string), poolID, cidrBlock, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
+
 	return diags
 }
 

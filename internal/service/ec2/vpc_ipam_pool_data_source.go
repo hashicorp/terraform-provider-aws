@@ -134,7 +134,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DescribeIpamPoolsInput{}
+	input := ec2.DescribeIpamPoolsInput{}
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		input.IpamPoolIds = []string{v.(string)}
@@ -148,7 +148,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 		input.Filters = nil
 	}
 
-	pool, err := findIPAMPool(ctx, conn, input)
+	pool, err := findIPAMPool(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IPAM Pool", err))
@@ -171,12 +171,12 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
-	if pool.SourceResource != nil {
+	if v := pool.SourceResource; v != nil {
 		tfMap := map[string]any{
-			names.AttrResourceID:    aws.ToString(pool.SourceResource.ResourceId),
-			names.AttrResourceOwner: aws.ToString(pool.SourceResource.ResourceOwner),
-			"resource_region":       aws.ToString(pool.SourceResource.ResourceRegion),
-			names.AttrResourceType:  string(pool.SourceResource.ResourceType),
+			names.AttrResourceID:    aws.ToString(v.ResourceId),
+			names.AttrResourceOwner: aws.ToString(v.ResourceOwner),
+			"resource_region":       aws.ToString(v.ResourceRegion),
+			names.AttrResourceType:  v.ResourceType,
 		}
 		d.Set("source_resource", []any{tfMap})
 	} else {
