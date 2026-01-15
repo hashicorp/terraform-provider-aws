@@ -80,11 +80,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.1
-	github.com/aws/aws-sdk-go-v2/service/connect v1.154.1
+	github.com/aws/aws-sdk-go-v2/service/connect v1.155.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9
-	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.63.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.55.3
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.61.5
@@ -110,7 +110,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.38.9
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.70.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.10
-	github.com/aws/aws-sdk-go-v2/service/eks v1.76.4
+	github.com/aws/aws-sdk-go-v2/service/eks v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.51.9
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.33.19
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.19
@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/memorydb v1.33.10
 	github.com/aws/aws-sdk-go-v2/service/mgn v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/mq v1.34.15
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.17
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.39.18
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.0.5
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.43.9
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.21.16
@@ -207,11 +207,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.100.1
 	github.com/aws/aws-sdk-go-v2/service/ram v1.34.19
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.27.5
-	github.com/aws/aws-sdk-go-v2/service/rds v1.113.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.114.0
 	github.com/aws/aws-sdk-go-v2/service/rdsdata v1.32.17
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.61.5
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.33.2
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.16
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.35.9
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.11
