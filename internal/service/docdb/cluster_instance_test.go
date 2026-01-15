@@ -449,7 +449,7 @@ resource "aws_docdb_cluster_instance" "test" {
   cluster_identifier           = aws_docdb_cluster.test.id
   instance_class               = data.aws_docdb_orderable_db_instance.test.instance_class
   apply_immediately            = true
-  certificate_rotation_restart = "false"
+  certificate_rotation_restart = false
   promotion_tier               = 3
 }
 `, rName))
