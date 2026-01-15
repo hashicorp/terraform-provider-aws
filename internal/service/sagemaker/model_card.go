@@ -118,7 +118,7 @@ func (r *modelCardResource) Create(ctx context.Context, request resource.CreateR
 	output, err := conn.CreateModelCard(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker Model Card (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker AI Model Card (%s)", name), err.Error())
 		return
 	}
 
@@ -147,7 +147,7 @@ func (r *modelCardResource) Read(ctx context.Context, request resource.ReadReque
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker Model Card (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker AI Model Card (%s)", name), err.Error())
 		return
 	}
 
@@ -190,7 +190,7 @@ func (r *modelCardResource) Update(ctx context.Context, request resource.UpdateR
 		_, err := conn.UpdateModelCard(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating SageMaker Model Card (%s)", name), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating SageMaker AI Model Card (%s)", name), err.Error())
 			return
 		}
 	}
@@ -219,12 +219,12 @@ func (r *modelCardResource) Delete(ctx context.Context, request resource.DeleteR
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting SageMaker Model Card (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SageMaker AI Model Card (%s)", name), err.Error())
 		return
 	}
 
 	if _, err := waitModelCardDeleted(ctx, conn, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker Model Card (%s) delete", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker AI Model Card (%s) delete", name), err.Error())
 	}
 }
 

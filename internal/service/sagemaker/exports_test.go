@@ -22,6 +22,7 @@ var (
 	ResourceImageVersion                           = resourceImageVersion
 	ResourceMlflowTrackingServer                   = resourceMlflowTrackingServer
 	ResourceModel                                  = resourceModel
+	ResourceModelCard                              = newModelCardResource
 	ResourceModelPackageGroup                      = resourceModelPackageGroup
 	ResourceModelPackageGroupPolicy                = resourceModelPackageGroupPolicy
 	ResourceMonitoringSchedule                     = resourceMonitoringSchedule
@@ -52,6 +53,7 @@ var (
 	FindImageVersionByTwoPartKey              = findImageVersionByTwoPartKey
 	FindMlflowTrackingServerByName            = findMlflowTrackingServerByName
 	FindModelByName                           = findModelByName
+	FindModelCardByName                       = findModelCardByName
 	FindModelPackageGroupByName               = findModelPackageGroupByName
 	FindModelPackageGroupPolicyByName         = findModelPackageGroupPolicyByName
 	FindMonitoringScheduleByName              = findMonitoringScheduleByName
