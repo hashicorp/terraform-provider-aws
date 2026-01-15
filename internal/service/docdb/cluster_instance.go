@@ -75,6 +75,7 @@ func resourceClusterInstance() *schema.Resource {
 			"certificate_rotation_restart": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  true,
 			},
 			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
@@ -320,9 +321,6 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("ca_cert_identifier") {
 			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
-		}
-
-		if d.HasChange("certificate_rotation_restart") {
 			input.CertificateRotationRestart = aws.Bool(d.Get("certificate_rotation_restart").(bool))
 		}
 
