@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,7 +32,7 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 			names.AttrState: {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.SnapshotBlockPublicAccessState](),
+				ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
 			},
 		},
 	}
@@ -44,7 +44,7 @@ func resourceEBSSnapshotBlockPublicAccessPut(ctx context.Context, d *schema.Reso
 
 	state := d.Get(names.AttrState).(string)
 	input := ec2.EnableSnapshotBlockPublicAccessInput{
-		State: types.SnapshotBlockPublicAccessState(state),
+		State: awstypes.SnapshotBlockPublicAccessState(state),
 	}
 
 	_, err := conn.EnableSnapshotBlockPublicAccess(ctx, &input)

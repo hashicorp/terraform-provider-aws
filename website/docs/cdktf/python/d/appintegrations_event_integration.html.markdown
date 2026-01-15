@@ -35,6 +35,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The AppIntegrations Event Integration name.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `source` - The source of the events.
 
-<!-- cache-key: cdktf-0.20.8 input-a2b07db4d9622e0a173d852d4b149d44bf0fa8466934be1d6bb261c76d08e4c8 -->
+<!-- cache-key: cdktf-0.20.8 input-30dc85c56ab909e57febc32ba546b141d9035e20dc0ae4a077f2d6958b198e8b -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events_test
@@ -74,6 +74,29 @@ func TestAccEventsBusDataSource_deadLetterConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "dead_letter_config.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dead_letter_config.0.arn", resourceName, "dead_letter_config.0.arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsBusDataSource_logConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cloudwatch_event_bus.test"
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusDataSourceConfig_logConfig(busName, "FULL", "TRACE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "log_config.0.include_detail", resourceName, "log_config.0.include_detail"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "log_config.0.level", resourceName, "log_config.0.level"),
 				),
 			},
 		},
@@ -176,4 +199,20 @@ data "aws_cloudwatch_event_bus" "test" {
   name = aws_cloudwatch_event_bus.test.name
 }
 `, busName)
+}
+
+func testAccBusDataSourceConfig_logConfig(name, includeDetail, level string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name = %[1]q
+  log_config {
+    include_detail = %[2]q
+    level          = %[3]q
+  }
+}
+
+data "aws_cloudwatch_event_bus" "test" {
+  name = aws_cloudwatch_event_bus.test.name
+}
+`, name, includeDetail, level)
 }

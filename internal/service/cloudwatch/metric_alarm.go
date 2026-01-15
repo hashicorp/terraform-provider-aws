@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -21,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -30,6 +33,9 @@ import (
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
+// @IdentityAttribute("alarm_name")
+// @Testing(idAttrDuplicates="alarm_name")
+// @Testing(preIdentityVersion="v6.7.0")
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -40,10 +46,6 @@ func resourceMetricAlarm() *schema.Resource {
 
 		SchemaVersion: 1,
 		MigrateState:  MetricAlarmMigrateState,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"actions_enabled": {
@@ -335,7 +337,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(name)
@@ -345,22 +347,22 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 		alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Metric Alarm (%s) tags: %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
-	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 }
 
 func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -369,14 +371,14 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Metric Alarm %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
@@ -387,7 +389,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set("comparison_operator", alarm.ComparisonOperator)
 	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
 	if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting dimensions: %s", err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
 	d.Set("evaluation_periods", alarm.EvaluationPeriods)
@@ -396,7 +398,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrMetricName, alarm.MetricName)
 	if len(alarm.Metrics) > 0 {
 		if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting metric_query: %s", err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 	d.Set(names.AttrNamespace, alarm.Namespace)
@@ -425,11 +427,11 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.PutMetricAlarm(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 	}
 
-	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 }
 
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -447,7 +449,7 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Metric Alarm (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -462,14 +464,14 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	output, err := conn.DescribeAlarms(ctx, input)
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
-	return tfresource.AssertSingleValueResult(output.MetricAlarms)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))
 }
 
 func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {

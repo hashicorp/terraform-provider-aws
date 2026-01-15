@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -6,22 +6,24 @@ package appsync
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -34,6 +36,7 @@ const (
 
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
@@ -389,18 +392,18 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateGraphqlApi(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync GraphQL API (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	d.SetId(aws.ToString(output.GraphqlApi.ApiId))
 
 	if v, ok := d.GetOk(names.AttrSchema); ok {
 		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return smerr.Append(ctx, diags, err)
 		}
 	}
 
-	return append(diags, resourceGraphQLAPIRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceGraphQLAPIRead(ctx, d, meta))
 }
 
 func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -409,42 +412,42 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	api, err := findGraphQLAPIByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync GraphQL API (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppSync GraphQL API (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	if err := d.Set("additional_authentication_provider", flattenAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("api_type", api.ApiType)
 	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
 	if err := d.Set("enhanced_metrics_config", flattenEnhancedMetricsConfig(api.EnhancedMetricsConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting enhanced_metrics_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("introspection_config", api.IntrospectionConfig)
 	if err := d.Set("lambda_authorizer_config", flattenLambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("log_config", flattenLogConfig(api.LogConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting log_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("merged_api_execution_role_arn", api.MergedApiExecutionRoleArn)
 	d.Set(names.AttrName, api.Name)
 	if err := d.Set("openid_connect_config", flattenOpenIDConnectConfig(api.OpenIDConnectConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("query_depth_limit", api.QueryDepthLimit)
 	d.Set("resolver_count_limit", api.ResolverCountLimit)
 	d.Set("uris", api.Uris)
 	if err := d.Set("user_pool_config", flattenUserPoolConfig(api.UserPoolConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("visibility", api.Visibility)
 	d.Set("xray_enabled", api.XrayEnabled)
@@ -512,19 +515,19 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateGraphqlApi(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
+			return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 		}
 
 		if d.HasChange(names.AttrSchema) {
 			if v, ok := d.GetOk(names.AttrSchema); ok {
 				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
+					return smerr.Append(ctx, diags, err)
 				}
 			}
 		}
 	}
 
-	return append(diags, resourceGraphQLAPIRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceGraphQLAPIRead(ctx, d, meta))
 }
 
 func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -542,7 +545,7 @@ func resourceGraphQLAPIDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppSync GraphQL API (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -557,11 +560,11 @@ func putSchema(ctx context.Context, conn *appsync.Client, apiID, definition stri
 	_, err := conn.StartSchemaCreation(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating AppSync GraphQL API (%s) schema: %w", apiID, err)
+		return smarterr.NewError(err)
 	}
 
 	if _, err := waitSchemaCreated(ctx, conn, apiID, timeout); err != nil {
-		return fmt.Errorf("waiting for AppSync GraphQL API (%s) schema create: %w", apiID, err)
+		return smarterr.NewError(err)
 	}
 
 	return nil
@@ -575,18 +578,15 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	output, err := conn.GetGraphqlApi(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.GraphqlApi == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.GraphqlApi, nil
@@ -600,33 +600,30 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	output, err := conn.GetSchemaCreationStatus(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
 }
 
-func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) retry.StateRefreshFunc {
+func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSchemaCreationStatusByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return output, string(output.Status), nil
@@ -634,7 +631,7 @@ func statusSchemaCreation(ctx context.Context, conn *appsync.Client, id string) 
 }
 
 func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, timeout time.Duration) (*appsync.GetSchemaCreationStatusOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusProcessing),
 		Target:  enum.Slice(awstypes.SchemaStatusActive, awstypes.SchemaStatusSuccess),
 		Refresh: statusSchemaCreation(ctx, conn, id),
@@ -644,11 +641,11 @@ func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Details)))
-		return output, err
+		retry.SetLastError(err, errors.New(aws.ToString(output.Details)))
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func expandLogConfig(tfList []any) *awstypes.LogConfig {

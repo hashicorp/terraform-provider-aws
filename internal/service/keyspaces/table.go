@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package keyspaces
@@ -16,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -373,7 +373,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	table, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -669,8 +669,7 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -679,24 +678,23 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.TableStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusTable(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTable(conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -712,7 +710,7 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusCreating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -729,7 +727,7 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusActive, types.TableStatusDeleting),
 		Target:  []string{},
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -746,7 +744,7 @@ func waitTableUpdated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusUpdating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

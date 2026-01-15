@@ -68,8 +68,8 @@ This resource supports the following arguments:
 
 An `target` block supports the following arguments:
 
-* `address` - (Required) The ARN of notification rule target. For example, a SNS Topic ARN.
-* `type` - (Optional) The type of the notification target. Default value is `SNS`.
+* `address` - (Required) The ARN of the Amazon Q Developer in chat applications topic or Amazon Q Developer in chat applications client.
+* `type` - (Optional) The type of the notification target. Valid values are `SNS`, `AWSChatbotSlack`, and `AWSChatbotMicrosoftTeams`. Default value is `SNS`.
 
 ## Attribute Reference
 
@@ -80,6 +80,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codestarnotifications_notification_rule.example
+  identity = {
+    "arn" = "arn:aws:codestar-notifications:us-west-2:123456789012:notificationrule/dc82df7a-9435-44d4-a696-78f67EXAMPLE"
+  }
+}
+
+resource "aws_codestarnotifications_notification_rule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeStar notification rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar notification rule using the ARN. For example:
 

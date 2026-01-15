@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,6 +38,18 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("default"),
+				},
+			},
+		},
+		{
+			flattened: []any{
+				map[string]any{
+					"image_kubernetes_version": "1.31",
+				},
+			},
+			expected: []awstypes.Ec2Configuration{
+				{
+					ImageKubernetesVersion: aws.String("1.31"),
 				},
 			},
 		},
@@ -68,14 +80,16 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 		{
 			flattened: []any{
 				map[string]any{
-					"image_id_override": "ami-deadbeef",
-					"image_type":        "ECS_AL1",
+					"image_id_override":        "ami-deadbeef",
+					"image_kubernetes_version": "1.31",
+					"image_type":               "ECS_AL1",
 				},
 			},
 			expected: []awstypes.Ec2Configuration{
 				{
-					ImageIdOverride: aws.String("ami-deadbeef"),
-					ImageType:       aws.String("ECS_AL1"),
+					ImageIdOverride:        aws.String("ami-deadbeef"),
+					ImageKubernetesVersion: aws.String("1.31"),
+					ImageType:              aws.String("ECS_AL1"),
 				},
 			},
 		},
@@ -217,7 +231,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1332,6 +1346,7 @@ func TestAccBatchComputeEnvironment_ec2Configuration(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "optimal"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.1.image_id_override"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.1.image_type", "ECS_AL2_NVIDIA"),
@@ -1594,6 +1609,46 @@ func TestAccBatchComputeEnvironment_updateLaunchTemplate(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/39470.
+func TestAccBatchComputeEnvironment_updateLaunchTemplateID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ce awstypes.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, "foo"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			// Swap to version 2 of the launch template
+			{
+				Config: testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, "bar"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ce awstypes.ComputeEnvironmentDetail
@@ -1782,6 +1837,7 @@ func TestAccBatchComputeEnvironment_updateEC2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.desired_vcpus", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "compute_resources.0.ec2_configuration.0.image_id_override"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_kubernetes_version", "1.31"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.ec2_configuration.0.image_type", "ECS_AL2"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.ec2_key_pair", ec2KeyPairResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.image_id", ""),
@@ -1874,6 +1930,47 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 	})
 }
 
+func TestAccBatchComputeEnvironment_updateInstanceTypeWithAllocationStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resourceName := "aws_batch_compute_environment.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // set up a basic compute environment with the SPOT_PRICE_CAPACITY_OPTIMIZED allocation strategy
+				Config: testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, "m7i"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "m7i"),
+				),
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, "r7i"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "r7i"),
+				),
+			},
+		}})
+}
+
 func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
@@ -1885,7 +1982,7 @@ func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfbatch.FindComputeEnvironmentDetailByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2983,6 +3080,65 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, version))
 }
 
+func testAccComputeEnvironmentConfig_launchTemplateWithVersion(rName, userDataSeed string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+locals {
+  user_data = <<-EOF
+Content-Type: multipart/mixed; boundary="//"
+MIME-Version: 1.0
+
+--//
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.txt"
+
+#!/bin/bash
+echo hello
+echo %[2]q
+--//--
+EOF
+}
+
+resource "aws_launch_template" "test" {
+  name      = %[1]q
+  user_data = base64encode(local.user_data)
+}
+
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type = [
+      "c4.large",
+    ]
+
+    launch_template {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "SPOT"
+  }
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "MANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName, userDataSeed))
+}
+
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -2993,8 +3149,9 @@ resource "aws_batch_compute_environment" "test" {
     instance_type = ["optimal"]
 
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
 
     ec2_configuration {
@@ -3171,8 +3328,9 @@ resource "aws_batch_compute_environment" "test" {
     ec2_key_pair        = aws_key_pair.test.id
     instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
     ec2_configuration {
-      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-      image_type        = "ECS_AL2"
+      image_id_override        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_kubernetes_version = "1.31"
+      image_type               = "ECS_AL2"
     }
     launch_template {
       launch_template_id = aws_launch_template.test.id
@@ -3198,4 +3356,45 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName))
+}
+
+func testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, instanceType string) string {
+	return acctest.ConfigCompose(
+		testAccComputeEnvironmentConfig_base(rName),
+		testAccComputeEnvironmentConfig_baseForUpdates(rName, publicKey),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
+    bid_percentage      = 100
+    ec2_key_pair        = aws_key_pair.test.id
+    instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_type        = "ECS_AL2"
+    }
+    launch_template {
+      launch_template_id = aws_launch_template.test.id
+      version            = "$Latest"
+    }
+    instance_type = [
+      %[2]q,
+    ]
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test_2.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test_2.id
+    ]
+    type = "SPOT"
+  }
+
+  type = "MANAGED"
+}
+`, rName, instanceType))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake_test
@@ -22,8 +22,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,12 +32,15 @@ func testAccDataLake_basic(t *testing.T) {
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,6 +57,7 @@ func testAccDataLake_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -85,12 +89,15 @@ func testAccDataLake_Identity_Basic(t *testing.T) {
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -103,7 +110,7 @@ func testAccDataLake_Identity_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("securityhub", "data-lake/default")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("securitylake", "data-lake/default")),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -127,12 +134,15 @@ func testAccDataLake_Identity_RegionOverride(t *testing.T) {
 
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region(), acctest.AlternateRegion())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -144,7 +154,7 @@ func testAccDataLake_Identity_RegionOverride(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.AlternateRegion()),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("securityhub", "data-lake/default")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionExact("securitylake", "data-lake/default")),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -175,12 +185,15 @@ func testAccDataLake_disappears(t *testing.T) {
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -190,7 +203,7 @@ func testAccDataLake_disappears(t *testing.T) {
 				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecuritylake.ResourceDataLake, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,12 +216,15 @@ func testAccDataLake_tags(t *testing.T) {
 	var datalake types.DataLakeResource
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -255,57 +271,15 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataLakeConfig_lifeCycle(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
-			},
-		},
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
 	})
-}
-
-func testAccDataLake_lifeCycleUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_securitylake_data_lake.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -361,11 +335,65 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 	})
 }
 
+func testAccDataLake_metaStoreUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region())
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_metaStore(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+			{
+				Config: testAccDataLakeConfig_metaStoreUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_updated", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
 func testAccDataLake_replication(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.region_2"
+
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t, acctest.Region(), acctest.AlternateRegion())
+	})
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -373,7 +401,6 @@ func testAccDataLake_replication(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccDeleteGlueDatabase(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -393,10 +420,12 @@ func testAccDataLake_replication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.replication_configuration.0.regions.*", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
 			{
@@ -413,12 +442,17 @@ func testAccDataLake_Identity_ExistingResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_data_lake.test"
 
+	t.Cleanup(func() {
+		testAccDeleteGlueDatabases(ctx, t)
+	})
+
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityLakeServiceID),
@@ -486,7 +520,7 @@ func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -522,7 +556,7 @@ func testAccCheckDataLakeExists(ctx context.Context, n string, v *types.DataLake
 	}
 }
 
-const testAccDataLakeConfigConfig_base = testAccDataLakeConfigConfig_base_iam + `
+const testAccDataLakeConfigConfig_base_kmsKey = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
@@ -545,7 +579,7 @@ POLICY
 
 func testAccDataLakeConfigConfig_base_regionOverride() string {
 	return acctest.ConfigCompose(
-		testAccDataLakeConfigConfig_base_iam,
+		testAccDataLakeConfigConfig_base,
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   region = %[1]q
@@ -570,7 +604,7 @@ POLICY
 `, acctest.AlternateRegion()))
 }
 
-const testAccDataLakeConfigConfig_base_iam = `
+const testAccDataLakeConfigConfig_base = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -614,6 +648,33 @@ resource "aws_iam_role" "datalake_s3_replication" {
   }]
 }
 POLICY
+}
+
+# These are required in all configurations because the role stays registered with the Lake Formation Data Lake
+# after the MetaStoreManager role is updated.
+resource "aws_iam_role" "meta_store_manager_updated" {
+  name               = "AmazonSecurityLakeMetaStoreManagerV1"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowLambda",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": [
+        "lambda.amazonaws.com"
+      ]
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "datalake_updated" {
+  role       = aws_iam_role.meta_store_manager_updated.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
 }
 
 resource "aws_iam_role_policy" "datalake_s3_replication" {
@@ -746,7 +807,10 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_lifeCycle(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		testAccDataLakeConfigConfig_base_kmsKey,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -782,7 +846,10 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		testAccDataLakeConfigConfig_base_kmsKey,
+		fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -809,6 +876,38 @@ resource "aws_securitylake_data_lake" "test" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.datalake]
+}
+`, rName, acctest.Region()))
+}
+
+func testAccDataLakeConfig_metaStore(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
+
+  configuration {
+    region = %[2]q
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.datalake]
+}
+`, rName, acctest.Region()))
+}
+
+func testAccDataLakeConfig_metaStoreUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataLakeConfigConfig_base,
+		fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager_updated.arn
+
+  configuration {
+    region = %[2]q
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.datalake_updated]
 }
 `, rName, acctest.Region()))
 }
@@ -841,7 +940,7 @@ resource "aws_securitylake_data_lake" "region_2" {
     Name = %[1]q
   }
 
-  depends_on = [[aws_iam_role_policy_attachment.datalake], aws_iam_role_policy.datalake_s3_replication, aws_securitylake_data_lake.test]
+  depends_on = [aws_iam_role_policy_attachment.datalake, aws_iam_role_policy.datalake_s3_replication, aws_securitylake_data_lake.test]
 }
 `, rName, acctest.Region(), acctest.AlternateRegion()))
 }

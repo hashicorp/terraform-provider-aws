@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package conns
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/dns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,6 +43,7 @@ type AWSClient struct {
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
+	tagPolicyConfig           *tftags.TagPolicyConfig
 	terraformVersion          string // From provider configuration.
 }
 
@@ -81,6 +83,10 @@ func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 	return c.ignoreTagsConfig
 }
 
+func (c *AWSClient) TagPolicyConfig(context.Context) *tftags.TagPolicyConfig {
+	return c.tagPolicyConfig
+}
+
 func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
 }
@@ -117,40 +123,45 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 
 // GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
 func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
-	return c.GlobalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+	return c.arn(ctx, service, "", c.AccountID(ctx), resource)
 }
 
 // GlobalARNNoAccount returns a global (no Region) ARN for the specified service namespace and resource without AWS account ID.
 func (c *AWSClient) GlobalARNNoAccount(ctx context.Context, service, resource string) string {
-	return c.GlobalARNWithAccount(ctx, service, "", resource)
+	return c.arn(ctx, service, "", "", resource)
 }
 
 // GlobalARNWithAccount returns a global (no Region) ARN for the specified service namespace, resource and account ID.
 func (c *AWSClient) GlobalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   service,
-		AccountID: accountID,
-		Resource:  resource,
-	}.String()
+	return c.arn(ctx, service, "", accountID, resource)
 }
 
 // RegionalARN returns a regional ARN for the specified service namespace and resource.
 func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
-	return c.RegionalARNWithAccount(ctx, service, c.AccountID(ctx), resource)
+	return c.arn(ctx, service, c.Region(ctx), c.AccountID(ctx), resource)
 }
 
 // RegionalARNNoAccount returns a regional ARN for the specified service namespace and resource without AWS account ID.
 func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource string) string {
-	return c.RegionalARNWithAccount(ctx, service, "", resource)
+	return c.arn(ctx, service, c.Region(ctx), "", resource)
 }
 
 // RegionalARNWithAccount returns a regional ARN for the specified service namespace, resource and account ID.
 func (c *AWSClient) RegionalARNWithAccount(ctx context.Context, service, accountID, resource string) string {
+	return c.arn(ctx, service, c.Region(ctx), accountID, resource)
+}
+
+// RegionalARNWithRegion returns a regional ARN for the specified service namespace, resource and account ID.
+func (c *AWSClient) RegionalARNWithRegion(ctx context.Context, service, region, resource string) string {
+	return c.arn(ctx, service, region, c.AccountID(ctx), resource)
+}
+
+// arn returns an ARN for the specified service namespace, region, account ID and resource.
+func (c *AWSClient) arn(ctx context.Context, service, region, accountID, resource string) string {
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		Region:    c.Region(ctx),
+		Region:    region,
 		AccountID: accountID,
 		Resource:  resource,
 	}.String()
@@ -367,7 +378,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 				if client, ok := raw.(T); ok {
 					return client, nil
 				} else {
-					var zero T
+					zero := inttypes.Zero[T]()
 					return zero, fmt.Errorf("AWS SDK v2 API client (%s): %T, want %T", servicePackageName, raw, zero)
 				}
 			}
@@ -376,24 +387,21 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 
 	sp := c.ServicePackage(ctx, servicePackageName)
 	if sp == nil {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("unknown service package: %s", servicePackageName)
 	}
 
 	v, ok := sp.(interface {
 		NewClient(context.Context, map[string]any) (T, error)
 	})
 	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
+		return inttypes.Zero[T](), fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
 	config := c.apiClientConfig(ctx, servicePackageName)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	client, err := v.NewClient(ctx, config)
 	if err != nil {
-		var zero T
-		return zero, err
+		return inttypes.Zero[T](), err
 	}
 
 	// All customization for AWS SDK for Go v2 API clients must be done during construction.

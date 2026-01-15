@@ -206,6 +206,7 @@ The following arguments are optional:
 * `certificate_name` - (Optional) Name of the SSL/TLS certificate attached to the distribution.
 * `ip_address_type` - (Optional) IP address type of the distribution. Valid values: `dualstack`, `ipv4`. Default: `dualstack`.
 * `is_enabled` - (Optional) Whether the distribution is enabled. Default: `true`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags for the Lightsail Distribution. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### cache_behavior
@@ -303,4 +304,4 @@ Using `terraform import`, import Lightsail Distribution using the `name`. For ex
 % terraform import aws_lightsail_distribution.example example-distribution
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-acca8af23408492e5045fe9d4fa7112d80e90ef897fdbed86686ee5a313a1255 -->
+<!-- cache-key: cdktf-0.20.8 input-4f66610e57bf30dc1de3b25bfc9751abea83af95d5a5261359d48e47d0a99915 -->

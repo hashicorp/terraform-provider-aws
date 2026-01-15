@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 type opFunc[T any] func(context.Context) (T, error)
@@ -87,33 +86,32 @@ func (op opFunc[T]) If(predicate predicateFunc[T]) runFunc[T] {
 	return func(ctx context.Context, timeout time.Duration, opts ...backoff.Option) (T, error) {
 		// We explicitly don't set a deadline on the context here to maintain compatibility
 		// with the Plugin SDKv2 implementation. A parent context may have set a deadline.
-		var l *backoff.Loop
+		var (
+			l   *backoff.Loop
+			t   T
+			err error
+		)
 		for l = backoff.NewLoopWithOptions(timeout, opts...); l.Continue(ctx); {
-			t, err := op(ctx)
+			t, err = op(ctx)
 
-			if retry, err := predicate(t, err); !retry {
+			var retry bool
+			if retry, err = predicate(t, err); !retry {
 				return t, err
 			}
 		}
 
-		var err error
-		if l.Remaining() == 0 {
-			err = inttypes.ErrDeadlineExceeded
-		} else {
-			err = context.Cause(ctx)
-		}
-
-		if errors.Is(err, inttypes.ErrDeadlineExceeded) || errors.Is(err, context.DeadlineExceeded) {
-			err = &TimeoutError{
-				// LastError must be nil for `TimedOut` to return true.
-				// LastError:     err,
-				LastState:     "retryableerror",
-				Timeout:       timeout,
-				ExpectedState: []string{"success"},
+		if err == nil {
+			if l.Remaining() == 0 || errors.Is(err, context.Cause(ctx)) {
+				err = &TimeoutError{
+					// LastError must be nil for `TimedOut` to return true.
+					// LastError:     err,
+					LastState:     "retryableerror",
+					Timeout:       timeout,
+					ExpectedState: []string{"success"},
+				}
 			}
 		}
 
-		var zero T
-		return zero, err
+		return t, err
 	}
 }

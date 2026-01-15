@@ -56,6 +56,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `profileName` - (Required) The name of the profile to initiate the signing operation.
 * `source` - (Required) The S3 bucket that contains the object to sign. See [Source](#source) below for details.
 * `destination` - (Required) The S3 bucket in which to save your signed object. See [Destination](#destination) below for details.
@@ -139,4 +140,4 @@ Using `terraform import`, import Signer signing jobs using the `jobId`. For exam
 % terraform import aws_signer_signing_job.test_signer_signing_job 9ed7e5c3-b8d4-4da0-8459-44e0b068f7ee
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c5499be1c9d09f579d4b7d9fd73a7211d4feaa55972095d8f20833f58d32df4 -->
+<!-- cache-key: cdktf-0.20.8 input-6ba990b6744493d1b820e400a93df3182c5bf443a47d68b158830649474c4446 -->

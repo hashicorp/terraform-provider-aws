@@ -20,7 +20,7 @@ This resource can be used to adjust this default behavior if necessary.
 
 ```terraform
 resource "aws_ssoadmin_application_assignment_configuration" "example" {
-  application_arn     = aws_ssoadmin_application.example.application_arn
+  application_arn     = aws_ssoadmin_application.example.arn
   assignment_required = true
 }
 ```
@@ -40,6 +40,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ARN of the application.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssoadmin_application_assignment_configuration.example
+  identity = {
+    "arn" = "arn:aws:sso::123456789012:application/ssoins-1234567890abcdef/apl-1234567890abcdef"
+  }
+}
+
+resource "aws_ssoadmin_application_assignment_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SSO application.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSO Admin Application Assignment Configuration using the `id`. For example:
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -330,7 +330,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -347,7 +347,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -364,7 +364,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {
@@ -376,7 +376,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
-							return fmt.Errorf("could not convert string to int: %v", err)
+							return fmt.Errorf("could not convert string to int: %w", err)
 						}
 
 						if intValue <= 0 {

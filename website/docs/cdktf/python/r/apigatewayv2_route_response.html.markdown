@@ -46,6 +46,7 @@ You can only define the $default route response for WebSocket APIs. You can use 
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `route_id` - (Required) Identifier of the [`aws_apigatewayv2_route`](/docs/providers/aws/r/apigatewayv2_route.html).
 * `route_response_key` - (Required) Route response key.
@@ -83,4 +84,4 @@ Using `terraform import`, import `aws_apigatewayv2_route_response` using the API
 % terraform import aws_apigatewayv2_route_response.example aabbccddee/1122334/998877
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0e436c998689951101d70d4c43b18921451f495c69ee52078f332b47cd57cb67 -->
+<!-- cache-key: cdktf-0.20.8 input-ba7974942c8ebf88d49272e0b2880709126984f55b88ce66d0c4070c38d88de8 -->

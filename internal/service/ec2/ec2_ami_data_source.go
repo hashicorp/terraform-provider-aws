@@ -1,17 +1,15 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -243,7 +241,8 @@ func dataSourceAMI() *schema.Resource {
 
 func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	describeImagesInput := ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
@@ -306,13 +305,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	d.SetId(aws.ToString(image.ImageId))
 	d.Set("architecture", image.Architecture)
-	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		Resource:  fmt.Sprintf("image/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set(names.AttrARN, amiARN(ctx, c, d.Id()))
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}

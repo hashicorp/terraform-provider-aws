@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `directoryId` - (Required) ID of the directory.
 
 ## Attribute Reference
@@ -56,7 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 * `accessUrl` - Access URL for the directory/connector, such as http://alias.awsapps.com.
 * `dnsIpAddresses` - List of IP addresses of the DNS servers for the directory/connector.
 * `securityGroupId` - ID of the security group created by the directory/connector.
-* `tags` – A map of tags assigned to the directory/connector.
+* `tags` - A map of tags assigned to the directory/connector.
 
  `vpcSettings` (for `SimpleAD` and `MicrosoftAD`) is also exported with the following attributes:
 
@@ -81,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 * `radiusTimeout` - Amount of time, in seconds, to wait for the RADIUS server to respond.
 * `useSameUsername` - Not currently used.
 
-<!-- cache-key: cdktf-0.20.8 input-77c56db7c6adf484c716285b72d920b827069a7908a716e6aa33cf444e4d0561 -->
+<!-- cache-key: cdktf-0.20.8 input-9d2500770538a9038268faf84e026bd3c309468f69ba821c0684b89d59d4be0e -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // Package names provides constants for AWS service names that are used as keys
@@ -66,6 +66,7 @@ const (
 	ComputeOptimizerEndpointID             = "compute-optimizer"
 	ConfigServiceEndpointID                = "config"
 	ConnectEndpointID                      = "connect"
+	ControlTowerEndpointID                 = "controltower"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
 	DataZoneEndpointID                     = "datazone"
@@ -101,6 +102,7 @@ const (
 	KafkaConnectEndpointID                 = "kafkaconnect"
 	KendraEndpointID                       = "kendra"
 	KinesisVideoEndpointID                 = "kinesisvideo"
+	LakeFormationEndpointID                = "lakeformation"
 	LambdaEndpointID                       = "lambda"
 	LexModelBuildingServiceEndpointID      = "models.lex"
 	LexV2ModelsEndpointID                  = "models-v2-lex"
@@ -295,5 +297,9 @@ func HumanFriendly(service string) (string, error) {
 }
 
 const (
-	TopLevelRegionAttributeDescription = `Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).`
+	ResourceTopLevelRegionAttributeDescription     = `Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). ` + topLevelRegionDefaultDescription
+	ListResourceTopLevelRegionAttributeDescription = `Region to [query](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) for resources of this type. ` + topLevelRegionDefaultDescription
+	ActionTopLevelRegionAttributeDescription       = `Region where this action will be [executed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). ` + topLevelRegionDefaultDescription
+
+	topLevelRegionDefaultDescription = `Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).`
 )

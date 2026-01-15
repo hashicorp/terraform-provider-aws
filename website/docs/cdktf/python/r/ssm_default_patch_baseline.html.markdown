@@ -43,8 +43,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `baseline_id` - (Required) ID of the patch baseline.
   Can be an ID or an ARN.
   When specifying an AWS-provided patch baseline, must be the ARN.
@@ -143,4 +144,4 @@ Using the operating system value:
 % terraform import aws_ssm_default_patch_baseline.example CENTOS
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c7888a2bf80f497e5fee504012a5094fc9dc5491b266b6f048528ab317dd5ecd -->
+<!-- cache-key: cdktf-0.20.8 input-da392fd56f381716ef47e028e9f89a0c63aaa0d943becc4823c05a5044b1dbcf -->

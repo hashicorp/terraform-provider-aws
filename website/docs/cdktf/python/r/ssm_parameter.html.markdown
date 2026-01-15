@@ -14,7 +14,7 @@ Provides an SSM Parameter resource.
 
 ~> **Note:** The `overwrite` argument makes it possible to overwrite an existing SSM Parameter created outside of Terraform.
 
--> **Note:** Write-Only argument `value_wo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/v1.11.x/resources/ephemeral#write-only-arguments).
+-> **Note:** Write-Only argument `value_wo` is available to use in place of `value`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
 
 ## Example Usage
 
@@ -89,6 +89,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowed_pattern` - (Optional) Regular expression used to validate the parameter value.
 * `data_type` - (Optional) Data type of the parameter. Valid values: `text`, `aws:ssm:integration` and `aws:ec2:image` for AMI format, see the [Native parameter support for Amazon Machine Image IDs](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html).
 * `description` - (Optional) Description of the parameter.
@@ -114,6 +115,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_parameter.example
+  identity = {
+    name = "/my_path/my_paramname"
+  }
+}
+
+resource "aws_ssm_parameter" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` - (String) Name of the parameter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Parameters using the parameter store `name`. For example:
 
 ```python
@@ -128,13 +155,13 @@ from imports.aws.ssm_parameter import SsmParameter
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsmParameter.generate_config_for_import(self, "myParam", "/my_path/my_paramname")
+        SsmParameter.generate_config_for_import(self, "example", "/my_path/my_paramname")
 ```
 
 Using `terraform import`, import SSM Parameters using the parameter store `name`. For example:
 
 ```console
-% terraform import aws_ssm_parameter.my_param /my_path/my_paramname
+% terraform import aws_ssm_parameter.example /my_path/my_paramname
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-71aa49c9d142a96bd5aa017f019eff2027a6d133a0d73891901202bc296004dc -->
+<!-- cache-key: cdktf-0.20.8 input-8600438d57457239f3f4174b57f4c616d64edd0c78e9d50de39cf38ab0932838 -->

@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the API key.
 * `customer_id` - (Optional) An Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".
@@ -79,4 +80,4 @@ Using `terraform import`, import API Gateway Keys using the `id`. For example:
 % terraform import aws_api_gateway_api_key.example 8bklk8bl1k3sB38D9B3l0enyWT8c09B30lkq0blk
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d298d44cbfa9c0047a7345469ee8b5220a0755e56bda92064816901f2e3558e9 -->
+<!-- cache-key: cdktf-0.20.8 input-bcdf01f62c50ba69260c2deacdee6b2edb442e6f6b5931471d2cceb214c0a681 -->

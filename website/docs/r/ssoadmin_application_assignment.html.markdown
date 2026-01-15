@@ -15,7 +15,7 @@ Terraform resource for managing an AWS SSO Admin Application Assignment.
 
 ```terraform
 resource "aws_ssoadmin_application_assignment" "example" {
-  application_arn = aws_ssoadmin_application.example.application_arn
+  application_arn = aws_ssoadmin_application.example.arn
   principal_id    = aws_identitystore_user.example.user_id
   principal_type  = "USER"
 }
@@ -25,7 +25,7 @@ resource "aws_ssoadmin_application_assignment" "example" {
 
 ```terraform
 resource "aws_ssoadmin_application_assignment" "example" {
-  application_arn = aws_ssoadmin_application.example.application_arn
+  application_arn = aws_ssoadmin_application.example.arn
   principal_id    = aws_identitystore_group.example.group_id
   principal_type  = "GROUP"
 }

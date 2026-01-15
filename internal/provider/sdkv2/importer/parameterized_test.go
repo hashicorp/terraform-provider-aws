@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer_test
@@ -25,24 +25,11 @@ var regionalSingleParameterizedSchema = map[string]*schema.Schema{
 }
 
 func regionalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: attrName,
-		Attributes: []inttypes.IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     "region",
-				Required: false,
-			},
-			{
-				Name:     attrName,
-				Required: true,
-			},
-		},
-	}
+	return inttypes.RegionalSingleParameterIdentity(attrName)
+}
+
+func regionalSingleParameterizedIdentitySpecNameMapped(identityAttrName, resourceAttrName string) inttypes.Identity {
+	return inttypes.RegionalSingleParameterIdentityWithMappedName(identityAttrName, resourceAttrName)
 }
 
 func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
@@ -101,12 +88,14 @@ func TestRegionalSingleParameterized_ByImportID(t *testing.T) {
 				region:    region,
 			}
 
+			identitySpec := regionalSingleParameterizedIdentitySpec(tc.attrName)
+
 			d := schema.TestResourceDataRaw(t, regionalSingleParameterizedSchema, map[string]any{
 				"region": tc.inputRegion,
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalSingleParameterized(ctx, d, tc.attrName, client)
+			err := importer.RegionalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -151,14 +140,18 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 	anotherRegion := "another-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
+		resourceAttrName    string
+		identitySpec        inttypes.Identity
 		identityAttrs       map[string]string
 		expectedRegion      string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
 		"Attr_Required": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"name": "a_name",
 			},
@@ -166,7 +159,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -175,7 +170,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithDefaultRegion": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"region": region,
 				"name":   "a_name",
@@ -184,7 +181,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WithRegionOverride": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"region": anotherRegion,
 				"name":   "a_name",
@@ -193,7 +192,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"Attr_WrongAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("name"),
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"name":       "a_name",
@@ -202,7 +203,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 		},
 
 		"ID_Required": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"id": "a_name",
 			},
@@ -210,7 +213,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"id":         "a_name",
@@ -219,7 +224,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithDefaultRegion": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"region": region,
 				"id":     "a_name",
@@ -228,7 +235,9 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WithRegionOverride": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"region": anotherRegion,
 				"id":     "a_name",
@@ -237,12 +246,25 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError:    false,
 		},
 		"ID_WrongAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
+			identitySpec:     regionalSingleParameterizedIdentitySpec("id"),
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"id":         "a_name",
 			},
 			expectError: true,
+		},
+
+		"name mapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			identitySpec:     regionalSingleParameterizedIdentitySpecNameMapped("id_name", "name"),
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+			},
+			expectedRegion: region,
+			expectError:    false,
 		},
 	}
 
@@ -256,12 +278,10 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := regionalSingleParameterizedIdentitySpec(tc.attrName)
-
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalSingleParameterized(ctx, d, tc.attrName, client)
+			err := importer.RegionalSingleParameterized(ctx, d, tc.identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -278,7 +298,7 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check ID value
 			// ID must always be set for SDKv2 resources
-			if e, a := tc.identityAttrs[tc.attrName], getAttributeValue(t, d, "id"); e != a {
+			if e, a := tc.identityAttrs[tc.identityAttrName], getAttributeValue(t, d, "id"); e != a {
 				t.Errorf("expected `id` to be %q, got %q", e, a)
 			}
 
@@ -289,8 +309,8 @@ func TestRegionalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check name value
 			var expectedNameValue string
-			if tc.attrName == "name" {
-				expectedNameValue = tc.identityAttrs["name"]
+			if tc.resourceAttrName == "name" {
+				expectedNameValue = tc.identityAttrs[tc.identityAttrName]
 			}
 			if e, a := expectedNameValue, getAttributeValue(t, d, "name"); e != a {
 				t.Errorf("expected `name` to be %q, got %q", e, a)
@@ -307,20 +327,11 @@ var globalSingleParameterizedSchema = map[string]*schema.Schema{
 }
 
 func globalSingleParameterizedIdentitySpec(attrName string) inttypes.Identity {
-	return inttypes.Identity{
-		IsGlobalResource:  true,
-		IdentityAttribute: attrName,
-		Attributes: []inttypes.IdentityAttribute{
-			{
-				Name:     "account_id",
-				Required: false,
-			},
-			{
-				Name:     attrName,
-				Required: true,
-			},
-		},
-	}
+	return inttypes.GlobalSingleParameterIdentity(attrName)
+}
+
+func globalSingleParameterizedIdentitySpecWithMappedName(attrName, resourceAttrName string) inttypes.Identity {
+	return inttypes.GlobalSingleParameterIdentityWithMappedName(attrName, resourceAttrName)
 }
 
 func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
@@ -357,10 +368,12 @@ func TestGlobalSingleParameterized_ByImportID(t *testing.T) {
 				region:    region,
 			}
 
+			identitySpec := globalSingleParameterizedIdentitySpec(tc.attrName)
+
 			d := schema.TestResourceDataRaw(t, globalSingleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalSingleParameterized(ctx, d, tc.attrName, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -399,20 +412,23 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 	region := "a-region-1"
 
 	testCases := map[string]struct {
-		attrName            string
+		identityAttrName    string
 		identityAttrs       map[string]string
+		resourceAttrName    string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
 		"Attr_Required": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"name": "a_name",
 			},
 			expectError: false,
 		},
 		"Attr_WithAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"name":       "a_name",
@@ -420,7 +436,8 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError: false,
 		},
 		"Attr_WrongAccountID": {
-			attrName: "name",
+			identityAttrName: "name",
+			resourceAttrName: "name",
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"name":       "a_name",
@@ -429,14 +446,16 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 		},
 
 		"ID_Required": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"id": "a_name",
 			},
 			expectError: false,
 		},
 		"ID_WithAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"account_id": accountID,
 				"id":         "a_name",
@@ -444,12 +463,22 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 			expectError: false,
 		},
 		"ID_WrongAccountID": {
-			attrName: "id",
+			identityAttrName: "id",
+			resourceAttrName: "id",
 			identityAttrs: map[string]string{
 				"account_id": "987654321098",
 				"id":         "a_name",
 			},
 			expectError: true,
+		},
+
+		"name mapped": {
+			identityAttrName: "id_name",
+			resourceAttrName: "name",
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+			},
+			expectError: false,
 		},
 	}
 
@@ -463,12 +492,17 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := globalSingleParameterizedIdentitySpec(tc.attrName)
+			var identitySpec inttypes.Identity
+			if tc.resourceAttrName == tc.identityAttrName {
+				identitySpec = globalSingleParameterizedIdentitySpec(tc.identityAttrName)
+			} else {
+				identitySpec = globalSingleParameterizedIdentitySpecWithMappedName(tc.identityAttrName, tc.resourceAttrName)
+			}
 
 			identitySchema := identity.NewIdentitySchema(identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalSingleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalSingleParameterized(ctx, d, tc.attrName, client)
+			err := importer.GlobalSingleParameterized(ctx, d, identitySpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -485,14 +519,14 @@ func TestGlobalSingleParameterized_ByIdentity(t *testing.T) {
 
 			// Check ID value
 			// ID must always be set for SDKv2 resources
-			if e, a := tc.identityAttrs[tc.attrName], getAttributeValue(t, d, "id"); e != a {
+			if e, a := tc.identityAttrs[tc.identityAttrName], getAttributeValue(t, d, "id"); e != a {
 				t.Errorf("expected `id` to be %q, got %q", e, a)
 			}
 
 			// Check name value
 			var expectedNameValue string
-			if tc.attrName == "name" {
-				expectedNameValue = tc.identityAttrs["name"]
+			if tc.resourceAttrName == "name" {
+				expectedNameValue = tc.identityAttrs[tc.identityAttrName]
 			}
 			if e, a := expectedNameValue, getAttributeValue(t, d, "name"); e != a {
 				t.Errorf("expected `name` to be %q, got %q", e, a)
@@ -517,6 +551,18 @@ func regionalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Iden
 	var attrs []inttypes.IdentityAttribute
 	for _, attrName := range attrNames {
 		attrs = append(attrs, inttypes.StringIdentityAttribute(attrName, true))
+	}
+	return inttypes.RegionalParameterizedIdentity(attrs)
+}
+
+func regionalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]string) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for identityAttrName, resourceAttrName := range attrNames {
+		if identityAttrName == resourceAttrName {
+			attrs = append(attrs, inttypes.StringIdentityAttribute(identityAttrName, true))
+		} else {
+			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
+		}
 	}
 	return inttypes.RegionalParameterizedIdentity(attrs)
 }
@@ -580,7 +626,7 @@ func TestRegionalMutipleParameterized_ByImportID(t *testing.T) {
 			})
 			d.SetId(tc.inputID)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -624,6 +670,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 
 	testCases := map[string]struct {
 		identityAttrs       map[string]string
+		identitySpec        inttypes.Identity
 		expectedAttrs       map[string]string
 		expectedID          string
 		expectedRegion      string
@@ -635,6 +682,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name": "a_name",
 				"type": "a_type",
 			},
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -649,6 +697,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name":       "a_name",
 				"type":       "a_type",
 			},
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -663,6 +712,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name":   "a_name",
 				"type":   "a_type",
 			},
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -677,6 +727,7 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name":   "a_name",
 				"type":   "a_type",
 			},
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
 			expectedAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
@@ -691,7 +742,26 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				"name":       "a_name",
 				"type":       "a_type",
 			},
-			expectError: true,
+			identitySpec: regionalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectError:  true,
+		},
+
+		"name mapped": {
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			identitySpec: regionalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectedID:     "a_name,a_type",
+			expectedRegion: region,
+			expectError:    false,
 		},
 	}
 
@@ -705,17 +775,15 @@ func TestRegionalMutipleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := regionalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			importSpec := inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      testImportID{t: t},
 			}
 
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, regionalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.RegionalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.RegionalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -770,6 +838,18 @@ func globalMultipleParameterizedIdentitySpec(attrNames []string) inttypes.Identi
 	return inttypes.GlobalParameterizedIdentity(attrs)
 }
 
+func globalMultipleParameterizedIdentitySpecWithMappedName(attrNames map[string]string) inttypes.Identity {
+	var attrs []inttypes.IdentityAttribute
+	for identityAttrName, resourceAttrName := range attrNames {
+		if identityAttrName == resourceAttrName {
+			attrs = append(attrs, inttypes.StringIdentityAttribute(identityAttrName, true))
+		} else {
+			attrs = append(attrs, inttypes.StringIdentityAttributeWithMappedName(identityAttrName, true, resourceAttrName))
+		}
+	}
+	return inttypes.GlobalParameterizedIdentity(attrs)
+}
+
 func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 	t.Parallel()
 
@@ -812,7 +892,7 @@ func TestGlobalMutipleParameterized_ByImportID(t *testing.T) {
 			d := schema.TestResourceDataRaw(t, globalMultipleParameterizedSchema, map[string]any{})
 			d.SetId(tc.inputID)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")
@@ -850,16 +930,34 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 
 	testCases := map[string]struct {
 		identityAttrs       map[string]string
+		identitySpec        inttypes.Identity
 		expectedID          string
 		expectedAttrs       map[string]string
 		expectError         bool
 		expectedErrorPrefix string
 	}{
-		"Identity": {
+		"same names": {
 			identityAttrs: map[string]string{
 				"name": "a_name",
 				"type": "a_type",
 			},
+			identitySpec: globalMultipleParameterizedIdentitySpec([]string{"name", "type"}),
+			expectedID:   "a_name,a_type",
+			expectedAttrs: map[string]string{
+				"name": "a_name",
+				"type": "a_type",
+			},
+			expectError: false,
+		},
+		"name mapped": {
+			identityAttrs: map[string]string{
+				"id_name": "a_name",
+				"type":    "a_type",
+			},
+			identitySpec: globalMultipleParameterizedIdentitySpecWithMappedName(map[string]string{
+				"id_name": "name",
+				"type":    "type",
+			}),
 			expectedID: "a_name,a_type",
 			expectedAttrs: map[string]string{
 				"name": "a_name",
@@ -879,17 +977,15 @@ func TestGlobalMutipleParameterized_ByIdentity(t *testing.T) {
 				region:    region,
 			}
 
-			identitySpec := globalMultipleParameterizedIdentitySpec([]string{"name", "type"})
-
 			importSpec := inttypes.SDKv2Import{
 				WrappedImport: true,
 				ImportID:      testImportID{t: t},
 			}
 
-			identitySchema := identity.NewIdentitySchema(identitySpec)
+			identitySchema := identity.NewIdentitySchema(tc.identitySpec)
 			d := schema.TestResourceDataWithIdentityRaw(t, globalMultipleParameterizedSchema, identitySchema, tc.identityAttrs)
 
-			err := importer.GlobalMultipleParameterized(ctx, d, identitySpec.Attributes, &importSpec, client)
+			err := importer.GlobalMultipleParameterized(ctx, d, tc.identitySpec, &importSpec, client)
 			if tc.expectError {
 				if err == nil {
 					t.Fatal("Expected error, got none")

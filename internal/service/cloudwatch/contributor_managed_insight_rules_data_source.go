@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,7 +48,7 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 	conn := d.Meta().CloudWatchClient(ctx)
 
 	var data contributorManagedInsightRulesDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -61,26 +61,23 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 
 	output, err := findContributorManagedInsightRules(ctx, conn, input, filter)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionReading, DSNameContributorManagedInsightRules, data.ResourceARN.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ResourceARN.String())
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(
 		ctx,
 		struct {
 			ManagedRules []awstypes.ManagedRuleDescription
 		}{
 			ManagedRules: output,
 		},
-		&data)...)
+		&data), smerr.ID, data.ResourceARN.String())
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ResourceARN.String())
 }
 
 type contributorManagedInsightRulesDataSourceModel struct {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas
@@ -15,12 +15,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -146,7 +147,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas default Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	}
@@ -156,7 +156,7 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	default:
@@ -164,7 +164,13 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	id := serviceQuotaCreateResourceID(serviceCode, quotaCode)
-	if value := d.Get(names.AttrValue).(float64); value > quotaValue {
+	value := d.Get(names.AttrValue).(float64)
+
+	if value < quotaValue {
+		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) with value less than current", id)
+	}
+
+	if value > quotaValue {
 		input := servicequotas.RequestServiceQuotaIncreaseInput{
 			DesiredValue: aws.Float64(value),
 			QuotaCode:    aws.String(quotaCode),
@@ -172,7 +178,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", id, err)
 		}
@@ -197,7 +202,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Service Quotas default Service Quota (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -222,7 +227,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 	serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		tflog.Debug(ctx, "No quota value set", map[string]any{
 			"service_code": serviceCode,
 			"quota_code":   quotaCode,
@@ -238,7 +243,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 		output, err := findRequestedServiceQuotaChangeByID(ctx, conn, requestID)
 
 		switch {
-		case tfresource.NotFound(err):
+		case retry.NotFound(err):
 			d.Set("request_id", "")
 			d.Set("request_status", "")
 
@@ -276,6 +281,10 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
 
+	if errs.IsAErrorMessageContains[*awstypes.ResourceAlreadyExistsException](err, "Only one open service quota increase request is allowed per quota") {
+		return sdkdiag.AppendWarningf(diags, "resource service quota %s already exists", d.Id())
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", d.Id(), err)
 	}
@@ -312,7 +321,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -323,7 +332,7 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -342,7 +351,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -353,7 +362,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output == nil || output.Quota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if apiObject := output.Quota.ErrorReason; apiObject != nil {
@@ -361,7 +370,7 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	}
 
 	if output.Quota.Value == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Quota, nil
@@ -379,7 +388,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -390,7 +399,7 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	}
 
 	if output == nil || output.RequestedQuota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RequestedQuota, nil

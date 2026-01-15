@@ -91,6 +91,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
 * `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
 * `oidc_config` - (Optional) Use this parameter to configure a private workforce using your own OIDC Identity Provider. Conflicts with `cognito_config`. see [OIDC Config](#oidc-config) details below.
@@ -159,4 +160,4 @@ Using `terraform import`, import SageMaker AI Workforces using the `workforce_na
 % terraform import aws_sagemaker_workforce.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e4e7b53e83b25c5b133e940afbad22980cb2d6086018193d762a5e14af8163cc -->
+<!-- cache-key: cdktf-0.20.8 input-b4b8779a11d7bef5fb0af2b2106f24a5347c8e2fe92650827fae68f786b4577a -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package importer
@@ -12,11 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attrName string, client AWSClient) error {
+func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+
 	if rd.Id() != "" {
 		importID := rd.Id()
-		if attrName != names.AttrID {
-			rd.Set(attrName, importID)
+		if attr.ResourceAttributeName() != names.AttrID {
+			rd.Set(attr.ResourceAttributeName(), importID)
 		}
 
 		return nil
@@ -35,28 +37,30 @@ func RegionalSingleParameterized(ctx context.Context, rd *schema.ResourceData, a
 		return err
 	}
 
-	valRaw, ok := identity.GetOk(attrName)
+	valRaw, ok := identity.GetOk(attr.Name())
 	if !ok {
-		return fmt.Errorf("identity attribute %q is required", attrName)
+		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
 	val, ok := valRaw.(string)
 	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, valRaw)
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 	}
-	setAttribute(rd, attrName, val)
+	setAttribute(rd, attr.ResourceAttributeName(), val)
 
-	if attrName != names.AttrID {
+	if attr.ResourceAttributeName() != names.AttrID {
 		rd.SetId(val)
 	}
 
 	return nil
 }
 
-func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, attrName string, client AWSClient) error {
+func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, client AWSClient) error {
+	attr := identitySpec.Attributes[len(identitySpec.Attributes)-1]
+
 	if rd.Id() != "" {
 		importID := rd.Id()
-		if attrName != names.AttrID {
-			rd.Set(attrName, importID)
+		if attr.ResourceAttributeName() != names.AttrID {
+			rd.Set(attr.ResourceAttributeName(), importID)
 		}
 
 		return nil
@@ -71,24 +75,24 @@ func GlobalSingleParameterized(ctx context.Context, rd *schema.ResourceData, att
 		return err
 	}
 
-	valRaw, ok := identity.GetOk(attrName)
+	valRaw, ok := identity.GetOk(attr.Name())
 	if !ok {
-		return fmt.Errorf("identity attribute %q is required", attrName)
+		return fmt.Errorf("identity attribute %q is required", attr.Name())
 	}
 	val, ok := valRaw.(string)
 	if !ok {
-		return fmt.Errorf("identity attribute %q: expected string, got %T", attrName, valRaw)
+		return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 	}
-	setAttribute(rd, attrName, val)
+	setAttribute(rd, attr.ResourceAttributeName(), val)
 
-	if attrName != names.AttrID {
+	if attr.ResourceAttributeName() != names.AttrID {
 		rd.SetId(val)
 	}
 
 	return nil
 }
 
-func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -113,21 +117,21 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 			return err
 		}
 
-		for _, attr := range attrs {
-			switch attr.Name {
+		for _, attr := range identitySpec.Attributes {
+			switch attr.Name() {
 			case names.AttrAccountID, names.AttrRegion:
 				// Do nothing
 
 			default:
-				valRaw, ok := identity.GetOk(attr.Name)
-				if attr.Required && !ok {
-					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				valRaw, ok := identity.GetOk(attr.Name())
+				if attr.Required() && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
 				val, ok := valRaw.(string)
 				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 				}
-				setAttribute(rd, attr.Name, val)
+				setAttribute(rd, attr.ResourceAttributeName(), val)
 			}
 		}
 
@@ -137,7 +141,7 @@ func RegionalMultipleParameterized(ctx context.Context, rd *schema.ResourceData,
 	return nil
 }
 
-func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, attrs []inttypes.IdentityAttribute, importSpec *inttypes.SDKv2Import, client AWSClient) error {
+func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, identitySpec inttypes.Identity, importSpec *inttypes.SDKv2Import, client AWSClient) error {
 	if rd.Id() != "" {
 		id, parts, err := importSpec.ImportID.Parse(rd.Id())
 		if err != nil {
@@ -158,21 +162,21 @@ func GlobalMultipleParameterized(ctx context.Context, rd *schema.ResourceData, a
 			return err
 		}
 
-		for _, attr := range attrs {
-			switch attr.Name {
+		for _, attr := range identitySpec.Attributes {
+			switch attr.Name() {
 			case names.AttrAccountID:
 				// Do nothing
 
 			default:
-				valRaw, ok := identity.GetOk(attr.Name)
-				if attr.Required && !ok {
-					return fmt.Errorf("identity attribute %q is required", attr.Name)
+				valRaw, ok := identity.GetOk(attr.Name())
+				if attr.Required() && !ok {
+					return fmt.Errorf("identity attribute %q is required", attr.Name())
 				}
 				val, ok := valRaw.(string)
 				if !ok {
-					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name, valRaw)
+					return fmt.Errorf("identity attribute %q: expected string, got %T", attr.Name(), valRaw)
 				}
-				setAttribute(rd, attr.Name, val)
+				setAttribute(rd, attr.ResourceAttributeName(), val)
 			}
 		}
 

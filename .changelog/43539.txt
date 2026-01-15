@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_globalaccelerator_custom_routing_endpoint_group: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_globalaccelerator_custom_routing_listener: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_globalaccelerator_endpoint_group: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_globalaccelerator_listener: Add resource identity support
+```

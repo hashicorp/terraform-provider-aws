@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,6 +30,7 @@ import (
 // @IdentityAttribute("policy_arn")
 // @IdAttrFormat("{role}/{policy_arn}")
 // @ImportIDHandler("rolePolicyAttachmentImportID")
+// @Testing(preIdentityVersion="6.0.0")
 func resourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyAttachmentCreate,
@@ -76,11 +78,11 @@ func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	// Human friendly ID for error messages since d.Id() is non-descriptive.
 	id := fmt.Sprintf("%s:%s", role, policyARN)
 
-	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findAttachedRolePolicyByTwoPartKey(ctx, conn, role, policyARN)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Role Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
@@ -106,7 +108,7 @@ func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceD
 
 func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -122,7 +124,7 @@ func attachPolicyToRole(ctx context.Context, conn *iam.Client, role, policyARN s
 
 func detachPolicyFromRole(ctx context.Context, conn *iam.Client, role, policyARN string) error {
 	var errConcurrentModificationException *awstypes.ConcurrentModificationException
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(policyARN),
 			RoleName:  aws.String(role),
@@ -168,7 +170,7 @@ func findAttachedRolePolicies(ctx context.Context, conn *iam.Client, input *iam.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -194,8 +196,12 @@ func createRolePolicyAttachmentImportID(d *schema.ResourceData) string {
 
 type rolePolicyAttachmentImportID struct{}
 
-func (rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
-	return fmt.Sprintf("%s/%s", d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+func (v rolePolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return v.create(d.Get(names.AttrRole).(string), d.Get("policy_arn").(string))
+}
+
+func (rolePolicyAttachmentImportID) create(roleName, policyARN string) string {
+	return fmt.Sprintf("%s/%s", roleName, policyARN)
 }
 
 func (rolePolicyAttachmentImportID) Parse(id string) (string, map[string]string, error) {

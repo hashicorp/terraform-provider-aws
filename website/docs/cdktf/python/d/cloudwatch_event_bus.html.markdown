@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the event bus.
 
 ## Attribute Reference
@@ -49,5 +50,8 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Event bus description.
 * `id` - Name of the event bus.
 * `kms_key_identifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.
+* `log_config` - Block for logging configuration settings for the event bus.
+    * `include_detail` - Whether EventBridge include detailed event information in the records it generates.
+    * `level` - Level of logging detail to include.
 
-<!-- cache-key: cdktf-0.20.8 input-477fea65d1e101c47f11ca48fecf0b7385dc4c6b80fe4a2f389fa93fcc8c07ce -->
+<!-- cache-key: cdktf-0.20.8 input-977936ce2702083764275c08970b0c469661a3a9bb06a55c68af882b5de83e68 -->

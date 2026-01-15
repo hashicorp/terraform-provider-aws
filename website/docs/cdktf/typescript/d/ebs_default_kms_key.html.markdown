@@ -40,7 +40,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source does not support any arguments.
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -55,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-9aa00797d408e029dd469252a30b2c21fac5c12ced3bf8535f68237e397c0397 -->
+<!-- cache-key: cdktf-0.20.8 input-63ded8575c7939fbd95ec44f8d758fd450083d480b7d45bcdb2180107ff471dd -->

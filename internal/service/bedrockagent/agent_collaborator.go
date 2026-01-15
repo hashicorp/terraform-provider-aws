@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -25,13 +25,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -147,8 +148,8 @@ func (r *agentCollaboratorResource) Create(ctx context.Context, request resource
 	}
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
-	output, err := retryOpIfPreparing[*bedrockagent.AssociateAgentCollaboratorOutput](ctx, timeout,
-		func() (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
+	output, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.AssociateAgentCollaboratorOutput, error) {
 			return conn.AssociateAgentCollaborator(ctx, &input)
 		},
 	)
@@ -201,7 +202,7 @@ func (r *agentCollaboratorResource) Read(ctx context.Context, request resource.R
 
 	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.AgentID.ValueString(), data.AgentVersion.ValueString(), data.CollaboratorID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -246,8 +247,8 @@ func (r *agentCollaboratorResource) Update(ctx context.Context, request resource
 		}
 
 		timeout := r.UpdateTimeout(ctx, new.Timeouts)
-		_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentCollaboratorOutput](ctx, timeout,
-			func() (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
+		_, err := retryOpIfPreparing(ctx, timeout,
+			func(ctx context.Context) (*bedrockagent.UpdateAgentCollaboratorOutput, error) {
 				return conn.UpdateAgentCollaborator(ctx, &input)
 			},
 		)
@@ -284,8 +285,8 @@ func (r *agentCollaboratorResource) Delete(ctx context.Context, request resource
 	}
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err := retryOpIfPreparing[*bedrockagent.DisassociateAgentCollaboratorOutput](ctx, timeout,
-		func() (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout,
+		func(ctx context.Context) (*bedrockagent.DisassociateAgentCollaboratorOutput, error) {
 			return conn.DisassociateAgentCollaborator(ctx, &input)
 		},
 	)
@@ -324,7 +325,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 	output, err := conn.GetAgentCollaborator(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -335,7 +336,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 	}
 
 	if output == nil || output.AgentCollaborator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentCollaborator, nil

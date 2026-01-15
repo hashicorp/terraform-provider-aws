@@ -29,11 +29,12 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `applied_for` - Which features this template applies to. Contains one or more of `PULL_THROUGH_CACHE` or `REPLICATION`.
+* `applied_for` - Which features this template applies to. Contains one or more of `CREATE_ON_PUSH`, `PULL_THROUGH_CACHE`, or `REPLICATION`.
 * `custom_role_arn` - The ARN of the custom role used for repository creation.
 * `description` - The description for this template.
 * `encryption_configuration` - Encryption configuration for any created repositories. See [Encryption Configuration](#encryption-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for any created repositories.
+* `image_tag_mutability_exclusion_filter` - Block that defines filters to specify which image tags can override the default tag mutability setting.
 * `lifecycle_policy` - The lifecycle policy document to apply to any created repositories.
 * `registry_id` - The registry ID the repository creation template applies to.
 * `repository_policy` - The registry policy document to apply to any created repositories.
@@ -43,3 +44,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `encryption_type` - Encryption type to use for any created repositories, either `AES256` or `KMS`.
 * `kms_key` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
+
+### Image Tag Mutability Exclusion Filter
+
+* `filter` - The filter pattern to use for excluding image tags from the mutability setting.
+* `filter_type` - The type of filter to use.

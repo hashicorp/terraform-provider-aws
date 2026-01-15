@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Optional) ARN of the stream consumer.
 * `name` - (Optional) Name of the stream consumer.
 * `stream_arn` - (Required) ARN of the data stream the consumer is registered with.
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html
 
-<!-- cache-key: cdktf-0.20.8 input-f6f37ad1cb997b2e7c173c7bc5440b8e3112af2e49749040fe45f8576928696a -->
+<!-- cache-key: cdktf-0.20.8 input-77f6ef084f65362b06bfa52aa7180df46916b9f41414986b7770811ac59bdba2 -->

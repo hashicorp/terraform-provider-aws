@@ -171,7 +171,7 @@ func (r *anycastIPListResource) Read(ctx context.Context, request resource.ReadR
 	id := fwflex.StringValueFromFramework(ctx, data.ID)
 	output, err := findAnycastIPListByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -207,7 +207,7 @@ func (r *anycastIPListResource) Delete(ctx context.Context, request resource.Del
 	id := fwflex.StringValueFromFramework(ctx, data.ID)
 	etag, err := anycastIPListETag(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -266,7 +266,7 @@ func findAnycastIPList(ctx context.Context, conn *cloudfront.Client, input *clou
 	}
 
 	if output == nil || output.AnycastIpList == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -276,7 +276,7 @@ func anycastIPListStatus(conn *cloudfront.Client, id string) retry.StateRefreshF
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAnycastIPListByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

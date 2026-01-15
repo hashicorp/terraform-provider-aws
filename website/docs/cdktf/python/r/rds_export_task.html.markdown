@@ -165,6 +165,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `export_only` - (Optional) Data to be exported from the snapshot. If this parameter is not provided, all the snapshot data is exported. Valid values are documented in the [AWS StartExportTask API documentation](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartExportTask.html#API_StartExportTask_RequestParameters).
 * `s3_prefix` - (Optional) Amazon S3 bucket prefix to use as the file name and path of the exported snapshot.
 
@@ -207,4 +208,4 @@ Using `terraform import`, import a RDS (Relational Database) Export Task using t
 % terraform import aws_rds_export_task.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-85f7fbc39b14c8bc604a74daa69a5c20b76d661a4af3a134d17931198e7cd32a -->
+<!-- cache-key: cdktf-0.20.8 input-6f322760453522d1cec4425a146d8ebaa9b410b131ce6bbc9a9ccee63e48003b -->

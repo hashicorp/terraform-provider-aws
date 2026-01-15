@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -16,13 +16,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -115,7 +116,7 @@ func resourceNotebookInstance() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3)$`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2|notebook-al2-v3|notebook-al2023-v1)$`), ""),
 			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
@@ -228,7 +229,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	notebookInstance, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Notebook Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -355,7 +356,7 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 
 	notebook, err := findNotebookInstanceByName(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -394,7 +395,7 @@ func findNotebookInstanceByName(ctx context.Context, conn *sagemaker.Client, nam
 	output, err := conn.DescribeNotebookInstance(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "RecordNotFound") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -405,7 +406,7 @@ func findNotebookInstanceByName(ctx context.Context, conn *sagemaker.Client, nam
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -417,33 +418,26 @@ func startNotebookInstance(ctx context.Context, conn *sagemaker.Client, id strin
 	}
 	// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
 	// it doesn't change we'll send another request
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.StartNotebookInstance(ctx, startOpts)
 		if err != nil {
-			return retry.NonRetryableError(fmt.Errorf("starting: %s", err))
+			return tfresource.NonRetryableError(fmt.Errorf("starting: %w", err))
 		}
 
 		err = waitNotebookInstanceStarted(ctx, conn, id)
 		if err != nil {
-			return retry.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+			return tfresource.RetryableError(fmt.Errorf("starting: waiting for completion: %w", err))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.StartNotebookInstance(ctx, startOpts)
-		if err != nil {
-			return fmt.Errorf("starting: %s", err)
-		}
 
-		err = waitNotebookInstanceStarted(ctx, conn, id)
-		if err != nil {
-			return fmt.Errorf("starting: waiting for completion: %s", err)
-		}
+	if err != nil {
+		return fmt.Errorf("starting: %w", err)
 	}
 
 	if err := waitNotebookInstanceInService(ctx, conn, id); err != nil {
-		return fmt.Errorf("starting: waiting to be in service: %s", err)
+		return fmt.Errorf("starting: waiting to be in service: %w", err)
 	}
 	return nil
 }
@@ -452,7 +446,7 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	notebook, err := findNotebookInstanceByName(ctx, conn, id)
 
 	if err != nil {
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil
 		}
 		return err
@@ -467,11 +461,11 @@ func stopNotebookInstance(ctx context.Context, conn *sagemaker.Client, id string
 	}
 
 	if _, err := conn.StopNotebookInstance(ctx, stopOpts); err != nil {
-		return fmt.Errorf("stopping: %s", err)
+		return fmt.Errorf("stopping: %w", err)
 	}
 
 	if err := waitNotebookInstanceStopped(ctx, conn, id); err != nil {
-		return fmt.Errorf("stopping: waiting for completion: %s", err)
+		return fmt.Errorf("stopping: waiting for completion: %w", err)
 	}
 
 	return nil

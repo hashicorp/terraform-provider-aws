@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -18,13 +18,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,6 +53,14 @@ func (r *policyStoreResource) Schema(ctx context.Context, request resource.Schem
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDeletionProtection: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
@@ -118,11 +127,22 @@ func (r *policyStoreResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
+
+	policyStore, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyStore, data.PolicyStoreID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, policyStore, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = fwflex.StringToFramework(ctx, output.PolicyStoreId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -138,7 +158,7 @@ func (r *policyStoreResource) Read(ctx context.Context, request resource.ReadReq
 
 	output, err := findPolicyStoreByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -175,7 +195,7 @@ func (r *policyStoreResource) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().VerifiedPermissionsClient(ctx)
 
-	if !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
+	if !new.DeletionProtection.Equal(old.DeletionProtection) || !new.Description.Equal(old.Description) || !new.ValidationSettings.Equal(old.ValidationSettings) {
 		var input verifiedpermissions.UpdatePolicyStoreInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
@@ -231,6 +251,7 @@ type policyStoreResourceModel struct {
 	framework.WithRegionModel
 	ARN                types.String                                        `tfsdk:"arn"`
 	Description        types.String                                        `tfsdk:"description"`
+	DeletionProtection fwtypes.StringEnum[awstypes.DeletionProtection]     `tfsdk:"deletion_protection"`
 	ID                 types.String                                        `tfsdk:"id"`
 	PolicyStoreID      types.String                                        `tfsdk:"policy_store_id"`
 	Tags               tftags.Map                                          `tfsdk:"tags"`
@@ -249,7 +270,7 @@ func findPolicyStoreByID(ctx context.Context, conn *verifiedpermissions.Client, 
 
 	out, err := conn.GetPolicyStore(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -259,7 +280,7 @@ func findPolicyStoreByID(ctx context.Context, conn *verifiedpermissions.Client, 
 	}
 
 	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

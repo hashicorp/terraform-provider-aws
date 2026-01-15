@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `task_definition` - (Required) ARN of the task definition which contains the container
 * `container_name` - (Required) Name of the container definition
 
@@ -53,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `disable_networking` - Indicator if networking is disabled
 * `docker_labels` - Set docker labels
 
-<!-- cache-key: cdktf-0.20.8 input-6aeb7bcd3d9ef0fd16650027ff7ee1fa1b9bdd2ab011e720f74e5b141ebf8c21 -->
+<!-- cache-key: cdktf-0.20.8 input-5a79e71eef0676cddea5801ec0cadc55533a0dffc064e3f3e93876d89516b895 -->

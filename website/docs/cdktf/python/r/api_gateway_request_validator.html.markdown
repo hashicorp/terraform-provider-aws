@@ -38,6 +38,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the request validator
 * `rest_api_id` - (Required) ID of the associated Rest API
 * `validate_request_body` - (Optional) Boolean whether to validate request body. Defaults to `false`.
@@ -74,4 +75,4 @@ Using `terraform import`, import `aws_api_gateway_request_validator` using `REST
 % terraform import aws_api_gateway_request_validator.example 12345abcde/67890fghij
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-505defc9caba2113992cea9320dfb9b74802857b30dd2c0100aa471ccc27a60b -->
+<!-- cache-key: cdktf-0.20.8 input-34d955f353e981609a901c15e3672026f45f05b519aa25d575509b032c8b2b96 -->

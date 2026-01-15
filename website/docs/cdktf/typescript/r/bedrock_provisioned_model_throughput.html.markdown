@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `commitmentDuration` - (Optional) Commitment duration requested for the Provisioned Throughput. For custom models, you can purchase on-demand Provisioned Throughput by omitting this argument. Valid values: `OneMonth`, `SixMonths`.
 * `modelArn` - (Required) ARN of the model to associate with this Provisioned Throughput.
 * `modelUnits` - (Required) Number of model units to allocate. A model unit delivers a specific throughput level for the specified model.
@@ -62,6 +63,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `10m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bedrock_provisioned_model_throughput.example
+  identity = {
+    "arn" = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_bedrock_provisioned_model_throughput" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Bedrock provisioned model throughput.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Provisioned Throughput using the `provisionedModelArn`. For example:
 
@@ -93,4 +115,4 @@ Using `terraform import`, import Provisioned Throughput using the `provisionedMo
 % terraform import aws_bedrock_provisioned_model_throughput.example arn:aws:bedrock:us-west-2:123456789012:provisioned-model/1y5n57gh5y2e
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ea5409b9dfeaf0566d6e29041a5ed1e5e9cc5decab840cfe258c07df81e14ad7 -->
+<!-- cache-key: cdktf-0.20.8 input-59460a796f0193723e9b5cbb06cbf3329c061fd354e143d7ef40b8f1b2258b74 -->

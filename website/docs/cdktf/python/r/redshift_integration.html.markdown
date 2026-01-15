@@ -153,6 +153,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
 For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
 You can only include this parameter if you specify the `kms_key_id` parameter.
@@ -204,4 +205,4 @@ Using `terraform import`, import Redshift Integration using the `arn`. For examp
 % terraform import aws_redshift_integration.example arn:aws:redshift:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5a220be4e5e1b82a9911a62ad39cafe74cb1cb67c8462441650d8ed8ff83f207 -->
+<!-- cache-key: cdktf-0.20.8 input-b496848ea83b0c0a3496f1d8be57be2fed935f59a4feb07ca6a568318a01111b -->

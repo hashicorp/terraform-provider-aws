@@ -77,6 +77,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 * `configuration_set` - (Optional) The ARN of the Amazon SES configuration set that you want to apply to messages that you send through the channel.
@@ -116,4 +117,4 @@ Using `terraform import`, import Pinpoint Email Channel using the `application-i
 % terraform import aws_pinpoint_email_channel.email application-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f241e136fa56c2547739a7955160cb39ed713e9e5ac76e90c67708b921512768 -->
+<!-- cache-key: cdktf-0.20.8 input-56f6a078b3c6e922282e888e994cb2810b9b1a8f97b5212571a8a1670e85424f -->

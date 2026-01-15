@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoverycontrolconfig
@@ -12,16 +12,19 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_control_panel", name="Control Panel")
+// @Tags(identifierAttribute="arn")
 func resourceControlPanel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlPanelCreate,
@@ -57,6 +60,8 @@ func resourceControlPanel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -72,20 +77,22 @@ func resourceControlPanelCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	output, err := conn.CreateControlPanel(ctx, input)
-	result := output.ControlPanel
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: %s", err)
 	}
 
-	if result == nil {
+	if output == nil || output.ControlPanel == nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Control Panel: empty response")
 	}
 
-	d.SetId(aws.ToString(result.ControlPanelArn))
+	d.SetId(aws.ToString(output.ControlPanel.ControlPanelArn))
 
 	if _, err := waitControlPanelCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Control Panel (%s) to be Deployed: %s", d.Id(), err)
+	}
+
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Route53 Recovery Control Config Control Panel (%s) tags: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
@@ -97,7 +104,7 @@ func resourceControlPanelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := findControlPanelByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route53 Recovery Control Config Control Panel (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -121,15 +128,17 @@ func resourceControlPanelUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigClient(ctx)
 
-	input := &r53rcc.UpdateControlPanelInput{
-		ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
-		ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &r53rcc.UpdateControlPanelInput{
+			ControlPanelName: aws.String(d.Get(names.AttrName).(string)),
+			ControlPanelArn:  aws.String(d.Get(names.AttrARN).(string)),
+		}
 
-	_, err := conn.UpdateControlPanel(ctx, input)
+		_, err := conn.UpdateControlPanel(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Control Panel: %s", err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Control Panel: %s", err)
+		}
 	}
 
 	return append(diags, resourceControlPanelRead(ctx, d, meta)...)
@@ -172,7 +181,7 @@ func findControlPanelByARN(ctx context.Context, conn *r53rcc.Client, arn string)
 
 	output, err := conn.DescribeControlPanel(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -182,7 +191,7 @@ func findControlPanelByARN(ctx context.Context, conn *r53rcc.Client, arn string)
 	}
 
 	if output == nil || output.ControlPanel == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ControlPanel, nil

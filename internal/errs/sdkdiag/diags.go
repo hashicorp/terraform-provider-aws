@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkdiag
@@ -102,4 +102,12 @@ func DiagnosticsString(diags diag.Diagnostics) string {
 	}
 
 	return buf.String()
+}
+
+func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity: diag.Warning,
+		Summary:  "AWS resource not found during refresh",
+		Detail:   "Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: " + err.Error(),
+	}
 }

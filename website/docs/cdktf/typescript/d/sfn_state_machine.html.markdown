@@ -40,6 +40,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Friendly name of the state machine to match.
 
 ## Attribute Reference
@@ -54,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `revisionId` - The revision identifier for the state machine.
 * `status` - Set to the current status of the state machine.
 
-<!-- cache-key: cdktf-0.20.8 input-82697f5522892e72dd2ebd921ecc58d90fcaf4711fd1c27d831daaad28c5ad44 -->
+<!-- cache-key: cdktf-0.20.8 input-b3ea3a55c0575748755c4d302d9143532db70a3fc1e7228dbf9cf3adfca7d6be -->

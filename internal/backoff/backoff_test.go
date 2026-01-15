@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backoff
@@ -29,7 +29,35 @@ func TestDefaultSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
+	}
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+	}
+}
+
+func TestDefaultSDKv2HelperRetryCompatibleDelayWithIncrementDelay(t *testing.T) {
+	t.Parallel()
+
+	delay := DefaultSDKv2HelperRetryCompatibleDelay()
+	want := []time.Duration{
+		0,
+		500 * time.Millisecond,
+		1 * time.Second,
+		1 * time.Second,
+		1 * time.Second,
+		2 * time.Second,
+		4 * time.Second,
+		8 * time.Second,
+		10 * time.Second,
+		10 * time.Second,
+	}
+	var got []time.Duration
+	for i := range len(want) {
+		delay.(DelayWithSetIncrementDelay).SetIncrementDelay(i < 3 || i > 4)
+
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -50,7 +78,7 @@ func TestSDKv2HelperRetryCompatibleDelay(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {
@@ -71,7 +99,7 @@ func TestSDKv2HelperRetryCompatibleDelayWithPollTimeout(t *testing.T) {
 	}
 	var got []time.Duration
 	for i := range len(want) {
-		got = append(got, delay(uint(i)))
+		got = append(got, delay.Next(uint(i)))
 	}
 
 	if diff := cmp.Diff(got, want); diff != "" {

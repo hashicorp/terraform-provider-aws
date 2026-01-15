@@ -40,6 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 * `integration_id` - (Required) Identifier of the [`aws_apigatewayv2_integration`](/docs/providers/aws/r/apigatewayv2_integration.html).
 * `integration_response_key` - (Required) Integration response key.
@@ -78,4 +79,4 @@ Using `terraform import`, import `aws_apigatewayv2_integration_response` using t
 % terraform import aws_apigatewayv2_integration_response.example aabbccddee/1122334/998877
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c751414ee371648e7a14d8bdd24be3cec193584e33fff3962b58af0f01c841ec -->
+<!-- cache-key: cdktf-0.20.8 input-1dca6be6ec21b8d98fc846571e3d5b3fb2b06d2d215e31372505556dc4089fe1 -->

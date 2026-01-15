@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,11 +24,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+/*
+  NOTE: aws_route53_record has a mutable identity ONLY because we shortcut the replace resource flow
+	when `set_identifier` changes. Other changes to Identity-related attributes do not do this.
+*/
 
 // @SDKResource("aws_route53_record", name="Record")
 // @IdentityAttribute("zone_id")
@@ -36,11 +42,11 @@ import (
 // @IdentityAttribute("type")
 // @IdentityAttribute("set_identifier", optional="true")
 // @MutableIdentity
-// @WrappedImport(false)
-// @Testing(identityTest=false)
+// @ImportIDHandler("recordImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSet")
 // @Testing(subdomainTfVar="zoneName;recordName")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="6.4.0")
 func resourceRecord() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -48,89 +54,6 @@ func resourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				// Import-by-id case
-				if d.Id() != "" {
-					parts := recordParseResourceID(d.Id())
-					// We check that we have parsed the id into the correct number of segments.
-					// We need at least 3 segments!
-					// However, parts[1] can be the empty string if it is the root domain of the zone,
-					// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
-					if parts[0] == "" || parts[2] == "" {
-						return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
-					}
-
-					d.Set("zone_id", parts[0])
-					d.Set(names.AttrName, parts[1])
-					d.Set(names.AttrType, parts[2])
-					if parts[3] != "" {
-						d.Set("set_identifier", parts[3])
-					}
-
-					return []*schema.ResourceData{d}, nil
-				}
-
-				identity, err := d.Identity()
-				if err != nil {
-					return nil, err
-				}
-
-				zoneIDRaw, ok := identity.GetOk("zone_id")
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", "zone_id")
-				}
-				zoneID, ok := zoneIDRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "zone_id", zoneIDRaw)
-				}
-				d.Set("zone_id", zoneID)
-
-				nameRaw, ok := identity.GetOk(names.AttrName)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrName)
-				}
-				name, ok := nameRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrName, nameRaw)
-				}
-				d.Set(names.AttrName, name)
-
-				typeRaw, ok := identity.GetOk(names.AttrType)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q is required", names.AttrType)
-				}
-				typ, ok := typeRaw.(string)
-				if !ok {
-					return nil, fmt.Errorf("identity attribute %q: expected string, got %T", names.AttrType, typeRaw)
-				}
-				d.Set(names.AttrType, typ)
-
-				vars := []string{
-					zoneID,
-					name,
-					typ,
-				}
-
-				setIdentifierRaw, ok := identity.GetOk("set_identifier")
-				if ok {
-					setIdentifier, ok := setIdentifierRaw.(string)
-					if !ok {
-						return nil, fmt.Errorf("identity attribute %q: expected string, got %T", "set_identifier", setIdentifierRaw)
-					}
-					d.Set("set_identifier", setIdentifier)
-
-					vars = append(vars, setIdentifier)
-				} else {
-					d.Set("set_identifier", "")
-				}
-
-				d.SetId(strings.Join(vars, "_"))
-
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
@@ -443,7 +366,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func(ctx context.Context) (any, error) {
 		return conn.ChangeResourceRecordSets(ctx, input)
 	})
 
@@ -455,15 +378,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Record: %s", err)
 	}
 
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	if output := outputRaw.(*route53.ChangeResourceRecordSetsOutput); output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -480,7 +395,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -769,16 +684,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	// Generate a new ID.
-	vars := []string{
-		zoneID,
-		strings.ToLower(d.Get(names.AttrName).(string)),
-		d.Get(names.AttrType).(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
-	}
-	d.SetId(strings.Join(vars, "_"))
+	d.SetId(createRecordImportID(d))
 
 	return append(diags, resourceRecordRead(ctx, d, meta)...)
 }
@@ -799,7 +705,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -926,7 +832,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1219,4 +1125,43 @@ func expandTxtEntry(s string) string {
 
 func flattenTxtEntry(s string) string {
 	return fmt.Sprintf(`"%s"`, s)
+}
+
+type recordImportID struct{}
+
+func (recordImportID) Create(d *schema.ResourceData) string {
+	return createRecordImportID(d)
+}
+
+func (recordImportID) Parse(id string) (string, map[string]string, error) {
+	parts := recordParseResourceID(id)
+	// We check that we have parsed the id into the correct number of segments.
+	// We need at least 3 segments!
+	// However, parts[1] can be the empty string if it is the root domain of the zone,
+	// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+	if parts[0] == "" || parts[2] == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", id)
+	}
+
+	result := map[string]string{
+		"zone_id":      parts[0],
+		names.AttrName: parts[1],
+		names.AttrType: parts[2],
+	}
+	if parts[3] != "" {
+		result["set_identifier"] = parts[3]
+	}
+	return id, result, nil
+}
+
+func createRecordImportID(d *schema.ResourceData) string {
+	parts := []string{
+		d.Get("zone_id").(string),
+		strings.ToLower(d.Get(names.AttrName).(string)),
+		d.Get(names.AttrType).(string),
+	}
+	if v, ok := d.GetOk("set_identifier"); ok {
+		parts = append(parts, v.(string))
+	}
+	return strings.Join(parts, "_")
 }

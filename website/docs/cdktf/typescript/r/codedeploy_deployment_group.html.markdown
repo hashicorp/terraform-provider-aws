@@ -246,6 +246,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `appName` - (Required) The name of the application.
 * `deploymentGroupName` - (Required) The name of the deployment group.
 * `serviceRoleArn` - (Required) The service role ARN that allows deployments.
@@ -452,4 +453,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.20.8 input-d8bdedddb53a7673bd54eacbe745d2b531c7d38e69649b2338f6c1ee7c5e3e87 -->
+<!-- cache-key: cdktf-0.20.8 input-b95f2ffdb6bf1c58ec579a49a6c4f4ec0aafb6eeece92f0ea2781e5743bc9a2a -->

@@ -36,6 +36,7 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `auto_adjust_data` - Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
+* `billing_view_arn` - ARN of the billing view.
 * `budget_exceeded` - Boolean indicating whether this budget has been exceeded.
 * `budget_limit` - The total amount of cost, usage, RI utilization, RI coverage, Savings Plans utilization, or Savings Plans coverage that you want to track with your budget. Contains object [Spend](#spend).
 * `budget_type` - Whether this budget tracks monetary cost or usage.

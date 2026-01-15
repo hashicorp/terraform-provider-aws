@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -560,7 +560,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACL(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafv2.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2069,6 +2069,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                          "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
@@ -2098,6 +2099,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "1",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":             "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
@@ -2127,6 +2129,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":             "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "1",
@@ -2155,6 +2158,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                          "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "0",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
@@ -2184,6 +2188,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":             "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
@@ -2213,6 +2218,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               "0",
 						"statement.0.rate_based_statement.0.limit":                                               "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                                  "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                               "0",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                         "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                          "0",
@@ -2242,6 +2248,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             "0",
 						"statement.0.rate_based_statement.0.limit":                                             "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                            "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                                "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                             "0",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                       "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                        "0",
@@ -2271,6 +2278,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         "0",
 						"statement.0.rate_based_statement.0.limit":                                         "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                        "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                            "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                         "0",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                   "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                    "0",
@@ -2319,6 +2327,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                          "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
@@ -2347,6 +2356,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                            "300",
 						"statement.0.rate_based_statement.0.limit":                                            "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                               "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                            "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                      "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                       "0",
@@ -2377,6 +2387,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                          "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
@@ -2405,6 +2416,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                            "300",
 						"statement.0.rate_based_statement.0.limit":                                            "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                               "0",
 						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                            "1",
 						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                      "0",
 						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                       "0",
@@ -2416,6 +2428,65 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                          "0",
 						"statement.0.rate_based_statement.0.custom_key.1.ja4_fingerprint.#":                   "1",
 						"statement.0.rate_based_statement.0.custom_key.1.ja4_fingerprint.0.fallback_behavior": "NO_MATCH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysBasic(webACLName, names.AttrHeader, "x-forwrded-for"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                    "1",
+						"statement.0.rate_based_statement.#":                                             "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
+						"statement.0.rate_based_statement.0.limit":                                       "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":                          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       "1",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.0.text_transformation.#": "1",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysASN(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                       "1",
+						"statement.0.rate_based_statement.#":                                "1",
+						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.limit":                          "50000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
+						"statement.0.rate_based_statement.0.custom_key.0.asn.#":             "1",
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
 					}),
 				),
 			},
@@ -3370,6 +3441,61 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_CloudFrontScopeResponseInspectionHeader(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_CloudFrontScopeResponseInspectionHeader(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`global/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.#":  "1",
+						"statement.0.managed_rule_group_statement.#":                                                                                                                "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/1/signin",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.0.identifier": "/password",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.payload_type":                "JSON",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.#":            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.username_field.0.identifier": "/username",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.#":                            "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.#":                   "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.0.name":              "sample-header",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.0.success_values.#":  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.0.success_values.0":  "f1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.0.failure_values.#":  "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.response_inspection.0.header.0.failure_values.0":  "f2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
@@ -3764,7 +3890,7 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -6433,6 +6559,57 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
+func testAccWebACLConfig_rateBasedStatement_customKeysASN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "CUSTOM_KEYS"
+        limit              = 50000
+
+        custom_key {
+          asn {}
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  tags = {
+    Tag1 = "Value1"
+    Tag2 = "Value2"
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
 func testAccWebACLConfig_rateBasedStatementUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -7127,6 +7304,69 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
+func testAccWebACLConfig_CloudFrontScopeResponseInspectionHeader(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesATPRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_atp_rule_set {
+            login_path = "/api/1/signin"
+            request_inspection {
+              password_field {
+                identifier = "/password"
+              }
+              payload_type = "JSON"
+              username_field {
+                identifier = "/username"
+              }
+            }
+            response_inspection {
+              header {
+                name           = "sample-header"
+                success_values = ["f1"]
+                failure_values = ["f2"]
+              }
+            }
+          }
+        }
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "AWSManagedRulesATPRuleSet_json"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
 func testAccWebACLConfig_associationConfigCloudFront(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -7364,11 +7604,6 @@ resource "aws_wafv2_web_acl" "test" {
 }
 
 func testAccWebACLConfig_dataProtectionConfig(rName, action, fieldType string, excludeRateBasedDetails, excludeRuleMatchDetails bool, keys []string) string {
-	keysString := ""
-	for _, key := range keys {
-		keysString += fmt.Sprintf("%q, ", key)
-	}
-
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -7396,7 +7631,7 @@ resource "aws_wafv2_web_acl" "test" {
     }
   }
 }
-`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, keysString)
+`, rName, action, fieldType, excludeRateBasedDetails, excludeRuleMatchDetails, acctest.ListOfStrings(keys...))
 }
 
 func testAccWebACLConfig_dataProtectionConfigMultiple(rName string) string {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -11,16 +11,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -120,6 +115,46 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitWeeks)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.tag_map.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.type", string(awstypes.LifecyclePolicyDetailFilterTypeCount)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.filter.0.value", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderLifecyclePolicy_policyDetailsExclusionRulesAMIsIsPublic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_imagebuilder_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAMIsIsPublic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.type", string(awstypes.LifecyclePolicyDetailActionTypeDelete)),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.amis", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.action.0.include_resources.0.snapshots", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.is_public", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_detail.0.exclusion_rules.0.amis.0.last_launched.0.unit", string(awstypes.LifecyclePolicyTimeUnitWeeks)),
@@ -236,73 +271,9 @@ func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccImageBuilderLifecyclePolicy_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_imagebuilder_lifecycle_policy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ImageBuilderServiceID),
-		CheckDestroy: testAccCheckLifecyclePolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccLifecyclePolicyConfig_basic(rName),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccLifecyclePolicyConfig_basic(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccLifecyclePolicyConfig_basic(rName),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
 			},
 		},
 	})
@@ -334,7 +305,7 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfimagebuilder.FindLifecyclePolicyByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -494,6 +465,51 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
       amis {
         is_public = true
         regions   = [data.aws_region.current.region]
+        last_launched {
+          unit  = "WEEKS"
+          value = 2
+        }
+        tag_map = {
+          "key1" = "value1"
+          "key2" = "value2"
+        }
+      }
+    }
+    filter {
+      type  = "COUNT"
+      value = "10"
+    }
+  }
+  resource_selection {
+    tag_map = {
+      "key1" = "value1"
+      "key2" = "value2"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccLifecyclePolicyConfig_policyDetailsExclusionRulesAMIsIsPublic(rName string) string {
+	return acctest.ConfigCompose(testAccLifecyclePolicyConfig_base(rName), fmt.Sprintf(`
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_detail {
+    action {
+      type = "DELETE"
+      include_resources {
+        amis      = true
+        snapshots = true
+      }
+    }
+    exclusion_rules {
+      amis {
+        regions = [data.aws_region.current.region]
         last_launched {
           unit  = "WEEKS"
           value = 2

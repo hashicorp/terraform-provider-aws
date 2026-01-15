@@ -115,6 +115,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `apiId` - (Required) API ID for the GraphQL API for the data source.
 * `name` - (Required) User-supplied name for the data source.
 * `type` - (Required) Type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`, `AMAZON_EVENTBRIDGE`, `AMAZON_OPENSEARCH_SERVICE`.
@@ -248,4 +249,4 @@ Using `terraform import`, import `aws_appsync_datasource` using the `apiId`, a h
 % terraform import aws_appsync_datasource.example abcdef123456-example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-148e64bd85002461ebb63b75834e59a0c9076b93aa1d2d2acbafd3ac1e5e1da1 -->
+<!-- cache-key: cdktf-0.20.8 input-f5c41f092aa9ba3a957819e6a21b63800197e3cba933d29dd778ae1e4e6afe9a -->

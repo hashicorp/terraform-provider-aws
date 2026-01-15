@@ -57,9 +57,10 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `addon_name` – (Required) Name of the EKS add-on. The name must match one of
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `addon_name` - (Required) Name of the EKS add-on. The name must match one of
   the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
-* `kubernetes_version` – (Required) Version of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `kubernetes_version` - (Required) Version of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 * `most_recent` - (Optional) Determines if the most recent or default version of the addon should be returned.
 
 ## Attribute Reference
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the add-on
 * `version` - Version of the EKS add-on.
 
-<!-- cache-key: cdktf-0.20.8 input-7c6f3385681241f89ada51ee4c5d85e4e13250c68f32fe30e511ca8a29a53eed -->
+<!-- cache-key: cdktf-0.20.8 input-f59cdbd478e6021e1d0c128ecd1a16c3b92d69682e80b99953c6214c0a46d70a -->

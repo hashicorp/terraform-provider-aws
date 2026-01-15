@@ -173,7 +173,7 @@ The `ebs` block supports the following:
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1/io2/gp3"`.
-* `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
+* `kms_key_id` - (Optional) Identifier (key ID, key alias, key ARN, or alias ARN) of the customer managed KMS key to use for EBS encryption.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
@@ -186,7 +186,7 @@ The `ebs` block supports the following:
 
 The `capacity_reservation_specification` block supports the following:
 
-* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacity_reservation_id` or `capacity_reservation_resource_group_arn` is specified in `capacity_reservation_target` block, either omit `capacity_reservation_preference` or set it to `capacity-reservations-only`.
 * `capacity_reservation_target` - Used to target a specific Capacity Reservation:
 
 The `capacity_reservation_target` block supports the following:
@@ -461,7 +461,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availability_zone` - (Optional) The Availability Zone for the instance.
-* `group_name` - (Optional) The name of the placement group for the instance.
+* `group_id` - (Optional) The ID of the placement group for the instance. Conflicts with `group_name`.
+* `group_name` - (Optional) The name of the placement group for the instance. Conflicts with `group_id`.
 * `host_id` - (Optional) The ID of the Dedicated Host for the instance.
 * `host_resource_group_arn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - (Optional) Reserved for future use.

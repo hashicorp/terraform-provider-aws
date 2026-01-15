@@ -69,6 +69,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `accountIdentifier` - (Optional) The ID of the Amazon Web Services account where the environment exists
 * `accountRegion` - (Optional) The Amazon Web Services region where the environment exists.
 * `blueprintIdentifier` - (Optional) The blueprint with which the environment is created.
@@ -132,4 +133,4 @@ Using `terraform import`, import DataZone Environment using the `domain_idntifie
 % terraform import aws_datazone_environment.example dzd_d2i7tzk3tnjjf4,5vpywijpwryec0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d234e40b71b60f3006b55d70d5bbb4904dafbad0d406de977e43b53f5247046 -->
+<!-- cache-key: cdktf-0.20.8 input-26464f7bcd766464488bb5ad7fd9edffe19fe582109f2a44835d7d96f4003a06 -->

@@ -39,6 +39,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
@@ -55,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Image Builder Image Pipelines.
 * `names` - Set of names of the matched Image Builder Image Pipelines.
 
-<!-- cache-key: cdktf-0.20.8 input-7f14f22e0bfc6850a65dfe0895ccb6b3748efd7c5822319dc24bc39f3c22e7dc -->
+<!-- cache-key: cdktf-0.20.8 input-d3937dfbd44f38ef28e266f635c1138eeead9a11024ce3b8a829cb1eeff8d9c5 -->

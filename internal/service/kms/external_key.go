@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -86,13 +87,23 @@ func resourceExternalKey() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
+			"key_spec": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeySpec](),
+			},
 			"key_state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"key_usage": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.KeyUsageType](),
 			},
 			"multi_region": {
 				Type:     schema.TypeBool,
@@ -118,13 +129,20 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := kms.CreateKeyInput{
 		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
-		KeyUsage:                       awstypes.KeyUsageTypeEncryptDecrypt,
 		Origin:                         awstypes.OriginTypeExternal,
 		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_spec"); ok {
+		input.KeySpec = awstypes.KeySpec(v.(string))
+	}
+
+	if v, ok := d.GetOk("key_usage"); ok {
+		input.KeyUsage = awstypes.KeyUsageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("multi_region"); ok {
@@ -145,7 +163,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.CreateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.CreateKeyOutput, error) {
 		return conn.CreateKey(ctx, &input)
 	})
 
@@ -205,7 +223,7 @@ func resourceExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS External Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -344,7 +362,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.GetParametersForImport(ctx, &inputGPFI)
 	})
 
@@ -387,7 +405,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.Client, resourceTy
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.ImportKeyMaterial(ctx, &inputIKM)
 	})
 
@@ -402,7 +420,7 @@ func waitKeyMaterialImported(ctx context.Context, conn *kms.Client, id string) (
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStatePendingImport),
 		Target:  enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Refresh: statusKeyState(ctx, conn, id),
@@ -422,7 +440,7 @@ func waitKeyValidToPropagated(ctx context.Context, conn *kms.Client, id string, 
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

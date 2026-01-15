@@ -1,0 +1,12 @@
+```release-note:enhancement
+resource/aws_sqs_queue: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_sqs_queue_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_sqs_queue_redrive_policy: Add resource identity support
+```
+```release-note:enhancement
+resource/aws_sqs_queue_redrive_allow_policy: Add resource identity support
+```

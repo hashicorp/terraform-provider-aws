@@ -44,6 +44,10 @@ The following arguments are required:
 
 * `name` - (Required) Name for the allocated static IP.
 
+The following arguments are optional:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -80,4 +84,4 @@ Using `terraform import`, import `aws_lightsail_static_ip` using the name attrib
 % terraform import aws_lightsail_static_ip.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dd772c37153df1e64a96b6b30283b7d2a377dcd590087c123ee4380c2126dc2c -->
+<!-- cache-key: cdktf-0.20.8 input-26b2643092ee3c2ad9da9c653598457ee814205d2f2b158e21e013987bc2fcda -->

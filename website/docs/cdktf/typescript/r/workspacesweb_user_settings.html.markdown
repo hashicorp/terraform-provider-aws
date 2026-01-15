@@ -155,6 +155,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additionalEncryptionContext` - (Optional) Additional encryption context for the user settings.
 * `associatedPortalArns` - (Optional) List of web portal ARNs to associate with the user settings.
 * `cookieSynchronizationConfiguration` - (Optional) Configuration that specifies which cookies should be synchronized from the end user's local browser to the remote browser. Detailed below.
@@ -222,4 +223,4 @@ Using `terraform import`, import WorkSpaces Web User Settings using the `userSet
 % terraform import aws_workspacesweb_user_settings.example arn:aws:workspacesweb:us-west-2:123456789012:usersettings/abcdef12345
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-14a2f85b4533f4f27dfaa34ef71eeac348be190ffbc7e8dba9125f4ed3780366 -->
+<!-- cache-key: cdktf-0.20.8 input-0e7ff4e33655aa4fb9309dd13cacb9e14b6e7b34fab554a0f6ccf239c35f3726 -->

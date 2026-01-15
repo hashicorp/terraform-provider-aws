@@ -47,13 +47,6 @@ class MyConvertedCode(TerraformStack):
             disable_api_stop=True,
             disable_api_termination=True,
             ebs_optimized=Token.as_string(True),
-            elastic_gpu_specifications=[LaunchTemplateElasticGpuSpecifications(
-                type="test"
-            )
-            ],
-            elastic_inference_accelerator=LaunchTemplateElasticInferenceAccelerator(
-                type="eia1.medium"
-            ),
             iam_instance_profile=LaunchTemplateIamInstanceProfile(
                 name="test"
             ),
@@ -103,6 +96,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
 * `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
@@ -115,9 +109,6 @@ This resource supports the following arguments:
 * `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_ChangingDisableAPITermination.html)
 * `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - (Optional) **DEPRECATED** The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
-  below for more details.
-* `elastic_inference_accelerator` - (Optional) **DEPRECATED** Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
@@ -188,7 +179,7 @@ The `ebs` block supports the following:
 
 The `capacity_reservation_specification` block supports the following:
 
-* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `open` or `none`. (Default `none`).
+* `capacity_reservation_preference` - Indicates the instance's Capacity Reservation preferences. Can be `capacity-reservations-only`, `open` or `none`. If `capacity_reservation_id` or `capacity_reservation_resource_group_arn` is specified in `capacity_reservation_target` block, either omit `capacity_reservation_preference` or set it to `capacity-reservations-only`.
 * `capacity_reservation_target` - Used to target a specific Capacity Reservation:
 
 The `capacity_reservation_target` block supports the following:
@@ -218,22 +209,6 @@ The `credit_specification` block supports the following:
   Can be `standard` or `unlimited`.
   T3 instances are launched as `unlimited` by default.
   T2 instances are launched as `standard` by default.
-
-### Elastic GPU
-
-Attach an elastic GPU the instance.
-
-The `elastic_gpu_specifications` block supports the following:
-
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
-
-### Elastic Inference Accelerator
-
-**DEPRECATED** Attach an Elastic Inference Accelerator to the instance. Additional information about Elastic Inference in EC2 can be found in the [EC2 User Guide](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-inference.html).
-
-The `elastic_inference_accelerator` configuration block supports the following:
-
-* `type` - (Required) Accelerator type.
 
 ### Enclave Options
 
@@ -479,7 +454,8 @@ The `placement` block supports the following:
 
 * `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
 * `availability_zone` - (Optional) The Availability Zone for the instance.
-* `group_name` - (Optional) The name of the placement group for the instance.
+* `group_id` - (Optional) The ID of the placement group for the instance. Conflicts with `group_name`.
+* `group_name` - (Optional) The name of the placement group for the instance. Conflicts with `group_id`.
 * `host_id` - (Optional) The ID of the Dedicated Host for the instance.
 * `host_resource_group_arn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
 * `spread_domain` - (Optional) Reserved for future use.
@@ -537,4 +513,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f96a6df42d4adf0fb13f42a075e9a959af313470da2120128823b0ed62073b56 -->
+<!-- cache-key: cdktf-0.20.8 input-92d9977f8d1c5bc9b3b0021fb0d5d2f7dce3e91c7a647d9c0095fd0667e0d85b -->

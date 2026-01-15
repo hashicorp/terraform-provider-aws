@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `calculatorName` - (Required) Name of the route calculator resource.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags for the route calculator.
 * `updateTime` - Timestamp for when the route calculator resource was last updated in ISO 8601 format.
 
-<!-- cache-key: cdktf-0.20.8 input-a90568e35dd04a8f46ec515120f565472a2f20502f4459ee9cb16f0099b2a191 -->
+<!-- cache-key: cdktf-0.20.8 input-7840d6b2682252948392347098f0b60fb5f6e8d51e1cdb2cbee1e94d30789d54 -->

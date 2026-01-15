@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -25,14 +25,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,15 +62,8 @@ type refreshScheduleResource struct {
 func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+			names.AttrARN:          framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
 			"data_set_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -204,28 +199,27 @@ type refreshOnDayModel struct {
 }
 
 func (r *refreshScheduleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data refreshScheduleResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
+	}
+
 	conn := r.Meta().QuickSightClient(ctx)
 
-	var plan refreshScheduleResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
-	}
-	awsAccountID, dataSetID, scheduleID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.DataSetID), flex.StringValueFromFramework(ctx, plan.ScheduleID)
-
+	awsAccountID, dataSetID, scheduleID := fwflex.StringValueFromFramework(ctx, data.AWSAccountID), fwflex.StringValueFromFramework(ctx, data.DataSetID), fwflex.StringValueFromFramework(ctx, data.ScheduleID)
 	var in quicksight.CreateRefreshScheduleInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, &in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	in.Schedule.ScheduleId = plan.ScheduleID.ValueStringPointer()
+	in.Schedule.ScheduleId = data.ScheduleID.ValueStringPointer()
 
 	// Because StartAfterDateTime is a string and not a time type, we have to handle it outside of AutoFlex
-	schedule, diags := plan.Schedule.ToPtr(ctx)
+	schedule, diags := data.Schedule.ToPtr(ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -238,34 +232,34 @@ func (r *refreshScheduleResource) Create(ctx context.Context, req resource.Creat
 	out, err := conn.CreateRefreshSchedule(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, plan.ScheduleID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, data.ScheduleID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, plan.ScheduleID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameRefreshSchedule, data.ScheduleID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, refreshScheduleCreateResourceID(awsAccountID, dataSetID, scheduleID))
+	data.ID = fwflex.StringValueToFramework(ctx, refreshScheduleCreateResourceID(awsAccountID, dataSetID, scheduleID))
 
 	_, outFind, err := findRefreshScheduleByThreePartKey(ctx, conn, awsAccountID, dataSetID, scheduleID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, plan.ID.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionReading, resNameRefreshSchedule, data.ID.String(), nil),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(plan.refreshFromRead(ctx, out.Arn, outFind)...)
+	resp.Diagnostics.Append(data.refreshFromRead(ctx, out.Arn, outFind)...)
 	// resp.Diagnostics.Append(flex.Flatten(ctx, outFind, &plan)...)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -287,7 +281,7 @@ func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	arn, outFind, err := findRefreshScheduleByThreePartKey(ctx, conn, awsAccountID, dataSetID, scheduleID)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -299,9 +293,9 @@ func (r *refreshScheduleResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.DataSetID = flex.StringValueToFramework(ctx, dataSetID)
-	state.ScheduleID = flex.StringValueToFramework(ctx, scheduleID)
+	state.AWSAccountID = fwflex.StringValueToFramework(ctx, awsAccountID)
+	state.DataSetID = fwflex.StringValueToFramework(ctx, dataSetID)
+	state.ScheduleID = fwflex.StringValueToFramework(ctx, scheduleID)
 	resp.Diagnostics.Append(state.refreshFromRead(ctx, arn, outFind)...)
 	// resp.Diagnostics.Append(flex.Flatten(ctx, outFind, &state)...)
 
@@ -330,7 +324,7 @@ func (r *refreshScheduleResource) Update(ctx context.Context, req resource.Updat
 
 	if !plan.Schedule.Equal(state.Schedule) {
 		var in quicksight.UpdateRefreshScheduleInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -482,7 +476,7 @@ func findRefreshSchedule(ctx context.Context, conn *quicksight.Client, input *qu
 	output, err := conn.DescribeRefreshSchedule(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -493,7 +487,7 @@ func findRefreshSchedule(ctx context.Context, conn *quicksight.Client, input *qu
 	}
 
 	if output == nil || output.RefreshSchedule == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Arn, output.RefreshSchedule, nil
@@ -506,7 +500,7 @@ func (rd *refreshScheduleResourceModel) refreshFromRead(ctx context.Context, arn
 		return diags
 	}
 
-	rd.ARN = flex.StringToFramework(ctx, arn)
+	rd.ARN = fwflex.StringToFramework(ctx, arn)
 
 	schedule, d := flattenSchedule(ctx, out)
 	diags.Append(d...)
@@ -524,7 +518,7 @@ func flattenSchedule(ctx context.Context, apiObject *awstypes.RefreshSchedule) (
 
 	var model scheduleModel
 
-	diags.Append(flex.Flatten(ctx, apiObject, &model)...)
+	diags.Append(fwflex.Flatten(ctx, apiObject, &model)...)
 
 	if apiObject.StartAfterDateTime != nil {
 		model.StartAfterDateTime = types.StringValue(apiObject.StartAfterDateTime.Format(startAfterDateTimeLayout))

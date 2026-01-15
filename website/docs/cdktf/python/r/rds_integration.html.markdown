@@ -126,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_encryption_context` - (Optional, Forces new resources) Set of non-secret key–value pairs that contains additional contextual information about the data.
 For more information, see the [User Guide](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context).
 You can only include this parameter if you specify the `kms_key_id` parameter.
@@ -146,7 +147,7 @@ For more detailed documentation about each argument, refer to the [AWS official 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Integration.
-* `id` - ID of the Integration.
+* `id` - (**Deprecated**, use `arn` instead) ARN of the Integration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -158,6 +159,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_rds_integration.example
+  identity = {
+    "arn" = "arn:aws:rds:us-east-1:123456789012:integration:12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_rds_integration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the RDS integration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import RDS (Relational Database) Integration using the `arn`. For example:
 
@@ -182,4 +204,4 @@ Using `terraform import`, import RDS (Relational Database) Integration using the
 % terraform import aws_rds_integration.example arn:aws:rds:us-west-2:123456789012:integration:abcdefgh-0000-1111-2222-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3c8bb2d8edc64fab097c8f558a3a0c85630c655783a80094ab43d1e7002eaffc -->
+<!-- cache-key: cdktf-0.20.8 input-da3978e6abd52038cf3b1c02642c6095f843e68d19ccd9f0f0b76c376e0e4e42 -->

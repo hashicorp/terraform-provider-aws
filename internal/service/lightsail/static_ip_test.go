@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -23,6 +23,7 @@ import (
 func TestAccLightsailStaticIP_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	staticIpName := fmt.Sprintf("tf-test-lightsail-%s", sdkacctest.RandString(5))
+	resourceName := "aws_lightsail_static_ip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -33,8 +34,13 @@ func TestAccLightsailStaticIP_basic(t *testing.T) {
 			{
 				Config: testAccStaticIPConfig_basic(staticIpName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStaticIPExists(ctx, "aws_lightsail_static_ip.test"),
+					testAccCheckStaticIPExists(ctx, resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `id` - (Optional) ID of the specific NAT Gateway to retrieve.
 * `subnet_id` - (Optional) ID of subnet that the NAT Gateway resides in.
 * `vpc_id` - (Optional) ID of the VPC that the NAT Gateway resides in.
@@ -98,4 +99,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-ecbcfc6d111d82e3b79cd740bce942af2770c3e01f04e560fdf76491372a848f -->
+<!-- cache-key: cdktf-0.20.8 input-ae00d12710fee6dce2e6a7dc1d8341873ed565123e75320be850a86c8e962190 -->

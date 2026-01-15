@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appfabric_test
@@ -21,14 +21,18 @@ func TestAccAppFabric_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AppBundle": {
-			acctest.CtBasic:       testAccAppBundle_basic,
-			acctest.CtDisappears:  testAccAppBundle_disappears,
-			"cmk":                 testAccAppBundle_cmk,
-			"tags":                testAccAppFabricAppBundle_tagsSerial,
-			"regionCreateNull":    testAccAppBundle_regionCreateNull,
-			"regionCreateNonNull": testAccAppBundle_regionCreateNonNull,
-			"upgradeFromV5":       testAccAppBundle_upgradeFromV5,
-			"Identity":            testAccAppFabricAppBundle_IdentitySerial,
+			acctest.CtBasic:                 testAccAppBundle_basic,
+			acctest.CtDisappears:            testAccAppBundle_disappears,
+			"cmk":                           testAccAppBundle_cmk,
+			"tags":                          testAccAppFabricAppBundle_tagsSerial,
+			"regionCreateNull":              testAccAppBundle_regionCreateNull,
+			"regionCreateNonNull":           testAccAppBundle_regionCreateNonNull,
+			"upgradeFromV5":                 testAccAppBundle_upgradeFromV5,
+			"upgradeFromV5PlanRefreshFalse": testAccAppBundle_upgradeFromV5PlanRefreshFalse,
+			"upgradeFromV5WithUpdatePlanRefreshFalse":    testAccAppBundle_upgradeFromV5WithUpdatePlanRefreshFalse,
+			"upgradeFromV5WithDefaultRegionRefreshFalse": testAccAppBundle_upgradeFromV5WithDefaultRegionRefreshFalse,
+			"upgradeFromV5WithNewRegionRefreshFalse":     testAccAppBundle_upgradeFromV5WithNewRegionRefreshFalse,
+			"Identity":                                   testAccAppFabricAppBundle_IdentitySerial,
 		},
 		"AppAuthorization": {
 			acctest.CtBasic:      testAccAppAuthorization_basic,

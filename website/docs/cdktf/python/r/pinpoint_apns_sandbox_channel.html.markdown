@@ -42,6 +42,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `application_id` - (Required) The application ID.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
 * `default_authentication_method` - (Optional) The default authentication method used for APNs Sandbox.
@@ -92,4 +93,4 @@ Using `terraform import`, import Pinpoint APNs Sandbox Channel using the `applic
 % terraform import aws_pinpoint_apns_sandbox_channel.apns_sandbox application-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9b39128a0fb5f80f620d484ded1a0f9f54b7b1afaaffa50e404146a69d92c38f -->
+<!-- cache-key: cdktf-0.20.8 input-eefbfb70b27d45d5da1829c28265a3cc288b00adce9ccd7f2104d21b5423882e -->

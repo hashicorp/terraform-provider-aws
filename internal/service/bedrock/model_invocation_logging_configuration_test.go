@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -10,17 +10,12 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +92,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -194,7 +189,7 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 
 			_, err := tfbedrock.FindModelInvocationLoggingConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -207,88 +202,6 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 
 		return nil
 	}
-}
-
-func testAccBedrockModelInvocationLoggingConfiguration_Identity_ExistingResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_model_invocation_logging_configuration.test"
-
-	resource.Test(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, names.BedrockServiceID),
-		CheckDestroy: testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccModelInvocationLoggingConfigurationConfig_basicV5(rName, "null", "null", "null", "null"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, "null", "null", "null", "null"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccModelInvocationLoggingConfigurationConfig_basic(rName, "null", "null", "null", "null"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
-						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
-					}),
-				},
-			},
-		},
-	})
 }
 
 func testAccModelInvocationLoggingConfigurationConfig_basic(rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled string) string {
@@ -305,6 +218,9 @@ resource "aws_s3_bucket" "test" {
     ignore_changes = ["tags", "tags_all"]
   }
 }
+
+# Use "data.aws_region.current.name" instead of "data.aws_region.current.region" as this configguration
+# is used in a v6.0.0 upgrade test and must work in pre-v6.0.0 scenarios.
 
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
@@ -328,7 +244,7 @@ resource "aws_s3_bucket_policy" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]
@@ -357,7 +273,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]
@@ -407,120 +323,6 @@ resource "aws_bedrock_model_invocation_logging_configuration" "test" {
 
     s3_config {
       bucket_name = aws_s3_bucket.test.id
-      key_prefix  = "bedrock"
-    }
-  }
-}
-`, rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled)
-}
-
-func testAccModelInvocationLoggingConfigurationConfig_basicV5(rName, embeddingDataDeliveryEnabled, imageDataDeliveryEnabled, textDataDeliveryEnabled, videoDataDeliveryEnabled string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-data "aws_region" "current" {}
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-
-  lifecycle {
-    ignore_changes = ["tags", "tags_all"]
-  }
-}
-
-resource "aws_s3_bucket_policy" "test" {
-  bucket = aws_s3_bucket.test.bucket
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "bedrock.amazonaws.com"
-    },
-    "Action": [
-      "s3:*"
-    ],
-    "Resource": [
-      "${aws_s3_bucket.test.arn}/*"
-    ],
-    "Condition": {
-      "StringEquals": {
-        "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
-      },
-      "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
-      }
-    }
-  }]
-}
-EOF
-}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "bedrock.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole",
-    "Condition": {
-      "StringEquals": {
-        "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
-      },
-      "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
-      }
-    }
-  }]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ],
-    "Resource": "${aws_cloudwatch_log_group.test.arn}:*"
-  }]
-}
-EOF
-}
-
-resource "aws_bedrock_model_invocation_logging_configuration" "test" {
-  logging_config {
-    embedding_data_delivery_enabled = %[2]s
-    image_data_delivery_enabled     = %[3]s
-    text_data_delivery_enabled      = %[4]s
-    video_data_delivery_enabled     = %[5]s
-
-    cloudwatch_config {
-      log_group_name = aws_cloudwatch_log_group.test.name
-      role_arn       = aws_iam_role.test.arn
-    }
-
-    s3_config {
-      bucket_name = aws_s3_bucket.test.bucket
       key_prefix  = "bedrock"
     }
   }

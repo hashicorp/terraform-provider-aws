@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -12,13 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -79,7 +74,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_disappears_Application(t 
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceApplication, applicationResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssoadmin.ResourceApplication, applicationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -127,94 +122,6 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource_fromV5(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.100.0",
-					},
-				},
-				Config: testAccApplicationAssignmentConfigurationConfig_basic_v5(rName, true),
-				ConfigStateChecks: []statecheck.StateCheck{
-					tfstatecheck.ExpectNoIdentity(resourceName),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("application_arn")),
-				},
-			},
-		},
-	})
-}
-
-func TestAccSSOAdminApplicationAssignmentConfiguration_Identity_ExistingResource_fromV6(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssoadmin_application_assignment_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(tfversion.Version1_12_0),
-		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SSOAdminServiceID),
-		CheckDestroy: testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "6.0.0",
-					},
-				},
-				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("application_arn")),
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectIdentityValueMatchesState(resourceName, tfjsonpath.New("application_arn")),
-				},
 			},
 		},
 	})
@@ -278,23 +185,6 @@ resource "aws_ssoadmin_application" "test" {
 
 resource "aws_ssoadmin_application_assignment_configuration" "test" {
   application_arn     = aws_ssoadmin_application.test.arn
-  assignment_required = %[3]t
-}
-`, rName, testAccApplicationProviderARN, assignmentRequired)
-}
-
-func testAccApplicationAssignmentConfigurationConfig_basic_v5(rName string, assignmentRequired bool) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_ssoadmin_application" "test" {
-  name                     = %[1]q
-  application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-}
-
-resource "aws_ssoadmin_application_assignment_configuration" "test" {
-  application_arn     = aws_ssoadmin_application.test.application_arn
   assignment_required = %[3]t
 }
 `, rName, testAccApplicationProviderARN, assignmentRequired)

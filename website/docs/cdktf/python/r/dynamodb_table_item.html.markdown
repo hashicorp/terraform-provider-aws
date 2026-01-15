@@ -54,6 +54,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.
@@ -69,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import DynamoDB table items.
 
-<!-- cache-key: cdktf-0.20.8 input-2794dad312c81acdfa2925339c3e2cd21bd5cfcb6949461b238bb0887694ad8b -->
+<!-- cache-key: cdktf-0.20.8 input-bea00e60f57659c3a7a505e351447fc531f912f3531d68e75214953ff7cdaa41 -->

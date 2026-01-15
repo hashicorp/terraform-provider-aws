@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -40,6 +40,10 @@ func (d *policyStoreDataSource) Schema(ctx context.Context, request datasource.S
 			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+			},
+			names.AttrDeletionProtection: schema.StringAttribute{
+				Computed:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.DeletionProtection](),
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
@@ -87,6 +91,7 @@ type policyStoreDataSourceModel struct {
 	framework.WithRegionModel
 	ARN                types.String                                             `tfsdk:"arn"`
 	CreatedDate        timetypes.RFC3339                                        `tfsdk:"created_date"`
+	DeletionProtection fwtypes.StringEnum[awstypes.DeletionProtection]          `tfsdk:"deletion_protection"`
 	Description        types.String                                             `tfsdk:"description"`
 	ID                 types.String                                             `tfsdk:"id"`
 	LastUpdatedDate    timetypes.RFC3339                                        `tfsdk:"last_updated_date"`

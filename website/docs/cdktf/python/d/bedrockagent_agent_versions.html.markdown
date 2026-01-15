@@ -37,6 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `agent_id` - (Required) Unique identifier of the agent.
 
 ## Attribute Reference
@@ -60,4 +61,4 @@ This data source exports the following attributes in addition to the arguments a
 * `guardrail_identifier` - Unique identifier of the guardrail.
 * `guardrail_version` - Version of the guardrail.
 
-<!-- cache-key: cdktf-0.20.8 input-52bfd41e02aad9ddf32b0c7ad3990928ec41756c1e0868742e9da57d7039957b -->
+<!-- cache-key: cdktf-0.20.8 input-28f56fa36e130746e980853b83f36f2585178792407fac937efe50d2da8d76fc -->

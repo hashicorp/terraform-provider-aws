@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the Job Definition. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `revision` - The revision of the job definition.
 * `name` - The name of the job definition to register. It can be up to 128 letters long. It can contain uppercase and lowercase letters, numbers, hyphens (-), and underscores (_).
@@ -299,4 +300,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `attempt_duration_seconds` - The job timeout time (in seconds) that's measured from the job attempt's startedAt timestamp.
 
-<!-- cache-key: cdktf-0.20.8 input-d67c7c8f34bcd44300ace9274ab0b35102b23c36b0ba36058a1028501370ee6c -->
+<!-- cache-key: cdktf-0.20.8 input-e0b0abdf3ec6eaa32756deeae8c0708d6124b8186435338a62d2084e16938a78 -->

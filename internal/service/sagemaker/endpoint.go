@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -6,6 +6,7 @@ package sagemaker
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,12 +16,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +37,7 @@ func resourceEndpoint() *schema.Resource {
 		ReadWithoutTimeout:   resourceEndpointRead,
 		UpdateWithoutTimeout: resourceEndpointUpdate,
 		DeleteWithoutTimeout: resourceEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -246,27 +250,49 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 	} else {
 		name = id.UniqueId()
 	}
-	input := &sagemaker.CreateEndpointInput{
+	input := sagemaker.CreateEndpointInput{
 		EndpointName:       aws.String(name),
 		EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
-		input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
+		input.DeploymentConfig = expandDeploymentConfig(v.([]any))
 	}
 
-	_, err := conn.CreateEndpoint(ctx, input)
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.CreateEndpoint(ctx, &input)
+
+		if err != nil {
+			return tfresource.NonRetryableError(fmt.Errorf("creating SageMaker AI Endpoint (%s): %w", name, err))
+		}
+
+		_, err = waitEndpointInService(ctx, conn, name)
+
+		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"
+		if errs.Contains(err, `Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"`) {
+			r := resourceEndpoint()
+			d := r.Data(nil)
+			d.SetId(name)
+			if diags := r.DeleteWithoutTimeout(ctx, d, meta); diags.HasError() { // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
+				return tfresource.NonRetryableError(sdkdiag.DiagnosticsError(diags))
+			}
+
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(fmt.Errorf("waiting for SageMaker AI Endpoint (%s) create: %w", name, err))
+		}
+
+		return nil
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SageMaker AI Endpoint (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.SetId(name)
-
-	if _, err := waitEndpointInService(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker AI Endpoint (%s) create: %s", name, err)
-	}
 
 	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
@@ -277,7 +303,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -288,7 +314,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.Set(names.AttrARN, endpoint.EndpointArn)
-	if err := d.Set("deployment_config", flattenEndpointDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
+	if err := d.Set("deployment_config", flattenDeploymentConfig(endpoint.LastDeploymentConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting deployment_config: %s", err)
 	}
 	d.Set("endpoint_config_name", endpoint.EndpointConfigName)
@@ -302,16 +328,17 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	if d.HasChanges("endpoint_config_name", "deployment_config") {
-		input := &sagemaker.UpdateEndpointInput{
+		_, n := d.GetChange("endpoint_config_name")
+		input := sagemaker.UpdateEndpointInput{
 			EndpointName:       aws.String(d.Id()),
-			EndpointConfigName: aws.String(d.Get("endpoint_config_name").(string)),
+			EndpointConfigName: aws.String(n.(string)),
 		}
 
 		if v, ok := d.GetOk("deployment_config"); ok && (len(v.([]any)) > 0) {
-			input.DeploymentConfig = expandEndpointDeploymentConfig(v.([]any))
+			input.DeploymentConfig = expandDeploymentConfig(v.([]any))
 		}
 
-		_, err := conn.UpdateEndpoint(ctx, input)
+		_, err := conn.UpdateEndpoint(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker AI Endpoint (%s): %s", d.Id(), err)
@@ -330,9 +357,10 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).SageMakerClient(ctx)
 
 	log.Printf("[INFO] Deleting SageMaker AI Endpoint: %s", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &sagemaker.DeleteEndpointInput{
+	input := sagemaker.DeleteEndpointInput{
 		EndpointName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteEndpoint(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
 		return diags
@@ -350,18 +378,18 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta an
 }
 
 func findEndpointByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeEndpointOutput, error) {
-	input := &sagemaker.DescribeEndpointInput{
+	input := sagemaker.DescribeEndpointInput{
 		EndpointName: aws.String(name),
 	}
 
-	output, err := findEndpoint(ctx, conn, input)
+	output, err := findEndpoint(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if status := output.EndpointStatus; status == awstypes.EndpointStatusDeleting {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -374,7 +402,7 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -385,17 +413,17 @@ func findEndpoint(ctx context.Context, conn *sagemaker.Client, input *sagemaker.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -411,7 +439,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 	const (
 		timeout = 60 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusCreating, awstypes.EndpointStatusUpdating, awstypes.EndpointStatusSystemUpdating),
 		Target:  enum.Slice(awstypes.EndpointStatusInService),
 		Refresh: statusEndpoint(ctx, conn, name),
@@ -422,7 +450,7 @@ func waitEndpointInService(ctx context.Context, conn *sagemaker.Client, name str
 
 	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
 		if failureReason := output.FailureReason; failureReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureReason)))
 		}
 
 		return output, err
@@ -435,7 +463,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEndpoint(ctx, conn, name),
@@ -446,7 +474,7 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 
 	if output, ok := outputRaw.(*sagemaker.DescribeEndpointOutput); ok {
 		if failureReason := output.FailureReason; failureReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureReason)))
 		}
 
 		return output, err
@@ -455,252 +483,247 @@ func waitEndpointDeleted(ctx context.Context, conn *sagemaker.Client, name strin
 	return nil, err
 }
 
-func expandEndpointDeploymentConfig(configured []any) *awstypes.DeploymentConfig {
-	if len(configured) == 0 {
+func expandDeploymentConfig(tfList []any) *awstypes.DeploymentConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.DeploymentConfig{
-		BlueGreenUpdatePolicy: expandEndpointDeploymentConfigBlueGreenUpdatePolicy(m["blue_green_update_policy"].([]any)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DeploymentConfig{
+		BlueGreenUpdatePolicy: expandBlueGreenUpdatePolicy(tfMap["blue_green_update_policy"].([]any)),
 	}
 
-	if v, ok := m["auto_rollback_configuration"].([]any); ok && len(v) > 0 {
-		c.AutoRollbackConfiguration = expandEndpointDeploymentConfigAutoRollbackConfig(v)
+	if v, ok := tfMap["auto_rollback_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.AutoRollbackConfiguration = expandAutoRollbackConfig(v)
 	}
 
-	if v, ok := m["rolling_update_policy"].([]any); ok && len(v) > 0 {
-		c.RollingUpdatePolicy = expandEndpointDeploymentConfigRollingUpdatePolicy(v)
+	if v, ok := tfMap["rolling_update_policy"].([]any); ok && len(v) > 0 {
+		apiObject.RollingUpdatePolicy = expandRollingUpdatePolicy(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentConfig(configured *awstypes.DeploymentConfig) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenDeploymentConfig(apiObject *awstypes.DeploymentConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"blue_green_update_policy": flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured.BlueGreenUpdatePolicy),
+	tfMap := map[string]any{
+		"blue_green_update_policy": flattenBlueGreenUpdatePolicy(apiObject.BlueGreenUpdatePolicy),
 	}
 
-	if configured.AutoRollbackConfiguration != nil {
-		cfg["auto_rollback_configuration"] = flattenEndpointDeploymentConfigAutoRollbackConfig(configured.AutoRollbackConfiguration)
+	if apiObject.AutoRollbackConfiguration != nil {
+		tfMap["auto_rollback_configuration"] = flattenAutoRollbackConfig(apiObject.AutoRollbackConfiguration)
 	}
 
-	if configured.RollingUpdatePolicy != nil {
-		cfg["rolling_update_policy"] = flattenEndpointDeploymentConfigRollingUpdatePolicy(configured.RollingUpdatePolicy)
+	if apiObject.RollingUpdatePolicy != nil {
+		tfMap["rolling_update_policy"] = flattenRollingUpdatePolicy(apiObject.RollingUpdatePolicy)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentConfigBlueGreenUpdatePolicy(configured []any) *awstypes.BlueGreenUpdatePolicy {
-	if len(configured) == 0 {
+func expandBlueGreenUpdatePolicy(tfList []any) *awstypes.BlueGreenUpdatePolicy {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.BlueGreenUpdatePolicy{
-		TerminationWaitInSeconds:    aws.Int32(int32(m["termination_wait_in_seconds"].(int))),
-		TrafficRoutingConfiguration: expandEndpointDeploymentConfigTrafficRoutingConfiguration(m["traffic_routing_configuration"].([]any)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.BlueGreenUpdatePolicy{
+		TerminationWaitInSeconds:    aws.Int32(int32(tfMap["termination_wait_in_seconds"].(int))),
+		TrafficRoutingConfiguration: expandTrafficRoutingConfig(tfMap["traffic_routing_configuration"].([]any)),
 	}
 
-	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
-		c.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
+	if v, ok := tfMap["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
+		apiObject.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentConfigBlueGreenUpdatePolicy(configured *awstypes.BlueGreenUpdatePolicy) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenBlueGreenUpdatePolicy(apiObject *awstypes.BlueGreenUpdatePolicy) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"termination_wait_in_seconds":   aws.ToInt32(configured.TerminationWaitInSeconds),
-		"traffic_routing_configuration": flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured.TrafficRoutingConfiguration),
+	tfMap := map[string]any{
+		"termination_wait_in_seconds":   aws.ToInt32(apiObject.TerminationWaitInSeconds),
+		"traffic_routing_configuration": flattenTrafficRoutingConfig(apiObject.TrafficRoutingConfiguration),
 	}
 
-	if configured.MaximumExecutionTimeoutInSeconds != nil {
-		cfg["maximum_execution_timeout_in_seconds"] = aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds)
+	if apiObject.MaximumExecutionTimeoutInSeconds != nil {
+		tfMap["maximum_execution_timeout_in_seconds"] = aws.ToInt32(apiObject.MaximumExecutionTimeoutInSeconds)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []any) *awstypes.TrafficRoutingConfig {
-	if len(configured) == 0 {
+func expandTrafficRoutingConfig(tfList []any) *awstypes.TrafficRoutingConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.TrafficRoutingConfig{
-		Type:                  awstypes.TrafficRoutingConfigType(m[names.AttrType].(string)),
-		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.TrafficRoutingConfig{
+		Type:                  awstypes.TrafficRoutingConfigType(tfMap[names.AttrType].(string)),
+		WaitIntervalInSeconds: aws.Int32(int32(tfMap["wait_interval_in_seconds"].(int))),
 	}
 
-	if v, ok := m["canary_size"].([]any); ok && len(v) > 0 {
-		c.CanarySize = expandEndpointDeploymentCapacitySize(v)
+	if v, ok := tfMap["canary_size"].([]any); ok && len(v) > 0 {
+		apiObject.CanarySize = expandCapacitySize(v)
 	}
 
-	if v, ok := m["linear_step_size"].([]any); ok && len(v) > 0 {
-		c.LinearStepSize = expandEndpointDeploymentCapacitySize(v)
+	if v, ok := tfMap["linear_step_size"].([]any); ok && len(v) > 0 {
+		apiObject.LinearStepSize = expandCapacitySize(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *awstypes.TrafficRoutingConfig) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenTrafficRoutingConfig(apiObject *awstypes.TrafficRoutingConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		names.AttrType:             configured.Type,
-		"wait_interval_in_seconds": aws.ToInt32(configured.WaitIntervalInSeconds),
+	tfMap := map[string]any{
+		names.AttrType:             apiObject.Type,
+		"wait_interval_in_seconds": aws.ToInt32(apiObject.WaitIntervalInSeconds),
 	}
 
-	if configured.CanarySize != nil {
-		cfg["canary_size"] = flattenEndpointDeploymentCapacitySize(configured.CanarySize)
+	if apiObject.CanarySize != nil {
+		tfMap["canary_size"] = flattenCapacitySize(apiObject.CanarySize)
 	}
 
-	if configured.LinearStepSize != nil {
-		cfg["linear_step_size"] = flattenEndpointDeploymentCapacitySize(configured.LinearStepSize)
+	if apiObject.LinearStepSize != nil {
+		tfMap["linear_step_size"] = flattenCapacitySize(apiObject.LinearStepSize)
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentCapacitySize(configured []any) *awstypes.CapacitySize {
-	if len(configured) == 0 {
+func expandCapacitySize(tfList []any) *awstypes.CapacitySize {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.CapacitySize{
-		Type:  awstypes.CapacitySizeType(m[names.AttrType].(string)),
-		Value: aws.Int32(int32(m[names.AttrValue].(int))),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.CapacitySize{
+		Type:  awstypes.CapacitySizeType(tfMap[names.AttrType].(string)),
+		Value: aws.Int32(int32(tfMap[names.AttrValue].(int))),
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentCapacitySize(configured *awstypes.CapacitySize) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenCapacitySize(apiObject *awstypes.CapacitySize) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		names.AttrType:  configured.Type,
-		names.AttrValue: aws.ToInt32(configured.Value),
+	tfMap := map[string]any{
+		names.AttrType:  apiObject.Type,
+		names.AttrValue: aws.ToInt32(apiObject.Value),
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfig(configured []any) *awstypes.AutoRollbackConfig {
-	if len(configured) == 0 {
+func expandAutoRollbackConfig(tfList []any) *awstypes.AutoRollbackConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.AutoRollbackConfig{
-		Alarms: expandEndpointDeploymentConfigAutoRollbackConfigAlarms(m["alarms"].(*schema.Set).List()),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.AutoRollbackConfig{
+		Alarms: expandAlarms(tfMap["alarms"].(*schema.Set).List()),
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *awstypes.AutoRollbackConfig) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenAutoRollbackConfig(apiObject *awstypes.AutoRollbackConfig) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"alarms": flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured.Alarms),
+	tfMap := map[string]any{
+		"alarms": flattenAlarms(apiObject.Alarms),
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []any) *awstypes.RollingUpdatePolicy {
-	if len(configured) == 0 {
+func expandRollingUpdatePolicy(tfList []any) *awstypes.RollingUpdatePolicy {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := configured[0].(map[string]any)
-
-	c := &awstypes.RollingUpdatePolicy{
-		WaitIntervalInSeconds: aws.Int32(int32(m["wait_interval_in_seconds"].(int))),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.RollingUpdatePolicy{
+		WaitIntervalInSeconds: aws.Int32(int32(tfMap["wait_interval_in_seconds"].(int))),
 	}
 
-	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
-		c.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
+	if v, ok := tfMap["maximum_batch_size"].([]any); ok && len(v) > 0 {
+		apiObject.MaximumBatchSize = expandCapacitySize(v)
 	}
 
-	if v, ok := m["maximum_batch_size"].([]any); ok && len(v) > 0 {
-		c.MaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
+	if v, ok := tfMap["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
+		apiObject.MaximumExecutionTimeoutInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := m["rollback_maximum_batch_size"].([]any); ok && len(v) > 0 {
-		c.RollbackMaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
+	if v, ok := tfMap["rollback_maximum_batch_size"].([]any); ok && len(v) > 0 {
+		apiObject.RollbackMaximumBatchSize = expandCapacitySize(v)
 	}
 
-	return c
+	return apiObject
 }
 
-func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *awstypes.RollingUpdatePolicy) []map[string]any {
-	if configured == nil {
-		return []map[string]any{}
+func flattenRollingUpdatePolicy(apiObject *awstypes.RollingUpdatePolicy) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
-	cfg := map[string]any{
-		"maximum_execution_timeout_in_seconds": aws.ToInt32(configured.MaximumExecutionTimeoutInSeconds),
-		"wait_interval_in_seconds":             aws.ToInt32(configured.WaitIntervalInSeconds),
-		"maximum_batch_size":                   flattenEndpointDeploymentCapacitySize(configured.MaximumBatchSize),
-		"rollback_maximum_batch_size":          flattenEndpointDeploymentCapacitySize(configured.RollbackMaximumBatchSize),
+	tfMap := map[string]any{
+		"maximum_batch_size":                   flattenCapacitySize(apiObject.MaximumBatchSize),
+		"maximum_execution_timeout_in_seconds": aws.ToInt32(apiObject.MaximumExecutionTimeoutInSeconds),
+		"rollback_maximum_batch_size":          flattenCapacitySize(apiObject.RollbackMaximumBatchSize),
+		"wait_interval_in_seconds":             aws.ToInt32(apiObject.WaitIntervalInSeconds),
 	}
 
-	return []map[string]any{cfg}
+	return []any{tfMap}
 }
 
-func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []any) []awstypes.Alarm {
-	if len(configured) == 0 {
+func expandAlarms(tfList []any) []awstypes.Alarm {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	alarms := make([]awstypes.Alarm, 0, len(configured))
+	apiObjects := make([]awstypes.Alarm, 0, len(tfList))
 
-	for _, alarmRaw := range configured {
-		m := alarmRaw.(map[string]any)
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
 
-		alarm := awstypes.Alarm{
-			AlarmName: aws.String(m["alarm_name"].(string)),
+		apiObject := awstypes.Alarm{
+			AlarmName: aws.String(tfMap["alarm_name"].(string)),
 		}
 
-		alarms = append(alarms, alarm)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return alarms
+	return apiObjects
 }
 
-func flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []awstypes.Alarm) []map[string]any {
-	result := make([]map[string]any, 0, len(configured))
+func flattenAlarms(apiObjects []awstypes.Alarm) []any {
+	tfList := make([]any, 0, len(apiObjects))
 
-	for _, i := range configured {
-		l := map[string]any{
-			"alarm_name": aws.ToString(i.AlarmName),
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"alarm_name": aws.ToString(apiObject.AlarmName),
 		}
 
-		result = append(result, l)
+		tfList = append(tfList, tfMap)
 	}
-	return result
+
+	return tfList
 }

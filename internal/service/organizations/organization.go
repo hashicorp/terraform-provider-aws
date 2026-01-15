@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -14,19 +14,28 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_organization", name="Organization")
+// @IdentityAttribute("id")
+// @CustomImport
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.Organization")
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="6.4.0")
+// @Testing(generator=false)
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,
@@ -63,11 +72,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,11 +152,24 @@ func resourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"joined_method": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"joined_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						names.AttrStatus: {
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "status is deprecated. Use state instead.",
+						},
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -230,7 +265,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	org, err := findOrganization(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -309,37 +344,35 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChange("aws_service_access_principals") {
-		o, n := d.GetChange("aws_service_access_principals")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+	if d.HasChanges("aws_service_access_principals", "enabled_policy_types") {
+		oa, na := d.GetChange("aws_service_access_principals")
+		oas, nas := oa.(*schema.Set), na.(*schema.Set)
+		adda, dela := flex.ExpandStringValueSet(nas.Difference(oas)), flex.ExpandStringValueSet(oas.Difference(nas))
 
-		for _, v := range del {
-			if err := disableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
-		for _, v := range add {
-			if err := enableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-	}
-
-	if d.HasChange("enabled_policy_types") {
 		defaultRootID := d.Get("roots.0.id").(string)
-		o, n := d.GetChange("enabled_policy_types")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+		ot, nt := d.GetChange("enabled_policy_types")
+		ots, nts := ot.(*schema.Set), nt.(*schema.Set)
+		addt, delt := flex.ExpandStringValueSet(nts.Difference(ots)), flex.ExpandStringValueSet(ots.Difference(nts))
 
-		for _, v := range del {
+		for _, v := range delt {
 			if err := disablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
-		for _, v := range add {
+		for _, v := range dela {
+			if err := disableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range adda {
+			if err := enableServicePrincipal(ctx, conn, v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		for _, v := range addt {
 			if err := enablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -378,10 +411,15 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	identitySpec := importer.IdentitySpec(ctx)
+
+	if err := importer.GlobalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+		return nil, err
+	}
+
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	org, err := findOrganization(ctx, conn)
-
 	if err != nil {
 		return nil, err
 	}
@@ -461,12 +499,11 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := organizations.DescribeOrganizationInput{}
-
+	var input organizations.DescribeOrganizationInput
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -477,7 +514,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	}
 
 	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Organization, nil
@@ -501,9 +538,8 @@ func findAccounts(ctx context.Context, conn *organizations.Client, input *organi
 }
 
 func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -549,9 +585,8 @@ func findRoots(ctx context.Context, conn *organizations.Client, input *organizat
 }
 
 func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+	var input organizations.ListRootsInput
+	output, err := findRoots(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -569,11 +604,14 @@ func flattenAccounts(apiObjects []awstypes.Account) []any {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]any{
-			names.AttrARN:    aws.ToString(apiObject.Arn),
-			names.AttrEmail:  aws.ToString(apiObject.Email),
-			names.AttrID:     aws.ToString(apiObject.Id),
-			names.AttrName:   aws.ToString(apiObject.Name),
-			names.AttrStatus: apiObject.Status,
+			names.AttrARN:      aws.ToString(apiObject.Arn),
+			names.AttrEmail:    aws.ToString(apiObject.Email),
+			names.AttrID:       aws.ToString(apiObject.Id),
+			"joined_method":    apiObject.JoinedMethod,
+			"joined_timestamp": aws.ToTime(apiObject.JoinedTimestamp).Format(time.RFC3339),
+			names.AttrName:     aws.ToString(apiObject.Name),
+			names.AttrStatus:   apiObject.Status,
+			names.AttrState:    apiObject.State,
 		})
 	}
 
@@ -616,7 +654,7 @@ func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []a
 	return tfList
 }
 
-func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
+func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
@@ -637,7 +675,7 @@ func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client
 const policyTypeStatusDisabled awstypes.PolicyTypeStatus = "DISABLED"
 
 func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PolicyTypeStatusEnabled, awstypes.PolicyTypeStatusPendingDisable),
 		Target:  enum.Slice(policyTypeStatusDisabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
@@ -654,7 +692,7 @@ func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.
 }
 
 func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(policyTypeStatusDisabled, awstypes.PolicyTypeStatusPendingEnable),
 		Target:  enum.Slice(awstypes.PolicyTypeStatusEnabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),

@@ -42,6 +42,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceId` - (Required) The ID of the VPC from Amazon VPC that the configuration is for.
 
 ## Attribute Reference
@@ -52,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - The ID of the firewall configuration.
 * `ownerId` - The Amazon Web Services account ID of the owner of the VPC that this firewall configuration applies to.
 
-<!-- cache-key: cdktf-0.20.8 input-ee43340131bd910d22f46773285c66e520f0548748a1144292c74e000ffbf246 -->
+<!-- cache-key: cdktf-0.20.8 input-52d397caa6181334b1853429f784ba8bc2191ba6468885f3c3dc99c80f7f85d7 -->

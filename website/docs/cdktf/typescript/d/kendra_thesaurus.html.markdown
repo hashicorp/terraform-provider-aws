@@ -39,6 +39,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `indexId` - (Required) Identifier of the index that contains the Thesaurus.
 * `thesaurusId` - (Required) Identifier of the Thesaurus.
 
@@ -66,4 +67,4 @@ The `sourceS3Path` configuration block supports the following attributes:
 * `bucket` - Name of the S3 bucket that contains the file.
 * `key` - Name of the file.
 
-<!-- cache-key: cdktf-0.20.8 input-cfa3d7c50c1985988559189b1f300737c96318782f1a01e1c47e4cbd6e7835ed -->
+<!-- cache-key: cdktf-0.20.8 input-b5c6241eae45023ae88c51189ce374790152219b94f3accc9790851b524815c3 -->

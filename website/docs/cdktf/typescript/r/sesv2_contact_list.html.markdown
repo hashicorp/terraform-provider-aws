@@ -75,6 +75,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of what the contact list is about.
 * `tags` - (Optional) Key-value map of resource tags for the contact list. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topic` - (Optional) Configuration block(s) with topic for the contact list. Detailed below.
@@ -89,6 +90,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of what the topic is about, which the contact will see.
 
 ## Attribute Reference
@@ -127,4 +129,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Contact List using the 
 % terraform import aws_sesv2_contact_list.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81a0db88299ea7dda3b5abd175a1cfe08ba81e3eb32542f229c90bdb8554054f -->
+<!-- cache-key: cdktf-0.20.8 input-39537d53d6e38afdb47c7486de6525d0e666e2478bfce65bfb548c55ae8eea89 -->

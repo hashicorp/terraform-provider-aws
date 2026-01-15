@@ -1,5 +1,4 @@
 resource "aws_ce_anomaly_monitor" "test" {
-{{- template "region" }}
   name         = var.rName
   monitor_type = "CUSTOM"
 

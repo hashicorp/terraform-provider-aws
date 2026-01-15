@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -25,13 +25,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -89,6 +90,9 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 			"parent_action_group_signature": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ActionGroupSignature](),
 				Optional:   true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRoot(names.AttrDescription)),
+				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -254,7 +258,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 
 	timeout := r.CreateTimeout(ctx, data.Timeouts)
 
-	output, err := retryOpIfPreparing[*bedrockagent.CreateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.CreateAgentActionGroupOutput, error) {
+	output, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.CreateAgentActionGroupOutput, error) {
 		return conn.CreateAgentActionGroup(ctx, input)
 	})
 
@@ -280,6 +284,9 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		}
 	}
 
+	if output.AgentActionGroup.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue(output.AgentActionGroup.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -300,7 +307,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 
 	output, err := findAgentActionGroupByThreePartKey(ctx, conn, data.ActionGroupID.ValueString(), data.AgentID.ValueString(), data.AgentVersion.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -318,6 +325,9 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	if output.ParentActionSignature != "" {
+		data.ParentActionGroupSignature = fwtypes.StringEnumValue(output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -349,7 +359,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 			return
 		}
 
-		_, err := retryOpIfPreparing[*bedrockagent.UpdateAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.UpdateAgentActionGroupOutput, error) {
+		_, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.UpdateAgentActionGroupOutput, error) {
 			return conn.UpdateAgentActionGroup(ctx, input)
 		})
 
@@ -374,7 +384,9 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 	}
 
 	new.ActionGroupState = fwtypes.StringEnumValue(output.ActionGroupState)
-
+	if output.ParentActionSignature != "" {
+		new.ParentActionGroupSignature = fwtypes.StringEnumValue(output.ParentActionSignature)
+	}
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
@@ -396,7 +408,7 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	timeout := r.DeleteTimeout(ctx, data.Timeouts)
 
-	_, err := retryOpIfPreparing[*bedrockagent.DeleteAgentActionGroupOutput](ctx, timeout, func() (*bedrockagent.DeleteAgentActionGroupOutput, error) {
+	_, err := retryOpIfPreparing(ctx, timeout, func(ctx context.Context) (*bedrockagent.DeleteAgentActionGroupOutput, error) {
 		return conn.DeleteAgentActionGroup(ctx, &input)
 	})
 
@@ -433,7 +445,7 @@ func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.
 	output, err := conn.GetAgentActionGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -444,7 +456,7 @@ func findAgentActionGroupByThreePartKey(ctx context.Context, conn *bedrockagent.
 	}
 
 	if output == nil || output.AgentActionGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentActionGroup, nil

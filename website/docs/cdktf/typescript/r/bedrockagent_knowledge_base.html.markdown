@@ -89,21 +89,21 @@ class MyConvertedCode extends TerraformStack {
             {
               embeddingModelArn:
                 "arn:aws:bedrock:us-west-2::foundation-model/amazon.titan-embed-text-v2:0",
-              embedding_model_configuration: [
+              embeddingModelConfiguration: [
                 {
-                  bedrock_embedding_model_configuration: [
+                  bedrockEmbeddingModelConfiguration: [
                     {
                       dimensions: 1024,
-                      embedding_data_type: "FLOAT32",
+                      embeddingDataType: "FLOAT32",
                     },
                   ],
                 },
               ],
-              supplemental_data_storage_configuration: [
+              supplementalDataStorageConfiguration: [
                 {
-                  storage_location: [
+                  storageLocation: [
                     {
-                      s3_location: [
+                      s3Location: [
                         {
                           uri: "s3://my-bucket/chunk-processor/",
                         },
@@ -144,6 +144,22 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+### Kendra Knowledge Base
+
+```hcl
+resource "aws_bedrockagent_knowledge_base" "kendra_example" {
+  name     = "example-kendra-kb"
+  role_arn = aws_iam_role.example.arn
+
+  knowledge_base_configuration {
+    type = "KENDRA"
+    kendra_knowledge_base_configuration {
+      kendra_index_arn = "arn:aws:kendra:us-east-1:123456789012:index/example-index-id"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -155,6 +171,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the knowledge base.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -162,33 +179,34 @@ The following arguments are optional:
 
 The `knowledgeBaseConfiguration` configuration block supports the following arguments:
 
-* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`.
-* `vectorKnowledgeBaseConfiguration` - (Optional) Details about the embeddings model that'sused to convert the data source. See [`vectorKnowledgeBaseConfiguration` block](#vector_knowledge_base_configuration-block) for details.
+* `type` - (Required) Type of data that the data source is converted into for the knowledge base. Valid Values: `VECTOR`, `KENDRA`.
+* `vectorKnowledgeBaseConfiguration` - (Optional) Details about the embeddings model that's used to convert the data source. See [`vectorKnowledgeBaseConfiguration` block](#vector_knowledge_base_configuration-block) for details.
+* `kendraKnowledgeBaseConfiguration` - (Optional) Configuration for Kendra knowledge base. See [`kendraKnowledgeBaseConfiguration` block](#kendra_knowledge_base_configuration-block) for details.
 
 ### `vectorKnowledgeBaseConfiguration` block
 
 The `vectorKnowledgeBaseConfiguration` configuration block supports the following arguments:
 
 * `embeddingModelArn` - (Required) ARN of the model used to create vector embeddings for the knowledge base.
-* `embedding_model_configuration` - (Optional) The embeddings model configuration details for the vector model used in Knowledge Base.  See [`embedding_model_configuration` block](#embedding_model_configuration-block) for details.
-* `supplemental_data_storage_configuration` - (Optional) supplemental_data_storage_configuration.  See [`supplemental_data_storage_configuration` block](#supplemental_data_storage_configuration-block) for details.
+* `embeddingModelConfiguration` - (Optional) The embeddings model configuration details for the vector model used in Knowledge Base.  See [`embeddingModelConfiguration` block](#embedding_model_configuration-block) for details.
+* `supplementalDataStorageConfiguration` - (Optional) supplemental_data_storage_configuration.  See [`supplementalDataStorageConfiguration` block](#supplemental_data_storage_configuration-block) for details.
 
-### `embedding_model_configuration` block
+### `embeddingModelConfiguration` block
 
-The `embedding_model_configuration` configuration block supports the following arguments:
+The `embeddingModelConfiguration` configuration block supports the following arguments:
 
-* `bedrock_embedding_model_configuration` - (Optional) The vector configuration details on the Bedrock embeddings model.  See [`bedrock_embedding_model_configuration` block](#bedrock_embedding_model_configuration-block) for details.
+* `bedrockEmbeddingModelConfiguration` - (Optional) The vector configuration details on the Bedrock embeddings model.  See [`bedrockEmbeddingModelConfiguration` block](#bedrock_embedding_model_configuration-block) for details.
 
-### `bedrock_embedding_model_configuration` block
+### `bedrockEmbeddingModelConfiguration` block
 
-The `bedrock_embedding_model_configuration` configuration block supports the following arguments:
+The `bedrockEmbeddingModelConfiguration` configuration block supports the following arguments:
 
 * `dimensions` - (Optional) Dimension details for the vector configuration used on the Bedrock embeddings model.
-* `embedding_data_type` - (Optional) Data type for the vectors when using a model to convert text into vector embeddings. The model must support the specified data type for vector embeddings.  Valid values are `FLOAT32` and `BINARY`.
+* `embeddingDataType` - (Optional) Data type for the vectors when using a model to convert text into vector embeddings. The model must support the specified data type for vector embeddings.  Valid values are `FLOAT32` and `BINARY`.
 
-### `supplemental_data_storage_configuration` block
+### `supplementalDataStorageConfiguration` block
 
-The `supplemental_data_storage_configuration` configuration block supports the following arguments:
+The `supplementalDataStorageConfiguration` configuration block supports the following arguments:
 
 * `storageLocation` - (Required) A storage location specification for images extracted from multimodal documents in your data source.  See [`storageLocation` block](#storage_location-block) for details.
 
@@ -204,6 +222,12 @@ The `storageLocation` configuration block supports the following arguments:
 The `s3Location` configuration block supports the following arguments:
 
 * `uri` - (Required) URI of the location.
+
+### `kendraKnowledgeBaseConfiguration` block
+
+The `kendraKnowledgeBaseConfiguration` configuration block supports the following arguments:
+
+* `kendraIndexArn` - (Required) ARN of the Amazon Kendra index.
 
 ### `storageConfiguration` block
 
@@ -313,4 +337,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Knowledge Base using 
 % terraform import aws_bedrockagent_knowledge_base.example EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-65cd22ffe02afc9c69622cf824ae03fc810a40c9ed4cb62f0d1185cacfe1dd0b -->
+<!-- cache-key: cdktf-0.20.8 input-0e03b5b72c6d03d9e151bacea847398de5d7dc3b9f8939d76792e3bc7dc540bd -->

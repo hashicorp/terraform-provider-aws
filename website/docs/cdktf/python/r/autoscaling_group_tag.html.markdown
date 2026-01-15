@@ -63,6 +63,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoscaling_group_name` - (Required) Name of the Autoscaling Group to apply the tag to.
 * `tag` - (Required) Tag to create. The `tag` block is documented below.
 
@@ -103,4 +104,4 @@ Using `terraform import`, import `aws_autoscaling_group_tag` using the ASG name 
 % terraform import aws_autoscaling_group_tag.example asg-example,k8s.io/cluster-autoscaler/node-template/label/eks.amazonaws.com/capacityType
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6d03164dc8f7802d7fed35fe5527ff2cb206eef4734529984f76a9f8bdd4520e -->
+<!-- cache-key: cdktf-0.20.8 input-1c08bdd424cf14c34ad4e8bfd1e8a6cb13c02607e0f15f68371b532bee4057c7 -->

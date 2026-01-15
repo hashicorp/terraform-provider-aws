@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -17,13 +18,13 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -344,6 +345,86 @@ func resourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"authentication_method": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MySQLAuthenticationMethod](),
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_db_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TargetDbType](),
+						},
+					},
+				},
+			},
+			"oracle_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_method": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.OracleAuthenticationMethod](),
+							ConflictsWith:    []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
+						},
+					},
+				},
+			},
 			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -370,6 +451,12 @@ func resourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"authentication_method": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PostgreSQLAuthenticationMethod](),
+						},
 						"babelfish_database_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -379,8 +466,9 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"database_mode": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DatabaseMode](),
 						},
 						"ddl_artifacts_schema": {
 							Type:     schema.TypeString,
@@ -415,16 +503,23 @@ func resourceEndpoint() *schema.Resource {
 							Optional: true,
 						},
 						"map_long_varchar_as": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LongVarcharMappingType](),
 						},
 						"max_file_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
 						"plugin_name": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PluginNameValue](),
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"slot_name": {
 							Type:     schema.TypeString,
@@ -589,39 +684,50 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	switch d.Get("engine_name").(string) {
 	case engineNameAurora, engineNameMariadb, engineNameMySQL:
-		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.MySQLSettings = &awstypes.MySQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-			}
-		} else {
-			input.MySQLSettings = &awstypes.MySQLSettings{
-				Username:     aws.String(d.Get(names.AttrUsername).(string)),
-				Password:     aws.String(d.Get(names.AttrPassword).(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-				DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-			}
-
-			// Set connection info in top-level namespace as well
-			expandTopLevelConnectionInfo(d, &input)
+		settings := &awstypes.MySQLSettings{}
+		if _, ok := d.GetOk("mysql_settings"); ok {
+			settings = expandMySQLSettings(d.Get("mysql_settings").([]any)[0].(map[string]any))
 		}
-	case engineNameAuroraPostgresql, engineNamePostgres:
-		settings := &awstypes.PostgreSQLSettings{}
-		if _, ok := d.GetOk("postgres_settings"); ok {
-			settings = expandPostgreSQLSettings(d.Get("postgres_settings").([]any)[0].(map[string]any))
-		}
-
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
-			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
 		} else {
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
 			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
-			settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+
+			// DatabaseName can be empty since it should not be specified
+			// when mysql_settings.target_db_type is `multiple-databases`
+			if v, ok := d.GetOk(names.AttrDatabaseName); ok {
+				settings.DatabaseName = aws.String(v.(string))
+			}
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, &input)
+		}
+		input.MySQLSettings = settings
+	case engineNameAuroraPostgresql, engineNamePostgres:
+		var settings *awstypes.PostgreSQLSettings
+
+		if v, ok := d.GetOk("postgres_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			settings = expandPostgreSQLSettings(v.([]any)[0].(map[string]any))
+		} else {
+			settings = &awstypes.PostgreSQLSettings{}
+		}
+		settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+		} else {
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
+
+			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, &input)
@@ -671,24 +777,30 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 		input.MongoDbSettings = settings
 	case engineNameOracle:
+		var settings = &awstypes.OracleSettings{
+			DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+		}
+
+		if v, ok := d.GetOk("oracle_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			settings.AuthenticationMethod = expandOracleSettings(v.([]any)).AuthenticationMethod
+		}
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.OracleSettings = &awstypes.OracleSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-				DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-			}
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
-			input.OracleSettings = &awstypes.OracleSettings{
-				Username:     aws.String(d.Get(names.AttrUsername).(string)),
-				Password:     aws.String(d.Get(names.AttrPassword).(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-				DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
 			}
+
+			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, &input)
 		}
+
+		input.OracleSettings = settings
 	case engineNameRedis:
 		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
 	case engineNameRedshift:
@@ -700,8 +812,11 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
 			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
+			if v, ok := d.GetOk(names.AttrPassword); ok {
+				settings.Password = aws.String(v.(string))
+			}
+
 			settings.Username = aws.String(d.Get(names.AttrUsername).(string))
-			settings.Password = aws.String(d.Get(names.AttrPassword).(string))
 			settings.ServerName = aws.String(d.Get("server_name").(string))
 			settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
@@ -795,8 +910,8 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		expandTopLevelConnectionInfo(d, &input)
 	}
 
-	_, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
-		func() (any, error) {
+	_, err := tfresource.RetryWhenIsA[any, *awstypes.AccessDeniedFault](ctx, d.Timeout(schema.TimeoutCreate),
+		func(ctx context.Context) (any, error) {
 			return conn.CreateEndpoint(ctx, &input)
 		})
 
@@ -815,7 +930,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	endpoint, err := findEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -853,6 +968,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		if d.HasChangesExcept("pause_replication_tasks") {
 			input := dms.ModifyEndpointInput{
 				EndpointArn: aws.String(endpointARN),
+				EngineName:  aws.String(d.Get("engine_name").(string)),
 			}
 
 			if d.HasChange(names.AttrCertificateARN) {
@@ -861,10 +977,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 			if d.HasChange(names.AttrEndpointType) {
 				input.EndpointType = awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string))
-			}
-
-			if d.HasChange("engine_name") {
-				input.EngineName = aws.String(d.Get("engine_name").(string))
 			}
 
 			if d.HasChange("extra_connection_attributes") {
@@ -884,50 +996,68 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			switch engineName := d.Get("engine_name").(string); engineName {
 			case engineNameAurora, engineNameMariadb, engineNameMySQL:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
-					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.MySQLSettings = &awstypes.MySQLSettings{
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-						}
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
+					"secrets_manager_access_role_arn", "secrets_manager_arn", "mysql_settings") {
+					var settings *awstypes.MySQLSettings
+
+					if v, ok := d.GetOk("mysql_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						settings = expandMySQLSettings(v.([]any)[0].(map[string]any))
 					} else {
-						input.MySQLSettings = &awstypes.MySQLSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+						settings = &awstypes.MySQLSettings{}
+					}
+
+					if _, ok := d.GetOk("secrets_manager_arn"); ok {
+						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+					} else {
+						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						settings.Password = aws.String(d.Get(names.AttrPassword).(string))
+						settings.ServerName = aws.String(d.Get("server_name").(string))
+						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
+
+						// DatabaseName can be empty since it should not be specified
+						// when mysql_settings.target_db_type is `multiple-databases`
+						if v, ok := d.GetOk(names.AttrDatabaseName); ok {
+							settings.DatabaseName = aws.String(v.(string))
 						}
-						input.EngineName = aws.String(engineName)
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
+
+					input.MySQLSettings = settings
 				}
 			case engineNameAuroraPostgresql, engineNamePostgres:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
-					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.PostgreSQLSettings = &awstypes.PostgreSQLSettings{
-							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-						}
+					names.AttrDatabaseName, "postgres_settings",
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
+					var settings *awstypes.PostgreSQLSettings
+
+					if v, ok := d.GetOk("postgres_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						settings = expandPostgreSQLSettings(v.([]any)[0].(map[string]any))
 					} else {
-						input.PostgreSQLSettings = &awstypes.PostgreSQLSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+						settings = &awstypes.PostgreSQLSettings{}
+					}
+					settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+
+					if _, ok := d.GetOk("secrets_manager_arn"); ok {
+						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
+					} else {
+						if v, ok := d.GetOk(names.AttrPassword); ok {
+							settings.Password = aws.String(v.(string))
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+
+						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						settings.ServerName = aws.String(d.Get("server_name").(string))
+						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
+
+					input.PostgreSQLSettings = settings
 				}
 			case engineNameDynamoDB:
 				if d.HasChange("service_access_role") {
@@ -937,10 +1067,10 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			case engineNameElasticsearch, engineNameOpenSearch:
 				if d.HasChanges(
+					"elasticsearch_settings.0.service_access_role_arn",
 					"elasticsearch_settings.0.endpoint_uri",
 					"elasticsearch_settings.0.error_retry_duration",
 					"elasticsearch_settings.0.full_load_error_percentage",
-					"elasticsearch_settings.0.service_access_role_arn",
 					"elasticsearch_settings.0.use_new_mapping_type") {
 					input.ElasticsearchSettings = &awstypes.ElasticsearchSettings{
 						ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
@@ -949,142 +1079,135 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 						FullLoadErrorPercentage: aws.Int32(int32(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 						UseNewMappingType:       aws.Bool(d.Get("elasticsearch_settings.0.use_new_mapping_type").(bool)),
 					}
-					input.EngineName = aws.String(engineName)
 				}
 			case engineNameKafka:
 				if d.HasChange("kafka_settings") {
 					input.KafkaSettings = expandKafkaSettings(d.Get("kafka_settings").([]any)[0].(map[string]any))
-					input.EngineName = aws.String(engineName)
 				}
 			case engineNameKinesis:
 				if d.HasChanges("kinesis_settings") {
 					input.KinesisSettings = expandKinesisSettings(d.Get("kinesis_settings").([]any)[0].(map[string]any))
-					input.EngineName = aws.String(engineName)
 				}
 			case engineNameMongodb:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "mongodb_settings.0.auth_type",
-					"mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id",
-					"mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source", "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
+					names.AttrDatabaseName, names.AttrKMSKeyARN, "mongodb_settings.0.auth_type", "mongodb_settings.0.auth_mechanism", "mongodb_settings.0.nesting_level", "mongodb_settings.0.extract_doc_id", "mongodb_settings.0.docs_to_investigate", "mongodb_settings.0.auth_source",
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
+					var settings = &awstypes.MongoDbSettings{}
+
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.MongoDbSettings = &awstypes.MongoDbSettings{
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-							KmsKeyId:                    aws.String(d.Get(names.AttrKMSKeyARN).(string)),
-
-							AuthType:          awstypes.AuthTypeValue(d.Get("mongodb_settings.0.auth_type").(string)),
-							AuthMechanism:     awstypes.AuthMechanismValue(d.Get("mongodb_settings.0.auth_mechanism").(string)),
-							NestingLevel:      awstypes.NestingLevelValue(d.Get("mongodb_settings.0.nesting_level").(string)),
-							ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
-							DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
-							AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
-						}
+						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 					} else {
-						input.MongoDbSettings = &awstypes.MongoDbSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-							KmsKeyId:     aws.String(d.Get(names.AttrKMSKeyARN).(string)),
-
-							AuthType:          awstypes.AuthTypeValue(d.Get("mongodb_settings.0.auth_type").(string)),
-							AuthMechanism:     awstypes.AuthMechanismValue(d.Get("mongodb_settings.0.auth_mechanism").(string)),
-							NestingLevel:      awstypes.NestingLevelValue(d.Get("mongodb_settings.0.nesting_level").(string)),
-							ExtractDocId:      aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string)),
-							DocsToInvestigate: aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string)),
-							AuthSource:        aws.String(d.Get("mongodb_settings.0.auth_source").(string)),
-						}
-						input.EngineName = aws.String(engineName)
+						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						settings.Password = aws.String(d.Get(names.AttrPassword).(string))
+						settings.ServerName = aws.String(d.Get("server_name").(string))
+						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
+
+					settings.DatabaseName = aws.String(d.Get(names.AttrDatabaseName).(string))
+					settings.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+					settings.AuthType = awstypes.AuthTypeValue(d.Get("mongodb_settings.0.auth_type").(string))
+					settings.AuthMechanism = awstypes.AuthMechanismValue(d.Get("mongodb_settings.0.auth_mechanism").(string))
+					settings.NestingLevel = awstypes.NestingLevelValue(d.Get("mongodb_settings.0.nesting_level").(string))
+					settings.ExtractDocId = aws.String(d.Get("mongodb_settings.0.extract_doc_id").(string))
+					settings.DocsToInvestigate = aws.String(d.Get("mongodb_settings.0.docs_to_investigate").(string))
+					settings.AuthSource = aws.String(d.Get("mongodb_settings.0.auth_source").(string))
+
+					input.MongoDbSettings = settings
 				}
 			case engineNameOracle:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrDatabaseName, "oracle_settings",
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
+					var settings = &awstypes.OracleSettings{
+						DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+					}
+
+					if v, ok := d.GetOk("oracle_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						settings.AuthenticationMethod = expandOracleSettings(v.([]any)).AuthenticationMethod
+					}
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.OracleSettings = &awstypes.OracleSettings{
-							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-						}
+						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 					} else {
-						input.OracleSettings = &awstypes.OracleSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+						if v, ok := d.GetOk(names.AttrPassword); ok {
+							settings.Password = aws.String(v.(string))
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'oracle')
+
+						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						settings.ServerName = aws.String(d.Get("server_name").(string))
+						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
 					}
+
+					input.OracleSettings = settings
 				}
 			case engineNameRedis:
 				if d.HasChanges("redis_settings") {
 					input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]any)[0].(map[string]any))
-					input.EngineName = aws.String(engineName)
 				}
 			case engineNameRedshift:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
-					"redshift_settings", "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrDatabaseName, "redshift_settings",
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
+					var settings = &awstypes.RedshiftSettings{
+						DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+					}
+
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
-						input.RedshiftSettings = &awstypes.RedshiftSettings{
-							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
-							SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-							SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-						}
+						settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+						settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 					} else {
-						input.RedshiftSettings = &awstypes.RedshiftSettings{
-							Username:     aws.String(d.Get(names.AttrUsername).(string)),
-							Password:     aws.String(d.Get(names.AttrPassword).(string)),
-							ServerName:   aws.String(d.Get("server_name").(string)),
-							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
-							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+						if v, ok := d.GetOk(names.AttrPassword); ok {
+							settings.Password = aws.String(v.(string))
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'redshift')
+
+						settings.Username = aws.String(d.Get(names.AttrUsername).(string))
+						settings.ServerName = aws.String(d.Get("server_name").(string))
+						settings.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
+					}
 
-						if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-							tfMap := v.([]any)[0].(map[string]any)
+					if v, ok := d.GetOk("redshift_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+						tfMap := v.([]any)[0].(map[string]any)
 
-							if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
-								input.RedshiftSettings.BucketFolder = aws.String(v)
-							}
-
-							if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
-								input.RedshiftSettings.BucketName = aws.String(v)
-							}
-
-							if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
-								input.RedshiftSettings.EncryptionMode = awstypes.EncryptionModeValue(v)
-							}
-
-							if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
-								input.RedshiftSettings.ServerSideEncryptionKmsKeyId = aws.String(v)
-							}
-
-							if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
-								input.RedshiftSettings.ServiceAccessRoleArn = aws.String(v)
-							}
+						if v, ok := tfMap["bucket_folder"].(string); ok && v != "" {
+							settings.BucketFolder = aws.String(v)
 						}
+
+						if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
+							settings.BucketName = aws.String(v)
+						}
+
+						if v, ok := tfMap["encryption_mode"].(string); ok && v != "" {
+							settings.EncryptionMode = awstypes.EncryptionModeValue(v)
+						}
+
+						if v, ok := tfMap["server_side_encryption_kms_key_id"].(string); ok && v != "" {
+							settings.ServerSideEncryptionKmsKeyId = aws.String(v)
+						}
+
+						if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+							settings.ServiceAccessRoleArn = aws.String(v)
+						}
+
+						input.RedshiftSettings = settings
 					}
 				}
 			case engineNameSQLServer, engineNameBabelfish:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
 						input.MicrosoftSQLServerSettings = &awstypes.MicrosoftSQLServerSettings{
 							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
@@ -1099,7 +1222,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
 							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
@@ -1107,8 +1229,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			case engineNameSybase:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
 						input.SybaseSettings = &awstypes.SybaseSettings{
 							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
@@ -1123,7 +1245,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
 							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
@@ -1131,8 +1252,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 			case engineNameDB2, engineNameDB2zOS:
 				if d.HasChanges(
-					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName, "secrets_manager_access_role_arn",
-					"secrets_manager_arn") {
+					names.AttrUsername, names.AttrPassword, "server_name", names.AttrPort, names.AttrDatabaseName,
+					"secrets_manager_access_role_arn", "secrets_manager_arn") {
 					if _, ok := d.GetOk("secrets_manager_arn"); ok {
 						input.IBMDb2Settings = &awstypes.IBMDb2Settings{
 							DatabaseName:                aws.String(d.Get(names.AttrDatabaseName).(string)),
@@ -1147,7 +1268,6 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 							Port:         aws.Int32(int32(d.Get(names.AttrPort).(int))),
 							DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
 						}
-						input.EngineName = aws.String(engineName) // Must be included (should be 'db2')
 
 						// Update connection info in top-level namespace as well
 						expandTopLevelConnectionInfoModify(d, &input)
@@ -1306,6 +1426,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+		if err := d.Set("mysql_settings", flattenMySQLSettings(endpoint.MySQLSettings)); err != nil {
+			return fmt.Errorf("setting mysql_settings: %w", err)
+		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		if endpoint.PostgreSQLSettings != nil {
 			d.Set(names.AttrUsername, endpoint.PostgreSQLSettings.Username)
@@ -1370,6 +1493,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *awstypes.Endpoin
 			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+		if err := d.Set("oracle_settings", flattenOracleSettings(endpoint.OracleSettings)); err != nil {
+			return fmt.Errorf("setting oracle_settings: %w", err)
 		}
 	case engineNameRedis:
 		// Auth password isn't returned in API. Propagate state value.
@@ -1912,6 +2038,47 @@ func flattenRedshiftSettings(settings *awstypes.RedshiftSettings) []map[string]a
 	return []map[string]any{m}
 }
 
+func expandMySQLSettings(tfMap map[string]any) *awstypes.MySQLSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MySQLSettings{}
+
+	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
+		apiObject.AfterConnectScript = aws.String(v)
+	}
+	if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
+		apiObject.AuthenticationMethod = awstypes.MySQLAuthenticationMethod(v)
+	}
+	if v, ok := tfMap["clean_source_metadata_on_mismatch"].(bool); ok {
+		apiObject.CleanSourceMetadataOnMismatch = aws.Bool(v)
+	}
+	if v, ok := tfMap["events_poll_interval"].(int); ok && v != 0 {
+		apiObject.EventsPollInterval = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["execute_timeout"].(int); ok && v != 0 {
+		apiObject.ExecuteTimeout = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok && v != 0 {
+		apiObject.MaxFileSize = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["parallel_load_threads"].(int); ok && v != 0 {
+		apiObject.ParallelLoadThreads = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["server_timezone"].(string); ok && v != "" {
+		apiObject.ServerTimezone = aws.String(v)
+	}
+	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+		apiObject.ServiceAccessRoleArn = aws.String(v)
+	}
+	if v, ok := tfMap["target_db_type"].(string); ok && v != "" {
+		apiObject.TargetDbType = awstypes.TargetDbType(v)
+	}
+
+	return apiObject
+}
+
 func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings {
 	if tfMap == nil {
 		return nil
@@ -1921,6 +2088,9 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 
 	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
 		apiObject.AfterConnectScript = aws.String(v)
+	}
+	if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
+		apiObject.AuthenticationMethod = awstypes.PostgreSQLAuthenticationMethod(v)
 	}
 	if v, ok := tfMap["babelfish_database_name"].(string); ok && v != "" {
 		apiObject.BabelfishDatabaseName = aws.String(v)
@@ -1964,11 +2134,55 @@ func expandPostgreSQLSettings(tfMap map[string]any) *awstypes.PostgreSQLSettings
 	if v, ok := tfMap["plugin_name"].(string); ok && v != "" {
 		apiObject.PluginName = awstypes.PluginNameValue(v)
 	}
+	if v, ok := tfMap["service_access_role_arn"].(string); ok && v != "" {
+		apiObject.ServiceAccessRoleArn = aws.String(v)
+	}
 	if v, ok := tfMap["slot_name"].(string); ok && v != "" {
 		apiObject.SlotName = aws.String(v)
 	}
 
 	return apiObject
+}
+
+func flattenMySQLSettings(apiObject *awstypes.MySQLSettings) []map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AfterConnectScript; v != nil {
+		tfMap["after_connect_script"] = aws.ToString(v)
+	}
+	if v := apiObject.AuthenticationMethod; v != "" {
+		tfMap["authentication_method"] = string(v)
+	}
+	if v := apiObject.CleanSourceMetadataOnMismatch; v != nil {
+		tfMap["clean_source_metadata_on_mismatch"] = aws.ToBool(v)
+	}
+	if v := apiObject.EventsPollInterval; v != nil {
+		tfMap["events_poll_interval"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ExecuteTimeout; v != nil {
+		tfMap["execute_timeout"] = aws.ToInt32(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ParallelLoadThreads; v != nil {
+		tfMap["parallel_load_threads"] = aws.ToInt32(v)
+	}
+	if v := apiObject.ServerTimezone; v != nil {
+		tfMap["server_timezone"] = aws.ToString(v)
+	}
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.ToString(v)
+	}
+	if v := apiObject.TargetDbType; v != "" {
+		tfMap["target_db_type"] = string(v)
+	}
+
+	return []map[string]any{tfMap}
 }
 
 func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[string]any {
@@ -1981,13 +2195,14 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	if v := apiObject.AfterConnectScript; v != nil {
 		tfMap["after_connect_script"] = aws.ToString(v)
 	}
+	tfMap["authentication_method"] = apiObject.AuthenticationMethod
 	if v := apiObject.BabelfishDatabaseName; v != nil {
 		tfMap["babelfish_database_name"] = aws.ToString(v)
 	}
 	if v := apiObject.CaptureDdls; v != nil {
 		tfMap["capture_ddls"] = aws.ToBool(v)
 	}
-	tfMap["database_mode"] = string(apiObject.DatabaseMode)
+	tfMap["database_mode"] = apiObject.DatabaseMode
 	if v := apiObject.DdlArtifactsSchema; v != nil {
 		tfMap["ddl_artifacts_schema"] = aws.ToString(v)
 	}
@@ -2012,11 +2227,14 @@ func flattenPostgreSQLSettings(apiObject *awstypes.PostgreSQLSettings) []map[str
 	if v := apiObject.MapJsonbAsClob; v != nil {
 		tfMap["map_jsonb_as_clob"] = aws.ToBool(v)
 	}
-	tfMap["map_long_varchar_as"] = string(apiObject.MapLongVarcharAs)
+	tfMap["map_long_varchar_as"] = apiObject.MapLongVarcharAs
 	if v := apiObject.MaxFileSize; v != nil {
 		tfMap["max_file_size"] = aws.ToInt32(v)
 	}
-	tfMap["plugin_name"] = string(apiObject.PluginName)
+	tfMap["plugin_name"] = apiObject.PluginName
+	if v := apiObject.ServiceAccessRoleArn; v != nil {
+		tfMap["service_access_role_arn"] = aws.ToString(v)
+	}
 	if v := apiObject.SlotName; v != nil {
 		tfMap["slot_name"] = aws.ToString(v)
 	}
@@ -2106,23 +2324,27 @@ func engineSettingsToSet(l []any) *schema.Set {
 
 func expandTopLevelConnectionInfo(d *schema.ResourceData, input *dms.CreateEndpointInput) {
 	input.Username = aws.String(d.Get(names.AttrUsername).(string))
-	input.Password = aws.String(d.Get(names.AttrPassword).(string))
 	input.ServerName = aws.String(d.Get("server_name").(string))
 	input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk(names.AttrPassword); ok {
+		input.Password = aws.String(v.(string))
+	}
 }
 
 func expandTopLevelConnectionInfoModify(d *schema.ResourceData, input *dms.ModifyEndpointInput) {
 	input.Username = aws.String(d.Get(names.AttrUsername).(string))
-	input.Password = aws.String(d.Get(names.AttrPassword).(string))
 	input.ServerName = aws.String(d.Get("server_name").(string))
 	input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 
 	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
 		input.DatabaseName = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk(names.AttrPassword); ok {
+		input.Password = aws.String(v.(string))
 	}
 }
 
@@ -2131,6 +2353,40 @@ func flattenTopLevelConnectionInfo(d *schema.ResourceData, endpoint *awstypes.En
 	d.Set("server_name", endpoint.ServerName)
 	d.Set(names.AttrPort, endpoint.Port)
 	d.Set(names.AttrDatabaseName, endpoint.DatabaseName)
+}
+
+func expandOracleSettings(tfList []any) *awstypes.OracleSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObject awstypes.OracleSettings
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["authentication_method"].(string); ok && v != "" {
+			apiObject.AuthenticationMethod = awstypes.OracleAuthenticationMethod(v)
+		}
+	}
+
+	return &apiObject
+}
+
+func flattenOracleSettings(oracleSettings *awstypes.OracleSettings) []any {
+	if oracleSettings == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"authentication_method": oracleSettings.AuthenticationMethod,
+	}
+
+	return []any{tfMap}
 }
 
 func findEndpointByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Endpoint, error) {
@@ -2165,8 +2421,7 @@ func findEndpoints(ctx context.Context, conn *dms.Client, input *dms.DescribeEnd
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2212,8 +2467,7 @@ func findConnections(ctx context.Context, conn *dms.Client, input *dms.DescribeC
 
 		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 
@@ -2227,11 +2481,11 @@ func findConnections(ctx context.Context, conn *dms.Client, input *dms.DescribeC
 	return output, nil
 }
 
-func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEndpoint(conn *dms.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2243,11 +2497,11 @@ func statusEndpoint(ctx context.Context, conn *dms.Client, id string) retry.Stat
 	}
 }
 
-func statusConnection(ctx context.Context, conn *dms.Client, endpointARN string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusConnection(conn *dms.Client, endpointARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findConnectionByEndpointARN(ctx, conn, endpointARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2263,7 +2517,7 @@ func waitEndpointDeleted(ctx context.Context, conn *dms.Client, id string, timeo
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{endpointStatusDeleting},
 		Target:  []string{},
-		Refresh: statusEndpoint(ctx, conn, id),
+		Refresh: statusEndpoint(conn, id),
 		Timeout: timeout,
 	}
 
@@ -2280,7 +2534,7 @@ func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{connectionStatusTesting},
 		Target:  []string{connectionStatusSuccessful},
-		Refresh: statusConnection(ctx, conn, endpointARN),
+		Refresh: statusConnection(conn, endpointARN),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -2288,6 +2542,7 @@ func waitConnectionSucceeded(ctx context.Context, conn *dms.Client, endpointARN 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Connection); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.LastFailureMessage)))
 		return output, err
 	}
 

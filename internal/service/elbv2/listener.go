@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +30,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,16 +44,14 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Listener")
 // @Testing(importIgnore="default_action.0.forward")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
 		ReadWithoutTimeout:   resourceListenerRead,
 		UpdateWithoutTimeout: resourceListenerUpdate,
 		DeleteWithoutTimeout: resourceListenerDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -271,6 +271,53 @@ func resourceListener() *schema.Resource {
 								},
 							},
 						},
+						"jwt_validation": {
+							Type:             schema.TypeList,
+							Optional:         true,
+							MaxItems:         1,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumJwtValidation),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"jwks_endpoint": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.JwtValidationActionAdditionalClaimFormatEnum](),
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Required: true,
+													MaxItems: 10,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(1, 256),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -381,12 +428,10 @@ func resourceListener() *schema.Resource {
 				ValidateFunc: validation.IsPortNumber,
 			},
 			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
 			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
@@ -641,7 +686,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return findListenerByARN(ctx, conn, d.Id())
 	})
 
@@ -679,7 +724,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -767,7 +812,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
@@ -821,7 +866,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	output, err := conn.DescribeListenerAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -832,7 +877,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil
@@ -1038,7 +1083,7 @@ func (m listenerAttributeMap) flatten(d *schema.ResourceData, apiObjects []awsty
 }
 
 func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.CertificateNotFoundException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateListener(ctx, input)
 	})
 
@@ -1061,7 +1106,7 @@ func findListenerByARN(ctx context.Context, conn *elasticloadbalancingv2.Client,
 
 	// Eventual consistency check.
 	if aws.ToString(output.ListenerArn) != arn {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -1087,7 +1132,7 @@ func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, inp
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -1163,6 +1208,11 @@ func expandListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diag
 	case awstypes.ActionTypeEnumAuthenticateOidc:
 		if v, ok := tfMap["authenticate_oidc"].([]any); ok {
 			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumJwtValidation:
+		if v, ok := tfMap["jwt_validation"].([]any); ok && len(v) > 0 {
+			action.JwtValidationConfig = expandListenerActionJWTValidationConfig(v)
 		}
 	}
 
@@ -1271,6 +1321,57 @@ func expandListenerFixedResponseConfig(l []any) *awstypes.FixedResponseActionCon
 	}
 
 	return fr
+}
+
+func expandListenerActionJWTValidationConfig(l []any) *awstypes.JwtValidationActionConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]any)
+
+	if !ok {
+		return nil
+	}
+
+	jwt := &awstypes.JwtValidationActionConfig{
+		Issuer:       aws.String(tfMap[names.AttrIssuer].(string)),
+		JwksEndpoint: aws.String(tfMap["jwks_endpoint"].(string)),
+	}
+
+	if v, ok := tfMap["additional_claim"].(*schema.Set); ok && v.Len() > 0 {
+		jwt.AdditionalClaims = expandJwtValidationActionAdditionalClaim(tfMap["additional_claim"].(*schema.Set).List())
+	}
+
+	return jwt
+}
+
+func expandJwtValidationActionAdditionalClaim(l []any) []awstypes.JwtValidationActionAdditionalClaim {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var claims []awstypes.JwtValidationActionAdditionalClaim
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		claim := awstypes.JwtValidationActionAdditionalClaim{
+			Format: awstypes.JwtValidationActionAdditionalClaimFormatEnum(tfMap[names.AttrFormat].(string)),
+			Name:   aws.String(tfMap[names.AttrName].(string)),
+		}
+
+		if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
+			claim.Values = flex.ExpandStringValueSet(v)
+		}
+
+		claims = append(claims, claim)
+	}
+
+	return claims
 }
 
 func expandListenerRedirectActionConfig(l []any) *awstypes.RedirectActionConfig {
@@ -1445,6 +1546,9 @@ func flattenListenerActions(d *schema.ResourceData, attrName string, apiObjects 
 			}
 
 			tfMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(apiObject.AuthenticateOidcConfig, clientSecret)
+
+		case awstypes.ActionTypeEnumJwtValidation:
+			tfMap["jwt_validation"] = flattenListenerActionJWTValidationConfig(apiObject.JwtValidationConfig)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1690,6 +1794,41 @@ func flattenListenerActionForwardConfigTargetGroupStickinessConfig(config *awsty
 	return []any{m}
 }
 
+func flattenListenerActionJWTValidationConfig(apiObject *awstypes.JwtValidationActionConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrIssuer: apiObject.Issuer,
+		"jwks_endpoint":  apiObject.JwksEndpoint,
+	}
+	if len(apiObject.AdditionalClaims) > 0 {
+		tfMap["additional_claim"] = flattenJwtValidationActionAdditionalClaims(apiObject.AdditionalClaims)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenJwtValidationActionAdditionalClaims(claims []awstypes.JwtValidationActionAdditionalClaim) []any {
+	if len(claims) == 0 {
+		return []any{}
+	}
+
+	var tfList []any
+
+	for _, claim := range claims {
+		tfMap := map[string]any{
+			names.AttrFormat: claim.Format,
+			names.AttrName:   claim.Name,
+			names.AttrValues: flex.FlattenStringValueSet(claim.Values),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func flattenListenerActionRedirectConfig(apiObject *awstypes.RedirectActionConfig) []any {
 	if apiObject == nil {
 		return []any{}
@@ -1872,6 +2011,15 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 					string(actionType),
 				))
 			}
+
+		case awstypes.ActionTypeEnumJwtValidation:
+			if jv := action.GetAttr("jwt_validation"); jv.IsNull() || jv.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("jwt_validation"),
+					actionPath.GetAttr(names.AttrType),
+					string(actionType),
+				))
+			}
 		}
 	}
 }
@@ -1923,6 +2071,16 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 		if actionType != awstypes.ActionTypeEnumFixedResponse {
 			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
 				actionPath.GetAttr("fixed_response"),
+				actionPath.GetAttr(names.AttrType),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["jwt_validation"].([]any); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumJwtValidation {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("jwt_validation"),
 				actionPath.GetAttr(names.AttrType),
 				string(actionType),
 			))

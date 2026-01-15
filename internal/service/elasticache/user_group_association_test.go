@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -8,13 +8,11 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,19 +22,19 @@ func TestAccElastiCacheUserGroupAssociation_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_user_group_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupAssociationExists(ctx, resourceName),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 				),
@@ -56,19 +54,19 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_user_group_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_preUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupAssociationExists(ctx, resourceName),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 				),
@@ -76,7 +74,7 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 			{
 				Config: testAccUserGroupAssociationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupAssociationExists(ctx, resourceName),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_id", fmt.Sprintf("%s-3", rName)),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 				),
@@ -87,20 +85,20 @@ func TestAccElastiCacheUserGroupAssociation_update(t *testing.T) {
 
 func TestAccElastiCacheUserGroupAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_user_group_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUserGroupAssociation(), resourceName),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticache.ResourceUserGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,15 +112,15 @@ func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName1 := "aws_elasticache_user_group_association.test1"
 	resourceName2 := "aws_elasticache_user_group_association.test2"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckUserGroupAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupAssociationConfig_preMultiple(rName),
@@ -130,17 +128,17 @@ func TestAccElastiCacheUserGroupAssociation_multiple(t *testing.T) {
 			{
 				Config: testAccUserGroupAssociationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserGroupAssociationExists(ctx, resourceName1),
-					testAccCheckUserGroupAssociationExists(ctx, resourceName2),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName1),
+					testAccCheckUserGroupAssociationExists(ctx, t, resourceName2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckUserGroupAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elasticache_user_group_association" {
@@ -149,7 +147,7 @@ func testAccCheckUserGroupAssociationDestroy(ctx context.Context) resource.TestC
 
 			err := tfelasticache.FindUserGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_group_id"], rs.Primary.Attributes["user_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -164,14 +162,14 @@ func testAccCheckUserGroupAssociationDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckUserGroupAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckUserGroupAssociationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
 
 		err := tfelasticache.FindUserGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_group_id"], rs.Primary.Attributes["user_id"])
 

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_instance: Prevent destruction of resource when `disable_api_termination` is `true`
+```
+
+```release-note:enhancement
+resource/aws_instance: Adds `force_destroy` argument that allows destruction even when `disable_api_termination` and `disable_api_stop` are `true`
+```

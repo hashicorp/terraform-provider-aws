@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -7,16 +7,19 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -76,14 +79,14 @@ func resourceDashboardPut(ctx context.Context, d *schema.ResourceData, meta any)
 	_, err := conn.PutDashboard(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Dashboard (%s): %s", name, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return append(diags, resourceDashboardRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceDashboardRead(ctx, d, meta))
 }
 
 func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -92,14 +95,14 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findDashboardByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Dashboard (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Dashboard (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("dashboard_arn", output.DashboardArn)
@@ -120,7 +123,7 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta a
 	_, err := conn.DeleteDashboards(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Dashboard (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -134,18 +137,18 @@ func findDashboardByName(ctx context.Context, conn *cloudwatch.Client, name stri
 	output, err := conn.GetDashboard(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFound) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
-		}
+		})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil

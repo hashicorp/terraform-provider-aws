@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `clusterIdentifier` - (Required, Forces new resources) The cluster identifier.
 * `clusterEndpointIdentifier` - (Required, Forces new resources) The identifier to use for the new endpoint. This parameter is stored as a lowercase string.
 * `customEndpointType` - (Required) The type of the endpoint. One of: READER , ANY .
@@ -140,4 +141,4 @@ Using `terraform import`, import RDS Clusters Endpoint using the `clusterEndpoin
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html#Aurora.Endpoints.Cluster
 
-<!-- cache-key: cdktf-0.20.8 input-b761562b3b7ed426711889d337bb634b5bbc5068e335a10133cf4b7802b4a672 -->
+<!-- cache-key: cdktf-0.20.8 input-59ac5440b19d69aa55c7b186d7857eb0fc5478a15dde9f53e78aa2924da88d89 -->

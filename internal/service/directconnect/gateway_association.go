@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -14,16 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_gateway_association", name="Gateway Association")
@@ -38,12 +42,17 @@ func resourceGatewayAssociation() *schema.Resource {
 			StateContext: resourceGatewayAssociationImport,
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: gatewayAssociationStateUpgradeV0,
 				Version: 0,
+			},
+			{
+				Type:    resourceGatewayAssociationResourceV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: gatewayAssociationStateUpgradeV1,
+				Version: 1,
 			},
 		},
 
@@ -94,6 +103,10 @@ func resourceGatewayAssociation() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"associated_gateway_id"},
 				AtLeastOneOf:  []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+			},
+			names.AttrTransitGatewayAttachmentID: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -166,13 +179,13 @@ func resourceGatewayAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.DirectConnectClient(ctx)
 
 	associationID := d.Get("dx_gateway_association_id").(string)
-
 	output, err := findGatewayAssociationByID(ctx, conn, associationID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Gateway Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -182,15 +195,30 @@ func resourceGatewayAssociationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway Association (%s): %s", d.Id(), err)
 	}
 
+	associatedGatewayID, dxGatewayID := aws.ToString(output.AssociatedGateway.Id), aws.ToString(output.DirectConnectGatewayId)
 	if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 	}
-	d.Set("associated_gateway_id", output.AssociatedGateway.Id)
+	d.Set("associated_gateway_id", associatedGatewayID)
 	d.Set("associated_gateway_owner_account_id", output.AssociatedGateway.OwnerAccount)
 	d.Set("associated_gateway_type", output.AssociatedGateway.Type)
 	d.Set("dx_gateway_association_id", output.AssociationId)
-	d.Set("dx_gateway_id", output.DirectConnectGatewayId)
+	d.Set("dx_gateway_id", dxGatewayID)
 	d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
+	if output.AssociatedGateway.Type == awstypes.GatewayTypeTransitGateway {
+		transitGatewayAttachment, err := tfec2.FindTransitGatewayAttachmentByTransitGatewayIDAndDirectConnectGatewayID(ctx, c.EC2Client(ctx), associatedGatewayID, dxGatewayID)
+
+		switch {
+		case tfawserr.ErrCodeEquals(err, "UnauthorizedOperation"):
+			d.Set(names.AttrTransitGatewayAttachmentID, nil)
+		case err != nil:
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s) Attachment (%s): %s", associatedGatewayID, dxGatewayID, err)
+		default:
+			d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachment.TransitGatewayAttachmentId)
+		}
+	} else {
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
+	}
 
 	return diags
 }
@@ -235,10 +263,16 @@ func resourceGatewayAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	associationID := d.Get("dx_gateway_association_id").(string)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association: %s", d.Id())
+	const (
+		timeout = 1 * time.Minute
+	)
 	input := directconnect.DeleteDirectConnectGatewayAssociationInput{
 		AssociationId: aws.String(associationID),
 	}
-	_, err := conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
+
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DirectConnectClientException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteDirectConnectGatewayAssociation(ctx, &input)
+	}, "has non-deleted Private IP VPN")
 
 	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "does not exist") {
 		return diags
@@ -318,7 +352,7 @@ func findNonDisassociatedGatewayAssociation(ctx context.Context, conn *directcon
 	}
 
 	if state := output.AssociationState; state == awstypes.DirectConnectGatewayAssociationStateDisassociated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -361,11 +395,11 @@ func findGatewayAssociations(ctx context.Context, conn *directconnect.Client, in
 	return output, nil
 }
 
-func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) retry.StateRefreshFunc {
+func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGatewayAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -378,7 +412,7 @@ func statusGatewayAssociation(ctx context.Context, conn *directconnect.Client, i
 }
 
 func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
 		Refresh: statusGatewayAssociation(ctx, conn, id),
@@ -388,7 +422,7 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -397,7 +431,7 @@ func waitGatewayAssociationCreated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateUpdating),
 		Target:  enum.Slice(awstypes.DirectConnectGatewayAssociationStateAssociated),
 		Refresh: statusGatewayAssociation(ctx, conn, id),
@@ -407,7 +441,7 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}
@@ -416,7 +450,7 @@ func waitGatewayAssociationUpdated(ctx context.Context, conn *directconnect.Clie
 }
 
 func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DirectConnectGatewayAssociationStateDisassociating),
 		Target:  []string{},
 		Refresh: statusGatewayAssociation(ctx, conn, id),
@@ -426,7 +460,7 @@ func waitGatewayAssociationDeleted(ctx context.Context, conn *directconnect.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateChangeError)))
 
 		return output, err
 	}

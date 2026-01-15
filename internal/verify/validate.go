@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
@@ -109,7 +109,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 		parsedARN, err := arn.Parse(value)
 
 		if err != nil {
-			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 			return ws, errors
 		}
 
@@ -215,16 +215,16 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errStr := err.Error()
-		if err, ok := errs.As[*json.SyntaxError](err); ok {
-			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+		if syntaxErr, ok := errs.As[*json.SyntaxError](err); ok {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
+		} else {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
 		}
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %w", k, err))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
@@ -330,7 +330,7 @@ func ValidLaunchTemplateID(v any, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
 	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
+			"%q must begin with 'lt-' and only contain alphanumeric characters: %v", k, value))
 	}
 	return
 }
@@ -411,33 +411,13 @@ func ValidRegionName(v any, k string) (ws []string, errors []error) {
 func ValidStringIsJSONOrYAML(v any, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {
 		if _, err := structure.NormalizeJsonString(v); err != nil {
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))
 		}
 	} else {
 		if _, err := checkYAMLString(v); err != nil {
-			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %s", k, err))
+			errors = append(errors, fmt.Errorf("%q contains an invalid YAML: %w", k, err))
 		}
 	}
-	return
-}
-
-// ValidTypeStringNullableFloat provides custom error messaging for TypeString floats
-// Some arguments require a floating point value or an unspecified, empty field.
-func ValidTypeStringNullableFloat(v any, k string) (ws []string, es []error) {
-	value, ok := v.(string)
-	if !ok {
-		es = append(es, fmt.Errorf("expected type of %s to be string", k))
-		return
-	}
-
-	if value == "" {
-		return
-	}
-
-	if _, err := strconv.ParseFloat(value, 64); err != nil {
-		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %s", k, value, err))
-	}
-
 	return
 }
 
@@ -465,7 +445,7 @@ func ValidDuration(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	duration, err := time.ParseDuration(value)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %w", k, err))
 	}
 	if duration < 0 {
 		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))

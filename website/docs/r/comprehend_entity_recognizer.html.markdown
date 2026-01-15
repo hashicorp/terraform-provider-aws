@@ -30,11 +30,11 @@ resource "aws_comprehend_entity_recognizer" "example" {
     }
 
     documents {
-      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.id}"
+      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.key}"
     }
 
     entity_list {
-      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.id}"
+      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.key}"
     }
   }
 
@@ -158,6 +158,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Optional, Default: `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_comprehend_entity_recognizer.example
+  identity = {
+    "arn" = "arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example"
+  }
+}
+
+resource "aws_comprehend_entity_recognizer" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Comprehend entity recognizer.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Comprehend Entity Recognizer using the ARN. For example:
 

@@ -79,6 +79,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `modelPackageGroupName` - (Required) The name of the model package group.
 
 ## Attribute Reference
@@ -119,4 +120,4 @@ Using `terraform import`, import SageMaker AI Model Package Groups using the `na
 % terraform import aws_sagemaker_model_package_group_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-34ee8a05621c6758bf0419837b44ba956b8264b13f58bca233df9268f84c0c69 -->
+<!-- cache-key: cdktf-0.20.8 input-9dc490b07e380b245ae371ca9af16a9b42727aa4ae48832d1757d952f5c0bef1 -->

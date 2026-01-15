@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -110,6 +110,7 @@ func implementsAttrValue(field reflect.Value) bool {
 
 func skippedFields() []string {
 	return []string{
+		"Region",
 		"Tags",
 		"TagsAll",
 		"Timeouts",

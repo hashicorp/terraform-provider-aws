@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the global endpoint.
 * `event_bus` - (Required) The event buses to use. The names of the event buses must be identical in each Region. Exactly two event buses are required. Documented below.
 * `name` - (Required) The name of the global endpoint.
@@ -121,4 +122,4 @@ Using `terraform import`, import EventBridge Global Endpoints using the `name`. 
 % terraform import aws_cloudwatch_event_endpoint.imported_endpoint example-endpoint
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dac45f03f23cfb9ec43d7243c7ab30a08379fa9704853c26c6d6b06354f671a4 -->
+<!-- cache-key: cdktf-0.20.8 input-adde6a75d5d74ed21b0ec732322215c126aeee97503729dd54dda250af66d251 -->

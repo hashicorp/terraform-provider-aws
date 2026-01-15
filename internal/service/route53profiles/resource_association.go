@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles
@@ -11,20 +11,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,7 +77,8 @@ func (r *resourceAssociationResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"resource_properties": schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+				Computed:   true,
+				CustomType: types.StringType,
 				Optional:   true,
 			},
 			names.AttrResourceType: schema.StringAttribute{
@@ -161,7 +162,7 @@ func (r *resourceAssociationResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	out, err := findResourceAssociationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -219,7 +220,7 @@ func (r *resourceAssociationResource) Delete(ctx context.Context, req resource.D
 }
 
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusResourceAssociation(ctx, conn, id),
@@ -237,7 +238,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.C
 }
 
 func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusResourceAssociation(ctx, conn, id),
@@ -252,10 +253,10 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	return nil, err
 }
 
-func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -275,7 +276,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	out, err := conn.GetProfileResourceAssociation(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -285,7 +286,7 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	}
 
 	if out == nil || out.ProfileResourceAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileResourceAssociation, nil
@@ -298,7 +299,7 @@ type resourceAssociationResourceModel struct {
 	OwnerId            types.String                               `tfsdk:"owner_id"`
 	ProfileID          types.String                               `tfsdk:"profile_id"`
 	ResourceArn        types.String                               `tfsdk:"resource_arn"`
-	ResourceProperties jsontypes.Normalized                       `tfsdk:"resource_properties"`
+	ResourceProperties types.String                               `tfsdk:"resource_properties"`
 	ResourceType       types.String                               `tfsdk:"resource_type"`
 	Status             fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage      types.String                               `tfsdk:"status_message"`

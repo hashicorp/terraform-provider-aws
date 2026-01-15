@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
@@ -15,13 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -71,7 +73,7 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var plan contributorInsightRuleResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -80,7 +82,7 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 		RuleDefinition: plan.RuleDefinition.ValueStringPointer(),
 		RuleName:       plan.RuleName.ValueStringPointer(),
 	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -89,17 +91,11 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 
 	out, err := conn.PutInsightRule(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorInsightRule, plan.RuleName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorInsightRule, plan.RuleName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.RuleName.String())
 		return
 	}
 
@@ -115,54 +111,48 @@ func (r *contributorInsightRuleResource) Create(ctx context.Context, req resourc
 		}
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudWatch, create.ErrActionCreating, ResNameContributorInsightRule, plan.RuleName.String(), err),
-				err.Error(),
-			)
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.RuleName.String())
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *contributorInsightRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var state contributorInsightRuleResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findContributorInsightRuleByName(ctx, conn, state.RuleName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionSetting, ResNameContributorInsightRule, state.RuleName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
 		return
 	}
 
 	cirARN := r.Meta().RegionalARN(ctx, "cloudwatch", fmt.Sprintf("insight-rule/%s", state.RuleName.ValueString()))
 	state.ResourceARN = fwflex.StringValueToFramework(ctx, cirARN)
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state), smerr.ID, state.RuleName.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state), smerr.ID, state.RuleName.String())
 }
 
 func (r *contributorInsightRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var old, new contributorInsightRuleResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &old))
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &new))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -176,10 +166,7 @@ func (r *contributorInsightRuleResource) Update(ctx context.Context, req resourc
 			}
 			_, err := conn.EnableInsightRules(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorInsightRule, new.RuleName.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.RuleName.String())
 			}
 		} else if new.RuleState.ValueEnum() == stateValueDisabled {
 			input := cloudwatch.DisableInsightRulesInput{
@@ -187,21 +174,18 @@ func (r *contributorInsightRuleResource) Update(ctx context.Context, req resourc
 			}
 			_, err := conn.DisableInsightRules(ctx, &input)
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.CloudWatch, create.ErrActionUpdating, ResNameContributorInsightRule, new.RuleName.String(), err),
-					err.Error(),
-				)
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, new.RuleName.String())
 			}
 		}
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &new), smerr.ID, new.RuleName.String())
 }
 
 func (r *contributorInsightRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CloudWatchClient(ctx)
 
 	var state contributorInsightRuleResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -215,10 +199,7 @@ func (r *contributorInsightRuleResource) Delete(ctx context.Context, req resourc
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudWatch, create.ErrActionDeleting, ResNameContributorInsightRule, state.RuleName.String(), err),
-			err.Error(),
-		)
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.RuleName.String())
 		return
 	}
 }
@@ -238,10 +219,10 @@ func findContributorInsightRuleByName(ctx context.Context, conn *cloudwatch.Clie
 func findContributorInsightRule(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, filter tfslices.Predicate[*awstypes.InsightRule]) (*awstypes.InsightRule, error) {
 	output, err := findContributorInsightRules(ctx, conn, input, filter)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
 
 func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, input *cloudwatch.DescribeInsightRulesInput, filter tfslices.Predicate[*awstypes.InsightRule]) ([]awstypes.InsightRule, error) {
@@ -252,13 +233,13 @@ func findContributorInsightRules(ctx context.Context, conn *cloudwatch.Client, i
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
-			}
+			})
 		}
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, v := range page.InsightRules {

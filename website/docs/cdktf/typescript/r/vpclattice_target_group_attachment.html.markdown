@@ -44,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `targetGroupIdentifier` - (Required) The ID or Amazon Resource Name (ARN) of the target group.
 - `target` - (Required) The target.
 
@@ -56,4 +57,4 @@ This resource supports the following arguments:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.8 input-76bb32523fd1b009dd3acd5c4e346952c40db6a6b4d8dbf3c0993de29a708fa5 -->
+<!-- cache-key: cdktf-0.20.8 input-d33516ceaaa5e5465bbc494d936406115dbf7547eb82a85e80a17abcf8e78361 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -11,13 +11,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -44,6 +45,10 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionOutput")
 // @Testing(importIgnore="filename;last_modified;publish")
+// @IdentityAttribute("function_name")
+// @Testing(idAttrDuplicates="function_name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @CustomImport
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,
@@ -59,6 +64,10 @@ func resourceFunction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				identitySpec := importer.IdentitySpec(ctx)
+				if err := importer.RegionalSingleParameterized(ctx, d, identitySpec, meta.(importer.AWSClient)); err != nil {
+					return nil, err
+				}
 				d.Set("function_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -79,8 +88,42 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_provider_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"lambda_managed_instances_capacity_provider_config": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capacity_provider_arn": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+									},
+									"execution_environment_memory_gib_per_vcpu": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										Computed: true,
+									},
+									"per_execution_environment_max_concurrency": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"code_sha256": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"code_signing_config_arn": {
@@ -106,6 +149,26 @@ func resourceFunction() *schema.Resource {
 			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"durable_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_timeout": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 31622400),
+						},
+						names.AttrRetentionPeriod: {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      14,
+							ValidateFunc: validation.IntBetween(1, 90),
+						},
+					},
+				},
 			},
 			names.AttrEnvironment: {
 				Type:     schema.TypeList,
@@ -209,6 +272,30 @@ func resourceFunction() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "0" && new == "1" {
+						imageConfigPlan := d.GetRawPlan().GetAttr("image_config")
+						if !imageConfigPlan.IsNull() {
+							icSlice := imageConfigPlan.AsValueSlice()[0]
+							if !icSlice.IsNull() {
+								var suppressCommand, suppressEntryPoint, suppressWorkingDirectory bool
+								icMap := icSlice.AsValueMap()
+								if v, ok := icMap["command"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
+									suppressCommand = true
+								}
+								if v, ok := icMap["entry_point"]; ok && (v.IsNull() || len(v.AsValueSlice()) == 0) {
+									suppressEntryPoint = true
+								}
+								if v, ok := icMap["working_directory"]; ok && (v.IsNull() || len(v.AsString()) == 0) {
+									suppressWorkingDirectory = true
+								}
+
+								return suppressCommand && suppressEntryPoint && suppressWorkingDirectory
+							}
+						}
+					}
+					return false
+				},
 			},
 			"image_uri": {
 				Type:         schema.TypeString,
@@ -290,6 +377,11 @@ func resourceFunction() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"publish_to": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionVersionLatestPublished](),
+			},
 			"qualified_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -313,6 +405,10 @@ func resourceFunction() *schema.Resource {
 				Optional:     true,
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
+			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrRole: {
 				Type:         schema.TypeString,
@@ -381,8 +477,29 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"source_kms_key_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"image_uri"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenancy_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tenant_isolation_mode": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.TenantIsolationMode](),
+						},
+					},
+				},
+			},
 			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -460,6 +577,13 @@ func resourceFunction() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
 			updateComputedAttributesOnPublish,
+			customdiff.ForceNewIfChange("durable_config", func(_ context.Context, old, new, meta any) bool {
+				// Force new when durable_config is being added (from empty to non-empty) or removed (from non-empty to empty)
+				// Allow updates to execution_timeout and retention_period when durable_config already exists
+				oldLen := len(old.([]any))
+				newLen := len(new.([]any))
+				return (oldLen == 0 && newLen > 0) || (oldLen > 0 && newLen == 0)
+			}),
 		),
 	}
 }
@@ -480,6 +604,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
+	}
+
+	if v, ok := d.GetOk("capacity_provider_config"); ok {
+		input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -523,6 +651,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+		input.DurableConfig = expandDurableConfigs(v.([]any))
+	}
+
 	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		if v, ok := v.([]any)[0].(map[string]any)["variables"].(map[string]any); ok && len(v) > 0 {
 			input.Environment = &awstypes.Environment{
@@ -546,6 +678,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.Runtime = awstypes.Runtime(d.Get("runtime").(string))
 	}
 
+	if v, ok := d.GetOk("publish_to"); ok {
+		input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]any)) > 0 {
 		input.ImageConfig = expandImageConfigs(v.([]any))
 	}
@@ -564,6 +700,16 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("snap_start"); ok {
 		input.SnapStart = expandSnapStart(v.([]any))
+	}
+
+	if v, ok := d.GetOk("source_kms_key_arn"); ok {
+		input.Code.SourceKMSKeyArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tenancy_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TenancyConfig = &awstypes.TenancyConfig{
+			TenantIsolationMode: awstypes.TenantIsolationMode(v.([]any)[0].(map[string]any)["tenant_isolation_mode"].(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -591,7 +737,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func() (any, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 		return findFunctionByName(ctx, conn, d.Id())
 	})
 
@@ -635,7 +781,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findFunction(ctx, conn, &input)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Function %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -645,10 +791,28 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	// If Qualifier is specified, GetFunction will return nil for Concurrency.
+	// Need to fetch it separately using GetFunctionConcurrency.
+	if output.Concurrency == nil && input.Qualifier != nil {
+		outputGFC, err := findFunctionConcurrencyByName(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) concurrency: %s", d.Id(), err)
+		}
+
+		output.Concurrency = &awstypes.Concurrency{
+			ReservedConcurrentExecutions: outputGFC.ReservedConcurrentExecutions,
+		}
+	}
+
 	function := output.Configuration
+	functionCode := output.Code
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)
+	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_config: %s", err)
+	}
 	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []any{
@@ -660,6 +824,13 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	} else {
 		d.Set("dead_letter_config", []any{})
+	}
+	if function.DurableConfig != nil {
+		if err := d.Set("durable_config", flattenDurableConfig(function.DurableConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting durable_config: %s", err)
+		}
+	} else {
+		d.Set("durable_config", []any{})
 	}
 	d.Set(names.AttrDescription, function.Description)
 	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
@@ -694,6 +865,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
@@ -705,6 +877,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("source_kms_key_arn", functionCode.SourceKMSKeyArn)
 	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
@@ -716,6 +889,15 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
+	}
+	if function.TenancyConfig != nil {
+		if err := d.Set("tenancy_config", []any{
+			map[string]any{
+				"tenant_isolation_mode": string(function.TenancyConfig.TenantIsolationMode),
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting tenancy_config: %s", err)
+		}
 	}
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
@@ -740,12 +922,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		setTagsOut(ctx, output.Tags)
 	}
 
-	// Currently, this functionality is only enabled in AWS Commercial partition
-	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
-	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -774,6 +955,15 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+
+	codeUpdateCompleted := false
+	defer func() {
+		if !codeUpdateCompleted {
+			// If an error occurs before completing the code update,
+			// reset non-refreshable attributes to pre-apply state.
+			resetNonRefreshableAttributes(d)
+		}
+	}()
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
@@ -806,6 +996,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
+		if d.HasChange("capacity_provider_config") {
+			if v, ok := d.GetOk("capacity_provider_config"); ok {
+				input.CapacityProviderConfig = expandCapacityProviderConfig(v.([]any))
+			}
+		}
+
 		if d.HasChange("dead_letter_config") {
 			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]any)) > 0 {
 				if v.([]any)[0] == nil {
@@ -819,6 +1015,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
 					TargetArn: aws.String(""),
 				}
+			}
+		}
+
+		if d.HasChange("durable_config") {
+			if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+				input.DurableConfig = expandDurableConfigs(v.([]any))
 			}
 		}
 
@@ -977,17 +1179,14 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			}
 		}
 
+		// If source_kms_key_arn is set, it should be always included in the update
+		if v, ok := d.GetOk("source_kms_key_arn"); ok {
+			input.SourceKMSKeyArn = aws.String(v.(string))
+		}
+
 		_, err := conn.UpdateFunctionCode(ctx, &input)
 
 		if err != nil {
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
-				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
-				for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version"} {
-					old, _ := d.GetChange(key)
-					d.Set(key, old)
-				}
-			}
-
 			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
 		}
 
@@ -995,6 +1194,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) code update: %s", d.Id(), err)
 		}
 	}
+	codeUpdateCompleted = true
 
 	if d.HasChange("reserved_concurrent_executions") {
 		if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
@@ -1026,7 +1226,11 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func() (any, error) {
+		if v, ok := d.GetOk("publish_to"); ok {
+			input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
+		}
+
+		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, lambdaPropagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
 		}, "in progress")
 
@@ -1059,11 +1263,18 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Stop any running durable executions before deleting the function
+	if v, ok := d.GetOk("durable_config"); ok && len(v.([]any)) > 0 {
+		if err := stopDurableExecutions(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "stopping durable executions for Lambda Function (%s): %s", d.Id(), err)
+		}
+	}
+
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 	input := lambda.DeleteFunctionInput{
 		FunctionName: aws.String(d.Id()),
 	}
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
 		return conn.DeleteFunction(ctx, &input)
 	}, "because it is a replicated function")
 
@@ -1075,22 +1286,115 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta an
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	if _, err := waitFunctionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) delete: %s", d.Id(), err)
+	}
+
 	return diags
 }
 
+func stopDurableExecutions(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) error {
+	input := &lambda.ListDurableExecutionsByFunctionInput{
+		FunctionName: aws.String(functionName),
+		Statuses:     []awstypes.ExecutionStatus{awstypes.ExecutionStatusRunning},
+	}
+
+	paginator := lambda.NewListDurableExecutionsByFunctionPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return err
+		}
+
+		for _, execution := range page.DurableExecutions {
+			_, err := conn.StopDurableExecution(ctx, &lambda.StopDurableExecutionInput{
+				DurableExecutionArn: execution.DurableExecutionArn,
+			})
+			if err != nil {
+				return err
+			}
+
+			if _, err := waitDurableExecutionStopped(ctx, conn, aws.ToString(execution.DurableExecutionArn), timeout); err != nil {
+				return fmt.Errorf("waiting for durable execution (%s) to stop: %w", aws.ToString(execution.DurableExecutionArn), err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) (*lambda.GetDurableExecutionOutput, error) {
+	input := &lambda.GetDurableExecutionInput{
+		DurableExecutionArn: aws.String(arn),
+	}
+
+	output, err := conn.GetDurableExecution(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func statusDurableExecution(ctx context.Context, conn *lambda.Client, arn string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findDurableExecution(ctx, conn, arn)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitDurableExecutionStopped(ctx context.Context, conn *lambda.Client, arn string, timeout time.Duration) (*lambda.GetDurableExecutionOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ExecutionStatusRunning),
+		Target:  enum.Slice(awstypes.ExecutionStatusStopped),
+		Refresh: statusDurableExecution(ctx, conn, arn),
+		Timeout: timeout,
+		Delay:   2 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*lambda.GetDurableExecutionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func findFunctionByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionOutput, error) {
-	input := &lambda.GetFunctionInput{
+	input := lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
 	}
 
-	return findFunction(ctx, conn, input)
+	return findFunction(ctx, conn, &input)
 }
 
 func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
 	output, err := conn.GetFunction(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1101,7 +1405,7 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	}
 
 	if output == nil || output.Code == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1122,7 +1426,7 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	output, err := conn.GetFunctionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1133,20 +1437,20 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, name string) (*awstypes.FunctionConfiguration, error) {
-	input := &lambda.ListVersionsByFunctionInput{
+	input := lambda.ListVersionsByFunctionInput{
 		FunctionName: aws.String(name),
 		MaxItems:     aws.Int32(listVersionsMaxItems),
 	}
 	var output *awstypes.FunctionConfiguration
 
-	pages := lambda.NewListVersionsByFunctionPaginator(conn, input)
+	pages := lambda.NewListVersionsByFunctionPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -1161,7 +1465,36 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
+}
+
+func findFunctionConcurrencyByName(ctx context.Context, conn *lambda.Client, name string) (*lambda.GetFunctionConcurrencyOutput, error) {
+	input := lambda.GetFunctionConcurrencyInput{
+		FunctionName: aws.String(name),
+	}
+
+	return findFunctionConcurrency(ctx, conn, &input)
+}
+
+func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionConcurrencyInput) (*lambda.GetFunctionConcurrencyOutput, error) {
+	output, err := conn.GetFunctionConcurrency(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1203,7 +1536,7 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	} else {
 		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
 		if err != nil || defaultSG == nil {
-			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+			return fmt.Errorf("finding VPC (%s) default security group: %w", vpcID, err)
 		}
 		replacementSGIDs = []string{aws.ToString(defaultSG.GroupId)}
 	}
@@ -1218,21 +1551,21 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
 		return conn.UpdateFunctionConfiguration(ctx, input)
 	}); err != nil {
-		return fmt.Errorf("updating Lambda Function (%s) configuration: %s", d.Id(), err)
+		return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
 	}
 
 	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
+func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1244,11 +1577,11 @@ func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, na
 	}
 }
 
-func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
+func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFunctionByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1260,11 +1593,11 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 	}
 }
 
-func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lambda.Client, name, qualifier string) retry.StateRefreshFunc {
+func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lambda.Client, name, qualifier string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFunctionConfigurationByTwoPartKey(ctx, conn, name, qualifier)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1272,14 +1605,21 @@ func statusFunctionConfigurationLastUpdateStatus(ctx context.Context, conn *lamb
 			return nil, "", err
 		}
 
-		return output, string(output.LastUpdateStatus), nil
+		// "LastUpdateStatus":null can be returned (when SnapStart is enabled?).
+		// lambda.NewFunctionUpdatedWaiter handles this as a retryable status.
+		status := output.LastUpdateStatus
+		if status == "" {
+			status = awstypes.LastUpdateStatusInProgress
+		}
+
+		return output, string(status), nil
 	}
 }
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatePending),
-		Target:  enum.Slice(awstypes.StateActive),
+		Target:  enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable),
 		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1288,7 +1628,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1297,7 +1637,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*awstypes.FunctionConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionLastUpdateStatus(ctx, conn, name),
@@ -1308,7 +1648,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
@@ -1317,7 +1657,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 }
 
 func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, name, qualifier string, timeout time.Duration) (*lambda.GetFunctionConfigurationOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.LastUpdateStatusInProgress),
 		Target:  enum.Slice(awstypes.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionConfigurationLastUpdateStatus(ctx, conn, name, qualifier),
@@ -1328,9 +1668,27 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetFunctionConfigurationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFunctionDeleted(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*lambda.GetFunctionOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateActive, awstypes.StateActiveNonInvocable, awstypes.StatePending, awstypes.StateInactive, awstypes.StateFailed, awstypes.StateDeleting),
+		Target:  []string{},
+		Refresh: statusFunctionState(ctx, conn, name),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
+		return &lambda.GetFunctionOutput{Configuration: output}, err
 	}
 
 	return nil, err
@@ -1344,7 +1702,7 @@ type functionCU interface {
 
 func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*T, error) {
 	output, err := tfresource.RetryWhen(ctx, lambdaPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return f()
 		},
 		func(err error) (bool, error) {
@@ -1376,7 +1734,7 @@ func retryFunctionOp[T functionCU](ctx context.Context, f func() (*T, error)) (*
 			functionExtraThrottlingTimeout = 9 * time.Minute
 		)
 		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return f()
 			},
 			func(err error) (bool, error) {
@@ -1426,10 +1784,12 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
+		d.HasChange("code_sha256") ||
 		d.HasChange("source_code_hash") ||
 		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
+		d.HasChange("source_kms_key_arn") ||
 		d.HasChange("image_uri") ||
 		d.HasChange("architectures")
 }
@@ -1459,6 +1819,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
+		d.HasChange("durable_config") ||
 		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
 		d.HasChange("vpc_config.0.ipv6_allowed_for_dual_stack") ||
@@ -1466,18 +1827,19 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
 		d.HasChange(names.AttrEnvironment) ||
-		d.HasChange("ephemeral_storage")
+		d.HasChange("ephemeral_storage") ||
+		d.HasChange("capacity_provider_config") ||
+		d.HasChange("publish_to")
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "apigateway",
-		Region:    c.Region(ctx),
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
-	}.String()
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
+}
+
+// See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
+func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
@@ -1505,10 +1867,65 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.EuNorth1RegionID:     {},
 		endpoints.MeSouth1RegionID:     {},
 		endpoints.SaEast1RegionID:      {},
+		endpoints.UsGovEast1RegionID:   {},
+		endpoints.UsGovWest1RegionID:   {},
 	}
 	_, ok := availableRegions[region]
 
 	return ok
+}
+
+func flattenCapacityProviderConfig(apiObject *awstypes.CapacityProviderConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	innerMap := make(map[string]any)
+	if apiObject.LambdaManagedInstancesCapacityProviderConfig != nil {
+		innerMap["capacity_provider_arn"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.CapacityProviderArn
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu != nil {
+			innerMap["execution_environment_memory_gib_per_vcpu"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.ExecutionEnvironmentMemoryGiBPerVCpu
+		}
+
+		if apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency != nil {
+			innerMap["per_execution_environment_max_concurrency"] = apiObject.LambdaManagedInstancesCapacityProviderConfig.PerExecutionEnvironmentMaxConcurrency
+		}
+	}
+
+	out := map[string]any{
+		"lambda_managed_instances_capacity_provider_config": []any{innerMap},
+	}
+
+	return []any{out}
+}
+
+func expandCapacityProviderConfig(tfList []any) *awstypes.CapacityProviderConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out awstypes.CapacityProviderConfig
+	m := tfList[0].(map[string]any)
+	if v, ok := m["lambda_managed_instances_capacity_provider_config"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		im := v.([]any)[0].(map[string]any)
+		var lmic awstypes.LambdaManagedInstancesCapacityProviderConfig
+		if val, ok := im["capacity_provider_arn"].(string); ok && v != "" {
+			lmic.CapacityProviderArn = aws.String(val)
+		}
+
+		if val, ok := im["execution_environment_memory_gib_per_vcpu"].(float64); ok && val != 0 {
+			lmic.ExecutionEnvironmentMemoryGiBPerVCpu = aws.Float64(val)
+		}
+
+		if val, ok := im["per_execution_environment_max_concurrency"].(int); ok && val != 0 {
+			lmic.PerExecutionEnvironmentMaxConcurrency = aws.Int32(int32(val))
+		}
+
+		out.LambdaManagedInstancesCapacityProviderConfig = &lmic
+	}
+
+	return &out
 }
 
 func flattenEnvironment(apiObject *awstypes.EnvironmentResponse) []any {
@@ -1551,6 +1968,40 @@ func expandFileSystemConfigs(tfList []any) []awstypes.FileSystemConfig {
 	}
 
 	return apiObjects
+}
+
+func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	return &awstypes.DurableConfig{
+		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
+		RetentionPeriodInDays: aws.Int32(int32(tfMap[names.AttrRetentionPeriod].(int))),
+	}
+}
+
+func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.ExecutionTimeout; v != nil {
+		tfMap["execution_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.RetentionPeriodInDays; v != nil {
+		tfMap[names.AttrRetentionPeriod] = aws.ToInt32(v)
+	}
+
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	return []any{tfMap}
 }
 
 func flattenImageConfig(apiObject *awstypes.ImageConfigResponse) []any {
@@ -1634,7 +2085,7 @@ func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.Res
 	return suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new, d.HasChanges("logging_config.0.log_format"))
 }
 
-func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(k, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
+func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(_, old, new string, logFormatHasChanges bool) bool { //nolint:unparam
 	if logFormatHasChanges {
 		return false
 	}
@@ -1683,4 +2134,16 @@ func flattenSnapStart(apiObject *awstypes.SnapStartResponse) []any {
 	}
 
 	return []any{tfMap}
+}
+
+// Non-API attributes (which cannot be refreshed via AWS API calls) in the state are updated even if the update fails.
+// Therefore, reset them to the previous value when the update fails.
+// https://developer.hashicorp.com/terraform/plugin/framework/diagnostics#how-errors-affect-state
+func resetNonRefreshableAttributes(d *schema.ResourceData) {
+	for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version", "source_code_hash", "filename"} {
+		if d.HasChange(key) {
+			old, _ := d.GetChange(key)
+			d.Set(key, old)
+		}
+	}
 }

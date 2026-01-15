@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -28,13 +28,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,6 +48,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkfirewall;networkfirewall.DescribeTLSInspectionConfigurationOutput")
 // @Testing(subdomainTfVar="common_name;certificate_domain")
 // @Testing(importIgnore="update_token", plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v5.100.0")
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -341,7 +343,7 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 
 	output, err := findTLSInspectionConfigurationByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -468,7 +470,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	output, err := conn.DescribeTLSInspectionConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -479,17 +481,17 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	}
 
 	if output == nil || output.TLSInspectionConfigurationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -505,11 +507,11 @@ const (
 	resourceStatusPending = "PENDING"
 )
 
-func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -532,7 +534,7 @@ func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *net
 }
 
 func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
 		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
@@ -549,7 +551,7 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 }
 
 func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
 		Target:  enum.Slice(awstypes.ResourceStatusActive),
 		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
@@ -566,7 +568,7 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 }
 
 func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusActive, awstypes.ResourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusTLSInspectionConfiguration(ctx, conn, arn),

@@ -275,6 +275,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the pipe. At most 512 characters.
 * `desiredState` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
@@ -687,4 +688,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5a2eae0f8ad0f4ef5a1ecec6b458966f44254f1631b97b04349b3a7a668d33f4 -->
+<!-- cache-key: cdktf-0.20.8 input-ea42928be23308e16f08dc8e3449738e22fee8ad9ba0b9c8fc75ab6bcb3eda90 -->

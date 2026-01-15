@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -138,7 +138,7 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 
 	pl, err := findManagedPrefixListByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -248,12 +248,12 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if len(descriptionOnlyRemovals) > 0 {
-				input := ec2.ModifyManagedPrefixListInput{
+				removeInput := ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
 					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
 				}
-				_, err := conn.ModifyManagedPrefixList(ctx, &input)
+				_, err := conn.ModifyManagedPrefixList(ctx, &removeInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
@@ -335,13 +335,13 @@ func updateMaxEntry(ctx context.Context, conn *ec2.Client, id string, maxEntries
 	_, err := conn.ModifyManagedPrefixList(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+		return fmt.Errorf("updating MaxEntries for EC2 Managed Prefix List (%s): %w", id, err)
 	}
 
 	_, err = waitManagedPrefixListModified(ctx, conn, id)
 
 	if err != nil {
-		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %w", id, err)
 	}
 
 	return nil

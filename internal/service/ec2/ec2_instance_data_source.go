@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -276,6 +275,10 @@ func dataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -408,7 +411,8 @@ func dataSourceInstance() *schema.Resource {
 // dataSourceInstanceRead performs the instanceID lookup
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
 	// Build up search parameters
 	input := ec2.DescribeInstancesInput{}
@@ -451,14 +455,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	// ARN
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
-		Resource:  fmt.Sprintf("instance/%s", d.Id()),
-	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrARN, instanceARN(ctx, c, d.Id()))
 
 	return diags
 }
@@ -477,13 +474,15 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
-	d.Set("placement_group", instance.Placement.GroupName)
-	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	d.Set("tenancy", instance.Placement.Tenancy)
-	d.Set("host_id", instance.Placement.HostId)
-	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-
+	if v := instance.Placement; v != nil {
+		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
+		d.Set("host_id", v.HostId)
+		d.Set("host_resource_group_arn", v.HostResourceGroupArn)
+		d.Set("placement_group", v.GroupName)
+		d.Set("placement_group_id", v.GroupId)
+		d.Set("placement_partition_number", v.PartitionNumber)
+		d.Set("tenancy", v.Tenancy)
+	}
 	d.Set("ami", instance.ImageId)
 	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
@@ -556,7 +555,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, true); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.ToString(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {

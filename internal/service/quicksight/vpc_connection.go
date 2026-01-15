@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -23,13 +23,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,16 +65,9 @@ const (
 func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrAWSAccountID: schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrARN:          framework.ARNAttributeComputedOnly(),
+			names.AttrAWSAccountID: quicksightschema.AWSAccountIDAttribute(),
+			names.AttrID:           framework.IDAttribute(),
 			"vpc_connection_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -155,37 +150,37 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightClient(ctx)
-
-	var plan vpcConnectionResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var data vpcConnectionResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
+	if data.AWSAccountID.IsUnknown() {
+		data.AWSAccountID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	}
-	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
+
+	conn := r.Meta().QuickSightClient(ctx)
+
+	awsAccountID, vpcConnectionID := fwflex.StringValueFromFramework(ctx, data.AWSAccountID), fwflex.StringValueFromFramework(ctx, data.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
 		AwsAccountId:     aws.String(awsAccountID),
-		Name:             plan.Name.ValueStringPointer(),
-		RoleArn:          plan.RoleArn.ValueStringPointer(),
-		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
-		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIDs),
+		Name:             data.Name.ValueStringPointer(),
+		RoleArn:          data.RoleArn.ValueStringPointer(),
+		SecurityGroupIds: fwflex.ExpandFrameworkStringValueSet(ctx, data.SecurityGroupIDs),
+		SubnetIds:        fwflex.ExpandFrameworkStringValueSet(ctx, data.SubnetIDs),
 		Tags:             getTagsIn(ctx),
 		VPCConnectionId:  aws.String(vpcConnectionID),
 	}
 
-	if !plan.DNSResolvers.IsNull() {
-		in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DNSResolvers)
+	if !data.DNSResolvers.IsNull() {
+		in.DnsResolvers = fwflex.ExpandFrameworkStringValueSet(ctx, data.DNSResolvers)
 	}
 
 	// account for IAM propagation when attempting to assume role
 	out, err := retryVPCConnectionCreate(ctx, conn, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, data.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -193,27 +188,27 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, resNameVPCConnection, data.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID))
+	data.ID = fwflex.StringValueToFramework(ctx, vpcConnectionCreateResourceID(awsAccountID, vpcConnectionID))
 
-	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, r.CreateTimeout(ctx, plan.Timeouts))
+	waitOut, err := waitVPCConnectionCreated(ctx, conn, awsAccountID, vpcConnectionID, r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameVPCConnection, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, resNameVPCConnection, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, waitOut.Arn)
-	plan.AvailabilityStatus = flex.StringValueToFramework(ctx, waitOut.AvailabilityStatus)
+	data.ARN = fwflex.StringToFramework(ctx, waitOut.Arn)
+	data.AvailabilityStatus = fwflex.StringValueToFramework(ctx, waitOut.AvailabilityStatus)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
 func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -235,7 +230,7 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -247,15 +242,15 @@ func (r *vpcConnectionResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.VPCConnectionID = flex.StringValueToFramework(ctx, vpcConnectionID)
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
-	state.SecurityGroupIDs = flex.FlattenFrameworkStringValueSetOfString(ctx, out.SecurityGroupIds)
-	state.DNSResolvers = flex.FlattenFrameworkStringValueSetOfString(ctx, out.DnsResolvers)
-	state.AvailabilityStatus = flex.StringValueToFramework(ctx, out.AvailabilityStatus)
-	state.SubnetIDs = flex.FlattenFrameworkStringValueSetOfString(ctx, tfslices.ApplyToAll(out.NetworkInterfaces, func(v awstypes.NetworkInterface) string {
+	state.AWSAccountID = fwflex.StringValueToFramework(ctx, awsAccountID)
+	state.VPCConnectionID = fwflex.StringValueToFramework(ctx, vpcConnectionID)
+	state.ARN = fwflex.StringToFramework(ctx, out.Arn)
+	state.Name = fwflex.StringToFramework(ctx, out.Name)
+	state.RoleArn = fwflex.StringToFramework(ctx, out.RoleArn)
+	state.SecurityGroupIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, out.SecurityGroupIds)
+	state.DNSResolvers = fwflex.FlattenFrameworkStringValueSetOfString(ctx, out.DnsResolvers)
+	state.AvailabilityStatus = fwflex.StringValueToFramework(ctx, out.AvailabilityStatus)
+	state.SubnetIDs = fwflex.FlattenFrameworkStringValueSetOfString(ctx, tfslices.ApplyToAll(out.NetworkInterfaces, func(v awstypes.NetworkInterface) string {
 		return aws.ToString(v.SubnetId)
 	}))
 
@@ -290,13 +285,13 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 			AwsAccountId:     aws.String(awsAccountID),
 			Name:             plan.Name.ValueStringPointer(),
 			RoleArn:          plan.RoleArn.ValueStringPointer(),
-			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
-			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIDs),
+			SecurityGroupIds: fwflex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIDs),
+			SubnetIds:        fwflex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIDs),
 			VPCConnectionId:  aws.String(vpcConnectionID),
 		}
 
 		if !plan.DNSResolvers.IsNull() {
-			in.DnsResolvers = flex.ExpandFrameworkStringValueSet(ctx, plan.DNSResolvers)
+			in.DnsResolvers = fwflex.ExpandFrameworkStringValueSet(ctx, plan.DNSResolvers)
 		}
 
 		out, err := conn.UpdateVPCConnection(ctx, &in)
@@ -394,7 +389,7 @@ func findVPCConnectionByTwoPartKey(ctx context.Context, conn *quicksight.Client,
 	}
 
 	if status := output.Status; status == awstypes.VPCConnectionResourceStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -407,7 +402,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 	output, err := conn.DescribeVPCConnection(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -418,7 +413,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 	}
 
 	if output == nil || output.VPCConnection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VPCConnection, nil
@@ -427,7 +422,7 @@ func findVPCConnection(ctx context.Context, conn *quicksight.Client, input *quic
 func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *quicksight.CreateVPCConnectionInput) (*quicksight.CreateVPCConnectionOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx,
 		iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateVPCConnection(ctx, in)
 		},
 		func(err error) (bool, error) {
@@ -444,7 +439,7 @@ func retryVPCConnectionCreate(ctx context.Context, conn *quicksight.Client, in *
 }
 
 func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusCreationInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusCreationSuccessful),
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -462,7 +457,7 @@ func waitVPCConnectionCreated(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusUpdateInProgress),
 		Target:     enum.Slice(awstypes.VPCConnectionResourceStatusUpdateSuccessful),
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -480,7 +475,7 @@ func waitVPCConnectionUpdated(ctx context.Context, conn *quicksight.Client, awsA
 }
 
 func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string, timeout time.Duration) (*awstypes.VPCConnection, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VPCConnectionResourceStatusDeletionInProgress),
 		Target:     []string{},
 		Refresh:    statusVPCConnection(ctx, conn, awsAccountID, vpcConnectionID),
@@ -497,11 +492,11 @@ func waitVPCConnectionDeleted(ctx context.Context, conn *quicksight.Client, awsA
 	return nil, err
 }
 
-func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) retry.StateRefreshFunc {
+func statusVPCConnection(ctx context.Context, conn *quicksight.Client, awsAccountID, vpcConnectionID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCConnectionByTwoPartKey(ctx, conn, awsAccountID, vpcConnectionID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

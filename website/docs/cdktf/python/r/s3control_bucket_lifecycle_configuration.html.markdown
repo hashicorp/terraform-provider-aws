@@ -57,6 +57,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bucket` - (Required) Amazon Resource Name (ARN) of the bucket.
 * `rule` - (Required) Configuration block(s) containing lifecycle rules for the bucket.
     * `abort_incomplete_multipart_upload` - (Optional) Configuration block containing settings for abort incomplete multipart upload.
@@ -102,4 +103,4 @@ Using `terraform import`, import S3 Control Bucket Lifecycle Configurations usin
 % terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-cff097a985740d959ada59c57dcd5daa70244019ab4e881ed525e73b6b61ffab -->
+<!-- cache-key: cdktf-0.20.8 input-c1905ce3b5eb9bb674e4477e9c2be3a082b3f9e7830233a8e5652a176941c63f -->

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Continuous Integration
 
 Continuous integration (CI) includes processes that run when you submit a pull request (PR). These processes can be divided into two broad categories: enrichment and testing.
@@ -21,6 +24,9 @@ To help place testing performed as part of CI in context, here is an overview of
 Continuous integration (CI) plays a pivotal role in maintaining the health and quality of a large project like the Terraform AWS Provider. CI tests are crucial for automatically assessing code changes for compliance with project standards and functionality expectations, greatly reducing the review burden on maintainers. By executing a battery of tests upon each pull request submission, CI ensures that new contributions integrate seamlessly with the existing codebase, minimizing the risk of regressions and enhancing overall stability.
 
 Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, CI tests serve as a safeguard, bolstering the reliability and maintainability of the project while fostering a collaborative and iterative development environment.
+
+!!! note "GitHub Actions Caching"
+    The provider uses a specialized caching strategy to handle the unique challenges of a massive codebase with 500+ active PRs. If you're working on GitHub Actions workflows or experiencing slow CI builds, see [GitHub Actions Caching Strategy](github-actions-caching.md) for details.
 
 ## Using `make` to Run Specific Tests Locally
 
@@ -65,6 +71,24 @@ Use the `clean-make-tests` target to clean up artifacts left behind by `make` te
 ```console
 make clean-make-tests
 ```
+
+### Quick Fixes
+
+Before running CI tests, you can automatically fix many common issues that would cause CI failures.
+
+Use the `quick-fix` target to run multiple fix targets in sequence (copyright headers, formatting, acceptance test linting, import ordering, modern Go patterns, Semgrep auto-fixes, and website Terraform formatting):
+
+```console
+make quick-fix
+```
+
+You can limit fixes to a specific service package with the `PKG` environment variable:
+
+```console
+PKG=rds make quick-fix
+```
+
+This is particularly useful before committing changes or submitting a pull request to catch and fix issues early.
 
 ### Acceptance Test Linting
 
@@ -128,7 +152,7 @@ To run `tflint` only against embedded configurations, use the `testacc-tflint-em
 make testacc-tflint-embedded
 ```
 
-### Copyright Checks / add headers check
+### Copyright Checks / headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
 
@@ -306,7 +330,7 @@ make gen
 
 `go_test` compiles the code and runs all tests except the [acceptance tests](running-and-writing-acceptance-tests.md). This check may also find higher level code errors than building alone finds.
 
-Use the `test` target to run this test:
+Use the `test` target to run unit tests. The target automatically detects whether you're testing a single service or the full codebase and optimizes accordingly (including macOS/CrowdStrike optimizations):
 
 ```console
 make test
@@ -319,6 +343,16 @@ PKG=rds make test
 ```
 
 **NOTE:** `test` and `golangci-lint2` are generally the longest running checks and, depending on your computer, may take considerable time to finish.
+
+#### test-shard (CI only)
+
+In CI, unit tests are distributed across multiple parallel jobs using round-robin sharding. This is handled automatically by GitHub Actions and is not typically needed for local development.
+
+If you need to test a specific shard locally (e.g., for debugging CI failures), use the `test-shard` target:
+
+```console
+make test-shard SHARD=0 TOTAL_SHARDS=4
+```
 
 #### import-lint
 
