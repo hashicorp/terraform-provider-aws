@@ -122,15 +122,15 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.32", "8.0.33", "8.0.34"`, `"8.0.37"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.4.4", "8.4.5"`, `"8.4.7"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.34"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.4.5"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.42", "8.0.43", "8.0.44"`, `"8.4.6", "8.4.7"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.44"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.44"),
 				),
 			},
 		},
