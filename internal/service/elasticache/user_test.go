@@ -385,6 +385,90 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheUser_passwordsWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user1, user2 awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_passwordsWriteOnly(rName, "password123456789", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user1),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"no_password_required",
+					"passwords_wo",
+					"passwords_wo_version",
+				},
+			},
+			// Update password by incrementing version
+			{
+				Config: testAccUserConfig_passwordsWriteOnly(rName, "newpassword1234567", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUser_authModePasswordsWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user1, user2 awstypes.User
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_authModePasswordsWriteOnly(rName, "password123456789", 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user1),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"authentication_mode.0.passwords_wo",
+					"authentication_mode.0.passwords_wo_version",
+					"no_password_required",
+				},
+			},
+			// Update password by incrementing version
+			{
+				Config: testAccUserConfig_authModePasswordsWriteOnly(rName, "newpassword1234567", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, t, resourceName, &user2),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
@@ -558,4 +642,34 @@ resource "aws_elasticache_user" "test" {
   }
 }
 `, rName, tagKey, tagValue)
+}
+
+func testAccUserConfig_passwordsWriteOnly(rName, password string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id              = %[1]q
+  user_name            = "username1"
+  access_string        = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine               = "redis"
+  passwords_wo         = %[2]q
+  passwords_wo_version = %[3]d
+}
+`, rName, password, version)
+}
+
+func testAccUserConfig_authModePasswordsWriteOnly(rName, password string, version int) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "redis"
+
+  authentication_mode {
+    type                 = "password"
+    passwords_wo         = %[2]q
+    passwords_wo_version = %[3]d
+  }
+}
+`, rName, password, version)
 }
