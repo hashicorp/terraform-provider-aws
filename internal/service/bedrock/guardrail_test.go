@@ -187,6 +187,10 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{3}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "NAME"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "investment_topic"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.input_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.output_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.output_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATE"),
 				),
 			},
@@ -200,6 +204,10 @@ func TestAccBedrockGuardrail_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.regexes_config.0.pattern", "^\\d{4}-\\d{2}-\\d{4}$"),
 					resource.TestCheckResourceAttr(resourceName, "sensitive_information_policy_config.0.pii_entities_config.0.type", "USERNAME"),
 					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.name", "earnings_topic"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.input_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.input_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.output_action", "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "topic_policy_config.0.topics_config.0.output_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "word_policy_config.0.words_config.0.text", "HATRED"),
 				),
 			},
@@ -596,10 +604,14 @@ resource "aws_bedrock_guardrail" "test" {
 
   topic_policy_config {
     topics_config {
-      name       = %[7]q
-      examples   = ["Where should I invest my money ?"]
-      type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      name          = %[7]q
+      examples      = ["Where should I invest my money ?"]
+      type          = "DENY"
+      definition    = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      input_action  = "BLOCK"
+      input_enabled = true
+      output_action = "BLOCK"
+      output_enabled = true
     }
   }
 
@@ -729,10 +741,14 @@ resource "aws_bedrock_guardrail" "test" {
 
   topic_policy_config {
     topics_config {
-      name       = "investment_topic"
-      examples   = ["Where should I invest my money ?"]
-      type       = "DENY"
-      definition = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      name          = "investment_topic"
+      examples      = ["Where should I invest my money ?"]
+      type          = "DENY"
+      definition    = "Investment advice refers to inquiries, guidance, or recommendations regarding the management or allocation of funds or assets with the goal of generating returns ."
+      input_action  = "BLOCK"
+      input_enabled = true
+      output_action = "BLOCK"
+      output_enabled = true
     }
     tier_config {
       tier_name = "STANDARD"
