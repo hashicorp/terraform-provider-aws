@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_arczonalshift_zonal_autoshift_configuration
+```
