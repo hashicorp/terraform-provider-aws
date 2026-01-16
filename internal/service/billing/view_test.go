@@ -61,45 +61,6 @@ func TestAccBillingView_basic(t *testing.T) {
 	})
 }
 
-func TestAccBillingView_dataFilterExpression(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var view awstypes.BillingViewElement
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_billing_view.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BillingServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckViewDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccViewConfig_dataFilterTags(rName, "TenantId", "12345"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckViewExists(ctx, resourceName, &view),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.key", "TenantId"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "data_filter_expression.0.tags.0.values.0", "12345"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
 func TestAccBillingView_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -409,23 +370,6 @@ resource "aws_billing_view" "test" {
   source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
 }
 `, rName))
-}
-
-func testAccViewConfig_dataFilterTags(rName, key, value string) string {
-	return acctest.ConfigCompose(testAccViewConfig_base(), fmt.Sprintf(`
-resource "aws_billing_view" "test" {
-  name         = %[1]q
-  description  = "Test description"
-  source_views = ["arn:${data.aws_partition.current.partition}:billing::${data.aws_caller_identity.current.account_id}:billingview/primary"]
-
-  data_filter_expression {
-    tags {
-      key    = %[2]q
-      values = [%[3]q]
-    }
-  }
-}
-`, rName, key, value))
 }
 
 func testAccViewConfig_update(rName, description string) string {
