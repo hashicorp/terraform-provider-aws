@@ -331,14 +331,23 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
+	@if [ -d "./$(PKG_NAME)" ] && ls ./$(PKG_NAME)/*.go >/dev/null 2>&1; then \
+		echo "make: Processing ./$(PKG_NAME)..."; \
+		goimports -w ./$(PKG_NAME)/*.go; \
+	fi
+	@for dir in $$(find ./$(PKG_NAME) -mindepth 1 -type d | sort); do \
+		if ls $$dir/*.go >/dev/null 2>&1; then \
+			echo "make: Processing $$dir..."; \
+			goimports -w $$dir/*.go; \
+		fi; \
+	done
 
 fix-imports-core: ## Fixing core directory imports with goimports
 	@echo "make: Fixing core directory imports with goimports..."
 	@go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|' | while read pkg; do \
-		if [ -d "$$pkg" ]; then \
+		if [ -d "$$pkg" ] && ls $$pkg/*.go >/dev/null 2>&1; then \
 			echo "make: Processing $$pkg..."; \
-			goimports -w $$pkg; \
+			goimports -w $$pkg/*.go; \
 		fi; \
 	done
 
@@ -502,7 +511,7 @@ quick-fix-core-heading: ## Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
 
-quick-fix-core: quick-fix-core-heading copyright-fix fmt-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
@@ -907,6 +916,12 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 		| sort -u \
 		| xargs -I {} terrafmt fmt  --fmtcompat {}
 
+testacc-lint-fix-core: ## Fix acceptance test linter findings in core directories
+	@echo "make: Fixing Acceptance Test Linting / terrafmt in core directories..."
+	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
+		| sort -u \
+		| xargs -I {} terrafmt fmt --fmtcompat {}
+
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT) -vet=off
@@ -1225,6 +1240,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-lint-fix-core \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \
