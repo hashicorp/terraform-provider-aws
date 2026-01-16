@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tags/tagpolicy"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/version"
 )
@@ -171,7 +171,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	// Handle custom S3 regions for S3-compatible storage (Ceph, MinIO, etc.)
 	// AWS SDK v2 validates regions strictly, but S3-compatible storage may use non-standard region strings
 	if customS3Endpoint := c.Endpoints[names.S3]; customS3Endpoint != "" {
-		if !types.IsAWSRegion(cfg.Region) {
+		if !inttypes.IsAWSRegion(cfg.Region) {
 			c.S3OriginalRegion = cfg.Region
 			cfg.Region = "us-east-1" // Use compliant dummy region for SDK initialization
 			tflog.Info(ctx, "Substituting non-standard region for S3-compatible endpoint", map[string]any{
