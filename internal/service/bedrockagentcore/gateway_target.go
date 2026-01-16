@@ -487,6 +487,40 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
+			"metadata_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[metadataConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"allowed_query_parameters": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of URL query parameters that are allowed to be propagated from incoming gateway URL to the target.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+							},
+						},
+						"allowed_request_headers": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of HTTP headers that are allowed to be propagated from incoming client requests to the target.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+							},
+						},
+						"allowed_response_headers": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Optional:    true,
+							Description: "A list of HTTP headers that are allowed to be propagated from the target response back to the client.",
+							Validators: []validator.Set{
+								setvalidator.SizeAtMost(10),
+							},
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -774,10 +808,17 @@ type gatewayTargetResourceModel struct {
 	CredentialProviderConfiguration fwtypes.ListNestedObjectValueOf[credentialProviderConfigurationModel] `tfsdk:"credential_provider_configuration"`
 	Description                     types.String                                                          `tfsdk:"description"`
 	GatewayIdentifier               types.String                                                          `tfsdk:"gateway_identifier"`
+	MetadataConfiguration           fwtypes.ListNestedObjectValueOf[metadataConfigurationModel]           `tfsdk:"metadata_configuration"`
 	Name                            types.String                                                          `tfsdk:"name"`
 	TargetConfiguration             fwtypes.ListNestedObjectValueOf[targetConfigurationModel]             `tfsdk:"target_configuration"`
 	TargetID                        types.String                                                          `tfsdk:"target_id"`
 	Timeouts                        timeouts.Value                                                        `tfsdk:"timeouts"`
+}
+
+type metadataConfigurationModel struct {
+	AllowedQueryParameters fwtypes.SetOfString `tfsdk:"allowed_query_parameters"`
+	AllowedRequestHeaders  fwtypes.SetOfString `tfsdk:"allowed_request_headers"`
+	AllowedResponseHeaders fwtypes.SetOfString `tfsdk:"allowed_response_headers"`
 }
 
 type credentialProviderConfigurationModel struct {
