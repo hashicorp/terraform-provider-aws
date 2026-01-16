@@ -5,6 +5,7 @@ package cloudfront
 
 // Exports for use in tests only.
 var (
+	ResourceAnycastIPList               = newAnycastIPListResource
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceConnectionFunction          = newResourceConnectionFunction
 	ResourceConnectionGroup             = newConnectionGroupResource
@@ -26,6 +27,7 @@ var (
 	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
+	FindAnycastIPListByID                      = findAnycastIPListByID
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindConnectionFunctionByTwoPartKey         = findConnectionFunctionByTwoPartKey
 	FindConnectionGroupById                    = findConnectionGroupByID
