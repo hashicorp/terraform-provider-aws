@@ -44,7 +44,7 @@ func TestAccSageMakerModelCardExportJob_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_card_export_job_arn"), tfknownvalue.RegionalARNExact("sagemaker", fmt.Sprintf("model-card-export-job/%s", rName))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("model_card_export_job_arn"), tfknownvalue.RegionalARNExact("sagemaker", fmt.Sprintf("model-card/%[1]s-card/export-job/%[1]s", rName))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("export_artifacts"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						"s3_export_artifacts": knownvalue.NotNull(),
 					})})),

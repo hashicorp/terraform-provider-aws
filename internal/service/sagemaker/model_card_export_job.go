@@ -39,7 +39,7 @@ import (
 
 // @FrameworkResource("aws_sagemaker_model_card_export_job", name="Model Card Export Job")
 func newModelCardExportJobResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &modelCardResource{}
+	r := &modelCardExportJobResource{}
 	r.SetDefaultCreateTimeout(15 * time.Minute)
 	return r, nil
 }
@@ -73,6 +73,7 @@ func (r *modelCardExportJobResource) Schema(ctx context.Context, request resourc
 			},
 			"model_card_version": schema.Int32Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.RequiresReplace(),
 				},
@@ -127,7 +128,7 @@ func (r *modelCardExportJobResource) Create(ctx context.Context, request resourc
 		return
 	}
 
-	output, err := conn.CreateModelCardExportJob(ctx, &input)
+	outputCMCEJ, err := conn.CreateModelCardExportJob(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker AI Model Card Export Job (%s)", name), err.Error())
@@ -135,11 +136,18 @@ func (r *modelCardExportJobResource) Create(ctx context.Context, request resourc
 	}
 
 	// Set values for unknowns.
-	arn := aws.ToString(output.ModelCardExportJobArn)
-	data.ModelCardExportJobARN = fwflex.StringValueToFramework(ctx, arn)
+	arn := aws.ToString(outputCMCEJ.ModelCardExportJobArn)
 
-	if _, err := waitModelCardExportJobCompleted(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	outputDMCEJ, err := waitModelCardExportJobCompleted(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker AI Model Card Export Job (%s) complete", arn), err.Error())
+	}
+
+	// Set unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputDMCEJ, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
