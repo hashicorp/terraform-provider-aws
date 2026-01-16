@@ -19,6 +19,7 @@ FEATURES:
 * **New List Resource:** `aws_cleanrooms_configured_table` ([#45956](https://github.com/hashicorp/terraform-provider-aws/issues/45956))
 * **New List Resource:** `aws_cloudfront_key_value_store` ([#45957](https://github.com/hashicorp/terraform-provider-aws/issues/45957))
 * **New List Resource:** `aws_opensearchserverless_collection` ([#46001](https://github.com/hashicorp/terraform-provider-aws/issues/46001))
+* **New List Resource:** `aws_s3_bucket` ([#46004](https://github.com/hashicorp/terraform-provider-aws/issues/46004))
 * **New Resource:** `aws_cloudfront_anycast_ip_list` ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
 * **New Resource:** `aws_ram_resource_associations_exclusive` ([#45883](https://github.com/hashicorp/terraform-provider-aws/issues/45883))
 * **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
@@ -27,6 +28,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
+* data-source/aws_vpc_ipam_pool: Add `source_resource` attribute ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 * resource/aws_docdb_cluster_instance: Add `certificate_rotation_restart` argument ([#45984](https://github.com/hashicorp/terraform-provider-aws/issues/45984))
 * resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
 * resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
@@ -35,7 +37,10 @@ ENHANCEMENTS:
 * resource/aws_sagemaker_endpoint: Retry IAM eventual consistency errors on Create ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
 * resource/aws_sagemaker_monitoring_schedule: Add `monitoring_schedule_config.monitoring_job_definition` argument ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
 * resource/aws_sagemaker_monitoring_schedule: Make `monitoring_schedule_config.monitoring_job_definition_name` argument optional ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
+* resource/aws_vpc_ipam_pool: Add `source_resource` argument in support of provisioning of VPC Resource Planning Pools ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 * resource/aws_vpc_ipam_resource_discovery: Add `organizational_unit_exclusion` argument ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
+* resource/aws_vpc_subnet: Add `ipv4_ipam_pool_id`, `ipv4_netmask_length`, `ipv6_ipam_pool_id`, and `ipv6_netmask_length` arguments in support of provisioning of subnets using IPAM ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
+* resource/aws_vpc_subnet: Change `ipv6_cidr_block` to Optional and Computed ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 
 BUG FIXES:
 
