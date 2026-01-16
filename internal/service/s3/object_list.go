@@ -77,10 +77,10 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 		names.AttrBucket: bucket,
 	})
 	stream.Results = func(yield func(list.ListResult) bool) {
-		input := &s3.ListObjectsV2Input{
+		input := s3.ListObjectsV2Input{
 			Bucket: aws.String(bucket),
 		}
-		for item, err := range listObjects(ctx, conn, input) {
+		for item, err := range listObjects(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
 				yield(result)
