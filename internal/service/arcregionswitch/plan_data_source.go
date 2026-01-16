@@ -24,20 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
-	input := arcregionswitch.ListRoute53HealthChecksInput{
-		Arn: aws.String(planArn),
-	}
-
-	output, err := conn.ListRoute53HealthChecks(ctx, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output.HealthChecks, nil
-}
-
 // @FrameworkDataSource("aws_arcregionswitch_plan", name="Plan")
 func newDataSourcePlan(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePlan{}
@@ -98,20 +84,6 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 		},
 		Blocks: map[string]fwschema.Block{},
 	}
-}
-
-type dataSourcePlanModel struct {
-	ARN                          types.String `tfsdk:"arn"`
-	Region                       types.String `tfsdk:"region"`
-	Name                         types.String `tfsdk:"name"`
-	ExecutionRole                types.String `tfsdk:"execution_role"`
-	RecoveryApproach             types.String `tfsdk:"recovery_approach"`
-	Regions                      types.List   `tfsdk:"regions"`
-	Description                  types.String `tfsdk:"description"`
-	PrimaryRegion                types.String `tfsdk:"primary_region"`
-	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
-	WaitForHealthChecks          types.Bool   `tfsdk:"wait_for_health_checks"`
-	Route53HealthChecks          types.List   `tfsdk:"route53_health_checks"`
 }
 
 func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -249,4 +221,32 @@ func (d *dataSourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Sch
 	var diags fwdiag.Diagnostics
 	// Basic validation is handled by the schema validators
 	return diags
+}
+
+type dataSourcePlanModel struct {
+	ARN                          types.String `tfsdk:"arn"`
+	Region                       types.String `tfsdk:"region"`
+	Name                         types.String `tfsdk:"name"`
+	ExecutionRole                types.String `tfsdk:"execution_role"`
+	RecoveryApproach             types.String `tfsdk:"recovery_approach"`
+	Regions                      types.List   `tfsdk:"regions"`
+	Description                  types.String `tfsdk:"description"`
+	PrimaryRegion                types.String `tfsdk:"primary_region"`
+	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
+	WaitForHealthChecks          types.Bool   `tfsdk:"wait_for_health_checks"`
+	Route53HealthChecks          types.List   `tfsdk:"route53_health_checks"`
+}
+
+func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
+	input := arcregionswitch.ListRoute53HealthChecksInput{
+		Arn: aws.String(planArn),
+	}
+
+	output, err := conn.ListRoute53HealthChecks(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.HealthChecks, nil
 }
