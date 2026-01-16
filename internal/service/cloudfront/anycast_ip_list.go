@@ -133,6 +133,10 @@ func (r *anycastIPListResource) Create(ctx context.Context, request resource.Cre
 
 		return
 	}
+	if outputCAIL == nil || outputCAIL.AnycastIpList == nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront Anycast IP List (%s)", name), "empty result")
+		return
+	}
 
 	// Set values for unknowns.
 	anycastIPList := outputCAIL.AnycastIpList
