@@ -3394,7 +3394,74 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey7(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.2"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "5"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 5),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "5"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+					timeout := 40 * time.Minute
+					nodeGroupsToRemove := []string{"0003", "0005"}
+
+					if err := resourceReplicationGroupShardModifyRemoveNodes(ctx, conn, rName, 3, nodeGroupsToRemove, timeout); err != nil {
+						t.Fatalf("error removing nodes: %s", err)
+					}
+				},
+				Config: testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName, "valkey", "7.2", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey7_3NodeGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName, "valkey", "7.2", 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.2"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 5),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "5"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3425,7 +3492,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey7(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "3"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 3),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3461,7 +3528,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey8(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "5"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 5),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "5"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3492,7 +3559,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Valkey8(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "3"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 3),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3528,7 +3595,74 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "5"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 5),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "5"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+					timeout := 40 * time.Minute
+					nodeGroupsToRemove := []string{"0003", "0005"}
+
+					if err := resourceReplicationGroupShardModifyRemoveNodes(ctx, conn, rName, 3, nodeGroupsToRemove, timeout); err != nil {
+						t.Fatalf("error removing nodes: %s", err)
+					}
+				},
+				Config: testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName, "valkey", "8.0", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7_3NodeGroups(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_clusterModeWithNumNodeGroups(rName, "redis", "7.1", 5),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.1"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 5),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "5"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3559,7 +3693,7 @@ func TestAccElastiCacheReplicationGroup_RemoveNodeGroups_Redis7(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "node_group_configuration.#", "3"),
+					testAccCheckReplicationGroupNumNodeGroups(ctx, t, resourceName, 3),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
@@ -3613,6 +3747,29 @@ func testAccCheckReplicationGroupDestroy(ctx context.Context, t *testing.T) reso
 
 			return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
 		}
+		return nil
+	}
+}
+
+func testAccCheckReplicationGroupNumNodeGroups(ctx context.Context, t *testing.T, n string, count int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).ElastiCacheClient(ctx)
+
+		id := rs.Primary.ID
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, id)
+
+		if err != nil {
+			return err
+		}
+		if len(output.NodeGroups) != count {
+			return fmt.Errorf("ElastiCache Replication Group (%s) does not have num_node_groups = %d", id, count)
+		}
+
 		return nil
 	}
 }

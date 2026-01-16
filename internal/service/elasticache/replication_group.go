@@ -1259,7 +1259,7 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 	}
 
 	if oldNodeGroupCount > newNodeGroupCount {
-		//scalling down scenario
+		//Scalling down scenario.
 
 		nodeGroupIDs := []string{}
 		rg, err := findReplicationGroupByID(ctx, conn, d.Id())
@@ -1273,20 +1273,20 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 				nodeGroupIDs = append(nodeGroupIDs, *ng.NodeGroupId)
 			}
 		}
-		lenghtOfNodeGroupIDs := len(nodeGroupIDs)
+		lengthOfNodeGroupIDs := len(nodeGroupIDs)
 
-		if lenghtOfNodeGroupIDs > newNodeGroupCount {
+		if lengthOfNodeGroupIDs > newNodeGroupCount {
 			sort.Strings(nodeGroupIDs)
 
 			nodeGroupsToRemove := []string{}
-			reductionCount := oldNodeGroupCount - newNodeGroupCount
 
-			for i := lenghtOfNodeGroupIDs; i > (lenghtOfNodeGroupIDs - reductionCount); i-- {
+			for i := lengthOfNodeGroupIDs; i > newNodeGroupCount; i-- {
 				nodeGroupsToRemove = append(nodeGroupsToRemove, nodeGroupIDs[i-1])
 			}
 
 			input.NodeGroupsToRemove = nodeGroupsToRemove
 		}
+
 	}
 
 	if _, err := conn.ModifyReplicationGroupShardConfiguration(ctx, input); err != nil {
