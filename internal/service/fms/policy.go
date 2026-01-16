@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(importIgnore="delete_all_policy_resources;policy_update_token")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
