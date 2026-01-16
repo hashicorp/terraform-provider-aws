@@ -31,6 +31,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(importIgnore="state")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectAttachmentCreate,
