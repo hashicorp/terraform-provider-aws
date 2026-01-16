@@ -70,6 +70,15 @@ func CIDRBlocksOverlap(cidr1, cidr2 string) bool {
 	return net1.Contains(ip2) || net1.Contains(getLastIP(net2))
 }
 
+// IsIPv4CIDR returns whether a CIDR block is IPv4.
+func IsIPv4CIDR(cidr string) bool {
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false
+	}
+	return ipNet.IP.To4() != nil
+}
+
 // getLastIP returns the last IP address in a network
 func getLastIP(ipnet *net.IPNet) net.IP {
 	ip := make(net.IP, len(ipnet.IP))

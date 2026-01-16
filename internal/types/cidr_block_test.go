@@ -3,7 +3,11 @@
 
 package types
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 func TestValidateCIDRBlock(t *testing.T) {
 	t.Parallel()
@@ -107,6 +111,23 @@ func TestCIDRBlocksOverlap(t *testing.T) {
 		overlaps := CIDRBlocksOverlap(ts.cidr1, ts.cidr2)
 		if ts.overlaps != overlaps {
 			t.Fatalf("CIDRBlocksOverlap(%q, %q) should be: %t", ts.cidr1, ts.cidr2, ts.overlaps)
+		}
+	}
+}
+
+func TestIsIPv4CIDR(t *testing.T) {
+	t.Parallel()
+
+	for _, ts := range []struct {
+		cidr   string
+		isIPv4 bool
+	}{
+		{"10.2.2.0/24", true},
+		{"2001:db8::/32", false},
+		{"invalid", false},
+	} {
+		if got, want := IsIPv4CIDR(ts.cidr), ts.isIPv4; !cmp.Equal(got, want) {
+			t.Errorf("IsIPv4CIDR(%q) err %t, want %t", ts.cidr, got, want)
 		}
 	}
 }
