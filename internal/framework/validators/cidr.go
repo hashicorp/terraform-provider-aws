@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // ipv4CIDRNetworkAddressValidator validates that a string Attribute's value is a valid IPv4 CIDR that represents a network address.
@@ -30,7 +30,7 @@ func (validator ipv4CIDRNetworkAddressValidator) ValidateString(ctx context.Cont
 		return
 	}
 
-	if err := verify.ValidateIPv4CIDRBlock(request.ConfigValue.ValueString()); err != nil {
+	if err := inttypes.ValidateIPv4CIDRBlock(request.ConfigValue.ValueString()); err != nil {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
@@ -69,7 +69,7 @@ func (validator ipv6CIDRNetworkAddressValidator) ValidateString(ctx context.Cont
 		return
 	}
 
-	if err := verify.ValidateIPv6CIDRBlock(request.ConfigValue.ValueString()); err != nil {
+	if err := inttypes.ValidateIPv6CIDRBlock(request.ConfigValue.ValueString()); err != nil {
 		response.Diagnostics.Append(validatordiag.InvalidAttributeValueDiagnostic(
 			request.Path,
 			validator.Description(ctx),
