@@ -5,6 +5,7 @@ package sagemaker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -133,7 +135,12 @@ func (r *modelCardExportJobResource) Create(ctx context.Context, request resourc
 	}
 
 	// Set values for unknowns.
-	data.ModelCardExportJobARN = fwflex.StringToFramework(ctx, output.ModelCardExportJobArn)
+	arn := aws.ToString(output.ModelCardExportJobArn)
+	data.ModelCardExportJobARN = fwflex.StringValueToFramework(ctx, arn)
+
+	if _, err := waitModelCardExportJobCompleted(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker AI Model Card Export Job (%s) complete", arn), err.Error())
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -147,8 +154,8 @@ func (r *modelCardExportJobResource) Read(ctx context.Context, request resource.
 
 	conn := r.Meta().SageMakerClient(ctx)
 
-	name := fwflex.StringValueFromFramework(ctx, data.ModelCardExportJobName)
-	output, err := findModelCardExportJobByName(ctx, conn, name)
+	arn := fwflex.StringValueFromFramework(ctx, data.ModelCardExportJobARN)
+	output, err := findModelCardExportJobByARN(ctx, conn, arn)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -157,7 +164,7 @@ func (r *modelCardExportJobResource) Read(ctx context.Context, request resource.
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker AI Model Card Export Job (%s)", name), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker AI Model Card Export Job (%s)", arn), err.Error())
 		return
 	}
 
@@ -171,19 +178,19 @@ func (r *modelCardExportJobResource) Read(ctx context.Context, request resource.
 }
 
 func (r *modelCardExportJobResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("model_card_export_job_name"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root("model_card_export_job_arn"), request, response)
 }
 
-func findModelCardExportJobByName(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeModelCardOutput, error) {
-	input := sagemaker.DescribeModelCardInput{
-		ModelCardName: aws.String(name),
+func findModelCardExportJobByARN(ctx context.Context, conn *sagemaker.Client, arn string) (*sagemaker.DescribeModelCardExportJobOutput, error) {
+	input := sagemaker.DescribeModelCardExportJobInput{
+		ModelCardExportJobArn: aws.String(arn),
 	}
 
 	return findModelCardExportJob(ctx, conn, &input)
 }
 
-func findModelCardExportJob(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeModelCardInput) (*sagemaker.DescribeModelCardOutput, error) {
-	output, err := conn.DescribeModelCard(ctx, input)
+func findModelCardExportJob(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeModelCardExportJobInput) (*sagemaker.DescribeModelCardExportJobOutput, error) {
+	output, err := conn.DescribeModelCardExportJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return nil, &sdkretry.NotFoundError{
@@ -201,6 +208,40 @@ func findModelCardExportJob(ctx context.Context, conn *sagemaker.Client, input *
 	}
 
 	return output, nil
+}
+
+func statusModelCardExportJob(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findModelCardExportJobByARN(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitModelCardExportJobCompleted(ctx context.Context, conn *sagemaker.Client, arn string, timeout time.Duration) (*sagemaker.DescribeModelCardExportJobOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ModelCardExportJobStatusInProgress),
+		Target:  enum.Slice(awstypes.ModelCardExportJobStatusCompleted),
+		Refresh: statusModelCardExportJob(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeModelCardExportJobOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		return output, err
+	}
+
+	return nil, err
 }
 
 type modelCardExportJobResourceModel struct {

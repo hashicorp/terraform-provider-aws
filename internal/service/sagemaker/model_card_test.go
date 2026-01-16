@@ -283,10 +283,24 @@ func testAccCheckModelCardExists(ctx context.Context, n string) resource.TestChe
 func testAccModelCardConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_model_card" "test" {
-  model_card_name   = %[1]q
+  model_card_name   = "%[1]s-card"
   model_card_status = "Draft"
 
   content = "{}"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_sagemaker_model_card_export_job" "test" {
+  model_card_export_job_name = %[1]q
+  model_card_name            = aws_sagemaker_model_card.test.model_card_name
+
+  output_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
+  }
 }
 `, rName)
 }
