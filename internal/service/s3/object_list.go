@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,14 +57,6 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 			stream.Results = list.ListResultsStreamDiagnostics(diags)
 			return
 		}
-	}
-
-	// Bucket is required for listing S3 objects
-	if query.Bucket.IsNull() || query.Bucket.IsUnknown() {
-		stream.Results = list.ListResultsStreamDiagnostics(diag.Diagnostics{
-			diag.NewErrorDiagnostic("Bucket Required", "The 'bucket' attribute is required for listing S3 objects"),
-		})
-		return
 	}
 
 	bucket := query.Bucket.ValueString()
