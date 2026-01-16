@@ -281,8 +281,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Configuration = expandClusterConfiguration(v.([]any))
 		}
 
-		if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]any)[0].(map[string]any))
+		if d.HasChange("service_connect_defaults") {
+			if v, ok := d.GetOk("service_connect_defaults"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.ServiceConnectDefaults = expandClusterServiceConnectDefaultsRequest(v.([]any)[0].(map[string]any))
+			} else {
+				// Explicitly set empty struct to remove service_connect_defaults on update
+				input.ServiceConnectDefaults = &awstypes.ClusterServiceConnectDefaultsRequest{
+					Namespace: aws.String(""),
+				}
+			}
 		}
 
 		if v, ok := d.GetOk("setting"); ok {
