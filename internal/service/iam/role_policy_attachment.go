@@ -31,6 +31,7 @@ import (
 // @IdAttrFormat("{role}/{policy_arn}")
 // @ImportIDHandler("rolePolicyAttachmentImportID")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyAttachmentCreate,
