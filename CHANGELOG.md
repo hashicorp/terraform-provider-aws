@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_organizations_entity_path` ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
+* **New Data Source:** `aws_resourcegroupstaggingapi_required_tags` ([#45994](https://github.com/hashicorp/terraform-provider-aws/issues/45994))
 * **New Data Source:** `aws_s3_bucket_object_lock_configuration` ([#45990](https://github.com/hashicorp/terraform-provider-aws/issues/45990))
 * **New Data Source:** `aws_s3_bucket_replication_configuration` ([#42662](https://github.com/hashicorp/terraform-provider-aws/issues/42662))
 * **New Data Source:** `aws_s3control_access_points` ([#45949](https://github.com/hashicorp/terraform-provider-aws/issues/45949))
@@ -48,12 +49,14 @@ BUG FIXES:
 * resource/aws_cloudwatch_event_rule: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_datazone_environment_profile: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
+* resource/aws_eks_cluster: Fix `kubernetes_network_config` argument name in EKS Auto Mode validation error message ([#45997](https://github.com/hashicorp/terraform-provider-aws/issues/45997))
 * resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_lambda_event_source_mapping: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_lambda_invocation: Fix panic when deleting or replacing resource with empty input in CRUD lifecycle scope ([#45967](https://github.com/hashicorp/terraform-provider-aws/issues/45967))
 * resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
 * resource/aws_pipes_pipe: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_rds_cluster: Properly set `iam_database_authentication_enabled` when restored from snapshot ([#39461](https://github.com/hashicorp/terraform-provider-aws/issues/39461))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
 * resource/aws_route53_zone: Fixes error where Delete would fail if the remote resource had already been deleted. ([#45985](https://github.com/hashicorp/terraform-provider-aws/issues/45985))
