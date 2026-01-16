@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -114,6 +115,17 @@ func (r *tableBucketResource) Schema(ctx context.Context, request resource.Schem
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"storage_class_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[storageClassConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				Default: storageClassConfigurationDefault{
+					storageClass: awstypes.StorageClassStandard,
+				},
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -233,6 +245,29 @@ func (r *tableBucketResource) Create(ctx context.Context, request resource.Creat
 		}
 	}
 
+	awsStorageClassConfig, err := findTableBucketStorageClassConfigurationByARN(ctx, conn, tableBucketARN)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) storage class", name), err.Error())
+
+		return
+	default:
+		// Always populate storage_class_configuration since AWS always returns a value (defaults to STANDARD)
+		var storageClassConfiguration storageClassConfigurationModel
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsStorageClassConfig, &storageClassConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		var diags diag.Diagnostics
+		data.StorageClassConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &storageClassConfiguration)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -305,6 +340,29 @@ func (r *tableBucketResource) Read(ctx context.Context, request resource.ReadReq
 		}
 	}
 
+	awsStorageClassConfig, err := findTableBucketStorageClassConfigurationByARN(ctx, conn, tableBucketARN)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table Bucket (%s) storage class", name), err.Error())
+
+		return
+	default:
+		// Always populate storage_class_configuration since AWS always returns a value (defaults to STANDARD)
+		var storageClassConfiguration storageClassConfigurationModel
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsStorageClassConfig, &storageClassConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		var diags diag.Diagnostics
+		data.StorageClassConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &storageClassConfiguration)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -345,6 +403,33 @@ func (r *tableBucketResource) Update(ctx context.Context, request resource.Updat
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table Bucket (%s) encryption configuration", name), err.Error())
+
+			return
+		}
+	}
+
+	if !old.StorageClassConfiguration.Equal(new.StorageClassConfiguration) {
+		sc, diags := new.StorageClassConfiguration.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input := s3tables.PutTableBucketStorageClassInput{
+			TableBucketARN: aws.String(tableBucketARN),
+		}
+
+		var storageClassConfiguration awstypes.StorageClassConfiguration
+		response.Diagnostics.Append(fwflex.Expand(ctx, sc, &storageClassConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.StorageClassConfiguration = &storageClassConfiguration
+
+		_, err := conn.PutTableBucketStorageClass(ctx, &input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table Bucket (%s) storage class configuration", name), err.Error())
 
 			return
 		}
@@ -538,17 +623,46 @@ func findTableBucketMaintenanceConfiguration(ctx context.Context, conn *s3tables
 	return output, nil
 }
 
+func findTableBucketStorageClassConfigurationByARN(ctx context.Context, conn *s3tables.Client, arn string) (*awstypes.StorageClassConfiguration, error) {
+	input := s3tables.GetTableBucketStorageClassInput{
+		TableBucketARN: aws.String(arn),
+	}
+
+	return findTableBucketStorageClassConfiguration(ctx, conn, &input)
+}
+
+func findTableBucketStorageClassConfiguration(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableBucketStorageClassInput) (*awstypes.StorageClassConfiguration, error) {
+	output, err := conn.GetTableBucketStorageClass(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StorageClassConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.StorageClassConfiguration, nil
+}
+
 type tableBucketResourceModel struct {
 	framework.WithRegionModel
-	ARN                      types.String                                                    `tfsdk:"arn"`
-	CreatedAt                timetypes.RFC3339                                               `tfsdk:"created_at"`
-	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]             `tfsdk:"encryption_configuration"`
-	ForceDestroy             types.Bool                                                      `tfsdk:"force_destroy"`
-	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
-	Name                     types.String                                                    `tfsdk:"name"`
-	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
-	Tags                     tftags.Map                                                      `tfsdk:"tags"`
-	TagsAll                  tftags.Map                                                      `tfsdk:"tags_all"`
+	ARN                       types.String                                                    `tfsdk:"arn"`
+	CreatedAt                 timetypes.RFC3339                                               `tfsdk:"created_at"`
+	EncryptionConfiguration   fwtypes.ObjectValueOf[encryptionConfigurationModel]             `tfsdk:"encryption_configuration"`
+	ForceDestroy              types.Bool                                                      `tfsdk:"force_destroy"`
+	MaintenanceConfiguration  fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
+	Name                      types.String                                                    `tfsdk:"name"`
+	OwnerAccountID            types.String                                                    `tfsdk:"owner_account_id"`
+	StorageClassConfiguration fwtypes.ObjectValueOf[storageClassConfigurationModel]           `tfsdk:"storage_class_configuration"`
+	Tags                      tftags.Map                                                      `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                      `tfsdk:"tags_all"`
 }
 type encryptionConfigurationModel struct {
 	KMSKeyARN    fwtypes.ARN                               `tfsdk:"kms_key_arn"`
@@ -566,6 +680,10 @@ func (m *encryptionConfigurationModel) Flatten(ctx context.Context, v any) (diag
 		}
 	}
 	return diags
+}
+
+type storageClassConfigurationModel struct {
+	StorageClass fwtypes.StringEnum[awstypes.StorageClass] `tfsdk:"storage_class"`
 }
 
 type tableBucketMaintenanceConfigurationModel struct {
@@ -667,6 +785,34 @@ func flattenIcebergUnreferencedFileRemovalSettings(ctx context.Context, in awsty
 		tflog.Warn(ctx, "Unexpected nil tagged union value")
 	}
 	return result, diags
+}
+
+// storageClassConfigurationDefault is a default value provider for storage_class_configuration
+type storageClassConfigurationDefault struct {
+	storageClass awstypes.StorageClass
+}
+
+func (d storageClassConfigurationDefault) Description(ctx context.Context) string {
+	return "Sets the default storage class to STANDARD"
+}
+
+func (d storageClassConfigurationDefault) MarkdownDescription(ctx context.Context) string {
+	return "Sets the default storage class to STANDARD"
+}
+
+func (d storageClassConfigurationDefault) DefaultObject(ctx context.Context, req defaults.ObjectRequest, resp *defaults.ObjectResponse) {
+	model := storageClassConfigurationModel{
+		StorageClass: fwtypes.StringEnumValue(d.storageClass),
+	}
+
+	objValue, diags := fwtypes.NewObjectValueOf(ctx, &model)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Convert custom type to base Object type
+	resp.PlanValue = objValue.ObjectValue
 }
 
 // emptyTableBucket deletes all tables in all namespaces within the specified table bucket.
