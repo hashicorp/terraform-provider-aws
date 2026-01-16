@@ -74,7 +74,7 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 	}
 
 	tflog.Info(ctx, "Listing S3 (Simple Storage) Object", map[string]any{
-		"bucket": bucket,
+		names.AttrBucket: bucket,
 	})
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &s3.ListObjectsV2Input{
