@@ -13,6 +13,8 @@ FEATURES:
 * **New List Resource:** `aws_cleanrooms_collaboration` ([#45953](https://github.com/hashicorp/terraform-provider-aws/issues/45953))
 * **New List Resource:** `aws_cleanrooms_configured_table` ([#45956](https://github.com/hashicorp/terraform-provider-aws/issues/45956))
 * **New List Resource:** `aws_cloudfront_key_value_store` ([#45957](https://github.com/hashicorp/terraform-provider-aws/issues/45957))
+* **New Resource:** `aws_ram_resource_associations_exclusive` ([#45883](https://github.com/hashicorp/terraform-provider-aws/issues/45883))
+* **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
 ENHANCEMENTS:
