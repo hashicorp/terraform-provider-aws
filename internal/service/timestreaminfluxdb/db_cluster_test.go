@@ -625,6 +625,10 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 				Config:      testAccDBClusterConfig_v3WithUsername(rName),
 				ExpectError: regexache.MustCompile(`(?s)username must not be set when using an InfluxDB V3 db parameter.*group`),
 			},
+			{
+				Config:      testAccDBClusterConfig_v3WithUnknownParameterGroup(rName),
+				ExpectError: regexache.MustCompile(`Parameter Group Not Found`),
+			},
 		},
 	})
 }
@@ -1251,6 +1255,26 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   vpc_security_group_ids        = [aws_security_group.test.id]
   db_instance_type              = "db.influx.medium"
   db_parameter_group_identifier = "InfluxDBV3Core"
+
+  depends_on = [
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDBClusterConfig_v3WithUnknownParameterGroup(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                          = %[1]q
+  vpc_subnet_ids                = aws_subnet.test[*].id
+  vpc_security_group_ids        = [aws_security_group.test.id]
+  db_instance_type              = "db.influx.medium"
+  db_parameter_group_identifier = "NonExistentParameterGroup123456789"
 
   depends_on = [
     aws_vpc_endpoint_route_table_association.test,
