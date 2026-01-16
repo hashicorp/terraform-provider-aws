@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
@@ -108,8 +110,10 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
-					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexache.MustCompile(`[^0]+`)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_attribute"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
