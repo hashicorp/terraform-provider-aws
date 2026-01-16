@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Data Handling and Conversion
 
@@ -267,6 +270,7 @@ type scheduleModel struct {
 }
 ```
 
+To ignore a field when expanding, but include it when flattening, use the option `noexpand`.
 To ignore a field when flattening, but include it when expanding, use the option `noflatten`.
 
 For example, from the struct `dataSourceReservedCacheNodeOfferingModel` for the ElastiCache Reserved Cache Node Offering:

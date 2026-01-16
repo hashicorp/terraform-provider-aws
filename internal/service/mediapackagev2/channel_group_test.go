@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediapackagev2_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmediapackagev2 "github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -117,7 +117,7 @@ func testAccMediaPackageV2ChannelGroup_disappears(t *testing.T) {
 				Config: testAccChannelGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelGroupExists(ctx, resourceName, &channelGroup),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmediapackagev2.ResourceChannelGroup, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfmediapackagev2.ResourceChannelGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,7 +143,7 @@ func testAccCheckChannelGroupDestroy(ctx context.Context) resource.TestCheckFunc
 				return fmt.Errorf("MediaPackageV2 Channel Group: %s not deleted", rs.Primary.ID)
 			}
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

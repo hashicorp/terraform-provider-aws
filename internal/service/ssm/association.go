@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -263,7 +264,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	association, err := findAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -406,7 +407,7 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	output, err := conn.DescribeAssociation(ctx, input)
 
 	if errs.IsA[*awstypes.AssociationDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -417,17 +418,17 @@ func findAssociationByID(ctx context.Context, conn *ssm.Client, id string) (*aws
 	}
 
 	if output == nil || output.AssociationDescription == nil || output.AssociationDescription.Overview == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AssociationDescription, nil
 }
 
-func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
+func statusAssociation(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAssociationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -442,7 +443,7 @@ func statusAssociation(ctx context.Context, conn *ssm.Client, id string) retry.S
 }
 
 func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.AssociationDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AssociationStatusNamePending),
 		Target:  enum.Slice(awstypes.AssociationStatusNameSuccess),
 		Refresh: statusAssociation(ctx, conn, id),
@@ -453,7 +454,7 @@ func waitAssociationCreated(ctx context.Context, conn *ssm.Client, id string, ti
 
 	if output, ok := outputRaw.(*awstypes.AssociationDescription); ok {
 		if status := awstypes.AssociationStatusName(aws.ToString(output.Overview.Status)); status == awstypes.AssociationStatusNameFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Overview.DetailedStatus)))
 		}
 
 		return output, err

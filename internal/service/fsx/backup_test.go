@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -160,7 +160,7 @@ func TestAccFSxBackup_disappears(t *testing.T) {
 				Config: testAccBackupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceBackup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceBackup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -184,7 +184,7 @@ func TestAccFSxBackup_Disappears_filesystem(t *testing.T) {
 				Config: testAccBackupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), "aws_fsx_lustre_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -299,7 +299,7 @@ func testAccCheckBackupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tffsx.FindBackupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

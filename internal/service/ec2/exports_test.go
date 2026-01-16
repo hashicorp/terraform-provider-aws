@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -213,6 +213,7 @@ var (
 	FindSecurityGroupByID                                       = findSecurityGroupByID
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
+	FindSecurityGroupRuleIDsBySecurityGroupID                   = findSecurityGroupRuleIDsBySecurityGroupID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
 	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot

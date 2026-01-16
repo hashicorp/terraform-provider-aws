@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -82,13 +83,11 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrLogGroupName: schema.StringAttribute{
-										// Must set to optional to avoid validation error
-										// See: https://github.com/hashicorp/terraform-plugin-framework/issues/740
-										Optional: true,
+										Required: true,
 									},
 									names.AttrRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Optional:   true,
+										Required:   true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -100,7 +99,7 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												names.AttrBucketName: schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"key_prefix": schema.StringAttribute{
 													Optional: true,
@@ -119,7 +118,7 @@ func (r *modelInvocationLoggingConfigurationResource) Schema(ctx context.Context
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									names.AttrBucketName: schema.StringAttribute{
-										Optional: true,
+										Required: true,
 									},
 									"key_prefix": schema.StringAttribute{
 										Optional: true,
@@ -174,7 +173,7 @@ func (r *modelInvocationLoggingConfigurationResource) Read(ctx context.Context, 
 
 	output, err := findModelInvocationLoggingConfiguration(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -264,7 +263,7 @@ func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.
 	}
 
 	if output == nil || output.LoggingConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

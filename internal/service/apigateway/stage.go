@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,6 +33,8 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput")
 // @Testing(serialize=true, serializeParallelTests=true)
 // @Testing(importStateIdFunc=testAccStageImportStateIdFunc)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
@@ -238,13 +240,14 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -257,7 +260,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, c, apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -277,8 +280,8 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, c, apiID, stageName))
+	d.Set("invoke_url", c.APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
 	}
@@ -439,8 +442,7 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -449,17 +451,17 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func stageCacheStatus(conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -477,7 +479,7 @@ func waitStageCacheAvailable(ctx context.Context, conn *apigateway.Client, apiID
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusDeleteInProgress, types.CacheClusterStatusFlushInProgress),
 		Target:  enum.Slice(types.CacheClusterStatusAvailable),
-		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Refresh: stageCacheStatus(conn, apiID, name),
 		Timeout: timeout,
 	}
 
@@ -503,7 +505,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 			// TODO: Check if this bug still exists in AWS SDK v2
 			types.CacheClusterStatusDeleteInProgress,
 		),
-		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Refresh: stageCacheStatus(conn, apiID, name),
 		Timeout: timeout,
 	}
 

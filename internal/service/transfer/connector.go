@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -235,7 +236,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findConnectorByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Transfer Connector (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -354,7 +355,7 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	output, err := conn.DescribeConnector(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -365,7 +366,7 @@ func findConnector(ctx context.Context, conn *transfer.Client, input *transfer.D
 	}
 
 	if output == nil || output.Connector == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connector, nil
@@ -540,11 +541,11 @@ func flattenDescribedConnectorVPCLatticeEgressConfig(apiObject *awstypes.Describ
 	return []any{tfMap}
 }
 
-func statusConnector(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
+func statusConnector(ctx context.Context, conn *transfer.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findConnectorByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -557,7 +558,7 @@ func statusConnector(ctx context.Context, conn *transfer.Client, id string) retr
 }
 
 func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
 		Refresh: statusConnector(ctx, conn, id),
@@ -568,7 +569,7 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -578,7 +579,7 @@ func waitConnectorCreated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusPending),
 		Target:  enum.Slice(awstypes.ConnectorStatusActive),
 		Refresh: statusConnector(ctx, conn, id),
@@ -589,7 +590,7 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err
@@ -599,7 +600,7 @@ func waitConnectorUpdated(ctx context.Context, conn *transfer.Client, id string,
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedConnector, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectorStatusActive, awstypes.ConnectorStatusPending),
 		Target:  []string{},
 		Refresh: statusConnector(ctx, conn, id),
@@ -610,7 +611,7 @@ func waitConnectorDeleted(ctx context.Context, conn *transfer.Client, id string,
 
 	if output, ok := outputRaw.(*awstypes.DescribedConnector); ok {
 		if output.Status == awstypes.ConnectorStatusErrored {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 
 		return output, err

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -13,12 +13,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -122,7 +123,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	backup, err := findBackupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -206,7 +207,7 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.BackupNotFound](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -226,11 +227,11 @@ func findBackups(ctx context.Context, conn *fsx.Client, input *fsx.DescribeBacku
 	return output, nil
 }
 
-func statusBackup(ctx context.Context, conn *fsx.Client, id string) retry.StateRefreshFunc {
+func statusBackup(ctx context.Context, conn *fsx.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBackupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -246,7 +247,7 @@ func waitBackupAvailable(ctx context.Context, conn *fsx.Client, id string) (*aws
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupLifecycleCreating, awstypes.BackupLifecyclePending, awstypes.BackupLifecycleTransferring),
 		Target:  enum.Slice(awstypes.BackupLifecycleAvailable),
 		Refresh: statusBackup(ctx, conn, id),
@@ -266,7 +267,7 @@ func waitBackupDeleted(ctx context.Context, conn *fsx.Client, id string) (*awsty
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FileSystemLifecycleDeleting),
 		Target:  []string{},
 		Refresh: statusBackup(ctx, conn, id),

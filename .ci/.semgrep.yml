@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: acceptance-test-naming-parent-disappears
     languages: [go]
@@ -207,7 +210,7 @@ rules:
 
   - id: is-not-found-error
     languages: [go]
-    message: Check for retry.NotFoundError errors with tfresource.NotFound()
+    message: Check for retry.NotFoundError errors with retry.NotFound()
     paths:
       include:
         - "/internal"

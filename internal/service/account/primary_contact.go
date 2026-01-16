@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account
@@ -209,7 +209,7 @@ func findContactInformation(ctx context.Context, conn *account.Client, accountID
 	}
 
 	if output == nil || output.ContactInformation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactInformation, nil

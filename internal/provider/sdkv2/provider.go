@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/useragent"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,6 +44,11 @@ var (
 type sdkProvider struct {
 	provider        *schema.Provider
 	servicePackages iter.Seq2[int, conns.ServicePackage]
+}
+
+// providerMeta matches the shape of ProviderMetaSchema
+type providerMeta struct {
+	UserAgent []string `cty:"user_agent"`
 }
 
 // NewProvider returns a new, initialized Terraform Plugin SDK v2-style provider instance.
@@ -279,6 +285,22 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Optional:    true,
 					Description: "Resolve an endpoint with FIPS capability",
 				},
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+			},
+
+			// ProviderMetaSchema enables module-scoped User-Agent modifications
+			ProviderMetaSchema: map[string]*schema.Schema{
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
 			},
 
 			// Data sources and resources implemented using Terraform Plugin SDK
@@ -501,6 +523,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		}
 	}
 
+	if v, ok := d.GetOk("user_agent"); ok && len(v.([]any)) > 0 {
+		config.UserAgent = useragent.FromSlice(v.([]any))
+	}
+
 	var c *conns.AWSClient
 	if v, ok := p.provider.Meta().(*conns.AWSClient); ok {
 		c = v
@@ -593,7 +619,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -606,6 +632,17 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -763,7 +800,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -776,6 +813,17 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -1189,11 +1237,12 @@ func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyCon
 }
 
 func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`)}
+	return append(diags, errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`))
 }
 
 const (
@@ -1201,12 +1250,13 @@ const (
 )
 
 func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	var diags diag.Diagnostics
 	switch s {
 	case "error", "warning", "disabled":
-		return nil
+		return diags
 	}
-	return diag.Diagnostics{errs.NewErrorDiagnostic(
+	return append(diags, errs.NewErrorDiagnostic(
 		summaryInvalidEnvironmentVariableValue,
 		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
-	)}
+	))
 }

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_multitenant_distribution: Fix "specified origin server does not exist or is not valid" errors when attempting to use Origin Access Control (OAC)
+```

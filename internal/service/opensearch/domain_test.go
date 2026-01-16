@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -2515,7 +2515,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2769,7 +2769,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3350,6 +3350,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3382,7 +3386,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3395,6 +3399,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3435,7 +3443,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3448,6 +3456,10 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
+
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
 
@@ -3488,7 +3500,7 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -3500,6 +3512,10 @@ func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
+
+data "aws_service_principal" "ec2" {
+  service_name = "ec2"
+}
 
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -3535,7 +3551,7 @@ data "aws_iam_policy_document" "role" {
 
     principals {
       type        = "Service"
-      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+      identifiers = [data.aws_service_principal.ec2.name]
     }
   }
 }
@@ -4187,6 +4203,10 @@ func testAccDomainConfig_baseLogPublishingOptions(rName string, nLogGroups int) 
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "opensearch" {
+  service_name = "opensearch"
+}
+
 resource "aws_cloudwatch_log_group" "test" {
   count = %[2]d
 
@@ -4202,7 +4222,7 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
       Effect = "Allow"
       Principal = {
         Service = [
-          "es.${data.aws_partition.current.dns_suffix}",
+          data.aws_service_principal.opensearch.name,
         ]
       }
       Action = [
@@ -4339,6 +4359,10 @@ func testAccDomainConfig_cognitoOptions(rName string, includeCognitoOptions bool
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_service_principal" "opensearch" {
+  service_name = "es"
+}
+
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 }
@@ -4371,7 +4395,7 @@ data "aws_iam_policy_document" "test" {
     principals {
       type = "Service"
       identifiers = [
-        "es.${data.aws_partition.current.dns_suffix}",
+        data.aws_service_principal.opensearch.name,
       ]
     }
   }
@@ -4394,6 +4418,7 @@ resource "aws_opensearch_domain" "test" {
 
   depends_on = [
     aws_cognito_user_pool_domain.test,
+    aws_iam_role_policy_attachment.test,
     aws_iam_role_policy_attachment.test,
   ]
 }

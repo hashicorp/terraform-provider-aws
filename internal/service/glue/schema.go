@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -279,7 +279,7 @@ func findSchemaByID(ctx context.Context, conn *glue.Client, id string) (*glue.Ge
 }
 
 // statusSchema fetches the Schema and its Status
-func statusSchema(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+func statusSchema(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
 	const (
 		schemaStatusUnknown = "Unknown"
 	)
@@ -302,7 +302,7 @@ func waitSchemaAvailable(ctx context.Context, conn *glue.Client, registryID stri
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusPending),
 		Target:  enum.Slice(awstypes.SchemaStatusAvailable),
 		Refresh: statusSchema(ctx, conn, registryID),
@@ -322,7 +322,7 @@ func waitSchemaDeleted(ctx context.Context, conn *glue.Client, registryID string
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaStatusDeleting),
 		Target:  []string{},
 		Refresh: statusSchema(ctx, conn, registryID),
@@ -355,7 +355,7 @@ func findSchemaVersionByID(ctx context.Context, conn *glue.Client, id string) (*
 }
 
 // statusSchemaVersion fetches the Schema Version and its Status
-func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) retry.StateRefreshFunc {
+func statusSchemaVersion(ctx context.Context, conn *glue.Client, id string) sdkretry.StateRefreshFunc {
 	const (
 		schemaVersionStatusUnknown = "Unknown"
 	)
@@ -378,7 +378,7 @@ func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Client, registry
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SchemaVersionStatusPending),
 		Target:  enum.Slice(awstypes.SchemaVersionStatusAvailable),
 		Refresh: statusSchemaVersion(ctx, conn, registryID),

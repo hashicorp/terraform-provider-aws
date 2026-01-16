@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreaminfluxdb
@@ -576,7 +576,7 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 
 	out, err := findDBParameterGroupByID(ctx, conn, parameterGroupID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return false, diags
 	}
 
@@ -809,7 +809,7 @@ func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *tim
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -837,7 +837,7 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

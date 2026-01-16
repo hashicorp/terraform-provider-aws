@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package drs_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdrs "github.com/hashicorp/terraform-provider-aws/internal/service/drs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -113,7 +113,7 @@ func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func testAccCheckReplicationConfigurationTemplateDestroy(ctx context.Context) re
 
 			_, err := tfdrs.FindReplicationConfigurationTemplateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {

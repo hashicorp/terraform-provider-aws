@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamquery
@@ -807,7 +807,7 @@ func waitScheduledQueryDeleted(ctx context.Context, conn *timestreamquery.Client
 func statusScheduledQuery(conn *timestreamquery.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findScheduledQueryByARN(ctx, conn, arn)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -836,7 +836,7 @@ func findScheduledQueryByARN(ctx context.Context, conn *timestreamquery.Client, 
 	}
 
 	if out == nil || out.ScheduledQuery == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ScheduledQuery, nil

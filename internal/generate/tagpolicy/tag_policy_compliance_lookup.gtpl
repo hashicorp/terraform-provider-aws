@@ -1,6 +1,10 @@
 
 |Tag Resource Type|Terraform Resource Type|
 |-----------------|-----------------------|
-{{- range $_, $m := .Mapping }}
-| `{{ $m.Tagris }}` | `{{ $m.Tf }}` |
+{{- range $tagType := .TagTypes }}
+{{- if $tagType.TerraformTypes }}
+  {{- range $tagType.TerraformTypes }}
+| `{{ $tagType.Name }}` | `{{ . }}` |
+  {{- end }}
+{{- end }}
 {{- end }}

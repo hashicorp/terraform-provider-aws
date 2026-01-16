@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -264,7 +265,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	org, err := findOrganization(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
@@ -498,12 +499,11 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := organizations.DescribeOrganizationInput{}
-
+	var input organizations.DescribeOrganizationInput
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -514,7 +514,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	}
 
 	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Organization, nil
@@ -538,9 +538,8 @@ func findAccounts(ctx context.Context, conn *organizations.Client, input *organi
 }
 
 func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -586,9 +585,8 @@ func findRoots(ctx context.Context, conn *organizations.Client, input *organizat
 }
 
 func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+	var input organizations.ListRootsInput
+	output, err := findRoots(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -656,7 +654,7 @@ func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []a
 	return tfList
 }
 
-func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
+func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
@@ -677,7 +675,7 @@ func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client
 const policyTypeStatusDisabled awstypes.PolicyTypeStatus = "DISABLED"
 
 func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PolicyTypeStatusEnabled, awstypes.PolicyTypeStatusPendingDisable),
 		Target:  enum.Slice(policyTypeStatusDisabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
@@ -694,7 +692,7 @@ func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.
 }
 
 func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(policyTypeStatusDisabled, awstypes.PolicyTypeStatusPendingEnable),
 		Target:  enum.Slice(awstypes.PolicyTypeStatusEnabled),
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),

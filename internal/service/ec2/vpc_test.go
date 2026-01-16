@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -107,7 +108,7 @@ func TestAccVPC_disappears(t *testing.T) {
 				Config: testAccVPCConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1153,6 +1154,56 @@ func TestAccVPC_regionCreateNonNull(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/45771.
+// https://github.com/hashicorp/terraform-provider-aws/issues/45134.
+func TestAccVPC_ramSharedImport(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckRAMSharingWithOrganizationEnabled(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckVPCDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Initialize the providers.
+				Config: testAccVPCConfig_ramSharedInitProviders,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckSameOrganization(ctx, t, acctest.NamedProviderFunc(acctest.ProviderName, providers), acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				// Initialize the source VPC in the alternate account and RAM share a subnet into the default account.
+				Config: testAccVPCConfig_ramSharedInit(rName),
+			},
+			{
+				// Import the shared subnet in the default account.
+				Config: testAccVPCConfig_ramShared(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, t, resourceName, &vpc),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -1530,4 +1581,81 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, region)
+}
+
+var testAccVPCConfig_ramSharedInitProviders = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "target" {
+  provider = %[1]q
+}
+
+data "aws_caller_identity" "source" {
+  provider = %[2]q
+}
+`, acctest.ProviderName, acctest.ProviderNameAlternate))
+
+func testAccVPCConfig_ramSharedInit(rName string) string {
+	return acctest.ConfigCompose(testAccVPCConfig_ramSharedInitProviders, fmt.Sprintf(`
+data "aws_organizations_organization" "test" {
+  provider = %[1]q
+}
+
+resource "aws_vpc" "source" {
+  provider = %[2]q
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_subnet" "source" {
+  provider = %[2]q
+
+  vpc_id     = aws_vpc.source.id
+  cidr_block = cidrsubnet(aws_vpc.source.cidr_block, 8, 0)
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider = %[2]q
+
+  name                      = %[3]q
+  allow_external_principals = false
+}
+
+resource "aws_ram_resource_association" "test" {
+  provider = %[2]q
+
+  resource_arn       = aws_subnet.source.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_principal_association" "test" {
+  provider = %[2]q
+
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+`, acctest.ProviderName, acctest.ProviderNameAlternate, rName))
+}
+
+func testAccVPCConfig_ramShared(rName string) string {
+	return acctest.ConfigCompose(testAccVPCConfig_ramSharedInit(rName), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  provider = %[1]q
+
+  cidr_block = "10.1.0.0/16"
+}
+
+import {
+  provider = %[1]q
+
+  to = aws_vpc.test
+  id = aws_subnet.source.vpc_id
+}
+`, acctest.ProviderName))
 }

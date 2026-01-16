@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -274,7 +274,7 @@ func (r *s3AccessPointAttachmentResource) Read(ctx context.Context, request reso
 	name := fwflex.StringValueFromFramework(ctx, data.Name)
 	output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -381,7 +381,7 @@ func findS3AccessPointAttachmentByName(ctx context.Context, conn *fsx.Client, na
 	}
 
 	if output.S3AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -428,7 +428,7 @@ func statusS3AccessPointAttachment(conn *fsx.Client, name string) retry.StateRef
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findS3AccessPointAttachmentByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -453,7 +453,7 @@ func waitS3AccessPointAttachmentCreated(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err
@@ -475,7 +475,7 @@ func waitS3AccessPointAttachmentDeleted(ctx context.Context, conn *fsx.Client, n
 
 	if output, ok := outputRaw.(*awstypes.S3AccessPointAttachment); ok {
 		if v := output.LifecycleTransitionReason; v != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.Message)))
 		}
 
 		return output, err

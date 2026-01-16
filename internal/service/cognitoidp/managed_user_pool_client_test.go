@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -1013,7 +1013,7 @@ func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testi
 				Config: testAccManagedUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), "aws_opensearch_domain.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourceDomain(), "aws_opensearch_domain.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

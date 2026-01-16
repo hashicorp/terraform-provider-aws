@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}_test
@@ -235,7 +235,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 					// private function to the testing package, you may need to add a line like the following
 					// to exports_test.go:
 					//
-					//   var Resource{{ .Resource}} = newResource{{ .Resource }}
+					//   var Resource{{ .Resource}} = new{{ .Resource }}Resource
 					{{- end }}
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}, resourceName),
 				),

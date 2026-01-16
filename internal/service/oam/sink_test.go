@@ -1,33 +1,26 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go-v2/service/oam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfoam "github.com/hashicorp/terraform-provider-aws/internal/service/oam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccObservabilityAccessManagerSink_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_sink.test"
@@ -64,10 +57,6 @@ func testAccObservabilityAccessManagerSink_basic(t *testing.T) {
 
 func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_sink.test"
@@ -86,7 +75,7 @@ func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfoam.ResourceSink(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfoam.ResourceSink(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,10 +85,6 @@ func testAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 
 func testAccObservabilityAccessManagerSink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_oam_sink.test"
@@ -157,47 +142,39 @@ func testAccCheckSinkDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &oam.GetSinkInput{
-				Identifier: aws.String(rs.Primary.ID),
+			_, err := tfoam.FindSinkByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
 			}
-			_, err := conn.GetSink(ctx, input)
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingDestroyed, tfoam.ResNameSink, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ObservabilityAccessManager Sink %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSinkExists(ctx context.Context, name string, sink *oam.GetSinkOutput) resource.TestCheckFunc {
+func testAccCheckSinkExists(ctx context.Context, n string, v *oam.GetSinkOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSink, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSink, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
-		resp, err := conn.GetSink(ctx, &oam.GetSinkInput{
-			Identifier: aws.String(rs.Primary.ID),
-		})
+		output, err := tfoam.FindSinkByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.ObservabilityAccessManager, create.ErrActionCheckingExistence, tfoam.ResNameSink, rs.Primary.ID, err)
+			return err
 		}
 
-		*sink = *resp
+		*v = *output
 
 		return nil
 	}

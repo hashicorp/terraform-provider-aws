@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -276,7 +276,7 @@ func TestAccELBV2Listener_disappears(t *testing.T) {
 				Config: testAccListenerConfig_Application_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListener(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1367,7 +1367,56 @@ func TestAccELBV2Listener_attributes_alb_HTTPSRequestHeaders(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
+func TestAccELBV2Listener_Protocol_quic(t *testing.T) {
+	const (
+		resourceName = "aws_lb_listener.test"
+	)
+
+	t.Parallel()
+
+	testcases := []awstypes.ProtocolEnum{awstypes.ProtocolEnumQuic, awstypes.ProtocolEnumTcpQuic}
+	for _, testcase := range testcases { //nolint:paralleltest // false positive
+		t.Run(string(testcase), func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var conf awstypes.Listener
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckListenerDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccListenerConfig_protocolQUIC(rName, testcase),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckListenerExists(ctx, resourceName, &conf),
+							resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(testcase)),
+							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+							resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+							resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+						),
+					},
+					{
+						ResourceName:      resourceName,
+						ImportState:       true,
+						ImportStateVerify: true,
+						ImportStateVerifyIgnore: []string{
+							"default_action.0.forward",
+						},
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAccELBV2Listener_Protocol_udp(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
@@ -1380,7 +1429,7 @@ func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_basicUdp(rName),
+				Config: testAccListenerConfig_basicUDP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
@@ -2330,7 +2379,7 @@ func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3771,7 +3820,7 @@ resource "aws_lb_target_group" "test2" {
 `, rName, rName2))
 }
 
-func testAccListenerConfig_basicUdp(rName string) string {
+func testAccListenerConfig_basicUDP(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
   load_balancer_arn = aws_lb.test.id
@@ -4380,6 +4429,45 @@ resource "aws_acm_certificate" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_protocolQUIC(rName string, protocol awstypes.ProtocolEnum) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.arn
+  port              = "443"
+  protocol          = %[2]q
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal           = true
+  load_balancer_type = "network"
+  name               = %[1]q
+  subnets            = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+`, rName, protocol))
 }
 
 func testAccListenerConfig_redirect(rName string) string {

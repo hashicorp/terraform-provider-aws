@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,7 +73,7 @@ func TestAccRoute53ResolverRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -585,7 +585,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfroute53resolver.FindResolverRuleByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

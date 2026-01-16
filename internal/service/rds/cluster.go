@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -662,6 +663,10 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -778,6 +783,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -1414,7 +1423,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	dbc, err := findDBClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1523,6 +1532,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
+	d.Set("upgrade_rollout_order", dbc.UpgradeRolloutOrder)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(dbc.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
@@ -1535,7 +1545,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
+		} else if retry.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") { //nolint:revive // Keep comments
 			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
@@ -2079,12 +2089,12 @@ func findDBClusterByID(ctx context.Context, conn *rds.Client, id string, optFns 
 	// Eventual consistency check.
 	if arn.IsARN(id) {
 		if aws.ToString(output.DBClusterArn) != id {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastRequest: input,
 			}
 		}
 	} else if aws.ToString(output.DBClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -2110,7 +2120,7 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2130,11 +2140,11 @@ func findDBClusters(ctx context.Context, conn *rds.Client, input *rds.DescribeDB
 	return output, nil
 }
 
-func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, optFns ...func(*rds.Options)) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterByID(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2169,7 +2179,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 		clusterStatusUpgrading,
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
@@ -2188,7 +2198,7 @@ func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, wa
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusCreating,
@@ -2230,7 +2240,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 		pendingStatuses = append(pendingStatuses, clusterStatusAvailableWithPendingModifiedValues)
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    pendingStatuses,
 		Target:     []string{clusterStatusAvailable},
 		Refresh:    statusDBCluster(ctx, conn, id, waitNoPendingModifiedValues),
@@ -2249,7 +2259,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 }
 
 func waitDBClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusAvailable,
 			clusterStatusBackingUp,

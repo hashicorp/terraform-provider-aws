@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry_test
@@ -61,11 +61,11 @@ func NewOpFunc(sequence []error, d time.Duration) func(context.Context) (any, er
 
 func UntilFoundOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
-		tfresource.NewEmptyResultError(nil),
-		tfresource.NewEmptyResultError(nil),
-		tfresource.NewEmptyResultError(nil),
+		tfresource.NewEmptyResultError(),
+		tfresource.NewEmptyResultError(),
+		tfresource.NewEmptyResultError(),
 		nil,
-		tfresource.NewEmptyResultError(nil),
+		tfresource.NewEmptyResultError(),
 		nil,
 		nil,
 		nil,
@@ -76,11 +76,11 @@ func UntilFoundOpFunc() func(context.Context) (any, error) {
 
 func UntilFoundSleepOpFunc() func(context.Context) (any, error) {
 	sequence := []error{
-		tfresource.NewEmptyResultError(nil),
-		tfresource.NewEmptyResultError(nil),
-		tfresource.NewEmptyResultError(nil),
+		tfresource.NewEmptyResultError(),
+		tfresource.NewEmptyResultError(),
+		tfresource.NewEmptyResultError(),
 		nil,
-		tfresource.NewEmptyResultError(nil),
+		tfresource.NewEmptyResultError(),
 		nil,
 		nil,
 		nil,
@@ -94,7 +94,7 @@ func UntilNotFoundOpFunc() func(context.Context) (any, error) {
 		nil,
 		nil,
 		nil,
-		tfresource.NewEmptyResultError(nil),
+		tfresource.NewEmptyResultError(),
 	}
 
 	return NewOpFunc(sequence, 0)

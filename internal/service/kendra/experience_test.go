@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkendra "github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -85,7 +85,7 @@ func TestAccKendraExperience_disappears(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceExperience(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkendra.ResourceExperience(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -583,7 +583,7 @@ func testAccCheckExperienceDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			_, err = tfkendra.FindExperienceByID(ctx, conn, id, indexId)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

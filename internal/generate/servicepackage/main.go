@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build ignore
@@ -220,8 +220,6 @@ type ResourceDatum struct {
 	wrappedImport                     common.TriBoolean
 	CustomImport                      bool
 	goImports                         []common.GoImport
-	ImportIDHandler                   string
-	SetIDAttribute                    bool
 	HasIdentityFix                    bool
 	common.ResourceIdentity
 }
@@ -438,27 +436,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "NoImport":
 				d.wrappedImport = common.TriBooleanFalse
 
-			case "ImportIDHandler":
-				attr := args.Positional[0]
-				if typeName, importSpec, err := common.ParseIdentifierSpec(attr); err != nil {
-					v.errs = append(v.errs, fmt.Errorf("%q at %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
-					continue
-				} else {
-					d.ImportIDHandler = typeName
-					if importSpec != nil {
-						d.goImports = append(d.goImports, *importSpec)
-					}
-				}
-
-				if attr, ok := args.Keyword["setIDAttribute"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid global value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						d.SetIDAttribute = b
-					}
-				}
-
 			case "IdentityFix":
 				d.HasIdentityFix = true
 
@@ -475,6 +452,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
 		}
+	}
+
+	if err := d.Validate(); err != nil {
+		v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
 	}
 
 	// Then build the resource maps, looking for duplicates.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -93,7 +93,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(state, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune
@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -155,7 +155,7 @@ func sweepClusters(region string) error {
 
 			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
-			if err != nil && !tfresource.NotFound(err) {
+			if err != nil && !retry.NotFound(err) {
 				log.Printf("[WARN] Reading Neptune Cluster %s Global Cluster information: %s", id, err)
 				continue
 			}

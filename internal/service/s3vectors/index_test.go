@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors_test
@@ -24,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3vectors "github.com/hashicorp/terraform-provider-aws/internal/service/s3vectors"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -225,7 +225,7 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceIndex, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -280,7 +280,7 @@ func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfs3vectors.FindIndexByARN(ctx, conn, rs.Primary.Attributes["index_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic ID generation only
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -79,7 +79,7 @@ func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, `invoking Lambda Function (%s): %s`, functionName, string(output.Payload))
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload)))
+	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(payload))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5 -- MD5 used for non-cryptographic ID generation only
 	d.Set("result", string(output.Payload))
 
 	return diags

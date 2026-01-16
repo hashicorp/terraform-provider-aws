@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccModelInvocationLoggingConfigurationConfig_basic(rName, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceModelInvocationLoggingConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -189,7 +189,7 @@ func testAccCheckModelInvocationLoggingConfigurationDestroy(ctx context.Context)
 
 			_, err := tfbedrock.FindModelInvocationLoggingConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -219,6 +219,9 @@ resource "aws_s3_bucket" "test" {
   }
 }
 
+# Use "data.aws_region.current.name" instead of "data.aws_region.current.region" as this configguration
+# is used in a v6.0.0 upgrade test and must work in pre-v6.0.0 scenarios.
+
 resource "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.bucket
 
@@ -241,7 +244,7 @@ resource "aws_s3_bucket_policy" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]
@@ -270,7 +273,7 @@ resource "aws_iam_role" "test" {
         "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
       }
     }
   }]

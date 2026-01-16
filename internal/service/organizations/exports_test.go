@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations
@@ -12,10 +12,12 @@ var (
 	ResourcePolicy                 = resourcePolicy
 	ResourcePolicyAttachment       = resourcePolicyAttachment
 	ResourceResourcePolicy         = resourceResourcePolicy
+	ResourceTag                    = resourceTag
 
 	FindAccountByID                  = findAccountByID
 	FindOrganizationalUnitByID       = findOrganizationalUnitByID
 	FindPolicyAttachmentByTwoPartKey = findPolicyAttachmentByTwoPartKey
 	FindPolicyByID                   = findPolicyByID
 	FindResourcePolicy               = findResourcePolicy
+	FindTag                          = findTag
 )

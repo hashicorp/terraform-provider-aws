@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,7 +79,7 @@ func TestAccVPCNATGateway_disappears(t *testing.T) {
 				Config: testAccVPCNATGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNATGateway(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNATGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1033,7 +1033,7 @@ func testAccCheckNATGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindNATGatewayByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1434,11 +1434,12 @@ resource "aws_nat_gateway" "test" {
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalManual(rName string, eipCount int, config map[int][]int) string {
-	localsStr := "locals {\n  config = [\n"
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr += fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
 	}
-	localsStr += "  ]\n}\n\n"
+	localsStr.WriteString("  ]\n}\n\n")
 
 	return acctest.ConfigCompose(
 		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
@@ -1463,15 +1464,16 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 
-`, rName, localsStr))
+`, rName, localsStr.String()))
 }
 
 func testAccVPCNATGatewayConfig_availabilityModeRegionalManualByAZID(rName string, eipCount int, config map[int][]int) string {
-	localsStr := "locals {\n  config = [\n"
+	var localsStr strings.Builder
+	localsStr.WriteString("locals {\n  config = [\n")
 	for azIndex, eipIndexes := range config {
-		localsStr += fmt.Sprintf("    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.Replace(fmt.Sprint(eipIndexes), " ", ", ", -1), "[]"))
+		fmt.Fprintf(&localsStr, "    {az = %d, eip = [%s]},\n", azIndex, strings.Trim(strings.ReplaceAll(fmt.Sprint(eipIndexes), " ", ", "), "[]"))
 	}
-	localsStr += "  ]\n}\n\n"
+	localsStr.WriteString("  ]\n}\n\n")
 
 	return acctest.ConfigCompose(
 		testAccVPCNATGatewayConfig_availabilityModeRegionalBase(rName, eipCount),
@@ -1496,5 +1498,5 @@ resource "aws_nat_gateway" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 
-`, rName, localsStr))
+`, rName, localsStr.String()))
 }

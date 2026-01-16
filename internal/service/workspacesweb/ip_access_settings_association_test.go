@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,7 +87,7 @@ func TestAccWorkSpacesWebIPAccessSettingsAssociation_disappears(t *testing.T) {
 				Config: testAccIPAccessSettingsAssociationConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAccessSettingsAssociationExists(ctx, resourceName, &ipAccessSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceIPAccessSettingsAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccCheckIPAccessSettingsAssociationDestroy(ctx context.Context) resourc
 
 			ipAccessSettings, err := tfworkspacesweb.FindIPAccessSettingsByARN(ctx, conn, rs.Primary.Attributes["ip_access_settings_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

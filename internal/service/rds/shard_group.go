@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -25,11 +25,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -187,7 +188,7 @@ func (r *shardGroupResource) Read(ctx context.Context, request resource.ReadRequ
 
 	output, err := findDBShardGroupByID(ctx, conn, data.DBShardGroupIdentifier.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -333,7 +334,7 @@ func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.Describ
 	})
 
 	if errs.IsA[*awstypes.DBShardGroupNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -346,11 +347,11 @@ func findDBShardGroups(ctx context.Context, conn *rds.Client, input *rds.Describ
 	return output, nil
 }
 
-func statusShardGroup(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusShardGroup(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBShardGroupByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -370,7 +371,7 @@ const (
 )
 
 func waitShardGroupCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*awstypes.DBShardGroup, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{shardGroupStatusCreating},
 		Target:  []string{shardGroupStatusAvailable},
 		Refresh: statusShardGroup(ctx, conn, id),
@@ -390,7 +391,7 @@ func waitShardGroupUpdated(ctx context.Context, conn *rds.Client, id string, tim
 	const (
 		delay = 1 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{shardGroupStatusModifying},
 		Target:  []string{shardGroupStatusAvailable},
 		Refresh: statusShardGroup(ctx, conn, id),
@@ -411,7 +412,7 @@ func waitShardGroupDeleted(ctx context.Context, conn *rds.Client, id string, tim
 	const (
 		delay = 1 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{shardGroupStatusDeleting},
 		Target:  []string{},
 		Refresh: statusShardGroup(ctx, conn, id),
