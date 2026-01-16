@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -178,7 +178,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 
 			return nil
 		})
-		if tfresource.TimedOut(healthCheckErr) {
+		if intretry.TimedOut(healthCheckErr) {
 			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
 				resp.Diagnostics.AddError("reading Route53 health checks", healthCheckErr.Error())
