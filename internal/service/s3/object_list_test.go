@@ -118,7 +118,7 @@ func TestAccS3Object_List_Prefix(t *testing.T) {
 				},
 			},
 
-			// Step 2: Query
+			// Step 2: Query only for prefix- objects
 			{
 				Query:           true,
 				ConfigDirectory: config.StaticDirectory("testdata/Object/list_prefix/"),
