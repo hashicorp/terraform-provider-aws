@@ -123,7 +123,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	conn := d.Meta().ARCRegionSwitchClient(ctx)
 
-	plan, err := FindPlanByARN(ctx, conn, data.ARN.ValueString())
+	plan, err := findPlanByARN(ctx, conn, data.ARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("reading ARC Region Switch Plan", err.Error())
 		return
