@@ -74,12 +74,7 @@ func (r *anycastIPListResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"ip_count": schema.Int32Attribute{
 				Required: true,
 				Validators: []validator.Int32{
