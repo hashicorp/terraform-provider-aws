@@ -6,4 +6,6 @@ package arcregionswitch
 // Exports for use in tests only.
 var (
 	ResourcePlan = newResourcePlan
+
+	FindPlanByARN = findPlanByARN
 )
