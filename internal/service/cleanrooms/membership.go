@@ -41,6 +41,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &membershipResource{}
 
