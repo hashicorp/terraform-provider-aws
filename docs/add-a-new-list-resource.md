@@ -16,7 +16,7 @@ List Resources are dependent on [resource identity](https://developer.hashicorp.
 
 Naming of a new List Resource should be identical to the target resource. For example, if adding a new list resource for `aws_batch_job_definition`, the list resource should be named `aws_batch_job_definition`.
 
-Always use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral resource and test templates using your chosen name. Existing resources can be implemented using either Terraform Plugin SDKv2 or Terraform Plugin Framework. The implementation type can be identified by inspecting the tags in the resource file.
 
 ### SDK resources
 
@@ -124,10 +124,13 @@ Run the acceptance tests for the new list resource to ensure everything is funct
 ### Prerequisites Issues
 
 - **Resource Identity Missing**: List resources require the target resource to have resource identity implemented first. This is a hard blocker - the list resource cannot be created without it.
+- **Branch Naming**: Use the convention `f-list-resource-<service-name>_<resource-name>` (e.g., `f-list-resource-batch_job_definition`)
 
 ### Common Implementation Issues
 
 - **Incorrect AWS API Types**: The `skaff` generator may use incorrect response types. Check AWS API documentation for the correct type (e.g., `awstypes.Batch` vs `awstypes.BatchDefinition`)
+- **Variable Name Errors**: Generated code contains compilation errors:
+    - Change `r.Meta()` to `l.Meta()`
 - **Resource Identifier**: Use the same identifier as the target resource (often name, not ARN)
 
 ### Test Configuration Issues
