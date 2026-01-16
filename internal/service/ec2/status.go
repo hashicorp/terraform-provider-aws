@@ -1243,12 +1243,12 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) sdkretry.
 	}
 }
 
-func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string) sdkretry.StateRefreshFunc {
+func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
-		output, err := findIPAMResourceCIDRByTwoPartKey(ctx, conn, scopeID, resourceID)
+		output, err := findIPAMResourceCIDRByThreePartKey(ctx, conn, scopeID, resourceID, addressFamily)
 
 		if retry.NotFound(err) {
-			return nil, "", nil
+			return new(*awstypes.IpamResourceCidr), string(awstypes.IpamManagementStateUnmanaged), nil
 		}
 
 		if err != nil {

@@ -4548,7 +4548,7 @@ func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.Get
 	return output, nil
 }
 
-func findIPAMResourceCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, scopeID, resourceID string) (*awstypes.IpamResourceCidr, error) {
+func findIPAMResourceCIDRByThreePartKey(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily) (*awstypes.IpamResourceCidr, error) {
 	input := ec2.GetIpamResourceCidrsInput{
 		Filters: []awstypes.Filter{
 			{
@@ -4559,7 +4559,25 @@ func findIPAMResourceCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, sco
 		IpamScopeId: aws.String(scopeID),
 	}
 
-	return findIPAMResourceCIDR(ctx, conn, &input)
+	output, err := findIPAMResourceCIDRs(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO. Multiple are returned (IPv6 & IPv4).
+	switch addressFamily {
+	case awstypes.AddressFamilyIpv4:
+		output = tfslices.Filter(output, func(v awstypes.IpamResourceCidr) bool {
+			return inttypes.IsIPv4CIDR(aws.ToString(v.ResourceCidr))
+		})
+	case awstypes.AddressFamilyIpv6:
+		output = tfslices.Filter(output, func(v awstypes.IpamResourceCidr) bool {
+			return !inttypes.IsIPv4CIDR(aws.ToString(v.ResourceCidr))
+		})
+	}
+
+	return tfresource.AssertFirstValueResult(output)
 }
 
 func findIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) (*awstypes.IpamScope, error) {

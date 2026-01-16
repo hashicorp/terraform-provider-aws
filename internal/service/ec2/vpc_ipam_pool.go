@@ -263,7 +263,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
 
 			// Wait for the resource to be managed by IPAM - can take 20+ minutes
-			if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, addressFamily, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for %s to be managed by IPAM: %s", resourceID, err)
 			}
 

@@ -1251,14 +1251,13 @@ func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout t
 	return nil, err
 }
 
-func waitIPAMResourceCIDRManaged(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, timeout time.Duration) (*awstypes.IpamResourceCidr, error) {
+func waitIPAMResourceCIDRManaged(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily, timeout time.Duration) (*awstypes.IpamResourceCidr, error) {
 	stateConf := &sdkretry.StateChangeConf{
-		Pending:        []string{"", string(awstypes.IpamManagementStateUnmanaged)}, // nosemgrep:ci.typed-enum-conversion
-		Target:         enum.Slice(awstypes.IpamManagementStateManaged),
-		Refresh:        statusIPAMResourceCIDR(ctx, conn, scopeID, resourceID),
-		Timeout:        timeout,
-		Delay:          10 * time.Second,
-		NotFoundChecks: 1000, // Should exceed any reasonable custom timeout value.
+		Pending: enum.Slice(awstypes.IpamManagementStateUnmanaged),
+		Target:  enum.Slice(awstypes.IpamManagementStateManaged),
+		Refresh: statusIPAMResourceCIDR(ctx, conn, scopeID, resourceID, addressFamily),
+		Timeout: timeout,
+		Delay:   10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
