@@ -14,6 +14,8 @@ import (
 )
 
 func TestConfigureProvider_s3CustomRegion(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 
 	testCases := map[string]struct {
@@ -62,6 +64,8 @@ func TestConfigureProvider_s3CustomRegion(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			config := map[string]any{
 				"access_key":                  "StaticAccessKey",
 				"secret_key":                  servicemocks.MockStaticSecretKey,
