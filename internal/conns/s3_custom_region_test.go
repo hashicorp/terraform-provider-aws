@@ -13,49 +13,49 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2"
 )
 
-func TestConfigureProvider_S3CustomRegion(t *testing.T) {
+func TestConfigureProvider_s3CustomRegion(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := map[string]struct {
-		region               string
-		customS3Endpoint     string
-		expectSubstitution   bool
+		region                 string
+		customS3Endpoint       string
+		expectSubstitution     bool
 		expectedOriginalRegion string
 	}{
 		"standard region no custom endpoint": {
-			region:               "us-east-1",
-			customS3Endpoint:     "",
-			expectSubstitution:   false,
+			region:                 "us-east-1",
+			customS3Endpoint:       "",
+			expectSubstitution:     false,
 			expectedOriginalRegion: "",
 		},
 		"standard region with custom endpoint": {
-			region:               "us-west-2",
-			customS3Endpoint:     "https://s3.example.com",
-			expectSubstitution:   false,
+			region:                 "us-west-2",
+			customS3Endpoint:       "https://s3.example.com",
+			expectSubstitution:     false,
 			expectedOriginalRegion: "",
 		},
 		"non-standard region with colon": {
-			region:               "ceph-objectstore:region-premium",
-			customS3Endpoint:     "https://ceph.example.com",
-			expectSubstitution:   true,
+			region:                 "ceph-objectstore:region-premium",
+			customS3Endpoint:       "https://ceph.example.com",
+			expectSubstitution:     true,
 			expectedOriginalRegion: "ceph-objectstore:region-premium",
 		},
 		"non-standard region with uppercase": {
-			region:               "CUSTOM-REGION",
-			customS3Endpoint:     "https://minio.example.com",
-			expectSubstitution:   true,
+			region:                 "CUSTOM-REGION",
+			customS3Endpoint:       "https://minio.example.com",
+			expectSubstitution:     true,
 			expectedOriginalRegion: "CUSTOM-REGION",
 		},
 		"non-standard region with underscore": {
-			region:               "custom_region_1",
-			customS3Endpoint:     "https://s3-compat.example.com",
-			expectSubstitution:   true,
+			region:                 "custom_region_1",
+			customS3Endpoint:       "https://s3-compat.example.com",
+			expectSubstitution:     true,
 			expectedOriginalRegion: "custom_region_1",
 		},
 		"non-standard region without custom endpoint": {
-			region:               "ceph:region",
-			customS3Endpoint:     "",
-			expectSubstitution:   false,
+			region:                 "ceph:region",
+			customS3Endpoint:       "",
+			expectSubstitution:     false,
 			expectedOriginalRegion: "",
 		},
 	}
