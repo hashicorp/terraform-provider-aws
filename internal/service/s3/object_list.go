@@ -45,6 +45,10 @@ func (l *listResourceObject) ListResourceConfigSchema(ctx context.Context, reque
 				Required:    true,
 				Description: "Name of the S3 bucket to list objects from.",
 			},
+			"prefix": listschema.StringAttribute{
+				Optional:    true,
+				Description: "Limits the response to keys that begin with the specified prefix.",
+			},
 		},
 	}
 }
@@ -71,6 +75,9 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := s3.ListObjectsV2Input{
 			Bucket: aws.String(bucket),
+		}
+		if !query.Prefix.IsNull() {
+			input.Prefix = query.Prefix.ValueStringPointer()
 		}
 		for item, err := range listObjects(ctx, conn, &input) {
 			if err != nil {
@@ -121,6 +128,7 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 type listObjectModel struct {
 	framework.WithRegionModel
 	Bucket types.String `tfsdk:"bucket"`
+	Prefix types.String `tfsdk:"prefix"`
 }
 
 func listObjects(ctx context.Context, conn *s3.Client, input *s3.ListObjectsV2Input) iter.Seq2[awstypes.Object, error] {
