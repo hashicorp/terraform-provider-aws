@@ -31,6 +31,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
