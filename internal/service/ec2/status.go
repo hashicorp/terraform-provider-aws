@@ -1248,7 +1248,7 @@ func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, reso
 		output, err := findIPAMResourceCIDRByThreePartKey(ctx, conn, scopeID, resourceID, addressFamily)
 
 		if retry.NotFound(err) {
-			return new(*awstypes.IpamResourceCidr), string(awstypes.IpamManagementStateUnmanaged), nil
+			return new(awstypes.IpamResourceCidr), string(awstypes.IpamManagementStateUnmanaged), nil
 		}
 
 		if err != nil {

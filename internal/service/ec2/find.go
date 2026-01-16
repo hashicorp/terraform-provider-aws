@@ -4565,7 +4565,6 @@ func findIPAMResourceCIDRByThreePartKey(ctx context.Context, conn *ec2.Client, s
 		return nil, err
 	}
 
-	// TODO. Multiple are returned (IPv6 & IPv4).
 	switch addressFamily {
 	case awstypes.AddressFamilyIpv4:
 		output = tfslices.Filter(output, func(v awstypes.IpamResourceCidr) bool {
