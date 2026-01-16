@@ -331,11 +331,34 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
+	@if [ -d "./$(PKG_NAME)" ] && ls ./$(PKG_NAME)/*.go >/dev/null 2>&1; then \
+		echo "make: Processing ./$(PKG_NAME)..."; \
+		goimports -w ./$(PKG_NAME)/*.go; \
+	fi
+	@for dir in $$(find ./$(PKG_NAME) -mindepth 1 -type d | sort); do \
+		if ls $$dir/*.go >/dev/null 2>&1; then \
+			echo "make: Processing $$dir..."; \
+			goimports -w $$dir/*.go; \
+		fi; \
+	done
+
+fix-imports-core: ## Fixing core directory imports with goimports
+	@echo "make: Fixing core directory imports with goimports..."
+	@go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|' | while read pkg; do \
+		if [ -d "$$pkg" ] && ls $$pkg/*.go >/dev/null 2>&1; then \
+			echo "make: Processing $$pkg..."; \
+			goimports -w $$pkg/*.go; \
+		fi; \
+	done
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+fmt-core: ## Fix Go source formatting in core directories
+	@echo "make: Fixing core directory source code with gofmt..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
+	gofmt -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
 fmt-check: ## Verify Go source is formatted
@@ -431,6 +454,11 @@ modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individ
 	@echo "make: Fixing checks for modern Go code..."
 	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
 
+modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
+	@echo "make: Fixing checks for modern Go code in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
+
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
 	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
@@ -478,6 +506,12 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS001=false \
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
+
+quick-fix-core-heading: ## Just a heading for quick-fix-core
+	@echo "make: Quick fixes for core (non-service) directories..."
+	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
+
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
 
 quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
@@ -623,6 +657,28 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
+
+semgrep-fix-core: semgrep-validate ## Fix Semgrep issues in core directories
+	@echo "make: Running Semgrep checks on core directories (must have semgrep installed)..."
+	@echo "make: Applying fixes with --autofix"
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		--exclude 'internal/service/**/*.go' \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -859,6 +915,12 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| sort -u \
 		| xargs -I {} terrafmt fmt  --fmtcompat {}
+
+testacc-lint-fix-core: ## Fix acceptance test linter findings in core directories
+	@echo "make: Fixing Acceptance Test Linting / terrafmt in core directories..."
+	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
+		| sort -u \
+		| xargs -I {} terrafmt fmt --fmtcompat {}
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
@@ -1113,8 +1175,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	examples-tflint \
 	fix-constants \
 	fix-imports \
+	fix-imports-core \
 	fmt \
 	fmt-check \
+	fmt-core \
 	fumpt \
 	gen \
 	gen-check \
@@ -1136,11 +1200,14 @@ yamllint: ## [CI] YAML Linting / yamllint
 	misspell \
 	modern-check \
 	modern-fix \
+	modern-fix-core \
 	pr-target-check \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
 	quick-fix \
+	quick-fix-core \
+	quick-fix-core-heading \
 	quick-fix-heading \
 	sane \
 	sanity \
@@ -1150,6 +1217,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
+	semgrep-fix-core \
 	semgrep-naming \
 	semgrep-naming-cae \
 	semgrep-service-naming \
@@ -1172,6 +1240,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-lint-fix-core \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \

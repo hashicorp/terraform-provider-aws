@@ -378,6 +378,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newBucketResourceAsListResource,
+			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrBucket,
+				ResourceType:        "Bucket",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+		{
 			Factory:  newObjectResourceAsListResource,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
