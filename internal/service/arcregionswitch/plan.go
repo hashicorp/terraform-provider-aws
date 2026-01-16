@@ -863,7 +863,7 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
 	plan, err := FindPlanByARN(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -1018,7 +1018,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"associated_alarms": fwschema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedAlarmModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
-					Attributes: map[string]fwschema.Attribute{
+					Attributes: map[string]fwschema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 						"map_block_key": fwschema.StringAttribute{
 							Required: true,
 						},
