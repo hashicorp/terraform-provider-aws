@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc_security_group_ingress_rule: Fix `InvalidGroupId.Malformed` error when updating cross-account security group rules with `referenced_security_group_id` containing account ID prefix
+```
+
+```release-note:bug
+resource/aws_vpc_security_group_egress_rule: Fix `InvalidGroupId.Malformed` error when updating cross-account security group rules with `referenced_security_group_id` containing account ID prefix
+```
