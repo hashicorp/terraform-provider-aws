@@ -32,6 +32,7 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
