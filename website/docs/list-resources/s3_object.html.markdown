@@ -15,7 +15,9 @@ Lists S3 (Simple Storage) Object resources.
 ```terraform
 list "aws_s3_object" "example" {
   provider = aws
-  bucket   = "my-bucket-name"
+  config {
+    bucket = "example"
+  }
 }
 ```
 
