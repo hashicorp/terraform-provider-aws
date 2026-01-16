@@ -7,6 +7,8 @@ package s3
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -371,6 +373,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newBucketResourceAsListResource,
+			TypeName: "aws_s3_bucket",
+			Name:     "Bucket",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrBucket,
+				ResourceType:        "Bucket",
+			}),
+			Identity: inttypes.RegionalSingleParameterIdentity(names.AttrBucket),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {
