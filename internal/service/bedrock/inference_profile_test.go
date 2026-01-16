@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -100,6 +101,55 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockInferenceProfile_importNoReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var inferenceprofile bedrock.GetInferenceProfileOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_inference_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"model_source.#",
+					"model_source.0.%",
+					"model_source.0.copy_from",
+				},
+			},
+			// After import, re-apply the same config. The key assertion is that this does NOT
+			// trigger a replacement (destroy + create). The model_source attribute is write-only
+			// and the AWS API doesn't return it, so after import the state has model_source=null.
+			// With the fix, the plan should show no-op (not replace).
+			{
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})

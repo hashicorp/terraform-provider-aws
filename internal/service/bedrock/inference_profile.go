@@ -122,7 +122,21 @@ func (r *inferenceProfileResource) Schema(ctx context.Context, req resource.Sche
 			"model_source": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceProfileModelModelSource](ctx),
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIf(
+						func(_ context.Context, req planmodifier.ListRequest, resp *listplanmodifier.RequiresReplaceIfFuncResponse) {
+							// Only require replacement if we have a prior state value to compare against.
+							// If state is null (like after import), don't force replacement.
+							// model_source is a write-only attribute that AWS API doesn't return.
+							if req.StateValue.IsNull() {
+								resp.RequiresReplace = false
+								return
+							}
+							// If state has a value, require replacement if plan differs
+							resp.RequiresReplace = !req.PlanValue.Equal(req.StateValue)
+						},
+						"If the value of this write-only attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+						"If the value of this write-only attribute changes, Terraform will destroy and recreate the resource. Does not trigger replacement on import.",
+					),
 				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
