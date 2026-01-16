@@ -18,6 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_eks_access_entry", name="Access Entry")
+// @Tags(identifierAttribute="access_entry_arn")
 func dataSourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessEntryRead,
@@ -60,7 +61,7 @@ func dataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTags:    tftags.TagsSchemaComputed(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
