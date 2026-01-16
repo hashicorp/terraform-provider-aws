@@ -55,6 +55,7 @@ const (
 // @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
