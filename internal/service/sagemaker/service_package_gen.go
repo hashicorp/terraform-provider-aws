@@ -35,6 +35,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			}),
 			Region: unique.Make(inttypes.ResourceRegionDefault()),
 		},
+		{
+			Factory:  newModelCardExportJobResource,
+			TypeName: "aws_sagemaker_model_card_export_job",
+			Name:     "Model Card Export Job",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
 	}
 }
 

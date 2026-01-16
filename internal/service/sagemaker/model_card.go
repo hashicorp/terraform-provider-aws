@@ -293,8 +293,7 @@ func statusModelCard(ctx context.Context, conn *sagemaker.Client, name string) s
 		output, err := findModelCardByName(ctx, conn, name)
 
 		if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Model card is being deleted") {
-			var zero sagemaker.DescribeModelCardOutput
-			return &zero, string(awstypes.ModelCardProcessingStatusDeleteInprogress), nil
+			return new(sagemaker.DescribeModelCardOutput), string(awstypes.ModelCardProcessingStatusDeleteInprogress), nil
 		}
 
 		if retry.NotFound(err) {
