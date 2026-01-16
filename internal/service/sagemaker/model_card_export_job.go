@@ -245,7 +245,7 @@ func waitModelCardExportJobCompleted(ctx context.Context, conn *sagemaker.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeModelCardExportJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		return output, err
 	}
 
