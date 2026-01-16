@@ -1076,6 +1076,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			),
 		},
 		{
+			Factory:  resourceImageDeregistrationProtection,
+			TypeName: "aws_ec2_image_deregistration_protection",
+			Name:     "Image Deregistration Protection",
+		},
+		{
 			Factory:  resourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
 			Name:     "Instance State",
