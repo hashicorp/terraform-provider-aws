@@ -136,6 +136,35 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinitionDataSource_advancedARN_EKSProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BatchEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionDataSourceConfig_advancedARNEKS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.security_context.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.security_context.0.allow_privilege_escalation", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccJobDefinitionDataSourceConfig_basicARN(rName string, increment string) string {
 	return acctest.ConfigCompose(
 		testAccJobDefinitionDataSourceConfig_container(rName, increment),
@@ -200,6 +229,15 @@ data "aws_batch_job_definition" "test" {
 func testAccJobDefinitionDataSourceConfig_basicARNEKS(rName string) string {
 	return acctest.ConfigCompose(
 		testAccJobDefinitionConfig_EKSProperties_basic(rName), `
+data "aws_batch_job_definition" "test" {
+  arn = aws_batch_job_definition.test.arn
+}
+`)
+}
+
+func testAccJobDefinitionDataSourceConfig_advancedARNEKS(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobDefinitionConfig_EKSProperties_advancedUpdate(rName), `
 data "aws_batch_job_definition" "test" {
   arn = aws_batch_job_definition.test.arn
 }
