@@ -66,7 +66,7 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 
 			tflog.Info(ctx, "Reading S3 (Simple Storage) Bucket")
 			diags := resourceBucketRead(ctx, rd, l.Meta())
-			if diags.HasError() || rd.Id() == "" {
+			if diags.HasError() {
 				tflog.Error(ctx, "Reading S3 (Simple Storage) Bucket", map[string]any{
 					names.AttrID: bucketName,
 					"diags":      sdkdiag.DiagnosticsString(diags),
