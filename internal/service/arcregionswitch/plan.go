@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package arcregionswitch
@@ -48,7 +48,7 @@ func FindPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	}
 
 	if output == nil || output.Plan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Plan, nil

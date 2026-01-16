@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 // lintignore:AWSAT003,AWSAT005,AT004
@@ -80,7 +80,7 @@ func TestAccARCRegionSwitchPlan_disappears(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfarcregionswitch.ResourcePlan, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfarcregionswitch.ResourcePlan, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
