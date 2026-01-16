@@ -39,6 +39,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization ([#45909](https://github.com/hashicorp/terraform-provider-aws/issues/45909))
+* provider: Fix crash when using custom S3 endpoints with non-standard region strings (e.g., S3-compatible storage like Ceph or MinIO) ([#46000](https://github.com/hashicorp/terraform-provider-aws/issues/46000))
 * provider: When importing resources with `region` defined, in AWS European Sovereign Cloud, prevent failing due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_bcmdataexports_export: Fix `Provider produced inconsistent result after apply` error when querying `CARBON_EMISSIONS` table without `table_configurations` ([#45972](https://github.com/hashicorp/terraform-provider-aws/issues/45972))
 * resource/aws_cloudformation_stack_set: Fix perpetual diff when using `auto_deployment` with `permission_model` set to `SERVICE_MANAGED` ([#45992](https://github.com/hashicorp/terraform-provider-aws/issues/45992))
