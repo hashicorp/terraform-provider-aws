@@ -17,10 +17,10 @@ import (
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	intretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -163,22 +163,22 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 	if data.WaitForHealthChecks.ValueBool() {
 		// Wait for health check IDs to be populated (takes ~4 minutes)
 		timeout := 5 * time.Minute
-		healthCheckErr = retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		healthCheckErr = sdkretry.RetryContext(ctx, timeout, func() *sdkretry.RetryError {
 			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
-				return retry.NonRetryableError(healthCheckErr)
+				return sdkretry.NonRetryableError(healthCheckErr)
 			}
 
 			// Check if all health check IDs are populated
 			for _, hc := range healthChecks {
 				if aws.ToString(hc.HealthCheckId) == "" {
-					return retry.RetryableError(fmt.Errorf("waiting for Route53 health check IDs to be populated"))
+					return sdkretry.RetryableError(fmt.Errorf("waiting for Route53 health check IDs to be populated"))
 				}
 			}
 
 			return nil
 		})
-		if intretry.TimedOut(healthCheckErr) {
+		if retry.TimedOut(healthCheckErr) {
 			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
 				resp.Diagnostics.AddError("reading Route53 health checks", healthCheckErr.Error())
