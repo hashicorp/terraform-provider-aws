@@ -45,8 +45,8 @@ func TestAccS3Bucket_List_Basic(t *testing.T) {
 					"resource_count": config.IntegerVariable(2),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), knownvalue.StringExact("arn:aws:s3:::"+rName+"-0")),
-					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), knownvalue.StringExact("arn:aws:s3:::"+rName+"-1")),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNNoAccountIDExact("s3", rName+"-0")),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.GlobalARNNoAccountIDExact("s3", rName+"-1")),
 				},
 			},
 
