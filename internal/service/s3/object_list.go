@@ -90,7 +90,7 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 
 			tflog.Info(ctx, "Reading S3 (Simple Storage) Object")
 			diags := resourceObjectRead(ctx, rd, l.Meta())
-			if diags.HasError()  || rd.Id() == "" {
+			if diags.HasError() || rd.Id() == "" {
 				tflog.Error(ctx, "Reading S3 (Simple Storage) Object", map[string]any{
 					names.AttrID: id,
 					"diags":      sdkdiag.DiagnosticsString(diags),
