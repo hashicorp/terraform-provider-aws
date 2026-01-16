@@ -4514,16 +4514,6 @@ func findIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Cli
 	return output, nil
 }
 
-func findIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamResourceCidrsInput) (*awstypes.IpamResourceCidr, error) {
-	output, err := findIPAMResourceCIDRs(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findIPAMResourceCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamResourceCidrsInput) ([]awstypes.IpamResourceCidr, error) {
 	var output []awstypes.IpamResourceCidr
 
