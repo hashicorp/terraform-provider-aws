@@ -45,7 +45,7 @@ func (l *listResourceObject) ListResourceConfigSchema(ctx context.Context, reque
 				Required:    true,
 				Description: "Name of the S3 bucket to list objects from.",
 			},
-			"prefix": listschema.StringAttribute{
+			names.AttrPrefix: listschema.StringAttribute{
 				Optional:    true,
 				Description: "Limits the response to keys that begin with the specified prefix.",
 			},
