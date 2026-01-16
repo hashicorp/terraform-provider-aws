@@ -110,13 +110,15 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "unmarshaling policy: %s", err)
 	}
 
-	doc.Statement.Resources = nil
+	for _, stmt := range doc.Statement {
+		stmt.Resources = nil
+	}
 
 	policyDoc := tfiam.IAMPolicyDoc{}
 
 	policyDoc.Id = doc.Id
 	policyDoc.Version = doc.Version
-	policyDoc.Statements = []*tfiam.IAMPolicyStatement{doc.Statement}
+	policyDoc.Statements = doc.Statement
 
 	formattedPolicy, err := json.Marshal(policyDoc)
 	if err != nil {
@@ -186,7 +188,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.Clien
 }
 
 type resourcePolicyDoc struct {
-	Version   string                    `json:",omitempty"`
-	Id        string                    `json:",omitempty"`
-	Statement *tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
+	Version   string                      `json:",omitempty"`
+	Id        string                      `json:",omitempty"`
+	Statement []*tfiam.IAMPolicyStatement `json:"Statement,omitempty"`
 }
