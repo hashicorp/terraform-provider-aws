@@ -23,6 +23,7 @@ FEATURES:
 * **New Resource:** `aws_cloudfront_anycast_ip_list` ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
 * **New Resource:** `aws_ram_resource_associations_exclusive` ([#45883](https://github.com/hashicorp/terraform-provider-aws/issues/45883))
 * **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
+* **New Resource:** `aws_sagemaker_model_card_export_job` ([#46009](https://github.com/hashicorp/terraform-provider-aws/issues/46009))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
 ENHANCEMENTS:
