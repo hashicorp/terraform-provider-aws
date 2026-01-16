@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_appconfig_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
