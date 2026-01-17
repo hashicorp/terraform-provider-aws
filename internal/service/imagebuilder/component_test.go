@@ -49,6 +49,10 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.ComponentTypeBuild)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_version_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_major_version_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_minor_version_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_patch_version_arn"),
 				),
 			},
 			{
