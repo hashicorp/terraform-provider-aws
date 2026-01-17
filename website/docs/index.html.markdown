@@ -341,6 +341,8 @@ This block allows module authors to provide additional information in the `User-
 -> In a module, `provider_meta` is defined within the `terraform` block.
 The `provider` block is inherited from the root module.
 
+-> Functions, including the [`user_agent` provider-defined function](./functions/user_agent.html.markdown), cannot be used in the [`terraform` block](https://developer.hashicorp.com/terraform/language/block/terraform#terraform-block).
+
 ```terraform
 terraform {
   required_providers {
@@ -352,8 +354,7 @@ terraform {
 
   provider_meta "aws" {
     user_agent = [
-      provider::aws::user_agent("example-demo", "0.0.1", "a comment"),
-      "other-demo/0.0.2 (other comment)",
+      "module-demo/0.0.3 (another comment)",
     ]
   }
 }
