@@ -26,15 +26,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -454,26 +451,4 @@ type iamIdentityCenterOptionsModel struct {
 	IamIdentityCenterInstanceArn           fwtypes.ARN `tfsdk:"iam_identity_center_instance_arn"`
 	IamRoleForIdentityCenterApplicationArn fwtypes.ARN `tfsdk:"iam_role_for_identity_center_application_arn"`
 	IamIdentityCenterApplicationArn        fwtypes.ARN `tfsdk:"iam_identity_center_application_arn"`
-}
-
-func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
-	input := opensearch.ListApplicationsInput{}
-	conn := client.OpenSearchClient(ctx)
-	var sweepResources []sweep.Sweepable
-
-	pages := opensearch.NewListApplicationsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-		if err != nil {
-			return nil, smarterr.NewError(err)
-		}
-
-		for _, v := range page.ApplicationSummaries {
-			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newResourceApplication, client,
-				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.Id))),
-			)
-		}
-	}
-
-	return sweepResources, nil
 }
