@@ -6,7 +6,9 @@ package connect
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -42,7 +44,7 @@ func resourcePhoneNumber() *schema.Resource {
 		DeleteWithoutTimeout: resourcePhoneNumberDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
@@ -111,60 +113,72 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	var phoneNumber string
 	targetARN := d.Get(names.AttrTargetARN).(string)
+	phoneNumberType := d.Get(names.AttrType).(string)
 
-	{
-		phoneNumberType := d.Get(names.AttrType).(string)
-		input := &connect.SearchAvailablePhoneNumbersInput{
-			MaxResults:             aws.Int32(1),
-			PhoneNumberCountryCode: awstypes.PhoneNumberCountryCode(d.Get("country_code").(string)),
-			PhoneNumberType:        awstypes.PhoneNumberType(phoneNumberType),
-			TargetArn:              aws.String(targetARN),
-		}
+	// Use the standard Terraform retry mechanism for handling race conditions
+	// when multiple instances try to claim the same phone number in parallel
+	output, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
+		func(ctx context.Context) (*connect.ClaimPhoneNumberOutput, error) {
+			// Search for available phone numbers
+			searchInput := &connect.SearchAvailablePhoneNumbersInput{
+				MaxResults:             aws.Int32(1),
+				PhoneNumberCountryCode: awstypes.PhoneNumberCountryCode(d.Get("country_code").(string)),
+				PhoneNumberType:        awstypes.PhoneNumberType(phoneNumberType),
+				TargetArn:              aws.String(targetARN),
+			}
 
-		if v, ok := d.GetOk(names.AttrPrefix); ok {
-			input.PhoneNumberPrefix = aws.String(v.(string))
-		}
+			if v, ok := d.GetOk(names.AttrPrefix); ok {
+				searchInput.PhoneNumberPrefix = aws.String(v.(string))
+			}
 
-		output, err := conn.SearchAvailablePhoneNumbers(ctx, input)
+			searchOutput, err := conn.SearchAvailablePhoneNumbers(ctx, searchInput)
 
-		if err == nil && (output == nil || len(output.AvailableNumbersList) == 0) {
-			err = tfresource.NewEmptyResultError()
-		}
+			if err == nil && (searchOutput == nil || len(searchOutput.AvailableNumbersList) == 0) {
+				err = tfresource.NewEmptyResultError()
+			}
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "searching Connect Phone Numbers (%s,%s): %s", targetARN, phoneNumberType, err)
-		}
+			if err != nil {
+				return nil, fmt.Errorf("searching Connect Phone Numbers (%s,%s): %w", targetARN, phoneNumberType, err)
+			}
 
-		phoneNumber = aws.ToString(output.AvailableNumbersList[0].PhoneNumber)
+			phoneNumber := aws.ToString(searchOutput.AvailableNumbersList[0].PhoneNumber)
+
+			// Attempt to claim the phone number
+			uuid, err := uuid.GenerateUUID()
+			if err != nil {
+				return nil, err
+			}
+
+			claimInput := &connect.ClaimPhoneNumberInput{
+				ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
+				PhoneNumber: aws.String(phoneNumber),
+				Tags:        getTagsIn(ctx),
+				TargetArn:   aws.String(targetARN),
+			}
+
+			if v, ok := d.GetOk(names.AttrDescription); ok {
+				claimInput.PhoneNumberDescription = aws.String(v.(string))
+			}
+
+			log.Printf("[DEBUG] Attempting to claim Connect Phone Number: %s", phoneNumber)
+			return conn.ClaimPhoneNumber(ctx, claimInput)
+		},
+		func(err error) (bool, error) {
+			// Retry if this is a phone number already claimed error (race condition)
+			if isPhoneNumberAlreadyClaimedError(err) {
+				log.Printf("[DEBUG] Phone number already claimed, retrying: %s", err)
+				return true, err
+			}
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "claiming Connect Phone Number (%s,%s): %s", targetARN, phoneNumberType, err)
 	}
 
-	{
-		uuid, err := uuid.GenerateUUID()
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
-		input := &connect.ClaimPhoneNumberInput{
-			ClientToken: aws.String(uuid), // can't use aws.String(id.UniqueId()), because it's not a valid uuid
-			PhoneNumber: aws.String(phoneNumber),
-			Tags:        getTagsIn(ctx),
-			TargetArn:   aws.String(targetARN),
-		}
-
-		if v, ok := d.GetOk(names.AttrDescription); ok {
-			input.PhoneNumberDescription = aws.String(v.(string))
-		}
-
-		output, err := conn.ClaimPhoneNumber(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "claiming Connect Phone Number (%s,%s): %s", targetARN, phoneNumber, err)
-		}
-
-		d.SetId(aws.ToString(output.PhoneNumberId))
-	}
+	d.SetId(aws.ToString(output.PhoneNumberId))
 
 	if _, err := waitPhoneNumberCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Connect Phone Number (%s) create: %s", d.Id(), err)
@@ -384,4 +398,21 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, id string
 	}
 
 	return nil, err
+}
+
+// isPhoneNumberAlreadyClaimedError checks if the error indicates that a phone number
+// has already been claimed by another process (race condition scenario)
+func isPhoneNumberAlreadyClaimedError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := err.Error()
+
+	// Match the specific error message from AWS Connect ClaimPhoneNumber API
+	// when a phone number is not available (already claimed by another process)
+	// Example: "InvalidParameterException: Phone number not available: +15047846302. Try again with a different available number"
+	return strings.Contains(errStr, "InvalidParameterException") &&
+		strings.Contains(errStr, "Phone number not available") &&
+		strings.Contains(errStr, "Try again with a different available number")
 }
