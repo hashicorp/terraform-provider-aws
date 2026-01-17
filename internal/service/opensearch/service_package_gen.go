@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceApplication,
+			Factory:  newApplicationResource,
 			TypeName: "aws_opensearch_application",
 			Name:     "Application",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

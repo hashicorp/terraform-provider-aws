@@ -5,7 +5,7 @@ package opensearch
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"regexp"
 	"time"
 
@@ -17,31 +17,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_opensearch_application", name="Application")
 // @Tags(identifierAttribute="arn")
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
+func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &applicationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -50,16 +48,13 @@ func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-const (
-	ResNameApplication = "Application"
-)
-
-type resourceApplication struct {
-	framework.ResourceWithModel[resourceApplicationModel]
+type applicationResource struct {
+	framework.ResourceWithModel[applicationResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -171,171 +166,151 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan applicationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().OpenSearchClient(ctx)
 
-	var plan resourceApplicationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input opensearch.CreateApplicationInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Generate ClientToken for idempotency
-	input.ClientToken = aws.String(id.UniqueId())
 
 	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.TagList = getTagsIn(ctx)
 
-	out, err := conn.CreateApplication(ctx, &input)
+	outputCA, err := conn.CreateApplication(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-	if out == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.Name.String())
+		resp.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Application (%s)", name), err.Error())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
+	id := aws.ToString(outputCA.Id)
+	outputGA, err := waitApplicationCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Application (%s) create", id), err.Error())
+		return
+	}
+
+	// Set values for unknowns.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, outputGA, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitApplicationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchClient(ctx)
-
-	var state resourceApplicationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+func (r *applicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state applicationResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findApplicationByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	conn := r.Meta().OpenSearchClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
+	out, err := findApplicationByID(ctx, conn, id)
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		resp.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Application (%s)", id), err.Error())
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	// Set attributes for import.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchClient(ctx)
-
-	var plan, state resourceApplicationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+func (r *applicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state applicationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	conn := r.Meta().OpenSearchClient(ctx)
+
+	diff, d := fwflex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
+		id := fwflex.StringValueFromFramework(ctx, plan.ID)
 		var input opensearch.UpdateApplicationInput
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateApplication(ctx, &input)
+		_, err := conn.UpdateApplication(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-			return
-		}
-		if out == nil {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			resp.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Application (%s)", id), err.Error())
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &plan))
-		if resp.Diagnostics.HasError() {
+		if _, err := waitApplicationDeleted(ctx, conn, id, r.UpdateTimeout(ctx, state.Timeouts)); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Application (%s) update", id), err.Error())
 			return
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitApplicationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
-		return
-	}
-
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().OpenSearchClient(ctx)
-
-	var state resourceApplicationModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+func (r *applicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state applicationResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().OpenSearchClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
 	input := opensearch.DeleteApplicationInput{
-		Id: state.ID.ValueStringPointer(),
+		Id: aws.String(id),
 	}
-
 	_, err := conn.DeleteApplication(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Application (%s)", id), err.Error())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+	if _, err := waitApplicationDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Application (%s) delete", id), err.Error())
 		return
 	}
 }
 
-func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
 func waitApplicationCreated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ApplicationStatusCreating)},
-		Target:                    []string{string(awstypes.ApplicationStatusActive)},
-		Refresh:                   statusApplication(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.ApplicationStatusCreating),
+		Target:  enum.Slice(awstypes.ApplicationStatusActive),
+		Refresh: statusApplication(conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -348,50 +323,46 @@ func waitApplicationCreated(ctx context.Context, conn *opensearch.Client, id str
 
 func waitApplicationUpdated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ApplicationStatusUpdating)},
-		Target:                    []string{string(awstypes.ApplicationStatusActive)},
-		Refresh:                   statusApplication(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*opensearch.GetApplicationOutput); ok {
-		return out, smarterr.NewError(err)
-	}
-
-	return nil, smarterr.NewError(err)
-}
-
-func waitApplicationDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.ApplicationStatusDeleting),
-			string(awstypes.ApplicationStatusActive),
-		},
-		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, id),
+		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
+		Target:  enum.Slice(awstypes.ApplicationStatusActive),
+		Refresh: statusApplication(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*opensearch.GetApplicationOutput); ok {
-		return out, smarterr.NewError(err)
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func statusApplication(ctx context.Context, conn *opensearch.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func waitApplicationDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApplicationStatusDeleting, awstypes.ApplicationStatusActive),
+		Target:  []string{},
+		Refresh: statusApplication(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*opensearch.GetApplicationOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func statusApplication(conn *opensearch.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findApplicationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
+
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, "", smarterr.NewError(err)
+			return nil, "", err
 		}
 
 		return out, string(out.Status), nil
@@ -403,27 +374,31 @@ func findApplicationByID(ctx context.Context, conn *opensearch.Client, id string
 		Id: aws.String(id),
 	}
 
-	out, err := conn.GetApplication(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, smarterr.NewError(&retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
-			})
+	return findApplication(ctx, conn, &input)
+}
+
+func findApplication(ctx context.Context, conn *opensearch.Client, input *opensearch.GetApplicationInput) (*opensearch.GetApplicationOutput, error) {
+	output, err := conn.GetApplication(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
-
-		return nil, smarterr.NewError(err)
 	}
 
-	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	if err != nil {
+		return nil, err
 	}
 
-	return out, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 // Data structures for the OpenSearch Application resource
-type resourceApplicationModel struct {
+type applicationResourceModel struct {
 	framework.WithRegionModel
 	ARN                      types.String                                                   `tfsdk:"arn"`
 	AppConfigs               fwtypes.SetNestedObjectValueOf[appConfigModel]                 `tfsdk:"app_config"`

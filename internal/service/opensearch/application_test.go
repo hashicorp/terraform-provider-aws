@@ -5,7 +5,6 @@ package opensearch_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -202,39 +200,38 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tfopensearch.FindApplicationByID(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.OpenSearch, create.ErrActionCheckingDestroyed, tfopensearch.ResNameApplication, rs.Primary.ID, err)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.OpenSearch, create.ErrActionCheckingDestroyed, tfopensearch.ResNameApplication, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpenSearch Application %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, name string, application *opensearch.GetApplicationOutput) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *opensearch.GetApplicationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameApplication, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameApplication, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindApplicationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfopensearch.FindApplicationByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameApplication, rs.Primary.ID, err)
+			return err
 		}
 
-		*application = *resp
+		*v = *output
 
 		return nil
 	}
@@ -255,7 +252,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-// Terraform configuration functions
 func testAccApplicationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_application" "test" {

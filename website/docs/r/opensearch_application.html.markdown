@@ -182,9 +182,9 @@ The following arguments are supported:
 
 * `name` - (Required) The unique name of the OpenSearch application. Names must be unique within an AWS Region for each account. Must be between 3 and 30 characters, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
 * `app_config` - (Optional) Configuration block(s) for OpenSearch application settings. See [App Config](#app-config) below.
-* `client_token` - (Optional) Unique, case-sensitive identifier to ensure idempotency of the request. Must be between 1 and 64 characters.
 * `data_source` - (Optional) Configuration block(s) for data sources to link to the OpenSearch application. See [Data Source](#data-source) below.
 * `iam_identity_center_options` - (Optional) Configuration block for integrating AWS IAM Identity Center with the OpenSearch application. See [IAM Identity Center Options](#iam-identity-center-options) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### App Config
@@ -218,6 +218,12 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_identity_center_options[0].iam_identity_center_application_arn` - If `iam_identity_center_options.enabled` is true this will hold the Amazon Resource Name (ARN) of the IAM Identity Center application.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Additional Information
+
+For more information about OpenSearch Applications, see the [AWS OpenSearch Service Developer Guide](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application.html).
+
+For information about configuring IAM Identity Center with OpenSearch Applications, see [Using AWS IAM Identity Center authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application-getting-started.html#create-application).
+
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -228,14 +234,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-OpenSearch Applications can be imported using the application `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch applications using the `id`. For example:
+
+```terraform
+import {
+  to = aws_opensearch_application.example
+  id = "app-1234567890abcdef0"
+}
+```
+
+Using `terraform import`, import OpenSearch applications using the `id`. For example:
 
 ```
 $ terraform import aws_opensearch_application.example app-1234567890abcdef0
 ```
-
-## Additional Information
-
-For more information about OpenSearch Applications, see the [AWS OpenSearch Service Developer Guide](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application.html).
-
-For information about configuring IAM Identity Center with OpenSearch Applications, see [Using AWS IAM Identity Center authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/application-getting-started.html#create-application).

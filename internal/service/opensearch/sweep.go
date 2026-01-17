@@ -37,7 +37,7 @@ func sweepApplications(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 		}
 
 		for _, v := range page.ApplicationSummaries {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newApplicationResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
 			)
 		}
