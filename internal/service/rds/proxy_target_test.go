@@ -284,14 +284,13 @@ resource "aws_security_group" "test" {
 func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
-  preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
+  engine = "mysql"
 }
 
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
+  preferred_instance_classes = ["db.t4g.micro", "db.t3.micro", "db.t4g.small", "db.t3.small"]
 }
 
 resource "aws_db_instance" "test" {

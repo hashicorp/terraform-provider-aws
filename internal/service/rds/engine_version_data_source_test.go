@@ -13,7 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,12 +45,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
 					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
-					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_character_sets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_feature_names.#", regexache.MustCompile(`^[1-9][0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_modes.#", regexache.MustCompile(`^[0-9]*`)),
-					resource.TestMatchResourceAttr(dataSourceName, "supported_timezones.#", regexache.MustCompile(`^[0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_certificate_rotation_without_restart"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_integrations"),
@@ -57,6 +56,13 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_description"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("exportable_log_types"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_character_sets"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_feature_names"), tfknownvalue.ListNotEmpty()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_modes"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("supported_timezones"), knownvalue.NotNull()),
+				},
 			},
 		},
 	})
@@ -75,9 +81,11 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "version_actual"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("valid_upgrade_targets"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -94,17 +102,17 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferred(),
+				Config: testAccEngineVersionDataSourceConfig_preferred_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.4.7"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.4.7"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferred2(),
+				Config: testAccEngineVersionDataSourceConfig_preferred_partialVersion(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.32"),
-					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.44"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.44"),
 				),
 			},
 		},
@@ -122,15 +130,15 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.32", "8.0.33", "8.0.34"`, `"8.0.37"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.4.4", "8.4.5"`, `"8.4.7"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.34"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.4.5"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"8.0.42", "8.0.43", "8.0.44"`, `"8.4.6", "8.4.7"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "5.7.44"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "8.0.44"),
 				),
 			},
 		},
@@ -171,13 +179,17 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
+					// resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.4\.`)),
+					// As of 2026-01-15, the latest 8.0.x was *created* after the latest 8.4.x, so `latest` unfortunately picks it
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15\.`)),
+					// resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^18\.`)),
+					// As of 2026-01-15, the latest 16.x was *created* after the latest 18.x, so `latest` unfortunately picks it
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^16\.`)),
 				),
 			},
 		},
@@ -274,7 +286,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
+func TestAccRDSEngineVersionDataSource_latest_FromPreferredVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_engine_version.test"
 
@@ -285,26 +297,42 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest(true, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
+				Config: testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(true, `"16.10", "15.15", "14.19", "13.23", "18.1", "10.17"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "15.4"),
+					// resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "18.1"),
+					// Version 16.10 was *created* after 18.1, so `latest` unfortunately picks it
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "16.10"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest(false, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
+				Config: testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(false, `"16.10", "15.15", "14.19", "13.23", "18.1", "10.17"`),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "13.9"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "16.10"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_latest_OfVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
+				Config: testAccEngineVersionDataSourceConfig_latest_OfVersion(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^15`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineMySQL, "8.0"),
+				Config: testAccEngineVersionDataSourceConfig_latest_OfVersion(tfrds.InstanceEngineMySQL, "8.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
@@ -424,26 +452,33 @@ func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine  = %[1]q
-  version = "8.0.32"
+  version = "8.4.6" # As of 2026-01-15, latest bug fix version with upgrade targets. End of support is 2026-09-30.
 }
 `, tfrds.InstanceEngineMySQL)
 }
 
-func testAccEngineVersionDataSourceConfig_preferred() string {
+func testAccEngineVersionDataSourceConfig_preferred_basic() string {
+	// Versions
+	// 85.9.12: does not exist
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.4.6: End of support is 2026-09-30.
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  preferred_versions = ["85.9.12", "8.4.7", "8.4.6"]
 }
 `, tfrds.InstanceEngineMySQL)
 }
 
-func testAccEngineVersionDataSourceConfig_preferred2() string {
+func testAccEngineVersionDataSourceConfig_preferred_partialVersion() string {
+	// Versions
+	// 8.4.7: latest as of 2026-01-15. End of support is 2026-11-30.
+	// 8.0.44: lastest 8.0.x as of 2026-01-15. End of support is 2026-07-31.
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
   version            = "8.0"
-  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+  preferred_versions = ["8.4.7", "8.0.44"]
 }
 `, tfrds.InstanceEngineMySQL)
 }
@@ -527,7 +562,7 @@ data "aws_rds_engine_version" "test" {
 `, engine, engineMode)
 }
 
-func testAccEngineVersionDataSourceConfig_latest(latest bool, preferredVersions string) string {
+func testAccEngineVersionDataSourceConfig_latest_FromPreferredVersions(latest bool, preferredVersions string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = %[1]q
@@ -537,7 +572,7 @@ data "aws_rds_engine_version" "test" {
 `, tfrds.InstanceEngineAuroraPostgreSQL, latest, preferredVersions)
 }
 
-func testAccEngineVersionDataSourceConfig_latest2(engine, majorVersion string) string {
+func testAccEngineVersionDataSourceConfig_latest_OfVersion(engine, majorVersion string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine  = %[1]q
