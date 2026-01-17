@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -77,7 +77,7 @@ func testAccPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffms.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

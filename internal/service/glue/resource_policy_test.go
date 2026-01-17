@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -94,8 +94,8 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(ctx, resourceName, "glue:CreateTable"),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

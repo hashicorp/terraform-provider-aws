@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner
@@ -185,7 +185,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {

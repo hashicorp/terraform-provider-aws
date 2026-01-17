@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -9,11 +9,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -27,6 +25,8 @@ import (
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
@@ -90,7 +90,8 @@ func resourceClientCertificateCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	cert, err := findClientCertificateByID(ctx, conn, d.Id())
 
@@ -104,13 +105,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Client Certificate (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region(ctx),
-		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, clientCertificateARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, cert.CreatedDate.String())
 	d.Set(names.AttrDescription, cert.Description)
 	d.Set("expiration_date", cert.ExpirationDate.String())
@@ -176,9 +171,8 @@ func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id 
 	output, err := conn.GetClientCertificate(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -187,8 +181,12 @@ func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
+}
+
+func clientCertificateARN(ctx context.Context, c *conns.AWSClient, certificateID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/clientcertificates/%s", certificateID))
 }

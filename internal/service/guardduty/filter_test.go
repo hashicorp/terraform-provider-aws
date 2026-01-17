@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -137,6 +137,28 @@ func testAccFilter_update(t *testing.T) {
 					}),
 				),
 			},
+			{
+				Config: testAccFilterConfig_matches(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.0", "us-*"),
+				),
+			},
+			{
+				Config: testAccFilterConfig_notMatches(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.not_matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.not_matches.0", "us-*"),
+				),
+			},
 		},
 	})
 }
@@ -162,7 +184,7 @@ func testAccFilter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -321,6 +343,50 @@ resource "aws_guardduty_filter" "test" {
     criterion {
       field      = "service.additionalInfo.threatListName"
       not_equals = ["some-threat", "yet-another-threat"]
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_matches() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
+
+  finding_criteria {
+    criterion {
+      field   = "region"
+      matches = ["us-*"]
+    }
+  }
+}
+
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_notMatches() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
+
+  finding_criteria {
+    criterion {
+      field       = "region"
+      not_matches = ["us-*"]
     }
   }
 }

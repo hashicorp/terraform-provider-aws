@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -191,9 +190,8 @@ func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name stri
 	output, err := conn.DescribeGlobalTable(ctx, input)
 
 	if errs.IsA[*awstypes.GlobalTableNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -202,14 +200,14 @@ func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name stri
 	}
 
 	if output == nil || output.GlobalTableDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GlobalTableDescription, nil
 }
 
-func statusGlobalTable(ctx context.Context, conn *dynamodb.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGlobalTable(conn *dynamodb.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGlobalTableByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -225,10 +223,10 @@ func statusGlobalTable(ctx context.Context, conn *dynamodb.Client, name string) 
 }
 
 func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.GlobalTableStatusCreating),
 		Target:     enum.Slice(awstypes.GlobalTableStatusActive),
-		Refresh:    statusGlobalTable(ctx, conn, name),
+		Refresh:    statusGlobalTable(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -243,10 +241,10 @@ func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.Client, name str
 }
 
 func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.GlobalTableStatusUpdating),
 		Target:     enum.Slice(awstypes.GlobalTableStatusActive),
-		Refresh:    statusGlobalTable(ctx, conn, name),
+		Refresh:    statusGlobalTable(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
@@ -261,10 +259,10 @@ func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.Client, name str
 }
 
 func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.GlobalTableStatusActive, awstypes.GlobalTableStatusDeleting),
 		Target:     []string{},
-		Refresh:    statusGlobalTable(ctx, conn, name),
+		Refresh:    statusGlobalTable(conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

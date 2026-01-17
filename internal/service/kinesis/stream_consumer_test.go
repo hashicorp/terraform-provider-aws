@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis_test
@@ -65,7 +65,7 @@ func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccStreamConsumerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesis.ResourceStreamConsumer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesis.ResourceStreamConsumer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

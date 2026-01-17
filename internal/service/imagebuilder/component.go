@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -275,7 +275,7 @@ func findComponentByARN(ctx context.Context, conn *imagebuilder.Client, arn stri
 	}
 
 	if output == nil || output.Component == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Component, nil

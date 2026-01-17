@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -336,7 +336,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil

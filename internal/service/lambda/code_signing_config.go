@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -235,7 +235,7 @@ func findCodeSigningConfig(ctx context.Context, conn *lambda.Client, input *lamb
 	}
 
 	if output == nil || output.CodeSigningConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CodeSigningConfig, nil

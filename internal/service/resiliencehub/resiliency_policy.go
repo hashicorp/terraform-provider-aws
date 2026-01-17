@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resiliencehub
@@ -518,7 +518,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	}
 
 	if out == nil || out.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Policy, nil

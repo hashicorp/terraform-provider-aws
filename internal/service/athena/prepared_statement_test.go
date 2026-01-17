@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena_test
@@ -71,7 +71,7 @@ func TestAccAthenaPreparedStatement_disappears(t *testing.T) {
 				Config: testAccPreparedStatementConfig_basic(rName, condition),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPreparedStatementExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourcePreparedStatement(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourcePreparedStatement(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

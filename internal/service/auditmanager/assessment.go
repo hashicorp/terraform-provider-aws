@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package auditmanager
@@ -336,7 +336,7 @@ func findAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 	}
 
 	if output == nil || output.Assessment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Assessment, nil

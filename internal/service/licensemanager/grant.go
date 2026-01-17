@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager
@@ -229,7 +229,7 @@ func findGrant(ctx context.Context, conn *licensemanager.Client, input *licensem
 	}
 
 	if output == nil || output.Grant == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Grant, nil

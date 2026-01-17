@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -189,7 +189,7 @@ func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, input *s3
 	}
 
 	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

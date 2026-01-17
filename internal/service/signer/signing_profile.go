@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer
@@ -356,7 +356,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {

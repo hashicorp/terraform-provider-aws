@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore
@@ -272,7 +272,7 @@ func waitMemoryCreated(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -289,7 +289,7 @@ func waitMemoryDeleted(ctx context.Context, conn *bedrockagentcorecontrol.Client
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*awstypes.Memory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 
@@ -334,7 +334,7 @@ func findMemory(ctx context.Context, conn *bedrockagentcorecontrol.Client, input
 	}
 
 	if out == nil || out.Memory == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Memory, nil

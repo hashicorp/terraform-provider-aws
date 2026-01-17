@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -90,7 +90,7 @@ func TestAccVPCIPv6CIDRBlockAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCIPv6CIDRBlockAssociation(), resource1Name),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCIPv6CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
 			},

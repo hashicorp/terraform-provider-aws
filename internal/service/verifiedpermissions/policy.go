@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -539,7 +539,7 @@ func findPolicyByID(ctx context.Context, conn *verifiedpermissions.Client, id, p
 	}
 
 	if out == nil || out.PolicyId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

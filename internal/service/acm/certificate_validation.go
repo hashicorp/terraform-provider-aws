@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
@@ -15,13 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -146,9 +144,8 @@ func findCertificateValidationByARN(ctx context.Context, conn *acm.Client, arn s
 	return output, nil
 }
 
-func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		// Don't call findCertificateByARN as it maps useful status codes to NotFoundError.
+func statusCertificate(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		input := acm.DescribeCertificateInput{
 			CertificateArn: aws.String(arn),
 		}
@@ -168,10 +165,10 @@ func statusCertificate(ctx context.Context, conn *acm.Client, arn string) sdkret
 }
 
 func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CertificateStatusPendingValidation),
 		Target:  enum.Slice(types.CertificateStatusIssued),
-		Refresh: statusCertificate(ctx, conn, arn),
+		Refresh: statusCertificate(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -180,9 +177,9 @@ func waitCertificateIssued(ctx context.Context, conn *acm.Client, arn string, ti
 	if output, ok := outputRaw.(*types.CertificateDetail); ok {
 		switch output.Status {
 		case types.CertificateStatusFailed:
-			tfresource.SetLastError(err, errors.New(string(output.FailureReason)))
+			retry.SetLastError(err, errors.New(string(output.FailureReason)))
 		case types.CertificateStatusRevoked:
-			tfresource.SetLastError(err, errors.New(string(output.RevocationReason)))
+			retry.SetLastError(err, errors.New(string(output.RevocationReason)))
 		}
 
 		return output, err

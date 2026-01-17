@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -97,7 +97,7 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceInferenceProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceInferenceProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

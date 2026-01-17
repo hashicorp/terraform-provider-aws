@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
@@ -406,6 +405,10 @@ func resourceFunction() *schema.Resource {
 				Optional:     true,
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
+			},
+			"response_streaming_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrRole: {
 				Type:         schema.TypeString,
@@ -862,6 +865,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
+	d.Set("response_streaming_invoke_arn", responseStreamingInvokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
@@ -918,12 +922,11 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta any)
 		setTagsOut(ctx, output.Tags)
 	}
 
-	// Currently, this functionality is only enabled in AWS Commercial partition
-	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
-	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	// Currently, this functionality is only enabled in AWS Commercial & AWS GovCloud (US)
+	// partitions and other partitions return ambiguous error codes.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); (partition == endpoints.AwsPartitionID || partition == endpoints.AwsUsGovPartitionID) && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1339,7 +1342,7 @@ func findDurableExecution(ctx context.Context, conn *lambda.Client, arn string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1402,7 +1405,7 @@ func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFun
 	}
 
 	if output == nil || output.Code == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1434,7 +1437,7 @@ func findFunctionConfiguration(ctx context.Context, conn *lambda.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1462,7 +1465,7 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1491,7 +1494,7 @@ func findFunctionConcurrency(ctx context.Context, conn *lambda.Client, input *la
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1625,7 +1628,7 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.StateReasonCode), aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -1645,7 +1648,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, name string, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
@@ -1665,7 +1668,7 @@ func waitFunctionConfigurationUpdated(ctx context.Context, conn *lambda.Client, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.GetFunctionConfigurationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastUpdateStatusReasonCode), aws.ToString(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
@@ -1831,13 +1834,12 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
 func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
-	return arn.ARN{
-		Partition: c.Partition(ctx),
-		Service:   "apigateway",
-		Region:    c.Region(ctx),
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
-	}.String()
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2015-03-31/functions/"+functionOrAliasARN+"/invocations")
+}
+
+// See https://aws.amazon.com/blogs/compute/building-responsive-apis-with-amazon-api-gateway-response-streaming/
+func responseStreamingInvokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
+	return c.RegionalARNWithAccount(ctx, "apigateway", "lambda", "path/2021-11-15/functions/"+functionOrAliasARN+"/response-streaming-invocations")
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
@@ -1865,6 +1867,8 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.EuNorth1RegionID:     {},
 		endpoints.MeSouth1RegionID:     {},
 		endpoints.SaEast1RegionID:      {},
+		endpoints.UsGovEast1RegionID:   {},
+		endpoints.UsGovWest1RegionID:   {},
 	}
 	_, ok := availableRegions[region]
 

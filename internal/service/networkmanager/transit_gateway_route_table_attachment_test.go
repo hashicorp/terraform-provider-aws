@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -72,7 +72,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

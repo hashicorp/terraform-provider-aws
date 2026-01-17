@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow
@@ -1562,7 +1562,7 @@ func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name 
 	}
 
 	if output == nil || len(output.ConnectorProfileDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)

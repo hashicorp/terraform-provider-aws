@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -72,8 +72,8 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

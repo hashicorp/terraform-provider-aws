@@ -1,11 +1,11 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dataexchange
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- AWS DataExchange API requires MD5 for asset upload integrity checking
 	"errors"
 	"fmt"
 	"io"
@@ -1027,7 +1027,7 @@ func findJobByID(ctx context.Context, conn *dataexchange.Client, jobID string) (
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -1057,6 +1057,8 @@ type nestedObjectCollectionValue[T any] interface {
 }
 
 func md5Reader(src io.Reader) (string, error) {
+	// MD5 is required by AWS DataExchange API for asset upload integrity checking.
+	// This is not used for cryptographic security purposes.
 	h := md5.New()
 	if _, err := io.Copy(h, src); err != nil {
 		return "", err

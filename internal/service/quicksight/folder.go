@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -314,7 +314,7 @@ func findFolder(ctx context.Context, conn *quicksight.Client, input *quicksight.
 	}
 
 	if output == nil || output.Folder == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Folder, nil
@@ -344,7 +344,7 @@ func findFolderPermissions(ctx context.Context, conn *quicksight.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

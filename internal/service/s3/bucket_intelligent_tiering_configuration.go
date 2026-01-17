@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -270,7 +270,7 @@ func findIntelligentTieringConfiguration(ctx context.Context, conn *s3.Client, b
 	}
 
 	if output == nil || output.IntelligentTieringConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IntelligentTieringConfiguration, nil

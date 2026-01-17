@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -38,6 +38,7 @@ const (
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags(identifierAttribute="arn")
 // @Testing(altRegionProvider=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -163,7 +163,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.CreateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.CreateKeyOutput, error) {
 		return conn.CreateKey(ctx, &input)
 	})
 

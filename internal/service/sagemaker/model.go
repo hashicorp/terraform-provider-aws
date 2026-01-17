@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -110,7 +110,7 @@ func resourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validModelDataURL,
+							ValidateFunc: validHTTPSOrS3URI,
 						},
 						"model_package_name": {
 							Type:         schema.TypeString,
@@ -160,7 +160,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -215,7 +215,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -348,7 +348,7 @@ func resourceModel() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validModelDataURL,
+							ValidateFunc: validHTTPSOrS3URI,
 						},
 						"model_package_name": {
 							Type:         schema.TypeString,
@@ -399,7 +399,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -454,7 +454,7 @@ func resourceModel() *schema.Resource {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
-													ValidateFunc: validModelDataURL,
+													ValidateFunc: validHTTPSOrS3URI,
 												},
 											},
 										},
@@ -670,7 +670,7 @@ func findModelByName(ctx context.Context, conn *sagemaker.Client, name string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

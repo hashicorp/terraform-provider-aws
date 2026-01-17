@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package computeoptimizer
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -193,14 +192,14 @@ func findEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnrollmentStatus(conn *computeoptimizer.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnrollmentStatus(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -216,17 +215,17 @@ func statusEnrollmentStatus(ctx context.Context, conn *computeoptimizer.Client) 
 }
 
 func waitEnrollmentStatusUpdated(ctx context.Context, conn *computeoptimizer.Client, targetStatus string, timeout time.Duration) (*computeoptimizer.GetEnrollmentStatusOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusPending),
 		Target:  []string{targetStatus},
-		Refresh: statusEnrollmentStatus(ctx, conn),
+		Refresh: statusEnrollmentStatus(conn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*computeoptimizer.GetEnrollmentStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

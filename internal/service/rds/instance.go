@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -3138,7 +3138,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
 		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err

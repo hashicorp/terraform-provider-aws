@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dsql
@@ -122,7 +122,7 @@ func (r *clusterPeeringResource) Create(ctx context.Context, request resource.Cr
 	output, err = waitClusterPeeringCreated(ctx, conn, data.Identifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err == nil && output.MultiRegionProperties == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -146,7 +146,7 @@ func (r *clusterPeeringResource) Read(ctx context.Context, request resource.Read
 	output, err := findClusterByID(ctx, conn, data.Identifier.ValueString())
 
 	if err == nil && output.MultiRegionProperties == nil {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if retry.NotFound(err) {

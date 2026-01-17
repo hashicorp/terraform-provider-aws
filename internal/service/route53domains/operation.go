@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53domains
@@ -29,7 +29,7 @@ func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53domains.GetOperationDetailOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 
 		return output, err
 	}
@@ -72,7 +72,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

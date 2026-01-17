@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisanalytics
@@ -37,7 +37,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalytics.Client, i
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationDetail, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -674,8 +674,8 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 				Config: testAccNFSFileShareConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfstoragegateway.ResourceNFSFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

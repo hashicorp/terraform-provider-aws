@@ -331,11 +331,34 @@ fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
-	@find ./$(PKG_NAME) -name "*.go" -type f -exec goimports -w {} \;
+	@if [ -d "./$(PKG_NAME)" ] && ls ./$(PKG_NAME)/*.go >/dev/null 2>&1; then \
+		echo "make: Processing ./$(PKG_NAME)..."; \
+		goimports -w ./$(PKG_NAME)/*.go; \
+	fi
+	@for dir in $$(find ./$(PKG_NAME) -mindepth 1 -type d | sort); do \
+		if ls $$dir/*.go >/dev/null 2>&1; then \
+			echo "make: Processing $$dir..."; \
+			goimports -w $$dir/*.go; \
+		fi; \
+	done
+
+fix-imports-core: ## Fixing core directory imports with goimports
+	@echo "make: Fixing core directory imports with goimports..."
+	@go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|' | while read pkg; do \
+		if [ -d "$$pkg" ] && ls $$pkg/*.go >/dev/null 2>&1; then \
+			echo "make: Processing $$pkg..."; \
+			goimports -w $$pkg/*.go; \
+		fi; \
+	done
 
 fmt: ## Fix Go source formatting
 	@echo "make: Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+fmt-core: ## Fix Go source formatting in core directories
+	@echo "make: Fixing core directory source code with gofmt..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/' | sed 's|github.com/hashicorp/terraform-provider-aws|.|'); \
+	gofmt -s -w $$core_pkgs
 
 # Currently required by tf-deploy compile
 fmt-check: ## Verify Go source is formatted
@@ -425,11 +448,16 @@ misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] 
 
 modern-check: prereq-go ## [CI] Check for modern Go code (best run in individual services)
 	@echo "make: Checking for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -test $(TEST)
 
 modern-fix: prereq-go ## [CI] Fix checks for modern Go code (best run in individual services)
 	@echo "make: Fixing checks for modern Go code..."
-	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -fix -test $(TEST)
+	@$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $(TEST)
+
+modern-fix-core: prereq-go ## Fix checks for modern Go code in core directories
+	@echo "make: Fixing checks for modern Go code in core directories..."
+	@core_pkgs=$$(go list ./... 2>/dev/null | grep -v '/internal/service/'); \
+	$(GO_VER) run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.21.0 -fix -test $$core_pkgs
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
@@ -479,6 +507,12 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
 
+quick-fix-core-heading: ## Just a heading for quick-fix-core
+	@echo "make: Quick fixes for core (non-service) directories..."
+	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
+
+quick-fix-core: quick-fix-core-heading copyright-fix fmt-core testacc-lint-fix-core fix-imports-core modern-fix-core semgrep-fix-core website-terrafmt-fix ## Quick fixes for core directories (non-internal/service)
+
 quick-fix-heading: ## Just a heading for quick-fix
 	@echo "make: Quick fixes..."
 	@echo "make: Multiple runs are needed if it finds errors (later targets not reached)"
@@ -497,20 +531,25 @@ provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
 		/markdown/**/*.md
 
+# The 2 smoke test targets run exactly the same set of acceptance tests.
+# The tests must pass in the AWS Commercial and AWS GovCloud (US) partitions.
+# The tests must pass on the earliest supported Terraform version (0.12.31).
+
 sane: prereq-go ## Run sane check
 	@echo "make: Sane Smoke Tests (x tests of Top y resources)"
 	@echo "make: Like 'sanity' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
+		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -519,7 +558,8 @@ sane: prereq-go ## Run sane check
 		./internal/service/ssm/... \
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
+		./internal/function/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off
 
 sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: Sanity Smoke Tests (x tests of Top y resources)"
@@ -527,21 +567,22 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccIAMRole_basic$$|^TestAccIAMRole_namePrefix$$|^TestAccIAMRole_disappears$$|^TestAccIAMRole_InlinePolicy_basic$$|^TestAccIAMPolicyDocumentDataSource_basic$$|^TestAccIAMPolicyDocumentDataSource_sourceConflicting$$|^TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON$$|^TestAccIAMRolePolicyAttachment_basic$$|^TestAccIAMRolePolicyAttachment_disappears$$|^TestAccIAMRolePolicyAttachment_Disappears_role$$|^TestAccIAMPolicy_basic$$|^TestAccIAMPolicy_policy$$|^TestAccIAMPolicy_tags$$|^TestAccIAMRolePolicy_basic$$|^TestAccIAMRolePolicy_unknownsInPolicy$$|^TestAccIAMInstanceProfile_basic$$|^TestAccIAMInstanceProfile_tags$$|^TestAccIAMPolicy_List_Basic$$|^TestAccIAMRole_Identity_Basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails1=`echo -n $$iam | grep -Fo FAIL: | wc -l | xargs` ; \
-	passes=$$(( 17-$$fails1 )) ; \
-	echo "17 of 48 complete: $$passes passed, $$fails1 failed" ; \
+	passes=$$(( 18-$$fails1 )) ; \
+	echo "18 of 54 complete: $$passes passed, $$fails1 failed" ; \
 	logs=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/logs/... \
 		./internal/service/ec2/... \
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
+		./internal/service/events/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccVPCSecurityGroup_basic$$|^TestAccVPCSecurityGroup_egressMode$$|^TestAccVPCSecurityGroup_vpcAllEgress$$|^TestAccVPCSecurityGroupRule_race$$|^TestAccVPCSecurityGroupRule_protocolChange$$|^TestAccVPCDataSource_basic$$|^TestAccVPCSubnet_basic$$|^TestAccVPC_tenancy$$|^TestAccVPCRouteTableAssociation_Subnet_basic$$|^TestAccVPCRouteTable_basic$$|^TestAccLogsLogGroup_basic$$|^TestAccLogsLogGroup_multiple$$|^TestAccKMSKey_basic$$|^TestAccELBV2TargetGroup_basic$$|^TestAccECSTaskDefinition_basic$$|^TestAccECSService_basic$$|^TestAccEventsPutEventsAction_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
-	passes=$$(( 33-$$tot_fails )) ; \
-	echo "33 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	passes=$$(( 35-$$tot_fails )) ; \
+	echo "35 of 54 complete: $$passes passed, $$tot_fails failed" ; \
 	lambda=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -549,11 +590,12 @@ sanity: prereq-go ## Run sanity check (failures allowed)
 		./internal/service/s3/... \
 		./internal/service/secretsmanager/... \
 		./internal/service/sts/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
+		./internal/function/... \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='^TestAccSTSCallerIdentityDataSource_basic$$|^TestAccMetaRegionDataSource_basic$$|^TestAccMetaRegionDataSource_endpoint$$|^TestAccMetaPartitionDataSource_basic$$|^TestAccS3Bucket_Basic_basic$$|^TestAccS3Bucket_Security_corsUpdate$$|^TestAccS3BucketPublicAccessBlock_basic$$|^TestAccS3BucketPolicy_basic$$|^TestAccS3BucketACL_updateACL$$|^TestAccS3Object_basic$$|^TestAccRoute53Record_basic$$|^TestAccRoute53Record_Latency_basic$$|^TestAccRoute53ZoneDataSource_name$$|^TestAccLambdaFunction_basic$$|^TestAccLambdaPermission_basic$$|^TestAccSecretsManagerSecret_basic$$|^TestAccSSMParameterEphemeral_basic$$|^TestAccLambdaCapacityProvider_List_Basic$$|^TestARNParseFunction_known$$' -timeout $(ACCTEST_TIMEOUT) -vet=off || true` ; \
 	fails3=`echo -n $$lambda | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2+$$fails3 )) ; \
-	passes=$$(( 48-$$tot_fails )) ; \
-	echo "48 of 48 complete: $$passes passed, $$tot_fails failed" ; \
+	passes=$$(( 54-$$tot_fails )) ; \
+	echo "54 of 54 complete: $$passes passed, $$tot_fails failed" ; \
 	if [ $$tot_fails -gt 0 ] ; then \
 		echo "Sanity tests failed"; \
 		exit 1; \
@@ -615,6 +657,28 @@ semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
+
+semgrep-fix-core: semgrep-validate ## Fix Semgrep issues in core directories
+	@echo "make: Running Semgrep checks on core directories (must have semgrep installed)..."
+	@echo "make: Applying fixes with --autofix"
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		--exclude 'internal/service/**/*.go' \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml \
@@ -851,6 +915,12 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| sort -u \
 		| xargs -I {} terrafmt fmt  --fmtcompat {}
+
+testacc-lint-fix-core: ## Fix acceptance test linter findings in core directories
+	@echo "make: Fixing Acceptance Test Linting / terrafmt in core directories..."
+	@find . -name '*_test.go' -type f ! -path './internal/service/*' ! -path './.git/*' ! -path './vendor/*' ! -path './tools/*' \
+		| sort -u \
+		| xargs -I {} terrafmt fmt --fmtcompat {}
 
 testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
@@ -1105,8 +1175,10 @@ yamllint: ## [CI] YAML Linting / yamllint
 	examples-tflint \
 	fix-constants \
 	fix-imports \
+	fix-imports-core \
 	fmt \
 	fmt-check \
+	fmt-core \
 	fumpt \
 	gen \
 	gen-check \
@@ -1128,11 +1200,14 @@ yamllint: ## [CI] YAML Linting / yamllint
 	misspell \
 	modern-check \
 	modern-fix \
+	modern-fix-core \
 	pr-target-check \
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
 	quick-fix \
+	quick-fix-core \
+	quick-fix-core-heading \
 	quick-fix-heading \
 	sane \
 	sanity \
@@ -1142,6 +1217,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
+	semgrep-fix-core \
 	semgrep-naming \
 	semgrep-naming-cae \
 	semgrep-service-naming \
@@ -1164,6 +1240,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	testacc \
 	testacc-lint \
 	testacc-lint-fix \
+	testacc-lint-fix-core \
 	testacc-short \
 	testacc-tflint \
 	testacc-tflint-dir \

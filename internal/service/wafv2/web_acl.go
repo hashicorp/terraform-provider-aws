@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -566,7 +566,7 @@ func findWebACL(ctx context.Context, conn *wafv2.Client, input *wafv2.GetWebACLI
 	}
 
 	if output == nil || output.WebACL == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

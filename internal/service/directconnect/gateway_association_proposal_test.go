@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -112,7 +112,7 @@ func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +138,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{

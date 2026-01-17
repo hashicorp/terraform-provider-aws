@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -213,7 +213,7 @@ func findAccountSettingsByID(ctx context.Context, conn *quicksight.Client, id st
 	}
 
 	if output == nil || output.AccountSettings == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountSettings, nil

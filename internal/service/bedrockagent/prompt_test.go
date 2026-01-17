@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -240,7 +240,7 @@ func TestAccBedrockAgentPrompt_disappears(t *testing.T) {
 				Config: testAccPromptConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPromptExists(ctx, resourceName, &prompt),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourcePrompt, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagent.ResourcePrompt, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

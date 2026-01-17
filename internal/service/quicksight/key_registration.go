@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -201,7 +201,7 @@ func findKeyRegistrationByID(ctx context.Context, conn *quicksight.Client, id st
 	}
 
 	if output == nil || len(output.KeyRegistration) == 0 {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KeyRegistration, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -76,7 +76,7 @@ func testAccAPICache_disappears(t *testing.T) {
 				Config: testAccAPICacheConfig_basic(rName, "SMALL", "FULL_REQUEST_CACHING", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappsync.ResourceAPICache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

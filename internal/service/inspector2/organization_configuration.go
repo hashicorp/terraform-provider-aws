@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2
@@ -189,7 +189,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 	}
 
 	if output == nil || output.AutoEnable == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

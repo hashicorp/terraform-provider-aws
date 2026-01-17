@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudtrail_test
@@ -222,7 +222,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudtrail.ResourceEventDataStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

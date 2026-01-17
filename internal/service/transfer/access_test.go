@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -133,7 +133,7 @@ func testAccAccess_disappears(t *testing.T) {
 				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceAccess(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -256,7 +256,7 @@ func findBucketABAC(ctx context.Context, conn *s3.Client, bucket, expectedBucket
 	}
 
 	if out == nil || out.AbacStatus == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.AbacStatus, nil

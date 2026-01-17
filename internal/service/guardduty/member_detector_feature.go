@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -271,7 +271,7 @@ func findMemberDetectors(ctx context.Context, client *guardduty.Client, input *g
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MemberDataSourceConfigurations, output.UnprocessedAccounts, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect
@@ -300,7 +300,7 @@ func findContactFlowModule(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.ContactFlowModule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactFlowModule, nil

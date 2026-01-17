@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx
@@ -254,7 +254,7 @@ func waitSnapshotCreated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -276,7 +276,7 @@ func waitSnapshotUpdated(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err
@@ -298,7 +298,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *fsx.Client, id string, timeo
 
 	if output, ok := outputRaw.(*awstypes.Snapshot); ok {
 		if output.LifecycleTransitionReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.LifecycleTransitionReason.Message)))
 		}
 
 		return output, err

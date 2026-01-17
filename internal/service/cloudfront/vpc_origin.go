@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -342,7 +342,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	}
 
 	if output == nil || output.VpcOrigin == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

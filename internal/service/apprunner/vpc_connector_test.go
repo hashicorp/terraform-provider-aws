@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apprunner_test
@@ -66,7 +66,7 @@ func TestAccAppRunnerVPCConnector_disappears(t *testing.T) {
 				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCConnector(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapprunner.ResourceVPCConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

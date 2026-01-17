@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -29,6 +28,8 @@ import (
 
 // @SDKResource("aws_api_gateway_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
@@ -98,7 +99,8 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	vpcLink, err := findVPCLinkByID(ctx, conn, d.Id())
 
@@ -112,7 +114,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, c, d.Id()))
 	d.Set(names.AttrDescription, vpcLink.Description)
 	d.Set(names.AttrName, vpcLink.Name)
 	d.Set("target_arns", vpcLink.TargetArns)
@@ -197,9 +199,8 @@ func findVPCLinkByID(ctx context.Context, conn *apigateway.Client, id string) (*
 	output, err := conn.GetVpcLink(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -208,14 +209,14 @@ func findVPCLinkByID(ctx context.Context, conn *apigateway.Client, id string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func vpcLinkStatus(ctx context.Context, conn *apigateway.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func vpcLinkStatus(conn *apigateway.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVPCLinkByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -234,10 +235,10 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.Client, id strin
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpcLinkStatusPending),
 		Target:     enum.Slice(types.VpcLinkStatusAvailable),
-		Refresh:    vpcLinkStatus(ctx, conn, id),
+		Refresh:    vpcLinkStatus(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
@@ -245,7 +246,7 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.Client, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigateway.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -257,18 +258,18 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.Client, id string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := sdkretry.StateChangeConf{
+	stateConf := retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpcLinkStatusPending, types.VpcLinkStatusAvailable, types.VpcLinkStatusDeleting),
 		Target:     []string{},
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
-		Refresh:    vpcLinkStatus(ctx, conn, id),
+		Refresh:    vpcLinkStatus(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigateway.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

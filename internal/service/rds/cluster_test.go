@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -141,7 +141,7 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2883,6 +2883,39 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_SnapshotIdentifier_IAMDatabaseAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster, sourceDbCluster types.DBCluster
+	var dbClusterSnapshot types.DBClusterSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_rds_cluster.source"
+	snapshotResourceName := "aws_db_cluster_snapshot.test"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_SnapshotID_IAMDatabseAuthenticationEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -4063,10 +4096,10 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 }
 
 func testAccCheckClusterExists(ctx context.Context, n string, v *types.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *types.DBCluster, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -6682,6 +6715,31 @@ resource "aws_rds_cluster" "test" {
 
   storage_encrypted = true
   kms_key_id        = aws_kms_key.test.arn
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_SnapshotID_IAMDatabseAuthenticationEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "source" {
+  cluster_identifier  = "%[1]s-source"
+  engine              = %[2]q
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  engine                              = %[2]q
+  skip_final_snapshot                 = true
+  snapshot_identifier                 = aws_db_cluster_snapshot.test.id
+  iam_database_authentication_enabled = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
 }

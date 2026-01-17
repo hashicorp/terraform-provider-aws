@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +27,8 @@ import (
 // @SDKResource("aws_api_gateway_api_key", name="API Key")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetApiKeyOutput")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIKeyCreate,
@@ -114,7 +115,8 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.APIGatewayClient(ctx)
 
 	apiKey, err := findAPIKeyByID(ctx, conn, d.Id())
 
@@ -130,7 +132,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	setTagsOut(ctx, apiKey.Tags)
 
-	d.Set(names.AttrARN, apiKeyARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiKeyARN(ctx, c, d.Id()))
 	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
@@ -233,9 +235,8 @@ func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*a
 	output, err := conn.GetApiKey(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -244,7 +245,7 @@ func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*a
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

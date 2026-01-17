@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package memorydb
@@ -548,9 +548,9 @@ func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, n
 // suffixAfterHyphen extracts the substring after the first hyphen ("-") in the input string.
 // If no hyphen is found, it returns an error.
 func suffixAfterHyphen(input string) (string, error) {
-	idx := strings.Index(input, "-")
-	if idx == -1 {
+	_, after, ok := strings.Cut(input, "-")
+	if !ok {
 		return "", errors.New("no hyphen found in the input string")
 	}
-	return input[idx+1:], nil
+	return after, nil
 }

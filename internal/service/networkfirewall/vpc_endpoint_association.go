@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -272,7 +272,7 @@ func findVPCEndpointAssociation(ctx context.Context, conn *networkfirewall.Clien
 	}
 
 	if output == nil || output.VpcEndpointAssociation == nil || output.VpcEndpointAssociationStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

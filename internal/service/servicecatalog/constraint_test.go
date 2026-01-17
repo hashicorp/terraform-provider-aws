@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -72,7 +72,7 @@ func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConstraintExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceConstraint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

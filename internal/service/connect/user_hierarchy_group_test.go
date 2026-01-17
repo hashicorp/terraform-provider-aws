@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -182,7 +182,7 @@ func testAccUserHierarchyGroup_disappears(t *testing.T) {
 				Config: testAccUserHierarchyGroupConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUserHierarchyGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

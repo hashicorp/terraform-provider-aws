@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -220,18 +220,14 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 }
 
 func testAccCheckVPCPeeringConnectionOptions(ctx context.Context, n, block string, options *awstypes.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
-	return testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, n, block, options, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, n, block, options, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx context.Context, n, block string, options *awstypes.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx context.Context, n, block string, options *awstypes.VpcPeeringConnectionOptionsDescription, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPC Peering Connection ID is set.")
 		}
 
 		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package resourcegroups_test
@@ -92,7 +92,7 @@ func TestAccResourceGroupsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfresourcegroups.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

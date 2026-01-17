@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -997,7 +997,7 @@ func findCluster(ctx context.Context, conn *eks.Client, input *eks.DescribeClust
 	}
 
 	if output == nil || output.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Cluster, nil
@@ -1069,7 +1069,7 @@ func findUpdate(ctx context.Context, conn *eks.Client, input *eks.DescribeUpdate
 	}
 
 	if output == nil || output.Update == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Update, nil
@@ -1157,7 +1157,7 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 
 	if output, ok := outputRaw.(*types.Update); ok {
 		if status := output.Status; status == types.UpdateStatusCancelled || status == types.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err
@@ -1930,7 +1930,7 @@ func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ 
 		storageConfigEnabled := storageConfig != nil && storageConfig.BlockStorage != nil && storageConfig.BlockStorage.Enabled != nil && aws.ToBool(storageConfig.BlockStorage.Enabled)
 
 		if computeConfigEnabled != kubernetesNetworkConfigEnabled || computeConfigEnabled != storageConfigEnabled {
-			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
+			return errors.New("compute_config.enabled, kubernetes_network_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
 		}
 	}
 

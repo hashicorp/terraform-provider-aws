@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift_test
@@ -199,8 +199,8 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceBuild(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfgamelift.ResourceBuild(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

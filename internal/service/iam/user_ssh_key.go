@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -229,7 +229,7 @@ func findSSHPublicKeyByThreePartKey(ctx context.Context, conn *iam.Client, id, e
 	}
 
 	if output == nil || output.SSHPublicKey == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SSHPublicKey, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -77,7 +77,7 @@ func TestAccChimeSDKVoiceSipMediaApplication_disappears(t *testing.T) {
 				Config: testAccSipMediaApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipMediaApplicationExists(ctx, resourceName, &chimeSipMediaApplication),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipMediaApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

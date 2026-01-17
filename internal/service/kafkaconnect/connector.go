@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect
@@ -606,7 +606,7 @@ func findConnectorByARN(ctx context.Context, conn *kafkaconnect.Client, arn stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -640,7 +640,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -661,7 +661,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -682,7 +682,7 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.Client, arn st
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeConnectorOutput); ok {
 		if state, stateDescription := output.ConnectorState, output.StateDescription; state == awstypes.ConnectorStateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err

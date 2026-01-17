@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2_test
@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
@@ -29,7 +27,7 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 	t.Parallel()
 
 	var certificateARN string
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	// Create an ACM certificate to be used by all the tests.
 	// It is created outside the Terraform configurations because deletion
@@ -53,7 +51,7 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 
 func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateARN *string) {
 	ctx := acctest.Context(t)
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -79,16 +77,16 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateARN *string)
 	domainNameResourceName := "aws_apigatewayv2_domain_name.test"
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(ctx, t, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
 			},
@@ -108,17 +106,17 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateARN *st
 	var v apigatewayv2.GetApiMappingOutput
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateARN),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceAPIMapping(), resourceName),
+					testAccCheckAPIMappingExists(ctx, t, resourceName, &domainName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigatewayv2.ResourceAPIMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,16 +132,16 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 	domainNameResourceName := "aws_apigatewayv2_domain_name.test"
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx),
+		CheckDestroy:             testAccCheckAPIMappingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateARN, "$context.domainName"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(ctx, t, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
@@ -151,7 +149,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateARN *string) {
 			{
 				Config: testAccAPIMappingConfig_key(rName, *certificateARN, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIMappingExists(ctx, resourceName, &domainName, &v),
+					testAccCheckAPIMappingExists(ctx, t, resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainNameResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStage, stageResourceName, names.AttrName)),
@@ -171,7 +169,7 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 		privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 		certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey, fmt.Sprintf("%s.example.com", rName))
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMClient(ctx)
 
 		input := acm.ImportCertificateInput{
 			Certificate: []byte(certificate),
@@ -192,9 +190,9 @@ func testAccCheckAPIMappingCreateCertificate(ctx context.Context, t *testing.T, 
 	}
 }
 
-func testAccCheckAPIMappingDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAPIMappingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_api_mapping" {
@@ -218,7 +216,7 @@ func testAccCheckAPIMappingDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAPIMappingExists(ctx context.Context, n string, vDomainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
+func testAccCheckAPIMappingExists(ctx context.Context, t *testing.T, n string, vDomainName *string, v *apigatewayv2.GetApiMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,7 +227,7 @@ func testAccCheckAPIMappingExists(ctx context.Context, n string, vDomainName *st
 			return fmt.Errorf("No API Gateway v2 API Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayV2Client(ctx)
 
 		domainName := rs.Primary.Attributes[names.AttrDomainName]
 		output, err := tfapigatewayv2.FindAPIMappingByTwoPartKey(ctx, conn, rs.Primary.ID, domainName)

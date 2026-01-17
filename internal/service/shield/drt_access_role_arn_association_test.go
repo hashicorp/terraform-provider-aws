@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield_test
@@ -72,7 +72,7 @@ func testAccDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 				Config: testAccDRTAccessRoleARNAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDRTAccessRoleARNAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessRoleARNAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfshield.ResourceDRTAccessRoleARNAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces_test
@@ -121,7 +121,7 @@ func testAccDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfworkspaces.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,6 +32,8 @@ import (
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true)
 // @Testing(tlsKeyDomain=rName)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -265,9 +266,8 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	output, err := conn.GetDomainName(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -276,14 +276,14 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	}
 
 	if output == nil || len(output.DomainNameConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainName(conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -299,17 +299,17 @@ func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name strin
 }
 
 func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.Client, name string, timeout time.Duration) (*apigatewayv2.GetDomainNameOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainNameStatusUpdating),
 		Target:  enum.Slice(awstypes.DomainNameStatusAvailable),
-		Refresh: statusDomainName(ctx, conn, name),
+		Refresh: statusDomainName(conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetDomainNameOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.DomainNameConfigurations[0].DomainNameStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.DomainNameConfigurations[0].DomainNameStatusMessage)))
 
 		return output, err
 	}

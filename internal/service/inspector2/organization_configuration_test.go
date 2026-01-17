@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package inspector2_test
@@ -63,7 +63,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfinspector2.ResourceOrganizationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

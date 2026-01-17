@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb_test
@@ -74,7 +74,7 @@ func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdocdb.ResourceClusterSnapshot(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdocdb.ResourceClusterSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

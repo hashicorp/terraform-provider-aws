@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -489,7 +489,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -531,7 +531,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -567,7 +567,7 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}
@@ -586,7 +586,7 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}

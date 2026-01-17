@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -211,13 +211,13 @@ func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 	}
 
 	if outputGAPP == nil {
-		return "", nil, tfresource.NewEmptyResultError(inputGAPP)
+		return "", nil, tfresource.NewEmptyResultError()
 	}
 
 	policy := aws.ToString(outputGAPP.Policy)
 
 	if policy == "" {
-		return "", nil, tfresource.NewEmptyResultError(inputGAPP)
+		return "", nil, tfresource.NewEmptyResultError()
 	}
 
 	inputGAPPS := s3control.GetAccessPointPolicyStatusInput{
@@ -244,7 +244,7 @@ func findAccessPointPolicyAndStatusByTwoPartKey(ctx context.Context, conn *s3con
 	}
 
 	if outputGAPPS == nil || outputGAPPS.PolicyStatus == nil {
-		return "", nil, tfresource.NewEmptyResultError(inputGAPPS)
+		return "", nil, tfresource.NewEmptyResultError()
 	}
 
 	return policy, outputGAPPS.PolicyStatus, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -293,7 +293,7 @@ func findUser(ctx context.Context, conn *iam.Client, input *iam.GetUserInput) (*
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil

@@ -1,11 +1,11 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 # Terraform AWS Provider Copyplop Configuration
 copyright:
   holder: "IBM Corp."
   start_year: 2014
-  current_year: 2025
+  current_year: 2026
   format: "Copyright {{.Holder}} {{.StartYear}}, {{.CurrentYear}}"
 
 license:
@@ -19,25 +19,42 @@ files:
     - "**/when_string_test.go" # standard library generated files
     - "CHANGELOG.md"
   extensions:
+    - ".css"
     - ".go"
-    - ".yml"
-    - ".yaml"
+    - ".hcl"
+    - ".html"
+    - ".js"
     - ".md"
+    - ".mjs"
+    - ".py"
+    - ".sh"
+    - ".tf"
+    - ".tfvars"
+    - ".xml"
+    - ".yaml"
+    - ".yml"
 
   comment_styles:
+    css: "/**"
     go: "//"
-    sh: "#"
-    py: "#"
     hcl: "#"
-    tf: "#"
-    yml: "#"
-    yaml: "#"
-    md: "<!--"
     html_markdown: "<!--"
+    html: "<!--"
+    js: "/**"
+    md: "<!--"
+    mjs: "/**"
+    py: "#"
+    sh: "#"
+    tf: "#"
+    tfvars: "#"
+    xml: "<!--"
+    yaml: "#"
+    yml: "#"
 
-  below_frontmatter:
-    - ".md"
-    - ".html.markdown"
+  placement_exceptions:
+    xml_declaration: true
+    markdown_heading: true
+    frontmatter: [".md", ".html.markdown"]
 
 detection:
   skip_generated: false

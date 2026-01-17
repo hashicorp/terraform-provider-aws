@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -75,7 +75,7 @@ func TestAccLightsailBucketResourceAccess_disappears(t *testing.T) {
 				Config: testAccBucketResourceAccessConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketResourceAccessExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucketResourceAccess(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceBucketResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

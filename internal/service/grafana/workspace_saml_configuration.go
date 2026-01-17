@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana
@@ -291,7 +291,7 @@ func findSAMLConfigurationByID(ctx context.Context, conn *grafana.Client, id str
 	}
 
 	if output == nil || output.Authentication == nil || output.Authentication.Saml == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Authentication.Saml.Status; status == awstypes.SamlConfigurationStatusNotConfigured {

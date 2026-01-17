@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acctest
@@ -335,6 +335,7 @@ terraform {
   provider_meta "aws" {
     user_agent = [
       "test-module/0.0.1 (test comment)",
+      "github.com/hashicorp/terraform-provider-aws/v0.0.0-acctest",
     ]
   }
 }

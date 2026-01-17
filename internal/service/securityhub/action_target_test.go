@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -60,7 +60,7 @@ func testAccActionTarget_disappears(t *testing.T) {
 				Config: testAccActionTargetConfig_identifier("testaction"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActionTargetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceActionTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsecurityhub.ResourceActionTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

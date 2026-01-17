@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -38,6 +38,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_provider_uuid"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -48,6 +49,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 					testAccCheckSAMLProviderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_provider_uuid"),
 				),
 			},
 			{
@@ -121,7 +123,7 @@ func TestAccIAMSAMLProvider_disappears(t *testing.T) {
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSAMLProvider(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceSAMLProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

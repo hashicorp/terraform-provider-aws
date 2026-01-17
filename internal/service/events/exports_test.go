@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package events
@@ -27,6 +27,8 @@ var (
 	RuleEventPatternJSONDecoder = ruleEventPatternJSONDecoder
 	RuleCreateResourceID        = ruleCreateResourceID
 	RuleParseResourceID         = ruleParseResourceID
+	EventBusARNPattern          = eventBusARNPattern
+	PartnerEventBusPattern      = partnerEventBusPattern
 	TargetParseImportID         = targetParseImportID
 	TargetStateUpgradeV0        = targetStateUpgradeV0
 )

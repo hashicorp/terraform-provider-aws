@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -586,7 +586,7 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	}
 
 	if output == nil || output.GraphqlApi == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.GraphqlApi, nil
@@ -608,7 +608,7 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
@@ -641,7 +641,7 @@ func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Details)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Details)))
 		return output, smarterr.NewError(err)
 	}
 

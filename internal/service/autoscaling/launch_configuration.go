@@ -1,11 +1,11 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- AWS AutoScaling API uses SHA1 for user_data hashing, must match AWS behavior
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -778,7 +778,7 @@ func userDataHashSum(userData string) string {
 		v = []byte(userData)
 	}
 
-	hash := sha1.Sum(v)
+	hash := sha1.Sum(v) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- AWS AutoScaling API uses SHA1 for user_data hashing, must match AWS behavior
 	return hex.EncodeToString(hash[:])
 }
 

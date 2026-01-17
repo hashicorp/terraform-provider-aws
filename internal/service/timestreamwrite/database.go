@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite
@@ -181,7 +181,7 @@ func findDatabaseByName(ctx context.Context, conn *timestreamwrite.Client, name 
 	}
 
 	if output == nil || output.Database == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Database, nil

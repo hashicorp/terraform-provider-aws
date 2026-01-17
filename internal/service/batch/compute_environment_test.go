@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -231,7 +231,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

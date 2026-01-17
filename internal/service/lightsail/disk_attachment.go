@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -211,7 +211,7 @@ func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Client, id stri
 	disk := out.Disk
 
 	if disk == nil || !aws.ToBool(disk.IsAttached) || aws.ToString(disk.Name) != dName || aws.ToString(disk.AttachedTo) != iName {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Disk, nil

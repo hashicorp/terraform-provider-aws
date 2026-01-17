@@ -201,7 +201,7 @@ The conditions block has 4 arguments `type`, `operator`, `key`, `value`. Setting
 
 The following arguments are available:
 
-* `type` (Required) - Valid values include: `account`, `any`, `tag-value`, `tag-name`, `tag-exists`, `resource-id`, `region`, `attachment-type`. Note: `account-id` is deprecated in favor of `account` in policy version `2025.11` and later.
+* `type` (Required) - Valid values include: `account-id`, `any`, `tag-value`, `tag-name`, `tag-exists`, `resource-id`, `region`, `attachment-type`.
 * `operator` (Optional) - Valid values include: `equals`, `not-equals`, `contains`, `begins-with`.
 * `key` (Optional) - string value
 * `value` (Optional) - string value
@@ -272,6 +272,7 @@ The following arguments are available:
 * `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment ids.
 * `edge_location_association` (Optional) - Associates routing policies with specific edge location pairs. Available in policy version `2025.11` and later. Detailed below.
 * `mode` (Optional) - String. When `action` is `share`, a `mode` value of `attachment-route` places the attachment and return routes in each of the `share_with` segments. When `action` is `send-via`, indicates the mode used for packets. Valid values: `attachment-route`, `single-hop`, `dual-hop`.
+* `routing_policy_names` (Optional) - A list of routing policy names to apply to segment sharing. The routing policies control how routes are propagated between the shared segments. Only applicable when `action` is `share`. Available in policy version `2025.11` and later.
 * `segment` (Optional) - Name of the segment.
 * `share_with` (Optional) - A list of strings to share with. Must be a substring is all segments. Valid values include: `["*"]` or `["<segment-names>"]`.
 * `share_with_except` (Optional) - A set subtraction of segments to not share with.

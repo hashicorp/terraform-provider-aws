@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray_test
@@ -120,7 +120,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

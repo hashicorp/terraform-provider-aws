@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -324,7 +324,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

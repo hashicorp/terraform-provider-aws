@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -864,12 +864,15 @@ func newWrappedListResourceFramework(spec *inttypes.ServicePackageFrameworkListR
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(framework.Lister); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParams]); ok {
 		if isRegionOverrideEnabled {
 			v.AppendResultInterceptor(listresource.SetRegionInterceptor())
 		}
 
 		v.AppendResultInterceptor(listresource.IdentityInterceptor(spec.Identity.Attributes))
+
+		// interceptor to set default types for tags, tags_all, and timeouts objects
+		v.AppendResultInterceptor(listresource.DefaultObjectInterceptor())
 
 		if !tfunique.IsHandleNil(spec.Tags) {
 			v.AppendResultInterceptor(listresource.TagsInterceptor(spec.Tags))
@@ -991,9 +994,9 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 		v.SetIdentitySpec(spec.Identity)
 	}
 
-	if v, ok := inner.(inttypes.SDKv2Tagger); ok {
+	if v, ok := inner.(framework.Lister[listresource.InterceptorParamsSDK]); ok {
 		if !tfunique.IsHandleNil(spec.Tags) {
-			v.SetTagsSpec(spec.Tags)
+			v.AppendResultInterceptor(listresource.TagsInterceptorSDK(spec.Tags))
 		}
 	}
 

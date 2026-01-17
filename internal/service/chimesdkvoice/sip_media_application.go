@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice
@@ -196,7 +196,7 @@ func findSIPMediaApplicationByID(ctx context.Context, conn *chimesdkvoice.Client
 	}
 
 	if resp == nil || resp.SipMediaApplication == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

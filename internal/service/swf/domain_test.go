@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package swf_test
@@ -82,7 +82,7 @@ func TestAccSWFDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, t, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfswf.ResourceDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfswf.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

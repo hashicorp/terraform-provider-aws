@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -218,7 +218,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Listener, nil

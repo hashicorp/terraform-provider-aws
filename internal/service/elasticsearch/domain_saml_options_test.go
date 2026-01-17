@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -67,7 +67,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -92,7 +92,7 @@ func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelasticsearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -185,7 +185,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 	}
 
 	if out == nil || out.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Subscription, nil

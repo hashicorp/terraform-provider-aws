@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -107,11 +107,31 @@ func resourceFilter() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidStringDateOrPositiveInt,
 									},
+									"matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
+									},
 									"not_equals": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"not_matches": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MinItems: 1,
+										MaxItems: 5,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 512),
+										},
 									},
 								},
 							},
@@ -363,6 +383,26 @@ func expandFindingCriteria(raw []any) (*awstypes.FindingCriteria, error) {
 				condition.LessThanOrEqual = aws.Int64(i)
 			}
 		}
+		if x, ok := typedCriterion["matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.Matches = foo
+			}
+		}
+		if x, ok := typedCriterion["not_matches"]; ok {
+			if v, ok := x.([]any); ok && len(v) > 0 {
+				foo := make([]string, len(v))
+				for i := range v {
+					s := v[i].(string)
+					foo[i] = s
+				}
+				condition.NotMatches = foo
+			}
+		}
 		criteria[field] = condition
 	}
 
@@ -405,6 +445,12 @@ func flattenFindingCriteria(findingCriteriaRemote *awstypes.FindingCriteria) []a
 		}
 		if v := aws.ToInt64(conditions.LessThanOrEqual); v > 0 {
 			criterion["less_than_or_equal"] = flattenConditionIntField(field, v)
+		}
+		if len(conditions.Matches) > 0 {
+			criterion["matches"] = conditions.Matches
+		}
+		if len(conditions.NotMatches) > 0 {
+			criterion["not_matches"] = conditions.NotMatches
 		}
 		flatCriteria = append(flatCriteria, criterion)
 	}

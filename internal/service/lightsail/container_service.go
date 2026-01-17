@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail
@@ -470,10 +470,24 @@ func flattenContainerServicePowerValues(t []types.ContainerServicePowerName) []s
 }
 
 func FindContainerServiceByName(ctx context.Context, conn *lightsail.Client, serviceName string) (*types.ContainerService, error) {
-	input := &lightsail.GetContainerServicesInput{
+	input := lightsail.GetContainerServicesInput{
 		ServiceName: aws.String(serviceName),
 	}
 
+	return findContainerService(ctx, conn, &input)
+}
+
+func findContainerService(ctx context.Context, conn *lightsail.Client, input *lightsail.GetContainerServicesInput) (*types.ContainerService, error) {
+	output, err := findContainerServices(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findContainerServices(ctx context.Context, conn *lightsail.Client, input *lightsail.GetContainerServicesInput) ([]types.ContainerService, error) {
 	output, err := conn.GetContainerServices(ctx, input)
 
 	if IsANotFoundError(err) {
@@ -487,13 +501,9 @@ func FindContainerServiceByName(ctx context.Context, conn *lightsail.Client, ser
 		return nil, err
 	}
 
-	if output == nil || len(output.ContainerServices) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	if count := len(output.ContainerServices); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.ContainerServices[0], nil
+	return output.ContainerServices, nil
 }

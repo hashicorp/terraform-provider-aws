@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -1378,7 +1378,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil

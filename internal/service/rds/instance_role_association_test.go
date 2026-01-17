@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -82,7 +82,7 @@ func TestAccRDSInstanceRoleAssociation_disappears(t *testing.T) {
 				Config: testAccInstanceRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceRoleAssociationExists(ctx, resourceName, &dbInstanceRole1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceRoleAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstanceRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

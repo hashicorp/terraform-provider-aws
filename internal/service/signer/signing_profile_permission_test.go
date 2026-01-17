@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer_test
@@ -74,7 +74,7 @@ func TestAccSignerSigningProfilePermission_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsigner.ResourceSigningProfilePermission(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfilePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

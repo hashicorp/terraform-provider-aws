@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh
@@ -1148,7 +1148,7 @@ func findVirtualNode(ctx context.Context, conn *appmesh.Client, input *appmesh.D
 	}
 
 	if output == nil || output.VirtualNode == nil || output.VirtualNode.Metadata == nil || output.VirtualNode.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualNode, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice
@@ -457,7 +457,7 @@ func waitOrganizationConformancePackCreated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -477,7 +477,7 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}
@@ -498,7 +498,7 @@ func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configser
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.OrganizationConformancePackStatus); ok {
-		tfresource.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
+		retry.SetLastError(err, organizationConformancePackStatusError(ctx, conn, output))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -55,8 +57,7 @@ func (t setTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t setTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("SetTypeOf[%T]", zero)
+	return fmt.Sprintf("SetTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (basetypes.SetValuable, diag.Diagnostics) {
@@ -136,6 +137,20 @@ func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 	}
 
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
+}
+
+// IsFullyKnown returns true if `v` all its elements are known.
+func (v SetValueOf[T]) IsFullyKnown() bool {
+	switch {
+	case v.IsUnknown():
+		return false
+	case v.IsNull():
+		return true
+	default:
+		return tfslices.All(v.Elements(), func(v attr.Value) bool {
+			return !v.IsUnknown()
+		})
+	}
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {

@@ -1,10 +1,10 @@
-# Copyright IBM Corp. 2014, 2025
+# Copyright IBM Corp. 2014, 2026
 # "SPDX-License-Identifier: MPL-2.0"
 
 site_name: Terraform AWS Provider - Contributor Guide
 site_description: 'Contributor documentation and reference for the
                    Terraform AWS Provider'
-copyright: HashiCorp
+copyright: IBM Corp.
 repo_name: hashicorp/terraform-provider-aws
 repo_url: https://github.com/hashicorp/terraform-provider-aws
 edit_uri: "https://github.com/hashicorp/terraform-provider-aws/tree/main/docs"
@@ -37,8 +37,9 @@ nav:
       - Acceptance Test Environment Variables: acc-test-environment-variables.md
       - AI Agents: ai-agents.md
       - AI Agent Guides:
-          - ARN-Based Resource Identity: ai-agent-guides/arn-based-resource-identity.md
-          - Parameterized Resource Identity: ai-agent-guides/parameterized-resource-identity.md
+          - Go-VCR: ai-agent-guides/go-vcr-migration.md
+          - Resource Identity (ARN-based): ai-agent-guides/arn-based-resource-identity.md
+          - Resource Identity (Parameterized): ai-agent-guides/parameterized-resource-identity.md
           - Smarterr: ai-agent-guides/smarterr.md
       - AWS SDK Go Base: aws-sdk-go-base.md
       - Core Services: core-services.md

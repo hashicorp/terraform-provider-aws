@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses
@@ -141,7 +141,7 @@ func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client,
 	}
 
 	if output == nil || output.MailFromDomainAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MailFromDomainAttributes, nil

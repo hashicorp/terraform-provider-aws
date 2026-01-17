@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -129,7 +129,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Policy = aws.String(v.(string))
 	}
 
-	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, iamPropagationTimeout, func(ctx context.Context) (*kms.ReplicateKeyOutput, error) {
 		// Replication is initiated in the primary key's Region.
 		return conn.ReplicateKey(ctx, &input, func(o *kms.Options) {
 			o.Region = primaryKeyARN.Region

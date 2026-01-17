@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package gamelift
@@ -259,7 +259,7 @@ func findScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	}
 
 	if output == nil || output.Script == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Script, nil

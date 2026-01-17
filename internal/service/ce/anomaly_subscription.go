@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ce
@@ -247,7 +247,7 @@ func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client
 	}
 
 	if output == nil || len(output.AnomalySubscriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.AnomalySubscriptions[0], nil

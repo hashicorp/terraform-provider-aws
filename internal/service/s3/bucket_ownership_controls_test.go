@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -64,7 +64,7 @@ func TestAccS3BucketOwnershipControls_disappears(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, string(types.ObjectOwnershipBucketOwnerPreferred)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketOwnershipControls(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketOwnershipControls(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +88,7 @@ func TestAccS3BucketOwnershipControls_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, string(types.ObjectOwnershipBucketOwnerPreferred)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), s3BucketResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), s3BucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

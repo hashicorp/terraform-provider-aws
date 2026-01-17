@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ce
@@ -127,7 +127,7 @@ func findCostAllocationTagByTagKey(ctx context.Context, conn *costexplorer.Clien
 	}
 
 	if output == nil || len(output.CostAllocationTags) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.CostAllocationTags[0], nil

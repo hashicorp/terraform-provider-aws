@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -54,6 +54,10 @@ func resourceSAMLProvider() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1000, 10000000),
+			},
+			"saml_provider_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -136,6 +140,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
+	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
@@ -208,7 +213,7 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

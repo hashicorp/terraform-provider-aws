@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -719,7 +719,7 @@ func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) 
 	}
 
 	if inttypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.State; state == types.WorkspaceDirectoryStateDeregistered {
@@ -789,7 +789,7 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}
@@ -815,7 +815,7 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

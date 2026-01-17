@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -194,7 +194,7 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckVolumeAttachmentInstanceExists(ctx, "aws_instance.test", &i),
 					testAccCheckVolumeExists(ctx, "aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -198,7 +198,7 @@ func findUserCustomPermissionByThreePartKey(ctx context.Context, conn *quicksigh
 	}
 
 	if aws.ToString(output.CustomPermissionsName) == "" {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CustomPermissionsName, nil

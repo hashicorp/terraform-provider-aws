@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer
@@ -227,7 +227,7 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 	}
 
 	if output == nil || output.ArchiveRule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ArchiveRule, nil

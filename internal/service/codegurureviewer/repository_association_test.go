@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codegurureviewer_test
@@ -199,7 +199,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodegurureviewer.ResourceRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

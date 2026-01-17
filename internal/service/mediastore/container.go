@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package mediastore
@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mediastore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -142,8 +141,8 @@ func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta a
 	return diags
 }
 
-func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func containerRefreshStatusFunc(conn *mediastore.Client, cn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		resp, err := findContainerByName(ctx, conn, cn)
 
 		if retry.NotFound(err) {
@@ -166,9 +165,8 @@ func findContainerByName(ctx context.Context, conn *mediastore.Client, id string
 	output, err := conn.DescribeContainer(ctx, input)
 
 	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -177,17 +175,17 @@ func findContainerByName(ctx context.Context, conn *mediastore.Client, id string
 	}
 
 	if output == nil || output.Container == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Container, nil
 }
 
 func waitContainerActive(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ContainerStatusCreating),
 		Target:     enum.Slice(awstypes.ContainerStatusActive),
-		Refresh:    containerRefreshStatusFunc(ctx, conn, id),
+		Refresh:    containerRefreshStatusFunc(conn, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -202,10 +200,10 @@ func waitContainerActive(ctx context.Context, conn *mediastore.Client, id string
 }
 
 func waitContainerDeleted(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ContainerStatusDeleting),
 		Target:     []string{},
-		Refresh:    containerRefreshStatusFunc(ctx, conn, id),
+		Refresh:    containerRefreshStatusFunc(conn, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

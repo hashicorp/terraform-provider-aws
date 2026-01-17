@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,7 +19,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -33,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -47,6 +50,7 @@ const (
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -66,11 +70,8 @@ func resourceTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validStreamSpec(diff)
-			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				return validateTableAttributes(diff)
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				return validateTableAttributes(ctx, diff, meta)
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
@@ -98,25 +99,6 @@ func resourceTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
-				if v := diff.Get("restore_source_name"); v != "" {
-					return nil
-				}
-
-				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
-					diff.Get("restore_source_table_arn") != "" {
-					return nil
-				}
-
-				var errs []error
-				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				if err := validateProvisionedThroughputField(diff, "write_capacity"); err != nil {
-					errs = append(errs, err)
-				}
-				return errors.Join(errs...)
-			},
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta any) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
@@ -143,8 +125,20 @@ func resourceTable() *schema.Resource {
 
 				return false
 			}),
-			validateWarmThroughputCustomDiff,
-			validateTTLCustomDiff,
+			suppressTableWarmThroughputDefaults,
+			customDiffGlobalSecondaryIndex,
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				rs := diff.GetRawState()
+				if rs.IsNull() {
+					return nil
+				}
+
+				if diff.HasChange("attribute") && !diff.HasChange("global_secondary_index") {
+					return diff.Clear("attribute")
+				}
+
+				return nil
+			},
 		),
 
 		SchemaVersion: 1,
@@ -188,11 +182,32 @@ func resourceTable() *schema.Resource {
 				"global_secondary_index": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"hash_key": {
-								Type:     schema.TypeString,
-								Required: true,
+								Type:       schema.TypeString,
+								Optional:   true,
+								Computed:   true,
+								Deprecated: "hash_key is deprecated. Use key_schema instead.",
+							},
+							"key_schema": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"attribute_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"key_type": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.KeyType](),
+										},
+									},
+								},
 							},
 							names.AttrName: {
 								Type:     schema.TypeString,
@@ -210,8 +225,9 @@ func resourceTable() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.ProjectionType](),
 							},
 							"range_key": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:       schema.TypeString,
+								Optional:   true,
+								Deprecated: "range_key is deprecated. Use key_schema instead.",
 							},
 							"read_capacity": {
 								Type:     schema.TypeInt,
@@ -551,6 +567,14 @@ func resourceTable() *schema.Resource {
 					ConflictsWith: []string{"on_demand_throughput"},
 				},
 			}
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			validateGlobalSecondaryIndexes,
+			validateStreamSpecification,
+			validateProvisionedThroughputField(cty.GetAttrPath("read_capacity")),
+			validateProvisionedThroughputField(cty.GetAttrPath("write_capacity")),
+			validateTTLList,
 		},
 	}
 }
@@ -2012,14 +2036,19 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			idxName := m[names.AttrName].(string)
 
 			c := awstypes.CreateGlobalSecondaryIndexAction{
-				IndexName:             aws.String(idxName),
-				KeySchema:             expandKeySchema(m),
-				ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
-				Projection:            expandProjection(m),
+				IndexName:  aws.String(idxName),
+				KeySchema:  expandKeySchema(m),
+				Projection: expandProjection(m),
 			}
 
-			if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
-				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			switch billingMode {
+			case awstypes.BillingModeProvisioned:
+				c.ProvisionedThroughput = expandProvisionedThroughput(m, billingMode)
+
+			case awstypes.BillingModePayPerRequest:
+				if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+					c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+				}
 			}
 
 			if v, ok := m["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2045,8 +2074,8 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
-			oldOnDemandThroughput := &awstypes.OnDemandThroughput{}
-			newOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			var oldOnDemandThroughput *awstypes.OnDemandThroughput
+			var newOnDemandThroughput *awstypes.OnDemandThroughput
 			if v, ok := oldMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
 				oldOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
 			}
@@ -2084,84 +2113,61 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
 
-			oldAttributes, err := stripCapacityAttributes(oldMap)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripNonKeyAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripOnDemandThroughputAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			oldAttributes, err = stripWarmThroughputAttributes(oldAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err := stripCapacityAttributes(newMap)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripNonKeyAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripOnDemandThroughputAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			newAttributes, err = stripWarmThroughputAttributes(newAttributes)
-			if err != nil {
-				return ops, err
-			}
-			gsiNeedsRecreate := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes) || warmThroughPutDecreased
+			recreateAttributesChanged := checkIfGSIRecreateAttributesChanged(oldMap, newMap)
 
-			// One step in most cases, an extra step in case of warmThroughputChanged without recreation necessity:
-			if (capacityChanged) && !gsiNeedsRecreate && billingMode == awstypes.BillingModeProvisioned {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
-					},
-				}
-				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !gsiNeedsRecreate && billingMode == awstypes.BillingModePayPerRequest {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:          aws.String(idxName),
-						OnDemandThroughput: newOnDemandThroughput,
-					},
-				}
-				ops = append(ops, update)
-			} else if gsiNeedsRecreate {
-				// Other attributes cannot be updated
+			gsiNeedsRecreate := nonKeyAttributesChanged || recreateAttributesChanged || warmThroughPutDecreased
+
+			if gsiNeedsRecreate {
 				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
 					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
 						IndexName: aws.String(idxName),
 					},
 				})
 
-				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
-					Create: &awstypes.CreateGlobalSecondaryIndexAction{
-						IndexName:             aws.String(idxName),
-						KeySchema:             expandKeySchema(newMap),
-						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
-						Projection:            expandProjection(newMap),
-						WarmThroughput:        newWarmThroughput,
-					},
-				})
-			}
-			// Separating the WarmThroughput updates from the others
-			if !gsiNeedsRecreate && warmThroughputChanged {
-				update := awstypes.GlobalSecondaryIndexUpdate{
-					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
-						IndexName:      aws.String(idxName),
-						WarmThroughput: newWarmThroughput,
-					},
+				c := awstypes.CreateGlobalSecondaryIndexAction{
+					IndexName:      aws.String(idxName),
+					KeySchema:      expandKeySchema(newMap),
+					Projection:     expandProjection(newMap),
+					WarmThroughput: newWarmThroughput,
 				}
-				ops = append(ops, update)
+				switch billingMode {
+				case awstypes.BillingModeProvisioned:
+					c.ProvisionedThroughput = expandProvisionedThroughput(newMap, billingMode)
+
+				case awstypes.BillingModePayPerRequest:
+					c.OnDemandThroughput = newOnDemandThroughput
+				}
+				ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
+					Create: &c,
+				})
+			} else {
+				if capacityChanged && billingMode == awstypes.BillingModeProvisioned {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:             aws.String(idxName),
+							ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
+						},
+					}
+					ops = append(ops, update)
+				} else if onDemandThroughputChanged && billingMode == awstypes.BillingModePayPerRequest {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:          aws.String(idxName),
+							OnDemandThroughput: newOnDemandThroughput,
+						},
+					}
+					ops = append(ops, update)
+				}
+				// Separating the WarmThroughput updates from the others
+				if warmThroughputChanged {
+					update := awstypes.GlobalSecondaryIndexUpdate{
+						Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+							IndexName:      aws.String(idxName),
+							WarmThroughput: newWarmThroughput,
+						},
+					}
+					ops = append(ops, update)
+				}
 			}
 		} else {
 			idxName := oldName
@@ -2173,6 +2179,33 @@ func updateDiffGSI(oldGsi, newGsi []any, billingMode awstypes.BillingMode) ([]aw
 		}
 	}
 	return ops, nil
+}
+
+// checkIfNonKeyAttributesChanged returns true if non_key_attributes between old map and new map are different
+func checkIfNonKeyAttributesChanged(oldMap, newMap map[string]any) bool {
+	oldNonKeyAttributes, oldNkaExists := oldMap["non_key_attributes"].(*schema.Set)
+	newNonKeyAttributes, newNkaExists := newMap["non_key_attributes"].(*schema.Set)
+
+	if oldNkaExists && newNkaExists {
+		return !oldNonKeyAttributes.Equal(newNonKeyAttributes)
+	}
+
+	return oldNkaExists != newNkaExists
+}
+
+func checkIfGSIRecreateAttributesChanged(oldMap, newMap map[string]any) bool {
+	oldAttributes := stripGSIUpdatableAttributes(oldMap)
+
+	newAttributes := stripGSIUpdatableAttributes(newMap)
+
+	oHk, oOk := oldAttributes["hash_key"]
+	nHk, nOk := newAttributes["hash_key"]
+	if oOk && nOk && oHk == nHk && oHk != "" {
+		delete(oldAttributes, "key_schema")
+		delete(newAttributes, "key_schema")
+	}
+
+	return !reflect.DeepEqual(oldAttributes, newAttributes)
 }
 
 func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) error {
@@ -2203,7 +2236,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.Client, tableName string) e
 }
 
 func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string, tfList []any, globalTableWitnessRegionName string, timeout time.Duration) error {
-	var g multierror.Group
+	var g tfsync.Group
 
 	var replicaDeletes []awstypes.ReplicationGroupUpdate
 	for _, tfMapRaw := range tfList {
@@ -2310,7 +2343,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				continue
 			}
 
-			g.Go(func() error {
+			g.Go(ctx, func(ctx context.Context) error {
 				input := &dynamodb.UpdateTableInput{
 					TableName: aws.String(tableName),
 					ReplicaUpdates: []awstypes.ReplicationGroupUpdate{
@@ -2359,7 +2392,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 				return nil
 			})
 		}
-		return g.Wait().ErrorOrNil()
+		return g.Wait(ctx)
 	}
 }
 
@@ -2608,20 +2641,34 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	for _, g := range gsi {
 		gsi := make(map[string]any)
 
+		gsi[names.AttrName] = aws.ToString(g.IndexName)
+
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.ToInt64(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.ToInt64(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi[names.AttrName] = aws.ToString(g.IndexName)
 		}
+
+		gsi["key_schema"] = flattenKeySchema(g.KeySchema)
+
+		var hashKeys []string
+		var rangeKeys []string
 
 		for _, attribute := range g.KeySchema {
 			if attribute.KeyType == awstypes.KeyTypeHash {
-				gsi["hash_key"] = aws.ToString(attribute.AttributeName)
+				hashKeys = append(hashKeys, aws.ToString(attribute.AttributeName))
 			}
-
 			if attribute.KeyType == awstypes.KeyTypeRange {
-				gsi["range_key"] = aws.ToString(attribute.AttributeName)
+				rangeKeys = append(rangeKeys, aws.ToString(attribute.AttributeName))
 			}
+		}
+
+		// Set single values or lists based on count
+		if len(hashKeys) == 1 {
+			gsi["hash_key"] = hashKeys[0]
+		}
+
+		if len(rangeKeys) == 1 {
+			gsi["range_key"] = rangeKeys[0]
 		}
 
 		if g.Projection != nil {
@@ -2641,6 +2688,19 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 	}
 
 	return output
+}
+
+func flattenKeySchema(elements []awstypes.KeySchemaElement) []map[string]any {
+	result := make([]map[string]any, len(elements))
+
+	for i, attribute := range elements {
+		result[i] = map[string]any{
+			"attribute_name": attribute.AttributeName,
+			"key_type":       attribute.KeyType,
+		}
+	}
+
+	return result
 }
 
 func flattenTableServerSideEncryption(description *awstypes.SSEDescription) []any {
@@ -2879,14 +2939,19 @@ func expandImportTable(data map[string]any) *dynamodb.ImportTableInput {
 
 func expandGlobalSecondaryIndex(data map[string]any, billingMode awstypes.BillingMode) *awstypes.GlobalSecondaryIndex {
 	output := awstypes.GlobalSecondaryIndex{
-		IndexName:             aws.String(data[names.AttrName].(string)),
-		KeySchema:             expandKeySchema(data),
-		Projection:            expandProjection(data),
-		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
+		IndexName:  aws.String(data[names.AttrName].(string)),
+		KeySchema:  expandKeySchema(data),
+		Projection: expandProjection(data),
 	}
 
-	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
-		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	switch billingMode {
+	case awstypes.BillingModeProvisioned:
+		output.ProvisionedThroughput = expandProvisionedThroughput(data, billingMode)
+
+	case awstypes.BillingModePayPerRequest:
+		if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+			output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+		}
 	}
 
 	if v, ok := data["warm_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
@@ -2938,20 +3003,39 @@ func expandProjection(data map[string]any) *awstypes.Projection {
 }
 
 func expandKeySchema(data map[string]any) []awstypes.KeySchemaElement {
-	keySchema := []awstypes.KeySchemaElement{}
+	var keySchema []awstypes.KeySchemaElement
 
-	if v, ok := data["hash_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, awstypes.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       awstypes.KeyTypeHash,
-		})
+	hKeys, hKsok := data["key_schema"].([]any)
+	if hKsok {
+		for _, v := range hKeys {
+			element := v.(map[string]any)
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(element["attribute_name"].(string)),
+				KeyType:       awstypes.KeyType(element["key_type"].(string)),
+			})
+		}
 	}
 
-	if v, ok := data["range_key"]; ok && v != nil && v != "" {
-		keySchema = append(keySchema, awstypes.KeySchemaElement{
-			AttributeName: aws.String(v.(string)),
-			KeyType:       awstypes.KeyTypeRange,
-		})
+	hKey, hKok := data["hash_key"]
+	if hKok {
+		if (hKey != nil && hKey != "") && (len(hKeys) == 0) {
+			// use hash_key
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(hKey.(string)),
+				KeyType:       awstypes.KeyTypeHash,
+			})
+		}
+	}
+
+	rKey, rKok := data["range_key"]
+	if rKok {
+		if rKey != nil && rKey != "" {
+			// use range_key
+			keySchema = append(keySchema, awstypes.KeySchemaElement{
+				AttributeName: aws.String(rKey.(string)),
+				KeyType:       awstypes.KeyTypeRange,
+			})
+		}
 	}
 
 	return keySchema
@@ -3062,10 +3146,11 @@ func expandS3BucketSource(data map[string]any) *awstypes.S3BucketSource {
 
 // validators
 
-func validateTableAttributes(d *schema.ResourceDiff) error {
+func validateTableAttributes(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+	c := meta.(*conns.AWSClient)
+	conn := c.DynamoDBClient(ctx)
 	// Collect all indexed attributes
 	indexedAttributes := map[string]bool{}
-
 	if v, ok := d.GetOk("hash_key"); ok {
 		indexedAttributes[v.(string)] = true
 	}
@@ -3080,28 +3165,63 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			indexedAttributes[rangeKey] = true
 		}
 	}
-	if v, ok := d.GetOk("global_secondary_index"); ok {
-		indexes := v.(*schema.Set).List()
-		for _, idx := range indexes {
-			index := idx.(map[string]any)
 
-			hashKey := index["hash_key"].(string)
-			indexedAttributes[hashKey] = true
+	// schema.ResourceDiff.GetOk() has a bug when retrieving a list inside a set
+	planRaw := d.GetRawPlan()
+	if planRaw.IsKnown() && !planRaw.IsNull() {
+		planGSI := planRaw.GetAttr("global_secondary_index")
+		if planGSI.IsKnown() && !planGSI.IsNull() {
+			for v := range tfcty.ValueElementValues(planGSI) {
+				hashKey := v.GetAttr("hash_key")
+				if hashKey.IsKnown() && !hashKey.IsNull() {
+					indexedAttributes[hashKey.AsString()] = true
+				}
+				rangeKey := v.GetAttr("range_key")
+				if rangeKey.IsKnown() && !rangeKey.IsNull() {
+					indexedAttributes[rangeKey.AsString()] = true
+				}
+				keySchema := v.GetAttr("key_schema")
+				if keySchema.IsKnown() && !keySchema.IsNull() {
+					for v := range tfcty.ValueElementValues(keySchema) {
+						name := v.GetAttr("attribute_name")
+						indexedAttributes[name.AsString()] = true
+					}
+				}
+			}
+		}
+	}
 
-			if rk, ok := index["range_key"].(string); ok && rk != "" {
-				indexedAttributes[rk] = true
+	// validate against remote as well, because we're using the remote state as a bridge between the table and gsi resources
+	remoteGSIAttributes := map[string]bool{}
+	name := planRaw.GetAttr(names.AttrName)
+	if name.IsKnown() {
+		table, err := findTableByName(ctx, conn, name.AsString())
+		if err != nil && !retry.NotFound(err) {
+			return err
+		}
+
+		if table != nil {
+			for _, g := range table.GlobalSecondaryIndexes {
+				for _, ks := range g.KeySchema {
+					remoteGSIAttributes[aws.ToString(ks.AttributeName)] = true
+					delete(indexedAttributes, aws.ToString(ks.AttributeName))
+				}
 			}
 		}
 	}
 
 	// Check if all indexed attributes have an attribute definition
 	attributes := d.Get("attribute").(*schema.Set).List()
+
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]any)
 		attrName := attribute[names.AttrName].(string)
 
-		if _, ok := indexedAttributes[attrName]; !ok {
+		_, ok1 := indexedAttributes[attrName]
+		_, ok2 := remoteGSIAttributes[attrName]
+
+		if !ok1 && !ok2 {
 			unindexedAttributes = append(unindexedAttributes, attrName)
 		} else {
 			delete(indexedAttributes, attrName)
@@ -3122,7 +3242,6 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 
 		errs = append(errs, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
-
 	return errors.Join(errs...)
 }
 
@@ -3150,45 +3269,191 @@ func validateGSIProvisionedThroughput(data map[string]any, billingMode awstypes.
 	return nil
 }
 
-func validateProvisionedThroughputField(diff *schema.ResourceDiff, key string) error {
-	oldBillingMode, newBillingMode := diff.GetChange("billing_mode")
-	v := diff.Get(key).(int)
-	if oldBillingMode, newBillingMode := awstypes.BillingMode(oldBillingMode.(string)), awstypes.BillingMode(newBillingMode.(string)); newBillingMode == awstypes.BillingModeProvisioned {
-		if v < provisionedThroughputMinValue {
-			// Assuming the field is ignored, likely due to autoscaling
-			if oldBillingMode == awstypes.BillingModePayPerRequest {
-				return nil
-			}
-			return fmt.Errorf("%s must be at least 1 when billing_mode is %q", key, newBillingMode)
-		}
-	} else if newBillingMode == awstypes.BillingModePayPerRequest && oldBillingMode != awstypes.BillingModeProvisioned {
-		if v != 0 {
-			return fmt.Errorf("%s can not be set when billing_mode is %q", key, awstypes.BillingModePayPerRequest)
-		}
+func validateGlobalSecondaryIndexes(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	gsisPath := cty.GetAttrPath("global_secondary_index")
+
+	gsis, err := gsisPath.Apply(req.RawConfig)
+	if err != nil {
+		resp.Diagnostics = sdkdiag.AppendFromErr(resp.Diagnostics, err)
+		return
 	}
-	return nil
+
+	for i, gsiElem := range tfcty.ValueElements(gsis) {
+		gsiElemPath := gsisPath.Index(i)
+		validateGlobalSecondaryIndex(ctx, gsiElem, gsiElemPath, &resp.Diagnostics)
+	}
 }
 
-func validateWarmThroughputCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+func validateGlobalSecondaryIndex(ctx context.Context, gsi cty.Value, gsiPath cty.Path, diags *diag.Diagnostics) {
+	keySchemaPath := gsiPath.GetAttr("key_schema")
+	keySchema := gsi.GetAttr("key_schema")
+	keySchemaIsZero := keySchema.IsKnown() && (keySchema.IsNull() || keySchema.LengthInt() == 0)
+
+	hashKey := gsi.GetAttr("hash_key")
+	hashKeyIsZero := hashKey.IsKnown() && hashKey.IsNull()
+
+	if hashKeyIsZero && keySchemaIsZero {
+		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
+			gsiPath, 0, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"),
+		))
+	} else if !hashKeyIsZero && !keySchemaIsZero {
+		*diags = append(*diags, errs.NewExactlyOneOfChildrenError(
+			gsiPath, 2, cty.GetAttrPath("key_schema"), cty.GetAttrPath("hash_key"), //nolint:mnd
+		))
+	}
+
+	rangeKey := gsi.GetAttr("range_key")
+	rangeKeyIsZero := rangeKey.IsKnown() && rangeKey.IsNull()
+
+	if !rangeKeyIsZero && !keySchemaIsZero {
+		*diags = append(*diags, errs.NewAttributeConflictsWithError(
+			gsiPath.GetAttr("range_key"),
+			keySchemaPath,
+		))
+	}
+
+	if !keySchemaIsZero {
+		validateGSIKeySchema(ctx, keySchema, keySchemaPath, diags)
+	}
+}
+
+func validateGSIKeySchema(_ context.Context, keySchema cty.Value, keySchemaPath cty.Path, diags *diag.Diagnostics) {
+	var hashCount, rangeCount int
+	var lastKeyType awstypes.KeyType
+	for i, gsi := range tfcty.ValueElements(keySchema) {
+		keyType := awstypes.KeyType(gsi.GetAttr("key_type").AsString())
+		switch keyType {
+		case awstypes.KeyTypeHash:
+			if lastKeyType == awstypes.KeyTypeRange {
+				elementPath := keySchemaPath.Index(i)
+				*diags = append(*diags, errs.NewAttributeErrorDiagnostic(
+					elementPath,
+					"Invalid Attribute Value",
+					fmt.Sprintf(`All elements of %s with "key_type" "`+string(awstypes.KeyTypeHash)+`" must be before elements with "key_type" "`+string(awstypes.KeyTypeRange)+`"`, errs.PathString(keySchemaPath)),
+				))
+			}
+			hashCount++
+
+		case awstypes.KeyTypeRange:
+			rangeCount++
+		}
+		lastKeyType = keyType
+	}
+
+	if hashCount < minNumberOfHashes || hashCount > maxNumberOfHashes {
+		*diags = append(*diags, errs.NewInvalidValueAttributeError(
+			keySchemaPath,
+			fmt.Sprintf(`The attribute %q must contain at least %d and at most %d elements with "key_type" %q, got %s`,
+				errs.PathString(keySchemaPath),
+				minNumberOfHashes, maxNumberOfHashes,
+				awstypes.KeyTypeHash,
+				strconv.Itoa(hashCount),
+			),
+		))
+	}
+
+	if rangeCount > maxNumberOfRanges {
+		*diags = append(*diags, errs.NewInvalidValueAttributeError(
+			keySchemaPath,
+			fmt.Sprintf(`The attribute %q must contain at most %d elements with "key_type" %q, got %s`,
+				errs.PathString(keySchemaPath),
+				maxNumberOfRanges,
+				awstypes.KeyTypeRange,
+				strconv.Itoa(rangeCount),
+			),
+		))
+	}
+}
+
+func validateStreamSpecification(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	streamEnabled := req.RawConfig.GetAttr("stream_enabled")
+	if !streamEnabled.IsKnown() {
+		return
+	}
+
+	streamViewType := req.RawConfig.GetAttr("stream_view_type")
+	if !streamViewType.IsKnown() {
+		return
+	}
+
+	if streamEnabled.IsNull() {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeAlsoRequiresError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+			))
+		}
+	} else if streamEnabled.True() {
+		if streamViewType.IsNull() || streamViewType.AsString() == "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeRequiredWhenError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"true",
+			))
+		}
+	} else {
+		if !streamViewType.IsNull() && streamViewType.AsString() != "" {
+			resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenWillBeError(
+				cty.GetAttrPath("stream_view_type"),
+				cty.GetAttrPath("stream_enabled"),
+				"false",
+			))
+		}
+	}
+}
+
+func validateProvisionedThroughputField(path cty.Path) schema.ValidateRawResourceConfigFunc {
+	return func(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+		v, err := path.Apply(req.RawConfig)
+		if err != nil {
+			resp.Diagnostics = sdkdiag.AppendFromErr(resp.Diagnostics, err)
+			return
+		}
+
+		if !v.IsKnown() || v.IsNull() {
+			return
+		}
+
+		billingMode := req.RawConfig.GetAttr("billing_mode")
+		if !billingMode.IsKnown() || billingMode.IsNull() {
+			return
+		}
+
+		bm := awstypes.BillingMode(billingMode.AsString())
+		value, _ := v.AsBigFloat().Int64()
+
+		switch bm {
+		case awstypes.BillingModeProvisioned:
+			if value < provisionedThroughputMinValue {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewInvalidValueAttributeCombinationError(
+					path,
+					fmt.Sprintf("Attribute %q must be at least %d when %q is %q.",
+						errs.PathString(path),
+						provisionedThroughputMinValue,
+						cty.GetAttrPath("billing_mode"),
+						string(awstypes.BillingModeProvisioned),
+					),
+				))
+			}
+
+		case awstypes.BillingModePayPerRequest:
+			if value != 0 {
+				resp.Diagnostics = append(resp.Diagnostics, errs.NewAttributeConflictsWhenError(
+					path,
+					cty.GetAttrPath("billing_mode"),
+					string(awstypes.BillingModePayPerRequest),
+				))
+			}
+		}
+	}
+}
+
+func suppressTableWarmThroughputDefaults(ctx context.Context, d *schema.ResourceDiff, meta any) error {
 	configRaw := d.GetRawConfig()
 	if !configRaw.IsKnown() || configRaw.IsNull() {
 		return nil
 	}
 
-	// Handle table-level warm throughput suppression
-	if err := suppressTableWarmThroughputDefaults(d, configRaw); err != nil {
-		return err
-	}
-
-	// Handle GSI warm throughput suppression
-	if err := suppressGSIWarmThroughputDefaults(d, configRaw); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
 	// If warm throughput is explicitly configured, don't suppress any diffs
 	if warmThroughput := configRaw.GetAttr("warm_throughput"); warmThroughput.IsKnown() && !warmThroughput.IsNull() && warmThroughput.LengthInt() > 0 {
 		return nil
@@ -3221,36 +3486,20 @@ func suppressTableWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.V
 	return nil
 }
 
-func suppressGSIWarmThroughputDefaults(d *schema.ResourceDiff, configRaw cty.Value) error {
-	// GSI warm throughput defaults are now handled in the flattenGSIWarmThroughput function
-	// by filtering out AWS default values during the read operation.
-	// This approach is more reliable than trying to suppress diffs on Set-based fields.
-	return nil
-}
-
-func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-	var diags diag.Diagnostics
-
-	configRaw := d.GetRawConfig()
-	if !configRaw.IsKnown() || configRaw.IsNull() {
-		return nil
+func validateTTLList(ctx context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+	ttl := req.RawConfig.GetAttr("ttl")
+	if !ttl.IsKnown() || ttl.IsNull() {
+		return
 	}
 
 	ttlPath := cty.GetAttrPath("ttl")
-	ttl := configRaw.GetAttr("ttl")
-	if ttl.IsKnown() && !ttl.IsNull() {
-		if ttl.LengthInt() == 1 {
-			idx := cty.NumberIntVal(0)
-			ttl := ttl.Index(idx)
-			ttlPath := ttlPath.Index(idx)
-			ttlPlantimeValidate(ttlPath, ttl, &diags)
-		}
+	for i, ttlElem := range tfcty.ValueElements(ttl) {
+		ttlElemPath := ttlPath.Index(i)
+		validateTTL(ctx, ttlElem, ttlElemPath, &resp.Diagnostics)
 	}
-
-	return sdkdiag.DiagnosticsError(diags)
 }
 
-func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+func validateTTL(_ context.Context, ttl cty.Value, ttlPath cty.Path, diags *diag.Diagnostics) {
 	attribute := ttl.GetAttr("attribute_name")
 	if !attribute.IsKnown() {
 		return
@@ -3274,8 +3523,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 		} else if attribute.AsString() == "" {
 			*diags = append(*diags, errs.NewInvalidValueAttributeErrorf(
 				ttlPath.GetAttr("attribute_name"),
-				"Attribute %q cannot have an empty value",
+				"Attribute %q cannot have an empty value when %q is \"true\"",
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
+				errs.PathString(ttlPath.GetAttr(names.AttrEnabled)),
 			))
 		}
 	}
@@ -3283,4 +3533,133 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 	// !! Not a validation error for attribute_name to be set when enabled is false !!
 	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
 	// The diff is handled by DiffSuppressFunc of attribute_name.
+}
+
+func customDiffGlobalSecondaryIndex(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	if diff.Id() == "" {
+		return nil
+	}
+	if !diff.HasChange("global_secondary_index") {
+		return nil
+	}
+
+	stateRaw := diff.GetRawState()
+	if !stateRaw.IsKnown() || stateRaw.IsNull() {
+		return nil
+	}
+	stateGSI := stateRaw.GetAttr("global_secondary_index")
+	state := collectGSI(stateGSI)
+
+	planRaw := diff.GetRawPlan()
+	if !planRaw.IsKnown() || planRaw.IsNull() {
+		return nil
+	}
+	planGSI := planRaw.GetAttr("global_secondary_index")
+	plan := collectGSI(planGSI)
+
+	// Adding or removing GSIs
+	if len(plan) != len(state) {
+		return nil
+	}
+
+	// GSI name mismatch
+	for name := range state {
+		if _, ok := plan[name]; !ok {
+			return nil
+		}
+	}
+
+	for name, vState := range state {
+		vPlan := plan[name]
+
+		for attrName := range vState.Type().AttributeTypes() {
+			s := vState.GetAttr(attrName)
+			p := vPlan.GetAttr(attrName)
+			switch attrName {
+			case "hash_key":
+				if p.IsNull() && !s.IsNull() {
+					// "key_schema" is set
+					continue // change to "key_schema" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			case "key_schema":
+				// key_schema is a block nested list, so the zero-value is an empty list
+				if p.LengthInt() == 0 && s.LengthInt() > 0 {
+					// "hash_key" is set
+					continue // change to "hash_key" will be caught by equality test
+				}
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+
+			default:
+				if !ctyValueLegacyEquals(s, p) {
+					return nil
+				}
+			}
+		}
+	}
+
+	return diff.Clear("global_secondary_index")
+}
+
+func collectGSI(gsi cty.Value) map[string]cty.Value {
+	result := make(map[string]cty.Value, gsi.LengthInt())
+	if gsi.IsKnown() && !gsi.IsNull() {
+		for v := range tfcty.ValueElementValues(gsi) {
+			name := v.GetAttr(names.AttrName)
+			result[name.AsString()] = v
+		}
+	}
+	return result
+}
+
+func ctyValueLegacyEquals(lhs, rhs cty.Value) bool {
+	if lhs.Equals(rhs).True() {
+		return true
+	}
+
+	if !lhs.Type().Equals(rhs.Type()) {
+		return false
+	}
+
+	switch {
+	case lhs.Type().IsSetType():
+		if rhs.IsNull() && lhs.LengthInt() == 0 {
+			return true
+		}
+		if lhs.IsNull() && rhs.LengthInt() == 0 {
+			return true
+		}
+
+	case lhs.Type().IsListType():
+		if rhs.IsNull() && lhs.LengthInt() == 0 {
+			return true
+		}
+		if lhs.IsNull() && rhs.LengthInt() == 0 {
+			return true
+		}
+
+	case lhs.Type() == cty.String:
+		if rhs.IsNull() && lhs.AsString() == "" {
+			return true
+		}
+		if lhs.IsNull() && rhs.AsString() == "" {
+			return true
+		}
+
+	case lhs.Type() == cty.Number:
+		var zero big.Float
+		if rhs.IsNull() && zero.Cmp(lhs.AsBigFloat()) == 0 {
+			return true
+		}
+		if lhs.IsNull() && zero.Cmp(rhs.AsBigFloat()) == 0 {
+			return true
+		}
+	}
+
+	return false
 }

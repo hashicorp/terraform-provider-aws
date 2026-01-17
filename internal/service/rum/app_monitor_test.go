@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rum_test
@@ -251,8 +251,8 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

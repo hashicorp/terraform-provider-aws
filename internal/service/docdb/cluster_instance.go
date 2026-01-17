@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -71,6 +72,11 @@ func resourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"certificate_rotation_restart": {
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
@@ -316,6 +322,9 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("ca_cert_identifier") {
 			input.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+			if v, null, _ := nullable.Bool(d.Get("certificate_rotation_restart").(string)).ValueBool(); !null {
+				input.CertificateRotationRestart = aws.Bool(v)
+			}
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {

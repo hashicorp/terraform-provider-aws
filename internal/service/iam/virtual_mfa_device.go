@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -63,6 +63,10 @@ func resourceVirtualMFADevice() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 512),
 			},
 			"qr_code_png": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"serial_number": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,6 +155,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set(names.AttrARN, vMFA.SerialNumber)
+	d.Set("serial_number", vMFA.SerialNumber)
 
 	path, name, err := parseVirtualMFADeviceARN(aws.ToString(vMFA.SerialNumber))
 	if err != nil {

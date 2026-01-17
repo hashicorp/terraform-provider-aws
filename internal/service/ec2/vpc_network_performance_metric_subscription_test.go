@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -71,7 +71,7 @@ func testAccNetworkPerformanceMetricSubscription_disappears(t *testing.T) {
 				Config: testAccVPCNetworkPerformanceMetricSubscription_basic(src, dst),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkPerformanceMetricSubscription(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkPerformanceMetricSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

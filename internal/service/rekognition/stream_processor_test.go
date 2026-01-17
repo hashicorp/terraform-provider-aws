@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition_test
@@ -90,7 +90,7 @@ func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 				Config: testAccStreamProcessorConfig_connectedHome(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfrekognition.ResourceStreamProcessor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

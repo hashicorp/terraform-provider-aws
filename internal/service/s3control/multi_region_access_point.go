@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control
@@ -290,7 +290,7 @@ func findMultiRegionAccessPointByTwoPartKey(ctx context.Context, conn *s3control
 	}
 
 	if output == nil || output.AccessPoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccessPoint, nil
@@ -319,7 +319,7 @@ func findMultiRegionAccessPointOperationByTwoPartKey(ctx context.Context, conn *
 	}
 
 	if output == nil || output.AsyncOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AsyncOperation, nil
@@ -359,7 +359,7 @@ func waitMultiRegionAccessPointRequestSucceeded(ctx context.Context, conn *s3con
 
 	if output, ok := outputRaw.(*types.AsyncOperation); ok {
 		if status, responseDetails := aws.ToString(output.RequestStatus), output.ResponseDetails; status == asyncOperationRequestStatusFailed && responseDetails != nil && responseDetails.ErrorDetails != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(responseDetails.ErrorDetails.Code), aws.ToString(responseDetails.ErrorDetails.Message)))
 		}
 
 		return output, err

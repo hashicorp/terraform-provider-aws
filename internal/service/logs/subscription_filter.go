@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -38,10 +39,15 @@ func resourceSubscriptionFilter() *schema.Resource {
 		DeleteWithoutTimeout: resourceSubscriptionFilterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceSubscriptionFilterImport,
+			StateContext: resourceSubscriptionFilterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"apply_on_transformed_logs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -53,6 +59,14 @@ func resourceSubscriptionFilter() *schema.Resource {
 				Optional:         true,
 				Default:          awstypes.DistributionByLogStream,
 				ValidateDiagFunc: enum.Validate[awstypes.Distribution](),
+			},
+			"emit_system_fields": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{"@aws.account", "@aws.region"}, false),
+				},
 			},
 			"filter_pattern": {
 				Type:         schema.TypeString,
@@ -93,8 +107,16 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		LogGroupName:   aws.String(logGroupName),
 	}
 
+	if v, ok := d.GetOk("apply_on_transformed_logs"); ok {
+		input.ApplyOnTransformedLogs = v.(bool)
+	}
+
 	if v, ok := d.GetOk("distribution"); ok {
 		input.Distribution = awstypes.Distribution(v.(string))
+	}
+
+	if v, ok := d.GetOk("emit_system_fields"); ok {
+		input.EmitSystemFields = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
@@ -118,6 +140,10 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.OperationAbortedException](err, "Please try again") {
+				return true, err
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Make sure you have given CloudWatch Logs permission to assume the provided role") {
 				return true, err
 			}
 
@@ -151,8 +177,10 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
+	d.Set("apply_on_transformed_logs", subscriptionFilter.ApplyOnTransformedLogs)
 	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
+	d.Set("emit_system_fields", subscriptionFilter.EmitSystemFields)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
 	d.Set(names.AttrLogGroupName, subscriptionFilter.LogGroupName)
 	d.Set(names.AttrName, subscriptionFilter.FilterName)
@@ -182,7 +210,7 @@ func resourceSubscriptionFilterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func resourceSubscriptionFilterImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourceSubscriptionFilterImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) < 2 {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <log-group-name>|<filter-name>", d.Id())

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package retry
@@ -163,9 +163,7 @@ func (conf *StateChangeConfOf[T, S]) WaitForStateContext(ctx context.Context) (T
 
 	// Timed out or Context canceled.
 	if l.Remaining() == 0 {
-		var zero T
-
-		return zero, &TimeoutError{
+		return inttypes.Zero[T](), &TimeoutError{
 			LastError:     err,
 			LastState:     string(currentState),
 			Timeout:       conf.Timeout,

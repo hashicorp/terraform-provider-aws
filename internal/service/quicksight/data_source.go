@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight
@@ -364,7 +364,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
@@ -394,7 +394,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -431,7 +431,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err
@@ -455,7 +455,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err

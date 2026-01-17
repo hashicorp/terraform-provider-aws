@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs
@@ -177,7 +177,7 @@ func findBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 	}
 
 	if output == nil || output.BackupPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackupPolicy, nil

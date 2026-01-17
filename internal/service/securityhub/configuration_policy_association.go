@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -160,7 +160,7 @@ func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.C
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -200,7 +200,7 @@ func waitConfigurationPolicyAssociationSucceeded(ctx context.Context, conn *secu
 	}
 
 	if output, ok := outputRaw.(*securityhub.GetConfigurationPolicyAssociationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.AssociationStatusMessage)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -101,8 +101,8 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,8 +110,8 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 				Config: testAccStudioSessionMappingConfig_basic2(rName, gName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

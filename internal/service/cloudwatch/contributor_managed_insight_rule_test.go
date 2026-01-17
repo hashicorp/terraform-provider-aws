@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch_test
@@ -80,7 +80,7 @@ func TestAccCloudWatchContributorManagedInsightRule_disappears(t *testing.T) {
 				Config: testAccContributorManagedInsightRuleConfig_basic(rName, templateName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContributorManagedInsightRuleExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudwatch.ResourceContributorManagedInsightRule, resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -117,7 +117,7 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfeks.ResourcePodIdentityAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfeks.ResourcePodIdentityAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

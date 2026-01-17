@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53
@@ -36,7 +36,7 @@ func findChangeByID(ctx context.Context, conn *route53.Client, id string) (*awst
 	}
 
 	if output == nil || output.ChangeInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ChangeInfo, nil

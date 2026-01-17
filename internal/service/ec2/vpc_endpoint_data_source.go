@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -69,6 +69,17 @@ func dataSourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"private_dns_preference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"private_dns_specified_domains": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -122,6 +133,11 @@ func dataSourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -135,6 +151,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_endpoint_type": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrVPCID: {
@@ -157,6 +174,8 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 				"vpc-endpoint-state": d.Get(names.AttrState).(string),
 				"vpc-id":             d.Get(names.AttrVPCID).(string),
 				"service-name":       d.Get(names.AttrServiceName).(string),
+				"vpc-endpoint-type":  d.Get("vpc_endpoint_type").(string),
+				"service-region":     d.Get("service_region").(string),
 			},
 		),
 	}
@@ -205,6 +224,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
 	serviceName := aws.ToString(vpce.ServiceName)
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", vpce.ServiceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty

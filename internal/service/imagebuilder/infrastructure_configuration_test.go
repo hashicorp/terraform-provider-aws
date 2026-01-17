@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -76,7 +76,7 @@ func TestAccImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -403,7 +403,7 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 	}
 
 	if out == nil || out.DataCellsFilter == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.DataCellsFilter, nil

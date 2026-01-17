@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -174,7 +174,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing.T)
 				Config: testAccFirewallRuleGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceFirewallRuleGroupAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceFirewallRuleGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

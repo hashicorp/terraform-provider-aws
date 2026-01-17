@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codegurureviewer
@@ -382,7 +382,7 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil
@@ -417,7 +417,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -436,7 +436,7 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

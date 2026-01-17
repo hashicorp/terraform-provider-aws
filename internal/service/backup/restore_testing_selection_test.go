@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -75,7 +75,7 @@ func TestAccBackupRestoreTestingSelection_disappears(t *testing.T) {
 				Config: testAccRestoreTestingSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingSelectionExists(ctx, resourceName, &restoretestingselection),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceRestoreTestingSelection, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingSelection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

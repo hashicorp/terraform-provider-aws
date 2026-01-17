@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -239,7 +239,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

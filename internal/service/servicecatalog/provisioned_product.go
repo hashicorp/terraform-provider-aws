@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -630,7 +630,7 @@ func findProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, in
 	}
 
 	if output == nil || output.ProvisionedProductDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -682,7 +682,7 @@ func findRecord(ctx context.Context, conn *servicecatalog.Client, input *service
 	}
 
 	if output == nil || output.RecordDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

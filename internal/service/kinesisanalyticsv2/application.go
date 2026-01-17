@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisanalyticsv2
@@ -1605,7 +1605,7 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	}
 
 	if output == nil || output.ApplicationDetail == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationDetail, nil
@@ -1719,7 +1719,7 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	}
 
 	if output == nil || output.ApplicationOperationInfoDetails == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationOperationInfoDetails, nil
@@ -1753,7 +1753,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 
 	if output, ok := outputRaw.(*awstypes.ApplicationOperationInfoDetails); ok {
 		if failureDetails := output.OperationFailureDetails; failureDetails != nil && failureDetails.ErrorInfo != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
+			retry.SetLastError(err, errors.New(aws.ToString(failureDetails.ErrorInfo.ErrorString)))
 		}
 
 		return output, err

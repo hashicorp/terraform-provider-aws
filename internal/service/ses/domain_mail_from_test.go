@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -76,7 +76,7 @@ func TestAccSESDomainMailFrom_disappears(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainMailFrom(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainMailFrom(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +101,7 @@ func TestAccSESDomainMailFrom_Disappears_identity(t *testing.T) {
 				Config: testAccDomainMailFromConfig_basic(domain, mailFromDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

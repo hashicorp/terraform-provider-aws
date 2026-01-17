@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional
@@ -165,7 +165,7 @@ func findRegexPatternSetByID(ctx context.Context, conn *wafregional.Client, id s
 	}
 
 	if output == nil || output.RegexPatternSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RegexPatternSet, nil

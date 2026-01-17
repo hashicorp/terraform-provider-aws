@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshift
@@ -12,13 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
 
 // @SDKResource("aws_redshift_authentication_profile", name="Authentication Profile")
@@ -39,16 +37,7 @@ func resourceAuthenticationProfile() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"authentication_profile_content": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"authentication_profile_content": sdkv2.JSONDocumentSchemaRequired(),
 		},
 	}
 }
@@ -58,10 +47,9 @@ func resourceAuthenticationProfileCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	authProfileName := d.Get("authentication_profile_name").(string)
-
 	input := redshift.CreateAuthenticationProfileInput{
-		AuthenticationProfileName:    aws.String(authProfileName),
 		AuthenticationProfileContent: aws.String(d.Get("authentication_profile_content").(string)),
+		AuthenticationProfileName:    aws.String(authProfileName),
 	}
 
 	out, err := conn.CreateAuthenticationProfile(ctx, &input)
@@ -101,12 +89,12 @@ func resourceAuthenticationProfileUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	input := &redshift.ModifyAuthenticationProfileInput{
-		AuthenticationProfileName:    aws.String(d.Id()),
+	input := redshift.ModifyAuthenticationProfileInput{
 		AuthenticationProfileContent: aws.String(d.Get("authentication_profile_content").(string)),
+		AuthenticationProfileName:    aws.String(d.Id()),
 	}
 
-	_, err := conn.ModifyAuthenticationProfile(ctx, input)
+	_, err := conn.ModifyAuthenticationProfile(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "modifying Redshift Authentication Profile (%s): %s", d.Id(), err)
@@ -119,17 +107,17 @@ func resourceAuthenticationProfileDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	deleteInput := redshift.DeleteAuthenticationProfileInput{
+	log.Printf("[DEBUG] Deleting Redshift Authentication Profile: %s", d.Id())
+	input := redshift.DeleteAuthenticationProfileInput{
 		AuthenticationProfileName: aws.String(d.Id()),
 	}
+	_, err := conn.DeleteAuthenticationProfile(ctx, &input)
 
-	log.Printf("[DEBUG] Deleting Redshift Authentication Profile: %s", d.Id())
-	_, err := conn.DeleteAuthenticationProfile(ctx, &deleteInput)
+	if errs.IsA[*awstypes.AuthenticationProfileNotFoundFault](err) {
+		return diags
+	}
 
 	if err != nil {
-		if errs.IsA[*awstypes.AuthenticationProfileNotFoundFault](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Authentication Profile (%s): %s", d.Id(), err)
 	}
 

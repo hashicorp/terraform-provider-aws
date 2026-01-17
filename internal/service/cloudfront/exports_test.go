@@ -1,18 +1,23 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
 
 // Exports for use in tests only.
 var (
+	ResourceAnycastIPList               = newAnycastIPListResource
 	ResourceCachePolicy                 = resourceCachePolicy
+	ResourceConnectionFunction          = newResourceConnectionFunction
+	ResourceConnectionGroup             = newConnectionGroupResource
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
 	ResourceDistribution                = resourceDistribution
+	ResourceDistributionTenant          = newDistributionTenantResource
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
+	ResourceMultiTenantDistribution     = newMultiTenantDistributionResource
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy
@@ -22,8 +27,13 @@ var (
 	ResourceTrustStore                  = newTrustStoreResource
 	ResourceVPCOrigin                   = newVPCOriginResource
 
+	FindAnycastIPListByID                      = findAnycastIPListByID
 	FindCachePolicyByID                        = findCachePolicyByID
+	FindConnectionFunctionByTwoPartKey         = findConnectionFunctionByTwoPartKey
+	FindConnectionGroupById                    = findConnectionGroupByID
+	FindConnectionGroupByRoutingEndpoint       = findConnectionGroupByRoutingEndpoint
 	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
+	FindDistributionTenantByIdentifier         = findDistributionTenantByIdentifier
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey

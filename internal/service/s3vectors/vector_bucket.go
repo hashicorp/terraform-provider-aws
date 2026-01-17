@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors
@@ -251,7 +251,7 @@ func findVectorBucket(ctx context.Context, conn *s3vectors.Client, input *s3vect
 	}
 
 	if output == nil || output.VectorBucket == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VectorBucket, nil

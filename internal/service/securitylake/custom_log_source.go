@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securitylake
@@ -185,7 +185,7 @@ func (r *customLogSourceResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateCustomLogSourceOutput, error) {
+	output, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.CreateCustomLogSourceOutput, error) {
 		return conn.CreateCustomLogSource(ctx, input)
 	})
 
@@ -269,7 +269,7 @@ func (r *customLogSourceResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteCustomLogSourceOutput, error) {
+	_, err := retryDataLakeConflictWithMutex(ctx, func(ctx context.Context) (*securitylake.DeleteCustomLogSourceOutput, error) {
 		return conn.DeleteCustomLogSource(ctx, input)
 	})
 
@@ -313,7 +313,7 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(sourceName)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 type customLogSourceResourceModel struct {

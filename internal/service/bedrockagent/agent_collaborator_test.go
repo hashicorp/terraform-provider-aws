@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -137,7 +137,7 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 				Config: testAccAgentCollaboratorConfig_basic(rName, model, description, instruction),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, t, tfbedrockagent.ResourceAgentCollaborator, resourceName, agentCollaboratorDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},

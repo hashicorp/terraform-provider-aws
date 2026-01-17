@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -237,7 +237,7 @@ func findResourceServerByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 	}
 
 	if output == nil || output.ResourceServer == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceServer, nil

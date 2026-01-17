@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPatternNoAnchors + `:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 // @SDKResource("aws_lambda_permission", name="Permission")
 // @IdentityAttribute("function_name")
@@ -69,6 +69,11 @@ func resourcePermission() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
+			},
+			"invoked_via_function_url": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 			names.AttrPrincipal: {
 				Type:     schema.TypeString,
@@ -144,6 +149,10 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("function_url_auth_type"); ok {
 		input.FunctionUrlAuthType = awstypes.FunctionUrlAuthType(v.(string))
+	}
+
+	if v, ok := d.GetOk("invoked_via_function_url"); ok {
+		input.InvokedViaFunctionUrl = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("principal_org_id"); ok {
@@ -232,6 +241,10 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta an
 		d.Set("source_account", v["AWS:SourceAccount"])
 	}
 
+	if v, ok := statement.Condition["Bool"]; ok {
+		d.Set("invoked_via_function_url", strings.EqualFold(v["lambda:InvokedViaFunctionUrl"], "true"))
+	}
+
 	if v, ok := statement.Condition["ArnLike"]; ok {
 		d.Set("source_arn", v["AWS:SourceArn"])
 	}
@@ -299,7 +312,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

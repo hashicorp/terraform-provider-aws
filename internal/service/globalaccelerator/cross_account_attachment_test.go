@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator_test
@@ -151,7 +151,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglobalaccelerator.ResourceCrossAccountAttachment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

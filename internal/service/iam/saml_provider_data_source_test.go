@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -31,6 +31,7 @@ func TestAccIAMSAMLProviderDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "create_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_provider_uuid", resourceName, "saml_provider_uuid"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.#", resourceName, "tags.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "valid_util", resourceName, "valid_util"),
 				),

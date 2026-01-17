@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -294,7 +294,7 @@ func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name 
 	}
 
 	if output.Webhook == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Webhook, nil

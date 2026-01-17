@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -322,7 +322,7 @@ func findSessionLoggerByARN(ctx context.Context, conn *workspacesweb.Client, arn
 	}
 
 	if output == nil || output.SessionLogger == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SessionLogger, nil
