@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
@@ -278,7 +277,7 @@ func (r *applicationResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		if _, err := waitApplicationDeleted(ctx, conn, id, r.UpdateTimeout(ctx, state.Timeouts)); err != nil {
+		if _, err := waitApplicationUpdated(ctx, conn, id, r.UpdateTimeout(ctx, state.Timeouts)); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Application (%s) update", id), err.Error())
 			return
 		}
@@ -325,13 +324,13 @@ func waitApplicationCreated(ctx context.Context, conn *opensearch.Client, id str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*opensearch.GetApplicationOutput); ok {
-		return out, smarterr.NewError(err)
+		return out, err
 	}
 
-	return nil, smarterr.NewError(err)
+	return nil, err
 }
 
-func waitApplicationUpdated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
+func waitApplicationUpdated(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusActive),
@@ -347,7 +346,7 @@ func waitApplicationUpdated(ctx context.Context, conn *opensearch.Client, id str
 	return nil, err
 }
 
-func waitApplicationDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) {
+func waitApplicationDeleted(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*opensearch.GetApplicationOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting, awstypes.ApplicationStatusActive),
 		Target:  []string{},
