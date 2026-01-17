@@ -36,6 +36,7 @@ import (
 // @IdentityAttribute("association_id")
 // @Testing(idAttrDuplicates="association_id")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
