@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -2222,6 +2223,11 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"], optFns...)
 
 			if retry.NotFound(err) {
+				continue
+			}
+
+			// only seems to affect directory buckets on post-delete checks
+			if strings.Contains(err.Error(), "NoSuchBucket") {
 				continue
 			}
 
