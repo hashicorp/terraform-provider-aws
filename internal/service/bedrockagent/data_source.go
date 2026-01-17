@@ -746,6 +746,26 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 									},
 								},
 								Blocks: map[string]schema.Block{
+									"bedrock_data_automation_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockDataAutomationConfigurationModel](ctx),
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
 									"bedrock_foundation_model_configuration": schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockFoundationModelConfigurationModel](ctx),
 										PlanModifiers: []planmodifier.List{
@@ -1110,6 +1130,7 @@ type vectorIngestionConfigurationModel struct {
 
 type parsingConfigurationModel struct {
 	ParsingStrategy                     fwtypes.StringEnum[awstypes.ParsingStrategy]                              `tfsdk:"parsing_strategy"`
+	BedrockDataAutomationConfiguration  fwtypes.ListNestedObjectValueOf[bedrockDataAutomationConfigurationModel]  `tfsdk:"bedrock_data_automation_configuration"`
 	BedrockFoundationModelConfiguration fwtypes.ListNestedObjectValueOf[bedrockFoundationModelConfigurationModel] `tfsdk:"bedrock_foundation_model_configuration"`
 }
 
@@ -1137,6 +1158,10 @@ type transformationFunctionModel struct {
 
 type transformationLambdaConfigurationModel struct {
 	LambdaArn fwtypes.ARN `tfsdk:"lambda_arn"`
+}
+
+type bedrockDataAutomationConfigurationModel struct {
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality] `tfsdk:"parsing_modality"`
 }
 
 type bedrockFoundationModelConfigurationModel struct {

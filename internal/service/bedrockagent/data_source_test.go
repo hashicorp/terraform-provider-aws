@@ -730,3 +730,63 @@ resource "aws_bedrockagent_data_source" "test" {
 }
 `, rName))
 }
+
+func testAccDataSource_bedrockDataAutomation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSource types.DataSource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_data_source.test"
+	foundationModel := "amazon.titan-embed-text-v2:0"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_bedrockDataAutomation(rName, foundationModel),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.parsing_strategy", "BEDROCK_DATA_AUTOMATION"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.bedrock_data_automation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vector_ingestion_configuration.0.parsing_configuration.0.bedrock_data_automation_configuration.0.parsing_modality", "MULTIMODAL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSourceConfig_bedrockDataAutomation(rName, foundationModel string) string {
+	return acctest.ConfigCompose(
+		testAccKnowledgeBaseConfig_base(rName, foundationModel),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_data_source" "test" {
+  knowledge_base_id = aws_bedrockagent_knowledge_base.test.id
+  name              = %[1]q
+
+  data_source_configuration {
+    type = "S3"
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.test.arn
+    }
+  }
+
+  vector_ingestion_configuration {
+    parsing_configuration {
+      parsing_strategy = "BEDROCK_DATA_AUTOMATION"
+      bedrock_data_automation_configuration {
+        parsing_modality = "MULTIMODAL"
+      }
+    }
+  }
+}
+`, rName))
+}
