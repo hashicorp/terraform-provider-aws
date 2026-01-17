@@ -29,7 +29,10 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -229,7 +232,10 @@ func TestAccDynamoDBTableReplica_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -304,7 +310,10 @@ func TestAccDynamoDBTableReplica_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -375,7 +384,10 @@ func TestAccDynamoDBTableReplica_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -464,7 +476,10 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -563,7 +578,10 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -712,7 +730,10 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -809,7 +830,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1001,7 +1025,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1170,7 +1197,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1355,7 +1385,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToProviderOnly(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1451,7 +1484,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToResourceOnly(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1546,7 +1582,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1616,7 +1655,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1678,7 +1720,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullOverlappingResourceTag(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1745,7 +1790,10 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullNonOverlappingResourceTag(
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1812,7 +1860,10 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1872,7 +1923,10 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1975,7 +2029,10 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2068,7 +2125,10 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2236,7 +2296,10 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
