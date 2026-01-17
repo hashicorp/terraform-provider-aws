@@ -36,6 +36,7 @@ import (
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.ComputeEnvironmentDetail")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,

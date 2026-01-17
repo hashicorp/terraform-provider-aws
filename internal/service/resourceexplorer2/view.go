@@ -43,6 +43,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }

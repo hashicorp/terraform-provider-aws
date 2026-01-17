@@ -40,6 +40,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserSettings")
 // @Testing(importStateIdAttribute="user_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newUserSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userSettingsResource{}, nil
 }

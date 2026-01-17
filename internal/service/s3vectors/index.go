@@ -38,6 +38,7 @@ import (
 // @Tags(identifierAttribute="index_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3vectors/types;awstypes;awstypes.Index")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 

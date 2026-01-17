@@ -40,6 +40,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.Portal")
 // @Testing(importStateIdAttribute="portal_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newPortalResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &portalResource{}
 

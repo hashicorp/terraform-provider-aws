@@ -36,6 +36,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecr/types;types.Repository")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(idAttrDuplicates="name")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepository() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryCreate,

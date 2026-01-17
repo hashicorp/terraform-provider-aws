@@ -33,6 +33,7 @@ const contactFlowMutexKey = `aws_connect_contact_flow`
 
 // @SDKResource("aws_connect_contact_flow", name="Contact Flow")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactFlowCreate,

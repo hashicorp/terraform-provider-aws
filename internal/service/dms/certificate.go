@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_dms_certificate", name="Certificate")
 // @Tags(identifierAttribute="certificate_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

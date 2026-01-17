@@ -49,6 +49,7 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }

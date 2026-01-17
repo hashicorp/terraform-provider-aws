@@ -134,6 +134,7 @@ var (
 // @Testing(existsType="map[string]string")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="confirmation_timeout_in_minutes;endpoint_auto_confirms")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicSubscriptionCreate,

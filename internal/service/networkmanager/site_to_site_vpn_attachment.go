@@ -31,6 +31,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(randomBgpAsn="64512;65534")
 // @Testing(randomIPv4Address="172.0.0.0/24")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,

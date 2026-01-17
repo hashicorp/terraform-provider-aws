@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_sesv2_dedicated_ip_pool", name="Dedicated IP Pool")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDedicatedIPPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDedicatedIPPoolCreate,

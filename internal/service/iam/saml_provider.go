@@ -32,6 +32,7 @@ import (
 // @Testing(tagsTest=false)
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,

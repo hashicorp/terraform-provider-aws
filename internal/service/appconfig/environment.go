@@ -37,6 +37,7 @@ import (
 
 // @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 

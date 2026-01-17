@@ -35,6 +35,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserAccessLoggingSettings")
 // @Testing(importStateIdAttribute="user_access_logging_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newUserAccessLoggingSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userAccessLoggingSettingsResource{}, nil
 }

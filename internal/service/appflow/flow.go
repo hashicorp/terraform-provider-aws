@@ -37,6 +37,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow;appflow.DescribeFlowOutput")
 // @Testing(idAttrDuplicates="name")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFlowCreate,

@@ -32,6 +32,7 @@ import (
 // @Testing(tlsEcdsaPublicKeyPem=true)
 // @Testing(importIgnore="public_key")
 // @Testing(plannableImportAction=Replace)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourcePlaybackKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlaybackKeyPairCreate,

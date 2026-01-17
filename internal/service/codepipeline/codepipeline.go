@@ -41,6 +41,7 @@ const (
 
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,

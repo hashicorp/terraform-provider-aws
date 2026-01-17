@@ -30,6 +30,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,

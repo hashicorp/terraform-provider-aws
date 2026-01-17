@@ -35,6 +35,7 @@ import (
 // @Testing(importIgnore="sas_configuration")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(name="LocationAzureBlob")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,

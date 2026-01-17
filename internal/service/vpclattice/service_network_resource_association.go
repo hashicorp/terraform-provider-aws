@@ -37,6 +37,7 @@ import (
 // @FrameworkResource("aws_vpclattice_service_network_resource_association", name="Service Network Resource Association")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkResourceAssociationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &serviceNetworkResourceAssociationResource{}
 

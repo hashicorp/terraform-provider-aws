@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
 // @Testing(importIgnore="start_channel")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,

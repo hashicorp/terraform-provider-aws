@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualRouterData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualRouterImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualRouter() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

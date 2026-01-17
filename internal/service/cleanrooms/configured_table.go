@@ -32,6 +32,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetConfiguredTableOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,

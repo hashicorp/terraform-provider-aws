@@ -61,8 +61,6 @@ const (
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
 // @Testing(generator=false)
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

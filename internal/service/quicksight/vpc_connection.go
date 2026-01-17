@@ -42,6 +42,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.VPCConnection")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
 

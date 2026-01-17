@@ -35,6 +35,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/drs/types;awstypes;awstypes.ReplicationConfigurationTemplate")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newReplicationConfigurationTemplateResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &replicationConfigurationTemplateResource{}
 

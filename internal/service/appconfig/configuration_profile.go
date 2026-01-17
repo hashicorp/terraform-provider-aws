@@ -44,6 +44,7 @@ func (configurationProfileType) Values() []configurationProfileType {
 
 // @SDKResource("aws_appconfig_configuration_profile", name="Configuration Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationProfileCreate,

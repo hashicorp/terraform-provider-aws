@@ -42,6 +42,7 @@ const (
 // @Tags(identifierAttribute="id", resourceType="Document")
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,

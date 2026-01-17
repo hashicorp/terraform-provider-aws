@@ -35,6 +35,7 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("capacity-provider/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,

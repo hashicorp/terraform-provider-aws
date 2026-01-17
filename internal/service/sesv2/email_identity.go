@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_sesv2_email_identity", name="Email Identity")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,

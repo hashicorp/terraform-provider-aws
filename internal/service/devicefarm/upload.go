@@ -31,6 +31,7 @@ import (
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="url", plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,

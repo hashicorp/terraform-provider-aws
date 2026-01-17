@@ -35,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxLustreOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxLustreImportStateID")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxLustreFileSystemCreate,

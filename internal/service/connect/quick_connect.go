@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_connect_quick_connect", name="Quick Connect")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,

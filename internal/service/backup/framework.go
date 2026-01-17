@@ -31,6 +31,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
 // @Testing(generator="randomFrameworkName()")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,

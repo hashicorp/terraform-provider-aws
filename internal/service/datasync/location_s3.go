@@ -33,6 +33,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationS3Output")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,

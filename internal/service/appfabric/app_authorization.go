@@ -45,6 +45,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppAuthorization")
 // @Testing(importIgnore="credential")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 

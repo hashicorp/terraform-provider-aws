@@ -19,6 +19,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.SecurityGroupRule")
 // @Testing(idAttrDuplicates="security_group_rule_id")
 // @Testing(preIdentityVersion="v6.12.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r

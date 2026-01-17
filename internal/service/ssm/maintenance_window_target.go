@@ -34,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;types.MaintenanceWindowTarget")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(importStateIdFunc="testAccMaintenanceWindowTargetImportStateIdFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMaintenanceWindowTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTargetCreate,

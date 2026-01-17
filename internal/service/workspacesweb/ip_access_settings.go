@@ -40,6 +40,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
 // @Testing(importStateIdAttribute="ip_access_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIPAccessSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ipAccessSettingsResource{}, nil
 }

@@ -31,6 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeMultiplexOutput", importIgnore="start_multiplex")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMultiplex() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMultiplexCreate,

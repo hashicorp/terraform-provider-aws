@@ -32,6 +32,7 @@ import (
 // @ArnFormat("report-group/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
 // @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,

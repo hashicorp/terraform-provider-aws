@@ -536,8 +536,8 @@ For example, the S3 Object uses
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 ```
 
-Some services or resource types are using a new variant of the standard `Exists` and `DestroyCheck` functions that use `acctest.ProviderMeta` internally, and thus take a `testing.T` as a parameter.
-In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(destroyTakesT=true)`, respectively.
+Some older resource types use variants of the standard `Exists` and `DestroyCheck` functions that do not take a `testing.T` parameter.
+In that case, add the annotations `@Testing(existsTakesT=false)` and `@Testing(destroyTakesT=false)`, respectively.
 
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.

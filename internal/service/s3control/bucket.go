@@ -36,6 +36,7 @@ const (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(preCheck="acctest.PreCheckOutpostsOutposts")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,

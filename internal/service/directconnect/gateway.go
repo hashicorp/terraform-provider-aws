@@ -34,6 +34,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(identityTest=false)
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,

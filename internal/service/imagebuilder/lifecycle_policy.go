@@ -40,6 +40,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("lifecycle-policy/{name}")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }

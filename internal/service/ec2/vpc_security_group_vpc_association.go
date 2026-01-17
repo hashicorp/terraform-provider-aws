@@ -36,6 +36,7 @@ import (
 // @Testing(importStateIdFunc=testAccSecurityGroupVPCAssociationImportStateIDFunc)
 // @Testing(importStateIdAttribute="vpc_id")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecurityGroupVPCAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupVPCAssociationResource{}
 

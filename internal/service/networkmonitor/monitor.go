@@ -36,6 +36,7 @@ import (
 
 // @FrameworkResource("aws_networkmonitor_monitor", name="Monitor")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newMonitorResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &monitorResource{}, nil
 }

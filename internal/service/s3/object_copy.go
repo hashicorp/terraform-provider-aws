@@ -33,6 +33,7 @@ import (
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
 // @NoImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,

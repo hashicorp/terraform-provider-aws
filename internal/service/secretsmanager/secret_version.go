@@ -42,6 +42,7 @@ const (
 // @Testing(importStateIdFunc="testAccSecretVersionImportStateIdFunc")
 // @Testing(importIgnore="has_secret_string_wo")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretVersionCreate,

@@ -52,6 +52,7 @@ import (
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,

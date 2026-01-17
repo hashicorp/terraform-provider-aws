@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualNodeData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualNodeImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

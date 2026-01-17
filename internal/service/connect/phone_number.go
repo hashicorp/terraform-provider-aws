@@ -34,6 +34,7 @@ import (
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.ClaimedPhoneNumberSummary")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePhoneNumberCreate,

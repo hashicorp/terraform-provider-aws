@@ -36,6 +36,7 @@ import (
 // @Testing(importStateIdFunc="testAccLogDeliveryConfigurationImportStateIdFunc")
 // @Testing(importStateIdAttribute="user_pool_id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &logDeliveryConfigurationResource{}
 	return r, nil

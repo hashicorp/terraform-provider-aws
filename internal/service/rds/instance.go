@@ -56,6 +56,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,

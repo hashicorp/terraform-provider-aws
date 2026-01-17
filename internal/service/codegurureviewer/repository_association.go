@@ -34,6 +34,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
 // @Testing(importIgnore="repository", plannableImportAction="Replace")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,

@@ -39,6 +39,7 @@ var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPattern
 // @Testing(preIdentityVersion="6.9.0")
 // @Testing(existsType="github.com/hashicorp/terraform-provider-aws/internal/service/lambda;tflambda;tflambda.PolicyStatement")
 // @Testing(importStateIdFunc="testAccPermissionImportStateIDFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,

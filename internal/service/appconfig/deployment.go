@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="state")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,

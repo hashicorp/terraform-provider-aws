@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_connect_vocabulary", name="Vocabulary")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,

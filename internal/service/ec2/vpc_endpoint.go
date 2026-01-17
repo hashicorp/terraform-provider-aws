@@ -44,6 +44,7 @@ const (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.VpcEndpoint")
 // @Testing(preIdentityVersion="v6.12.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,

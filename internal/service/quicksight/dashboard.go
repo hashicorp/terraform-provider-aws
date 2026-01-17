@@ -35,6 +35,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Dashboard")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDashboard() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDashboardCreate,

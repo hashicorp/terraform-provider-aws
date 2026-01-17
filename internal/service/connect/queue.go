@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_connect_queue", name="Queue")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,

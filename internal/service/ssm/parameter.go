@@ -39,6 +39,7 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
 // @CustomImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,

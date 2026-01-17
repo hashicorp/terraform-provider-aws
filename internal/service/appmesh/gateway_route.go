@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.GatewayRouteData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccGatewayRouteImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayRouteCreate,

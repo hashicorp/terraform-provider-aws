@@ -35,6 +35,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceSetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSetResource{}
 

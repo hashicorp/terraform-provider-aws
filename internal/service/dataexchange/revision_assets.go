@@ -55,6 +55,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @NoImport
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dataexchange;dataexchange.GetRevisionOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRevisionAssetsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &revisionAssetsResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)

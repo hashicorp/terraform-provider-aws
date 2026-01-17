@@ -32,6 +32,7 @@ import (
 // @IdentityAttribute("repository")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(idAttrDuplicates="repository")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,

@@ -42,6 +42,7 @@ import (
 // @Testing(importStateIdAttribute="api_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.Api")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAPIResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &apiResource{}
 

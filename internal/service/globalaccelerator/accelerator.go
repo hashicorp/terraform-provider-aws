@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,

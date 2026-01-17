@@ -30,6 +30,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayRouteTableAttachment")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAttachmentCreate,

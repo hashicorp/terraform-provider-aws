@@ -30,6 +30,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,

@@ -33,6 +33,7 @@ import (
 // @IdentityAttribute("expected_bucket_owner", optional="true")
 // @ImportIDHandler("resourceImportID")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,

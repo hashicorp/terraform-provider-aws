@@ -33,6 +33,7 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalyMonitor")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalyMonitorCreate,

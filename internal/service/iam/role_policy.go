@@ -39,6 +39,7 @@ const (
 // @ImportIDHandler("rolePolicyImportID")
 // @Testing(existsType="string")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,

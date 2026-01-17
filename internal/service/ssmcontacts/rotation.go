@@ -44,6 +44,7 @@ const (
 // Region override test requires `aws_ssmincidents_replication_set`, which doesn't support region override
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newRotationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &rotationResource{}
 

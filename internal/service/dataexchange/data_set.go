@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_dataexchange_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
 // @Testing(tagsTest=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,

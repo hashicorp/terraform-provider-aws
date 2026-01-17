@@ -40,6 +40,7 @@ const (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,

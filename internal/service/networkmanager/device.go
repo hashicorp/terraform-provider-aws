@@ -33,6 +33,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
 // @Testing(importStateIdAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeviceCreate,

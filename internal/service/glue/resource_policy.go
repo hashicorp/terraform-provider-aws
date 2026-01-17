@@ -30,6 +30,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut(awstypes.ExistConditionNotExist),

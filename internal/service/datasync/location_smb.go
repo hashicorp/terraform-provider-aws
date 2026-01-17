@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationSmbOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importIgnore="password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,

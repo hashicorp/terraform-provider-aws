@@ -33,6 +33,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationNfsOutput")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,

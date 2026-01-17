@@ -29,6 +29,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,

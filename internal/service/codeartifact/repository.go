@@ -27,6 +27,7 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_repository", name="Repository")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
