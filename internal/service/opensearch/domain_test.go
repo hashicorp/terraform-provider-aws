@@ -135,6 +135,118 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 }
 
+func TestExpandServerlessVectorAcceleration(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    map[string]any
+		expected *awstypes.ServerlessVectorAcceleration
+	}{
+		{
+			name:     "nil input",
+			input:    nil,
+			expected: nil,
+		},
+		{
+			name:  "enabled true",
+			input: map[string]any{names.AttrEnabled: true},
+			expected: &awstypes.ServerlessVectorAcceleration{
+				Enabled: aws.Bool(true),
+			},
+		},
+		{
+			name:  "enabled false",
+			input: map[string]any{names.AttrEnabled: false},
+			expected: &awstypes.ServerlessVectorAcceleration{
+				Enabled: aws.Bool(false),
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfopensearch.ExpandServerlessVectorAcceleration(testCase.input)
+
+			if testCase.expected == nil {
+				if got != nil {
+					t.Errorf("expected nil, got %v", got)
+				}
+				return
+			}
+
+			if got == nil {
+				t.Errorf("expected %v, got nil", testCase.expected)
+				return
+			}
+
+			if aws.ToBool(got.Enabled) != aws.ToBool(testCase.expected.Enabled) {
+				t.Errorf("expected enabled %v, got %v", aws.ToBool(testCase.expected.Enabled), aws.ToBool(got.Enabled))
+			}
+		})
+	}
+}
+
+func TestFlattenServerlessVectorAcceleration(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    *awstypes.ServerlessVectorAcceleration
+		expected map[string]any
+	}{
+		{
+			name:     "nil input",
+			input:    nil,
+			expected: nil,
+		},
+		{
+			name: "enabled true",
+			input: &awstypes.ServerlessVectorAcceleration{
+				Enabled: aws.Bool(true),
+			},
+			expected: map[string]any{
+				names.AttrEnabled: true,
+			},
+		},
+		{
+			name: "enabled false",
+			input: &awstypes.ServerlessVectorAcceleration{
+				Enabled: aws.Bool(false),
+			},
+			expected: map[string]any{
+				names.AttrEnabled: false,
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfopensearch.FlattenServerlessVectorAcceleration(testCase.input)
+
+			if testCase.expected == nil {
+				if got != nil {
+					t.Errorf("expected nil, got %v", got)
+				}
+				return
+			}
+
+			if got == nil {
+				t.Errorf("expected %v, got nil", testCase.expected)
+				return
+			}
+
+			if got[names.AttrEnabled] != testCase.expected[names.AttrEnabled] {
+				t.Errorf("expected enabled %v, got %v", testCase.expected[names.AttrEnabled], got[names.AttrEnabled])
+			}
+		})
+	}
+}
+
 func TestAccOpenSearchDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2282,7 +2394,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
@@ -2290,6 +2402,8 @@ func TestAccOpenSearchDomain_AIMLOptions_createEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.0.enabled", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2329,7 +2443,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
@@ -2337,6 +2451,8 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.0.enabled", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2354,7 +2470,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false),
+				Config: testAccDomainConfig_AIMLOptions(rName, enabledState, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
@@ -2362,6 +2478,8 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", enabledState),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.0.enabled", acctest.CtFalse),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -2370,7 +2488,7 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true),
+				Config: testAccDomainConfig_AIMLOptions(rName, disabledState, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.#", "1"),
@@ -2378,6 +2496,8 @@ func TestAccOpenSearchDomain_AIMLOptions_createDisabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.natural_language_query_generation_options.0.desired_state", disabledState),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.s3_vectors_engine.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aiml_options.0.serverless_vector_acceleration.0.enabled", acctest.CtTrue),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -4465,7 +4585,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName, option)
 }
 
-func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnabled bool) string {
+func testAccDomainConfig_AIMLOptions(rName, desiredState string, S3VecotrsEnabled bool, serverlessVectorAccelerationEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name = %[1]q
@@ -4510,9 +4630,13 @@ resource "aws_opensearch_domain" "test" {
     s3_vectors_engine {
       enabled = %[3]t
     }
+	
+	serverless_vector_acceleration {
+		enabled = %[4]t
+	}
   }
 }
-`, rName, desiredState, S3VecotrsEnabled)
+`, rName, desiredState, S3VecotrsEnabled, serverlessVectorAccelerationEnabled)
 }
 
 func testAccDomainConfig_identityCenterOptionsFull(rName string, enableAPIAccess bool, rolesKey, subjectKey string) string {
