@@ -32,6 +32,9 @@ type Config struct {
 	AllowedAccountIds              []string
 	AssumeRole                     []awsbase.AssumeRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
+	ClientCertificate              string
+	ClientPrivateKey               string
+	ClientPrivateKeyPassphrase     string
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
 	EC2MetadataServiceEnableState  imds.ClientEnableState
@@ -159,6 +162,16 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	if diags.HasError() {
 		return nil, diags
+	}
+
+	if c.ClientCertificate != "" {
+		if err := c.validateMTLSConfig(); err != nil {
+			return nil, sdkdiag.AppendErrorf(diags, "mTLS configuration error: %s", err)
+		}
+
+		if err := c.configureHTTPClientMTLS(&cfg); err != nil {
+			return nil, sdkdiag.AppendErrorf(diags, "failed to configure mTLS: %s", err)
+		}
 	}
 
 	if !c.SkipRegionValidation {
