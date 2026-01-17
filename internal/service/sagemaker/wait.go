@@ -17,33 +17,31 @@ import (
 )
 
 const (
-	notebookInstanceInServiceTimeout   = 60 * time.Minute
-	notebookInstanceStoppedTimeout     = 10 * time.Minute
-	notebookInstanceDeletedTimeout     = 10 * time.Minute
-	modelPackageGroupCompletedTimeout  = 10 * time.Minute
-	modelPackageGroupDeletedTimeout    = 10 * time.Minute
-	imageCreatedTimeout                = 10 * time.Minute
-	imageDeletedTimeout                = 10 * time.Minute
-	imageVersionCreatedTimeout         = 10 * time.Minute
-	imageVersionDeletedTimeout         = 10 * time.Minute
-	domainInServiceTimeout             = 20 * time.Minute
-	domainDeletedTimeout               = 20 * time.Minute
-	featureGroupCreatedTimeout         = 20 * time.Minute
-	featureGroupDeletedTimeout         = 10 * time.Minute
-	appInServiceTimeout                = 10 * time.Minute
-	appDeletedTimeout                  = 10 * time.Minute
-	flowDefinitionActiveTimeout        = 2 * time.Minute
-	flowDefinitionDeletedTimeout       = 2 * time.Minute
-	projectCreatedTimeout              = 15 * time.Minute
-	projectDeletedTimeout              = 15 * time.Minute
-	workforceActiveTimeout             = 10 * time.Minute
-	workforceDeletedTimeout            = 10 * time.Minute
-	spaceDeletedTimeout                = 10 * time.Minute
-	spaceInServiceTimeout              = 10 * time.Minute
-	monitoringScheduleScheduledTimeout = 2 * time.Minute
-	monitoringScheduleStoppedTimeout   = 2 * time.Minute
-	mlflowTrackingServerTimeout        = 45 * time.Minute
-	hubTimeout                         = 10 * time.Minute
+	notebookInstanceInServiceTimeout  = 60 * time.Minute
+	notebookInstanceStoppedTimeout    = 10 * time.Minute
+	notebookInstanceDeletedTimeout    = 10 * time.Minute
+	modelPackageGroupCompletedTimeout = 10 * time.Minute
+	modelPackageGroupDeletedTimeout   = 10 * time.Minute
+	imageCreatedTimeout               = 10 * time.Minute
+	imageDeletedTimeout               = 10 * time.Minute
+	imageVersionCreatedTimeout        = 10 * time.Minute
+	imageVersionDeletedTimeout        = 10 * time.Minute
+	domainInServiceTimeout            = 20 * time.Minute
+	domainDeletedTimeout              = 20 * time.Minute
+	featureGroupCreatedTimeout        = 20 * time.Minute
+	featureGroupDeletedTimeout        = 10 * time.Minute
+	appInServiceTimeout               = 10 * time.Minute
+	appDeletedTimeout                 = 10 * time.Minute
+	flowDefinitionActiveTimeout       = 2 * time.Minute
+	flowDefinitionDeletedTimeout      = 2 * time.Minute
+	projectCreatedTimeout             = 15 * time.Minute
+	projectDeletedTimeout             = 15 * time.Minute
+	workforceActiveTimeout            = 10 * time.Minute
+	workforceDeletedTimeout           = 10 * time.Minute
+	spaceDeletedTimeout               = 10 * time.Minute
+	spaceInServiceTimeout             = 10 * time.Minute
+	mlflowTrackingServerTimeout       = 45 * time.Minute
+	hubTimeout                        = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
@@ -582,48 +580,6 @@ func waitSpaceDeleted(ctx context.Context, conn *sagemaker.Client, domainId, nam
 
 	if output, ok := outputRaw.(*sagemaker.DescribeSpaceOutput); ok {
 		if status, reason := output.Status, aws.ToString(output.FailureReason); status == awstypes.SpaceStatusDeleteFailed && reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitMonitoringScheduleScheduled(ctx context.Context, conn *sagemaker.Client, name string) error {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ScheduleStatusPending),
-		Target:  enum.Slice(awstypes.ScheduleStatusScheduled),
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
-		Timeout: monitoringScheduleScheduledTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
-		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
-			retry.SetLastError(err, errors.New(reason))
-		}
-
-		return err
-	}
-
-	return err
-}
-
-func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMonitoringScheduleOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ScheduleStatusScheduled, awstypes.ScheduleStatusPending, awstypes.ScheduleStatusStopped),
-		Target:  []string{},
-		Refresh: statusMonitoringSchedule(ctx, conn, name),
-		Timeout: monitoringScheduleStoppedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*sagemaker.DescribeMonitoringScheduleOutput); ok {
-		if status, reason := output.MonitoringScheduleStatus, aws.ToString(output.FailureReason); status == awstypes.ScheduleStatusFailed && reason != "" {
 			retry.SetLastError(err, errors.New(reason))
 		}
 

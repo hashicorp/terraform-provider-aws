@@ -6,7 +6,7 @@ package ec2
 import (
 	"bytes"
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- AWS EC2 API uses SHA1 for user_data hashing, must match AWS behavior
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -3003,7 +3003,7 @@ func userDataHashSum(userData string) string {
 		v = []byte(userData)
 	}
 
-	hash := sha1.Sum(v)
+	hash := sha1.Sum(v) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- AWS EC2 API uses SHA1 for user_data hashing, must match AWS behavior
 	return hex.EncodeToString(hash[:])
 }
 

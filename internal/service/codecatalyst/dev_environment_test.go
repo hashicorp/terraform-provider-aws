@@ -12,11 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	"github.com/aws/aws-sdk-go-v2/service/codecatalyst/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcodecatalyst "github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
@@ -26,10 +24,10 @@ import (
 func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_dev_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
@@ -37,12 +35,12 @@ func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
+					testAccCheckDevEnvironmentExists(ctx, t, resourceName, &DevEnvironment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
@@ -58,10 +56,10 @@ func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 	ctx := acctest.Context(t)
 	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_codecatalyst_dev_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
@@ -69,12 +67,12 @@ func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEnvironmentConfig_withRepositories(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
+					testAccCheckDevEnvironmentExists(ctx, t, resourceName, &DevEnvironment),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
@@ -92,11 +90,11 @@ func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 }
 func TestAccCodeCatalystDevEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var DevEnvironment codecatalyst.GetDevEnvironmentOutput
 	resourceName := "aws_codecatalyst_dev_environment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeCatalyst)
@@ -104,12 +102,12 @@ func TestAccCodeCatalystDevEnvironment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCatalyst),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDevEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
+					testAccCheckDevEnvironmentExists(ctx, t, resourceName, &DevEnvironment),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecatalyst.ResourceDevEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,9 +116,9 @@ func TestAccCodeCatalystDevEnvironment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDevEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDevEnvironmentDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCatalystClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codecatalyst_dev_environment" {
@@ -149,7 +147,7 @@ func testAccCheckDevEnvironmentDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvironment *codecatalyst.GetDevEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckDevEnvironmentExists(ctx context.Context, t *testing.T, name string, DevEnvironment *codecatalyst.GetDevEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -162,7 +160,7 @@ func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvir
 		spaceName := rs.Primary.Attributes["space_name"]
 		projectName := rs.Primary.Attributes["project_name"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CodeCatalystClient(ctx)
 		input := codecatalyst.GetDevEnvironmentInput{
 			Id:          aws.String(rs.Primary.ID),
 			SpaceName:   aws.String(spaceName),
@@ -181,7 +179,7 @@ func testAccCheckDevEnvironmentExists(ctx context.Context, name string, DevEnvir
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCatalystClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).CodeCatalystClient(ctx)
 
 	/*
 		If no Amazon CodeCatalyst token is available then the Go SDK crashes:

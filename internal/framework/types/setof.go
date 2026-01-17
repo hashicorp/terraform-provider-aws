@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -136,6 +137,20 @@ func (v SetValueOf[T]) ValidateAttribute(ctx context.Context, req xattr.Validate
 	}
 
 	resp.Diagnostics.Append(v.validateAttributeFunc(ctx, req.Path, v.Elements())...)
+}
+
+// IsFullyKnown returns true if `v` all its elements are known.
+func (v SetValueOf[T]) IsFullyKnown() bool {
+	switch {
+	case v.IsUnknown():
+		return false
+	case v.IsNull():
+		return true
+	default:
+		return tfslices.All(v.Elements(), func(v attr.Value) bool {
+			return !v.IsUnknown()
+		})
+	}
 }
 
 func NewSetValueOfNull[T attr.Value](ctx context.Context) SetValueOf[T] {
