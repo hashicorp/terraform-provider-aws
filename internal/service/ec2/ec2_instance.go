@@ -484,6 +484,12 @@ func resourceInstance() *schema.Resource {
 				Optional:     true,
 				AtLeastOneOf: []string{names.AttrInstanceType, names.AttrLaunchTemplate},
 			},
+			"preserve_powerstate": {
+				Type:     schema.TypeBool,
+				Computed: false,
+				Optional: true,
+				Default:  false,
+			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
@@ -1537,6 +1543,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	preservePowerstate := d.Get("preserve_powerstate").(bool)
+
 	// See also CustomizeDiff.
 	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
@@ -1553,7 +1561,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 					},
 				}
 
-				if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, fmt.Sprintf("InstanceType (%s)", instanceType), preservePowerstate); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
 				}
 			}
@@ -1578,7 +1586,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData", preservePowerstate); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data: %s", d.Id(), err)
 			}
 		}
@@ -1598,7 +1606,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)"); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, &input, "UserData (base64)", preservePowerstate); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
 		}
@@ -1988,8 +1996,14 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id str
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
+func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string, preservePowerstate bool) error {
 	id := aws.ToString(input.InstanceId)
+
+	_, state, err := statusInstance(ctx, conn, id)()
+
+	if err != nil {
+		return err
+	}
 
 	if err := stopInstance(ctx, conn, id, false, instanceStopTimeout); err != nil {
 		return err
@@ -1999,8 +2013,10 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
-		return err
+	if !preservePowerstate || (strings.ToLower(state) != "stopped" && strings.ToLower(state) != "stopping") {
+		if err := startInstance(ctx, conn, id, true, instanceStartTimeout); err != nil {
+			return err
+		}
 	}
 
 	return nil
