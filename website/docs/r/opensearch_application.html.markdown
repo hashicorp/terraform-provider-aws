@@ -178,7 +178,7 @@ resource "aws_opensearch_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The unique name of the OpenSearch application. Names must be unique within an AWS Region for each account. Must be between 3 and 30 characters, start with a lowercase letter, and contain only lowercase letters, numbers, and hyphens.
 * `app_config` - (Optional) Configuration block(s) for OpenSearch application settings. See [App Config](#app-config) below.
@@ -212,7 +212,7 @@ The `iam_identity_center_options` block supports the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the OpenSearch application.
 * `endpoint` - Endpoint URL of the OpenSearch application.
