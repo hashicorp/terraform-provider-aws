@@ -46,6 +46,13 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
 				),
 			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
+			},
 		},
 	})
 }
@@ -80,42 +87,6 @@ func TestAccARCZonalShiftZonalAutoshiftConfiguration_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
-			},
-		},
-	})
-}
-
-func TestAccARCZonalShiftZonalAutoshiftConfiguration_importBasic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_arczonalshift_zonal_autoshift_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ARCZonalShiftServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckZonalAutoshiftConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccZonalAutoshiftConfigurationConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
-					resource.TestCheckResourceAttr(resourceName, "autoshift_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "outcome_alarm_arns.#", "1"),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrResourceARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrResourceARN,
 			},
 		},
 	})

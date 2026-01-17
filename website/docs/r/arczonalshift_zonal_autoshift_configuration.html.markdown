@@ -89,7 +89,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports no additional attributes beyond the arguments above.
+This resource exports no additional attributes.
 
 ## Import
 

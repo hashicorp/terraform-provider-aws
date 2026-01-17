@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/arczonalshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arczonalshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	flex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -114,23 +113,23 @@ func (r *resourceZonalAutoshiftConfiguration) Create(ctx context.Context, req re
 
 	input := arczonalshift.CreatePracticeRunConfigurationInput{
 		ResourceIdentifier: plan.ResourceARN.ValueStringPointer(),
-		OutcomeAlarms:      expandControlConditions(ctx, plan.OutcomeAlarmARNs),
+		OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
 	}
 
 	if !plan.BlockingAlarmARNs.IsNull() {
-		input.BlockingAlarms = expandControlConditions(ctx, plan.BlockingAlarmARNs)
+		input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
 	}
 
 	if !plan.BlockedDates.IsNull() {
-		input.BlockedDates = expandStringList(ctx, plan.BlockedDates)
+		input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
 	}
 
 	if !plan.BlockedWindows.IsNull() {
-		input.BlockedWindows = expandStringList(ctx, plan.BlockedWindows)
+		input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
 	}
 
 	if !plan.AllowedWindows.IsNull() {
-		input.AllowedWindows = expandStringList(ctx, plan.AllowedWindows)
+		input.AllowedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.AllowedWindows)
 	}
 
 	out, err := conn.CreatePracticeRunConfiguration(ctx, &input)
@@ -197,11 +196,11 @@ func (r *resourceZonalAutoshiftConfiguration) Read(ctx context.Context, req reso
 	}
 
 	state.AutoshiftEnabled = types.BoolValue(out.ZonalAutoshiftStatus == awstypes.ZonalAutoshiftStatusEnabled)
-	state.OutcomeAlarmARNs = flattenControlConditions(ctx, out.PracticeRunConfiguration.OutcomeAlarms)
-	state.BlockingAlarmARNs = flattenControlConditions(ctx, out.PracticeRunConfiguration.BlockingAlarms)
-	state.BlockedDates = flattenStringList(ctx, out.PracticeRunConfiguration.BlockedDates)
-	state.BlockedWindows = flattenStringList(ctx, out.PracticeRunConfiguration.BlockedWindows)
-	state.AllowedWindows = flattenStringList(ctx, out.PracticeRunConfiguration.AllowedWindows)
+	state.OutcomeAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.OutcomeAlarms))
+	state.BlockingAlarmARNs = flex.FlattenFrameworkStringValueListOfString(ctx, controlConditionsToAlarmARNs(out.PracticeRunConfiguration.BlockingAlarms))
+	state.BlockedDates = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedDates)
+	state.BlockedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.BlockedWindows)
+	state.AllowedWindows = flex.FlattenFrameworkStringValueListOfString(ctx, out.PracticeRunConfiguration.AllowedWindows)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
@@ -227,22 +226,22 @@ func (r *resourceZonalAutoshiftConfiguration) Update(ctx context.Context, req re
 	if practiceRunChanged {
 		input := arczonalshift.UpdatePracticeRunConfigurationInput{
 			ResourceIdentifier: aws.String(resourceIdentifier),
-			OutcomeAlarms:      expandControlConditions(ctx, plan.OutcomeAlarmARNs),
+			OutcomeAlarms:      alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.OutcomeAlarmARNs)),
 		}
 
 		if !plan.BlockingAlarmARNs.IsNull() {
-			input.BlockingAlarms = expandControlConditions(ctx, plan.BlockingAlarmARNs)
+			input.BlockingAlarms = alarmARNsToControlConditions(flex.ExpandFrameworkStringValueList(ctx, plan.BlockingAlarmARNs))
 		}
 
 		if !plan.BlockedDates.IsNull() {
-			input.BlockedDates = expandStringList(ctx, plan.BlockedDates)
+			input.BlockedDates = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedDates)
 		}
 
 		if !plan.BlockedWindows.IsNull() {
-			input.BlockedWindows = expandStringList(ctx, plan.BlockedWindows)
+			input.BlockedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.BlockedWindows)
 			input.AllowedWindows = []string{}
 		} else if !plan.AllowedWindows.IsNull() {
-			input.AllowedWindows = expandStringList(ctx, plan.AllowedWindows)
+			input.AllowedWindows = flex.ExpandFrameworkStringValueList(ctx, plan.AllowedWindows)
 			input.BlockedWindows = []string{}
 		} else {
 			input.BlockedWindows = []string{}
@@ -317,13 +316,25 @@ func (r *resourceZonalAutoshiftConfiguration) ImportState(ctx context.Context, r
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrResourceARN), req, resp)
 }
 
-func expandControlConditions(ctx context.Context, list fwtypes.ListOfString) []awstypes.ControlCondition {
-	if list.IsNull() || list.IsUnknown() {
+// controlConditionsToAlarmARNs extracts alarm ARNs from ControlCondition structs.
+func controlConditionsToAlarmARNs(conditions []awstypes.ControlCondition) []string {
+	if len(conditions) == 0 {
 		return nil
 	}
 
-	var arns []string
-	list.ElementsAs(ctx, &arns, false)
+	arns := make([]string, len(conditions))
+	for i, condition := range conditions {
+		arns[i] = aws.ToString(condition.AlarmIdentifier)
+	}
+	return arns
+}
+
+// alarmARNsToControlConditions converts alarm ARNs to ControlCondition structs.
+// The Type is always CloudWatch since that's the only supported type.
+func alarmARNsToControlConditions(arns []string) []awstypes.ControlCondition {
+	if len(arns) == 0 {
+		return nil
+	}
 
 	conditions := make([]awstypes.ControlCondition, len(arns))
 	for i, arn := range arns {
@@ -333,42 +344,6 @@ func expandControlConditions(ctx context.Context, list fwtypes.ListOfString) []a
 		}
 	}
 	return conditions
-}
-
-func flattenControlConditions(ctx context.Context, conditions []awstypes.ControlCondition) fwtypes.ListOfString {
-	if len(conditions) == 0 {
-		return fwtypes.NewListValueOfNull[basetypes.StringValue](ctx)
-	}
-
-	elements := make([]attr.Value, len(conditions))
-	for i, condition := range conditions {
-		elements[i] = basetypes.NewStringValue(aws.ToString(condition.AlarmIdentifier))
-	}
-
-	return fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, elements)
-}
-
-func expandStringList(ctx context.Context, list fwtypes.ListOfString) []string {
-	if list.IsNull() || list.IsUnknown() {
-		return nil
-	}
-
-	var result []string
-	list.ElementsAs(ctx, &result, false)
-	return result
-}
-
-func flattenStringList(ctx context.Context, list []string) fwtypes.ListOfString {
-	if len(list) == 0 {
-		return fwtypes.NewListValueOfNull[basetypes.StringValue](ctx)
-	}
-
-	elements := make([]attr.Value, len(list))
-	for i, s := range list {
-		elements[i] = basetypes.NewStringValue(s)
-	}
-
-	return fwtypes.NewListValueOfMust[basetypes.StringValue](ctx, elements)
 }
 
 // Finder functions
