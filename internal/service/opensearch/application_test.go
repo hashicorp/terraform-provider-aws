@@ -47,6 +47,7 @@ func TestAccOpenSearchApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opensearch", regexache.MustCompile(`application/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "app_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "data_source.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_identity_center_options.#", "0"),

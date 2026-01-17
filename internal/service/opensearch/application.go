@@ -58,7 +58,20 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
+			names.AttrEndpoint: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -84,13 +97,8 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrKey: schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.OneOf(
-									"opensearchDashboards.dashboardAdmin.users",
-									"opensearchDashboards.dashboardAdmin.groups",
-								),
-							},
+							CustomType: fwtypes.StringEnumType[awstypes.AppConfigType](),
+							Optional:   true,
 						},
 						names.AttrValue: schema.StringAttribute{
 							Optional: true,
@@ -108,18 +116,11 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						"data_source_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(20, 2048),
-							},
 						},
 						"data_source_description": schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(1000),
-								stringvalidator.RegexMatches(
-									regexp.MustCompile(`^([a-zA-Z0-9_])*[\\a-zA-Z0-9_@#%*+=:?./!\s-]*$`),
-									"data source description contains invalid characters",
-								),
 							},
 						},
 					},
@@ -135,25 +136,20 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						names.AttrEnabled: schema.BoolAttribute{
 							Optional: true,
 						},
+						"iam_identity_center_application_arn": schema.StringAttribute{
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
+						},
 						"iam_identity_center_instance_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(20, 2048),
-							},
 						},
 						"iam_role_for_identity_center_application_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(20, 2048),
-								stringvalidator.RegexMatches(
-									regexp.MustCompile(`^arn:(aws|aws\-cn|aws\-us\-gov|aws\-iso|aws\-iso\-b):iam::[0-9]+:role\/.*$`),
-									"must be a valid IAM role ARN",
-								),
-							},
 						},
-						"iam_identity_center_application_arn": framework.ARNAttributeComputedOnly(),
 					},
 				},
 			},
@@ -400,11 +396,13 @@ func findApplication(ctx context.Context, conn *opensearch.Client, input *opense
 // Data structures for the OpenSearch Application resource
 type applicationResourceModel struct {
 	framework.WithRegionModel
-	ARN                      types.String                                                   `tfsdk:"arn"`
 	AppConfigs               fwtypes.SetNestedObjectValueOf[appConfigModel]                 `tfsdk:"app_config"`
+	ARN                      types.String                                                   `tfsdk:"arn"`
 	DataSources              fwtypes.SetNestedObjectValueOf[dataSourceModel]                `tfsdk:"data_source"`
-	IamIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterOptionsModel] `tfsdk:"iam_identity_center_options"`
+	Endpoint                 types.String                                                   `tfsdk:"endpoint"`
+	IAMIdentityCenterOptions fwtypes.ListNestedObjectValueOf[iamIdentityCenterOptionsModel] `tfsdk:"iam_identity_center_options"`
 	ID                       types.String                                                   `tfsdk:"id"`
+	KMSKeyARN                fwtypes.ARN                                                    `tfsdk:"kms_key_arn"`
 	Name                     types.String                                                   `tfsdk:"name"`
 	Tags                     tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                  tftags.Map                                                     `tfsdk:"tags_all"`
@@ -412,18 +410,18 @@ type applicationResourceModel struct {
 }
 
 type appConfigModel struct {
-	Key   types.String `tfsdk:"key"`
-	Value types.String `tfsdk:"value"`
+	Key   fwtypes.StringEnum[awstypes.AppConfigType] `tfsdk:"key"`
+	Value types.String                               `tfsdk:"value"`
 }
 
 type dataSourceModel struct {
-	DataSourceArn         fwtypes.ARN  `tfsdk:"data_source_arn"`
+	DataSourceARN         fwtypes.ARN  `tfsdk:"data_source_arn"`
 	DataSourceDescription types.String `tfsdk:"data_source_description"`
 }
 
 type iamIdentityCenterOptionsModel struct {
-	Enabled                                types.Bool  `tfsdk:"enabled"`
-	IamIdentityCenterInstanceArn           fwtypes.ARN `tfsdk:"iam_identity_center_instance_arn"`
-	IamRoleForIdentityCenterApplicationArn fwtypes.ARN `tfsdk:"iam_role_for_identity_center_application_arn"`
-	IamIdentityCenterApplicationArn        fwtypes.ARN `tfsdk:"iam_identity_center_application_arn"`
+	Enabled                                types.Bool   `tfsdk:"enabled"`
+	IAMIdentityCenterApplicationARN        types.String `tfsdk:"iam_identity_center_application_arn"`
+	IAMIdentityCenterInstanceARN           fwtypes.ARN  `tfsdk:"iam_identity_center_instance_arn"`
+	IAMRoleForIdentityCenterApplicationARN fwtypes.ARN  `tfsdk:"iam_role_for_identity_center_application_arn"`
 }
