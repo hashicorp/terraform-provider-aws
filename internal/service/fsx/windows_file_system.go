@@ -227,6 +227,15 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"auth_secret_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.password",
+								"self_managed_active_directory.0.username",
+							},
+						},
 						"file_system_administrators_group": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -240,14 +249,21 @@ func resourceWindowsFileSystem() *schema.Resource {
 						},
 						names.AttrPassword: {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.auth_secret_arn",
+							},
 						},
 						names.AttrUsername: {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.auth_secret_arn",
+							},
 						},
 					},
 				},
@@ -661,8 +677,18 @@ func expandSelfManagedActiveDirectoryConfigurationCreate(l []any) *awstypes.Self
 	req := &awstypes.SelfManagedActiveDirectoryConfiguration{
 		DomainName: aws.String(data[names.AttrDomainName].(string)),
 		DnsIps:     flex.ExpandStringValueSet(data["dns_ips"].(*schema.Set)),
-		Password:   aws.String(data[names.AttrPassword].(string)),
-		UserName:   aws.String(data[names.AttrUsername].(string)),
+	}
+
+	if v, ok := data["auth_secret_arn"].(string); ok && v != "" {
+		req.DomainJoinServiceAccountSecret = aws.String(v)
+	}
+
+	if v, ok := data[names.AttrPassword].(string); ok && v != "" {
+		req.Password = aws.String(v)
+	}
+
+	if v, ok := data[names.AttrUsername].(string); ok && v != "" {
+		req.UserName = aws.String(v)
 	}
 
 	if v, ok := data["file_system_administrators_group"]; ok && v.(string) != "" {
@@ -686,6 +712,10 @@ func expandSelfManagedActiveDirectoryConfigurationUpdate(l []any) *awstypes.Self
 
 	if v, ok := data["dns_ips"].(*schema.Set); ok && v.Len() > 0 {
 		req.DnsIps = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := data["auth_secret_arn"].(string); ok && v != "" {
+		req.DomainJoinServiceAccountSecret = aws.String(v)
 	}
 
 	if v, ok := data[names.AttrPassword].(string); ok && v != "" {
@@ -713,6 +743,7 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 	m := map[string]any{
 		"dns_ips":                                adopts.DnsIps,
 		names.AttrDomainName:                     aws.ToString(adopts.DomainName),
+		"auth_secret_arn":                        aws.ToString(adopts.DomainJoinServiceAccountSecret),
 		"file_system_administrators_group":       aws.ToString(adopts.FileSystemAdministratorsGroup),
 		"organizational_unit_distinguished_name": aws.ToString(adopts.OrganizationalUnitDistinguishedName),
 		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
