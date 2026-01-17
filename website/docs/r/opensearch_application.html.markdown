@@ -165,9 +165,9 @@ resource "aws_opensearch_application" "example" {
   name = "my-opensearch-app"
 
   iam_identity_center_options {
-    enabled                                         = true
-    iam_identity_center_instance_arn                = tolist(data.aws_ssoadmin_instances.example.arns)[0]
-    iam_role_for_identity_center_application_arn    = aws_iam_role.opensearch_application.arn
+    enabled                                      = true
+    iam_identity_center_instance_arn             = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+    iam_role_for_identity_center_application_arn = aws_iam_role.opensearch_application.arn
   }
 
   tags = {
