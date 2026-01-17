@@ -112,6 +112,50 @@ func (r *resourcePolicyResource) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
+func (r *resourcePolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().XRayClient(ctx)
+
+	var plan resourcePolicyResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := xray.PutResourcePolicyInput{
+		PolicyDocument: plan.PolicyDocument.ValueStringPointer(),
+		PolicyName:     plan.PolicyName.ValueStringPointer(),
+	}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &in)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.PutResourcePolicy(ctx, &in)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.XRay, create.ErrActionUpdating, ResNameResourcePolicy, plan.PolicyName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	out, err := findResourcePolicyByName(ctx, conn, plan.PolicyName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.XRay, create.ErrActionSetting, ResNameResourcePolicy, plan.PolicyName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
 func (r *resourcePolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().XRayClient(ctx)
 
