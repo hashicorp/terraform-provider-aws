@@ -6,9 +6,9 @@ package opensearch
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
@@ -78,7 +78,7 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 30),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[a-z][a-z0-9\-]+$`),
+						regexache.MustCompile(`^[a-z][a-z0-9\-]+$`),
 						"name must start with a lowercase letter and contain only lowercase letters, numbers, and hyphens",
 					),
 				},
