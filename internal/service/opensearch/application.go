@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -131,10 +133,16 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrEnabled: schema.BoolAttribute{
 							Optional: true,
+							PlanModifiers: []planmodifier.Bool{
+								boolplanmodifier.RequiresReplace(),
+							},
 						},
 						"iam_identity_center_application_arn": schema.StringAttribute{
 							Computed: true,
@@ -145,10 +153,16 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 						"iam_identity_center_instance_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"iam_role_for_identity_center_application_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 				},
