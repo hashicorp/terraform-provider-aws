@@ -247,6 +247,6 @@ import {
 
 Using `terraform import`, import OpenSearch applications using the `id`. For example:
 
-```
-$ terraform import aws_opensearch_application.example app-1234567890abcdef0
+```console
+% terraform import aws_opensearch_application.example app-1234567890abcdef0
 ```
