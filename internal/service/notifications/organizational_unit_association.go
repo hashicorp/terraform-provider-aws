@@ -6,7 +6,6 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
@@ -17,13 +16,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -68,16 +68,15 @@ func (r *organizationalUnitAssociationResource) Create(ctx context.Context, requ
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var input notifications.AssociateOrganizationalUnitInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if response.Diagnostics.HasError() {
-		return
+	notificationConfigurationARN, organizationalUnitID := fwflex.StringValueFromFramework(ctx, data.NotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.OrganizationalUnitID)
+	input := notifications.AssociateOrganizationalUnitInput{
+		NotificationConfigurationArn: aws.String(notificationConfigurationARN),
+		OrganizationalUnitId:         aws.String(organizationalUnitID),
 	}
-
 	_, err := conn.AssociateOrganizationalUnit(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Organizational Unit Association (%s,%s)", data.NotificationConfigurationARN.ValueString(), data.OrganizationalUnitID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Organizational Unit Association (%s,%s)", notificationConfigurationARN, organizationalUnitID), err.Error())
 
 		return
 	}
@@ -95,9 +94,9 @@ func (r *organizationalUnitAssociationResource) Read(ctx context.Context, reques
 	conn := r.Meta().NotificationsClient(ctx)
 
 	notificationConfigurationARN, organizationalUnitID := fwflex.StringValueFromFramework(ctx, data.NotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.OrganizationalUnitID)
-	err := findOrganizationalUnitAssociationByTwoPartKey(ctx, conn, notificationConfigurationARN, organizationalUnitID)
+	_, err := findOrganizationalUnitAssociationByTwoPartKey(ctx, conn, notificationConfigurationARN, organizationalUnitID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -122,12 +121,11 @@ func (r *organizationalUnitAssociationResource) Delete(ctx context.Context, requ
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var input notifications.DisassociateOrganizationalUnitInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if response.Diagnostics.HasError() {
-		return
+	notificationConfigurationARN, organizationalUnitID := fwflex.StringValueFromFramework(ctx, data.NotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.OrganizationalUnitID)
+	input := notifications.DisassociateOrganizationalUnitInput{
+		NotificationConfigurationArn: aws.String(notificationConfigurationARN),
+		OrganizationalUnitId:         aws.String(organizationalUnitID),
 	}
-
 	_, err := conn.DisassociateOrganizationalUnit(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -135,7 +133,7 @@ func (r *organizationalUnitAssociationResource) Delete(ctx context.Context, requ
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Organizational Unit Association (%s,%s)", data.NotificationConfigurationARN.ValueString(), data.OrganizationalUnitID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Organizational Unit Association (%s,%s)", notificationConfigurationARN, organizationalUnitID), err.Error())
 
 		return
 	}
@@ -157,34 +155,42 @@ func (r *organizationalUnitAssociationResource) ImportState(ctx context.Context,
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("notification_configuration_arn"), parts[0])...)
 }
 
-func findOrganizationalUnitAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, notificationConfigurationArn, organizationalUnitID string) error {
+func findOrganizationalUnitAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, notificationConfigurationARN, organizationalUnitID string) (*string, error) {
 	input := notifications.ListOrganizationalUnitsInput{
-		NotificationConfigurationArn: aws.String(notificationConfigurationArn),
+		NotificationConfigurationArn: aws.String(notificationConfigurationARN),
+	}
+	output, err := findOrganizationalUnits(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	pages := notifications.NewListOrganizationalUnitsPaginator(conn, &input)
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v string) bool {
+		return v == organizationalUnitID
+	}))
+}
+
+func findOrganizationalUnits(ctx context.Context, conn *notifications.Client, input *notifications.ListOrganizationalUnitsInput) ([]string, error) {
+	var output []string
+
+	pages := notifications.NewListOrganizationalUnitsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		if slices.Contains(page.OrganizationalUnits, organizationalUnitID) {
-			return nil
-		}
+		output = append(output, page.OrganizationalUnits...)
 	}
 
-	return &retry.NotFoundError{
-		LastRequest: &input,
-	}
+	return output, nil
 }
 
 type organizationalUnitAssociationResourceModel struct {

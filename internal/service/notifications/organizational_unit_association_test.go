@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,18 +31,18 @@ func TestAccNotificationsOrganizationalUnitAssociation_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
-			},
-		},
-		CheckDestroy: testAccCheckOrganizationalUnitAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationalUnitAssociationConfig_base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckSleep(t, 30*time.Second),
+				),
+			},
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -54,7 +54,7 @@ func TestAccNotificationsOrganizationalUnitAssociation_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "organizational_unit_id",
-				ImportStateIdFunc:                    testAccOrganizationalUnitAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "notification_configuration_arn", "organizational_unit_id"),
 			},
 		},
 	})
@@ -70,18 +70,18 @@ func TestAccNotificationsOrganizationalUnitAssociation_organization(t *testing.T
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
-			},
-		},
-		CheckDestroy: testAccCheckOrganizationalUnitAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationalUnitAssociationConfig_base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckSleep(t, 30*time.Second),
+				),
+			},
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_organization(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -93,7 +93,7 @@ func TestAccNotificationsOrganizationalUnitAssociation_organization(t *testing.T
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "organizational_unit_id",
-				ImportStateIdFunc:                    testAccOrganizationalUnitAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "notification_configuration_arn", "organizational_unit_id"),
 			},
 		},
 	})
@@ -109,18 +109,18 @@ func TestAccNotificationsOrganizationalUnitAssociation_disappears(t *testing.T) 
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.NotificationsEndpointID)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NotificationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
-			},
-		},
-		CheckDestroy: testAccCheckOrganizationalUnitAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationalUnitAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationalUnitAssociationConfig_base(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckSleep(t, 30*time.Second),
+				),
+			},
 			{
 				Config: testAccOrganizationalUnitAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -147,7 +147,7 @@ func testAccCheckOrganizationalUnitAssociationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			err := tfnotifications.FindOrganizationalUnitAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes["organizational_unit_id"])
+			_, err := tfnotifications.FindOrganizationalUnitAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes["organizational_unit_id"])
 
 			if retry.NotFound(err) {
 				continue
@@ -173,20 +173,9 @@ func testAccCheckOrganizationalUnitAssociationExists(ctx context.Context, n stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		err := tfnotifications.FindOrganizationalUnitAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes["organizational_unit_id"])
+		_, err := tfnotifications.FindOrganizationalUnitAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["notification_configuration_arn"], rs.Primary.Attributes["organizational_unit_id"])
 
 		return err
-	}
-}
-
-func testAccOrganizationalUnitAssociationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["notification_configuration_arn"] + intflex.ResourceIdSeparator + rs.Primary.Attributes["organizational_unit_id"], nil
 	}
 }
 
@@ -194,45 +183,31 @@ func testAccOrganizationalUnitAssociationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
 
-resource "aws_notifications_notification_configuration" "test" {
-  name        = %[1]q
-  description = "example"
-}
-`, rName)
-}
-
-func testAccOrganizationalUnitAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationalUnitAssociationConfig_base(rName),
-		fmt.Sprintf(`
 resource "aws_organizations_organizational_unit" "test" {
   name      = %[1]q
   parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 
-# Allow time for organizational unit creation to propagate
-resource "time_sleep" "wait" {
-  depends_on = [
-    aws_organizations_organizational_unit.test,
-    aws_notifications_notification_configuration.test,
-  ]
-
-  create_duration = "5s"
+resource "aws_notifications_notification_configuration" "test" {
+  name        = %[1]q
+  description = "test"
+}
+`, rName)
 }
 
+func testAccOrganizationalUnitAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccOrganizationalUnitAssociationConfig_base(rName), `
 resource "aws_notifications_organizational_unit_association" "test" {
   depends_on = [time_sleep.wait]
 
   organizational_unit_id         = aws_organizations_organizational_unit.test.id
   notification_configuration_arn = aws_notifications_notification_configuration.test.arn
 }
-`, rName))
+`)
 }
 
 func testAccOrganizationalUnitAssociationConfig_organization(rName string) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationalUnitAssociationConfig_base(rName),
-		`
+	return acctest.ConfigCompose(testAccOrganizationalUnitAssociationConfig_base(rName), `
 resource "aws_notifications_organizational_unit_association" "test" {
   organizational_unit_id         = data.aws_organizations_organization.test.roots[0].id
   notification_configuration_arn = aws_notifications_notification_configuration.test.arn
