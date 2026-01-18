@@ -30,6 +30,11 @@ rule "aws_acm_certificate_lifecycle" {
 }
 
 # Rule needs to be disabled due to enum value case inconsistencies
+rule "aws_dms_s3_endpoint_invalid_canned_acl_for_objects" {
+  enabled = false
+}
+
+# Rule needs to be disabled due to enum value case inconsistencies
 rule "aws_dms_s3_endpoint_invalid_compression_type" {
   enabled = false
 }
@@ -46,10 +51,5 @@ rule "aws_dms_s3_endpoint_invalid_encryption_mode" {
 
 # Avoids errant findings related to directory paths in generated configuration files
 rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
-  enabled = false
-}
-
-# Rule needs to be disabled due to bad email regex in the linter rule
-rule "aws_guardduty_member_invalid_email" {
   enabled = false
 }
