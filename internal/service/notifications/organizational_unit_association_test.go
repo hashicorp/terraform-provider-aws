@@ -198,8 +198,6 @@ resource "aws_notifications_notification_configuration" "test" {
 func testAccOrganizationalUnitAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOrganizationalUnitAssociationConfig_base(rName), `
 resource "aws_notifications_organizational_unit_association" "test" {
-  depends_on = [time_sleep.wait]
-
   organizational_unit_id         = aws_organizations_organizational_unit.test.id
   notification_configuration_arn = aws_notifications_notification_configuration.test.arn
 }
@@ -209,7 +207,7 @@ resource "aws_notifications_organizational_unit_association" "test" {
 func testAccOrganizationalUnitAssociationConfig_organization(rName string) string {
 	return acctest.ConfigCompose(testAccOrganizationalUnitAssociationConfig_base(rName), `
 resource "aws_notifications_organizational_unit_association" "test" {
-  organizational_unit_id         = data.aws_organizations_organization.test.roots[0].id
+  organizational_unit_id         = "Root"
   notification_configuration_arn = aws_notifications_notification_configuration.test.arn
 }
 `)
