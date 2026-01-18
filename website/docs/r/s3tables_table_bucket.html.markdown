@@ -20,6 +20,18 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Storage Class Configuration
+
+```terraform
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+
+  storage_class_configuration = {
+    storage_class = "INTELLIGENT_TIERING"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -37,6 +49,9 @@ The following arguments are optional:
 * `maintenance_configuration` - (Optional) A single table bucket maintenance configuration object.
   [See `maintenance_configuration` below](#maintenance_configuration).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `storage_class_configuration` - (Optional) A single table bucket storage class configuration object.
+  If not specified, AWS will use the default storage class (`STANDARD`).
+  [See `storage_class_configuration` below](#storage_class_configuration).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption_configuration`
@@ -70,6 +85,12 @@ The `iceberg_unreferenced_file_removal.settings` object supports the following a
   Must be at least `1`.
 * `unreferenced_days` - (Required) Unreferenced data objects are marked for deletion after this many days.
   Must be at least `1`.
+
+### `storage_class_configuration`
+
+The `storage_class_configuration` object supports the following argument:
+
+* `storage_class` - (Required) The storage class for the table bucket. Valid values are `STANDARD` and `INTELLIGENT_TIERING`.
 
 ## Attribute Reference
 

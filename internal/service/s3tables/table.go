@@ -128,6 +128,15 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"storage_class_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[storageClassConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+					objectplanmodifier.RequiresReplace(),
+				},
+			},
 			"table_bucket_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -393,6 +402,26 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		}
 	}
 
+	awsStorageClassConfig, err := findTableStorageClassByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) storage class", name), err.Error())
+
+		return
+	}
+
+	var storageClassConfiguration storageClassConfigurationModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, awsStorageClassConfig, &storageClassConfiguration)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	var diags diag.Diagnostics
+	data.StorageClassConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &storageClassConfiguration)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -460,6 +489,28 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 		}
 		var diags diag.Diagnostics
 		data.EncryptionConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	awsStorageClassConfig, err := findTableStorageClassByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) storage class", name), err.Error())
+
+		return
+	default:
+		var storageClassConfiguration storageClassConfigurationModel
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsStorageClassConfig, &storageClassConfiguration)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		var diags diag.Diagnostics
+		data.StorageClassConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &storageClassConfiguration)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
@@ -709,6 +760,36 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	return output.EncryptionConfiguration, nil
 }
 
+func findTableStorageClassByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*awstypes.StorageClassConfiguration, error) {
+	input := s3tables.GetTableStorageClassInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	return findTableStorageClass(ctx, conn, &input)
+}
+
+func findTableStorageClass(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableStorageClassInput) (*awstypes.StorageClassConfiguration, error) {
+	output, err := conn.GetTableStorageClass(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StorageClassConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.StorageClassConfiguration, nil
+}
+
 func findTableMaintenanceConfigurationByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {
 	input := s3tables.GetTableMaintenanceConfigurationInput{
 		Name:           aws.String(name),
@@ -741,25 +822,26 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 
 type tableResourceModel struct {
 	framework.WithRegionModel
-	ARN                      types.String                                              `tfsdk:"arn"`
-	CreatedAt                timetypes.RFC3339                                         `tfsdk:"created_at"`
-	CreatedBy                types.String                                              `tfsdk:"created_by"`
-	EncryptionConfiguration  fwtypes.ObjectValueOf[encryptionConfigurationModel]       `tfsdk:"encryption_configuration"`
-	Format                   fwtypes.StringEnum[awstypes.OpenTableFormat]              `tfsdk:"format"`
-	MaintenanceConfiguration fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
-	Metadata                 fwtypes.ListNestedObjectValueOf[tableMetadataModel]       `tfsdk:"metadata"`
-	MetadataLocation         types.String                                              `tfsdk:"metadata_location"`
-	ModifiedAt               timetypes.RFC3339                                         `tfsdk:"modified_at"`
-	ModifiedBy               types.String                                              `tfsdk:"modified_by"`
-	Name                     types.String                                              `tfsdk:"name"`
-	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
-	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
-	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
-	Tags                     tftags.Map                                                `tfsdk:"tags"`
-	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
-	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
-	VersionToken             types.String                                              `tfsdk:"version_token"`
-	WarehouseLocation        types.String                                              `tfsdk:"warehouse_location"`
+	ARN                       types.String                                              `tfsdk:"arn"`
+	CreatedAt                 timetypes.RFC3339                                         `tfsdk:"created_at"`
+	CreatedBy                 types.String                                              `tfsdk:"created_by"`
+	EncryptionConfiguration   fwtypes.ObjectValueOf[encryptionConfigurationModel]       `tfsdk:"encryption_configuration"`
+	Format                    fwtypes.StringEnum[awstypes.OpenTableFormat]              `tfsdk:"format"`
+	MaintenanceConfiguration  fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
+	Metadata                  fwtypes.ListNestedObjectValueOf[tableMetadataModel]       `tfsdk:"metadata"`
+	MetadataLocation          types.String                                              `tfsdk:"metadata_location"`
+	ModifiedAt                timetypes.RFC3339                                         `tfsdk:"modified_at"`
+	ModifiedBy                types.String                                              `tfsdk:"modified_by"`
+	Name                      types.String                                              `tfsdk:"name"`
+	Namespace                 types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
+	OwnerAccountID            types.String                                              `tfsdk:"owner_account_id"`
+	StorageClassConfiguration fwtypes.ObjectValueOf[storageClassConfigurationModel]     `tfsdk:"storage_class_configuration"`
+	TableBucketARN            fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
+	Tags                      tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                `tfsdk:"tags_all"`
+	Type                      fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
+	VersionToken              types.String                                              `tfsdk:"version_token"`
+	WarehouseLocation         types.String                                              `tfsdk:"warehouse_location"`
 }
 
 type tableMaintenanceConfigurationModel struct {

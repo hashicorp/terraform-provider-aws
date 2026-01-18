@@ -79,6 +79,30 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Storage Class Configuration
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  storage_class_configuration = {
+    storage_class = "INTELLIGENT_TIERING"
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -103,6 +127,8 @@ The following arguments are optional:
 * `metadata` - (Optional) Contains details about the table metadata. This configuration specifies the metadata format and schema for the table. Currently only supports Iceberg format.
   [See `metadata` below](#metadata).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `storage_class_configuration` - (Optional, Forces new resource) A single table storage class configuration object.
+  [See `storage_class_configuration` below](#storage_class_configuration).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `encryption_configuration`
@@ -183,6 +209,14 @@ The `field` configuration block supports the following arguments:
 * `name` - (Required) The name of the field.
 * `type` - (Required) The field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
 * `required` - (Optional) A Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
+
+### `storage_class_configuration`
+
+The `storage_class_configuration` object supports the following argument:
+
+* `storage_class` - (Required, Forces new resource) The storage class for the table.
+  Valid values are `STANDARD` and `INTELLIGENT_TIERING`.
+  Note: Once set, the storage class cannot be changed and requires resource replacement.
 
 ## Attribute Reference
 
