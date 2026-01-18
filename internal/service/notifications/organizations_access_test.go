@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNotificationsOrganizationsAccess_basic(t *testing.T) {
+func testAccOrganizationsAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_notifications_organizations_access.test"
 
