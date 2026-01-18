@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications_test
@@ -74,7 +74,7 @@ func TestAccNotificationsManagedNotificationAdditionalChannelAssociation_disappe
 				Config: testAccManagedNotificationAdditionalChannelAssociationConfig_basic(rName, rEmailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedNotificationAdditionalChannelAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceManagedNotificationAdditionalChannelAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceManagedNotificationAdditionalChannelAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
