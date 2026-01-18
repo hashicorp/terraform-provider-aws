@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +45,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_basic(t *t
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "contact_identifier",
-				ImportStateIdFunc:                    testAccManagedNotificationAccountContactAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "managed_notification_configuration_arn", "contact_identifier"),
 			},
 		},
 	})
@@ -70,7 +69,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_disappears
 				Config: testAccManagedNotificationAccountContactAssociationConfig_basic(string(awstypes.AccountContactTypeAccountAlternateSecurity)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckManagedNotificationAccountContactAssociationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceManagedNotificationAccountContactAssociation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceManagedNotificationAccountContactAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -81,58 +80,6 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_disappears
 			},
 		},
 	})
-}
-
-func testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_notifications_managed_notification_account_contact_association" {
-				continue
-			}
-
-			err := tfnotifications.FindManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_configuration_arn"], rs.Primary.Attributes["contact_identifier"])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return errors.New("User Notifications Managed Notification Account Contact Association still exists")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckManagedNotificationAccountContactAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
-
-		err := tfnotifications.FindManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_configuration_arn"], rs.Primary.Attributes["contact_identifier"])
-
-		return err
-	}
-}
-
-func testAccManagedNotificationAccountContactAssociationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["managed_notification_configuration_arn"] + intflex.ResourceIdSeparator + rs.Primary.Attributes["contact_identifier"], nil
-	}
 }
 
 func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateBilling(t *testing.T) {
@@ -160,7 +107,7 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateB
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "contact_identifier",
-				ImportStateIdFunc:                    testAccManagedNotificationAccountContactAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "managed_notification_configuration_arn", "contact_identifier"),
 			},
 		},
 	})
@@ -191,10 +138,51 @@ func TestAccNotificationsManagedNotificationAccountContactAssociation_alternateO
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "contact_identifier",
-				ImportStateIdFunc:                    testAccManagedNotificationAccountContactAssociationImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "managed_notification_configuration_arn", "contact_identifier"),
 			},
 		},
 	})
+}
+
+func testAccCheckManagedNotificationAccountContactAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_notifications_managed_notification_account_contact_association" {
+				continue
+			}
+
+			_, err := tfnotifications.FindManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_configuration_arn"], rs.Primary.Attributes["contact_identifier"])
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return errors.New("User Notifications Managed Notification Account Contact Association still exists")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckManagedNotificationAccountContactAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
+
+		_, err := tfnotifications.FindManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_configuration_arn"], rs.Primary.Attributes["contact_identifier"])
+
+		return err
+	}
 }
 
 func testAccManagedNotificationAccountContactAssociationConfig_basic(contactIdentifier string) string {

@@ -6,7 +6,6 @@ package notifications
 import (
 	"context"
 	"fmt"
-	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
@@ -16,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -68,16 +68,15 @@ func (r *managedNotificationAccountContactAssociationResource) Create(ctx contex
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var input notifications.AssociateManagedNotificationAccountContactInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if response.Diagnostics.HasError() {
-		return
+	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), data.ContactIdentifier.ValueEnum()
+	input := notifications.AssociateManagedNotificationAccountContactInput{
+		ContactIdentifier:                   contactIdentifier,
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
-
 	_, err := conn.AssociateManagedNotificationAccountContact(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Managed Notification Account Contact Association (%s,%s)", data.ManagedNotificationConfigurationARN.ValueString(), data.ContactIdentifier.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Managed Notification Account Contact Association (%s,%s)", managedNotificationConfigurationARN, contactIdentifier), err.Error())
 
 		return
 	}
@@ -95,9 +94,9 @@ func (r *managedNotificationAccountContactAssociationResource) Read(ctx context.
 	conn := r.Meta().NotificationsClient(ctx)
 
 	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ContactIdentifier)
-	err := findManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, contactIdentifier)
+	_, err := findManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, contactIdentifier)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -122,12 +121,11 @@ func (r *managedNotificationAccountContactAssociationResource) Delete(ctx contex
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	var input notifications.DisassociateManagedNotificationAccountContactInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if response.Diagnostics.HasError() {
-		return
+	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), data.ContactIdentifier.ValueEnum()
+	input := notifications.DisassociateManagedNotificationAccountContactInput{
+		ContactIdentifier:                   contactIdentifier,
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
-
 	_, err := conn.DisassociateManagedNotificationAccountContact(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -135,7 +133,7 @@ func (r *managedNotificationAccountContactAssociationResource) Delete(ctx contex
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Managed Notification Account Contact Association (%s,%s)", data.ManagedNotificationConfigurationARN.ValueString(), data.ContactIdentifier.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Managed Notification Account Contact Association (%s,%s)", managedNotificationConfigurationARN, contactIdentifier), err.Error())
 
 		return
 	}
@@ -157,36 +155,51 @@ func (r *managedNotificationAccountContactAssociationResource) ImportState(ctx c
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("managed_notification_configuration_arn"), parts[0])...)
 }
 
-func findManagedNotificationAccountContactAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, managedNotificationConfigurationArn, contactIdentifier string) error {
+func findManagedNotificationAccountContactAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, managedNotificationConfigurationARN, contactIdentifier string) (*awstypes.ManagedNotificationChannelAssociationSummary, error) {
 	input := notifications.ListManagedNotificationChannelAssociationsInput{
-		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationArn),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
 
-	pages := notifications.NewListManagedNotificationChannelAssociationsPaginator(conn, &input)
+	return findManagedNotificationChannelAssociation(ctx, conn, &input, func(v *awstypes.ManagedNotificationChannelAssociationSummary) bool {
+		return aws.ToString(v.ChannelIdentifier) == contactIdentifier && v.ChannelType == awstypes.ChannelTypeAccountContact
+	})
+}
+
+func findManagedNotificationChannelAssociation(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) (*awstypes.ManagedNotificationChannelAssociationSummary, error) {
+	output, err := findManagedNotificationChannelAssociations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findManagedNotificationChannelAssociations(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) ([]awstypes.ManagedNotificationChannelAssociationSummary, error) {
+	var output []awstypes.ManagedNotificationChannelAssociationSummary
+
+	pages := notifications.NewListManagedNotificationChannelAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		if slices.ContainsFunc(page.ChannelAssociations, func(ca awstypes.ManagedNotificationChannelAssociationSummary) bool {
-			return aws.ToString(ca.ChannelIdentifier) == contactIdentifier && string(ca.ChannelType) == "ACCOUNT_CONTACT"
-		}) {
-			return nil
+		for _, v := range page.ChannelAssociations {
+			if filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
 
-	return &retry.NotFoundError{
-		LastRequest: &input,
-	}
+	return output, nil
 }
 
 type managedNotificationAccountContactAssociationResourceModel struct {
