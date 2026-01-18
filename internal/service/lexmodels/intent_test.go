@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -599,7 +599,7 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 				Config: testAccIntentConfig_basic(testIntentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceIntent(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceIntent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

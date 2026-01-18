@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -90,6 +90,23 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_viaCompat(t *testi
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_viaCompat,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentViaExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_routingPolicyNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_routingPolicyNames,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentRoutingPolicyNamesExpectedJSON),
 				),
 			},
 		},
@@ -1131,6 +1148,143 @@ const testAccPolicyDocumentViaExpectedJSON = `{
       "action": {
         "add-to-network-function-group": "InspectionVPC"
       }
+    }
+  ]
+}`
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_routingPolicyNames = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges = [
+      "64512-65534"
+    ]
+    inside_cidr_blocks = [
+      "10.1.0.0/16"
+    ]
+    edge_locations {
+      location = "us-east-1"
+      asn      = 64555
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    description                   = "Shared services segment"
+    require_attachment_acceptance = true
+    isolate_attachments           = false
+  }
+
+  segments {
+    name                          = "prod"
+    description                   = "Production segment"
+    require_attachment_acceptance = true
+    isolate_attachments           = false
+  }
+
+  routing_policies {
+    routing_policy_name        = "routingFilter"
+    routing_policy_description = "Test routing policy"
+    routing_policy_direction   = "inbound"
+    routing_policy_number      = 100
+    routing_policy_rules {
+      rule_number = 1
+      rule_definition {
+        condition_logic = "and"
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  segment_actions {
+    action               = "share"
+    mode                 = "attachment-route"
+    segment              = "shared"
+    share_with           = ["prod"]
+    routing_policy_names = ["routingFilter"]
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
+  "version": "2025.11",
+  "core-network-configuration": {
+    "vpn-ecmp-support": false,
+    "dns-support": true,
+    "security-group-referencing-support": false,
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "inside-cidr-blocks": [
+      "10.1.0.0/16"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-1",
+        "asn": 64555
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "shared",
+      "description": "Shared services segment",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "prod",
+      "description": "Production segment",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    }
+  ],
+  "routing-policies": [
+    {
+      "routing-policy-name": "routingFilter",
+      "routing-policy-description": "Test routing policy",
+      "routing-policy-direction": "inbound",
+      "routing-policy-number": 100,
+      "routing-policy-rules": [
+        {
+          "rule-number": 1,
+          "rule-definition": {
+            "condition-logic": "and",
+            "match-conditions": [
+              {
+                "type": "prefix-in-cidr",
+                "value": "10.0.0.0/8"
+              }
+            ],
+            "action": {
+              "type": "allow"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "share",
+      "mode": "attachment-route",
+      "segment": "shared",
+      "share-with": [
+        "prod"
+      ],
+      "routing-policy-names": [
+        "routingFilter"
+      ]
     }
   ]
 }`

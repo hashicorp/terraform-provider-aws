@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -248,7 +248,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	instance, err := findReplicationInstanceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -465,7 +465,7 @@ func statusReplicationInstance(conn *dms.Client, id string) retry.StateRefreshFu
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findReplicationInstanceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

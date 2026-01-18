@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudcontrol
@@ -348,7 +348,7 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 	}
 
 	if output == nil || output.ResourceDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceDescription, nil
@@ -376,7 +376,7 @@ func findProgressEvent(ctx context.Context, conn *cloudcontrol.Client, input *cl
 	}
 
 	if output == nil || output.ProgressEvent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ProgressEvent, nil
@@ -386,7 +386,7 @@ func statusProgressEventOperation(conn *cloudcontrol.Client, requestToken string
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findProgressEventByRequestToken(ctx, conn, requestToken)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

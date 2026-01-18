@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/useragent"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -43,6 +44,11 @@ var (
 type sdkProvider struct {
 	provider        *schema.Provider
 	servicePackages iter.Seq2[int, conns.ServicePackage]
+}
+
+// providerMeta matches the shape of ProviderMetaSchema
+type providerMeta struct {
+	UserAgent []string `cty:"user_agent"`
 }
 
 // NewProvider returns a new, initialized Terraform Plugin SDK v2-style provider instance.
@@ -249,6 +255,15 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Description: "The region where AWS STS operations will take place. Examples\n" +
 						"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 				},
+				"tag_policy_compliance": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Description: `The severity with which to enforce organizational tagging policies on resources managed by this provider instance. ` +
+						`At this time this only includes compliance with required tag keys by resource type. ` +
+						`Valid values are "error", "warning", and "disabled". ` +
+						`When unset or "disabled", tag policy compliance will not be enforced by the provider. ` +
+						`Can also be configured with the ` + tftags.TagPolicyComplianceEnvVar + ` environment variable.`,
+				},
 				"token": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -269,6 +284,22 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					Type:        schema.TypeBool,
 					Optional:    true,
 					Description: "Resolve an endpoint with FIPS capability",
+				},
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+			},
+
+			// ProviderMetaSchema enables module-scoped User-Agent modifications
+			ProviderMetaSchema: map[string]*schema.Schema{
+				"user_agent": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					Description: "Product details to append to the User-Agent string sent in all AWS API calls.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
 
@@ -465,6 +496,13 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
+	tagCfg, dg := expandTagPolicyConfig(cty.GetAttrPath("tag_policy_compliance"), d.Get("tag_policy_compliance").(string))
+	diags = append(diags, dg...)
+	if dg.HasError() {
+		return nil, diags
+	}
+	config.TagPolicyConfig = tagCfg
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		config.MaxRetries = v.(int)
 	}
@@ -483,6 +521,10 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		} else {
 			config.EC2MetadataServiceEnableState = imds.ClientEnabled
 		}
+	}
+
+	if v, ok := d.GetOk("user_agent"); ok && len(v.([]any)) > 0 {
+		config.UserAgent = useragent.FromSlice(v.([]any))
 	}
 
 	var c *conns.AWSClient
@@ -577,7 +619,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			opts := wrappedDataSourceOptions{
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -586,10 +628,21 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -703,6 +756,11 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					why:         CustomizeDiff,
 					interceptor: setTagsAll(),
 				})
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        Before,
+					why:         CustomizeDiff,
+					interceptor: validateRequiredTags(),
+				})
 			}
 
 			if len(resource.Identity.Attributes) > 0 {
@@ -742,7 +800,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
-				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, meta any) (context.Context, error) {
+				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
 					var overrideRegion string
 
 					if isRegionOverrideEnabled && getAttribute != nil {
@@ -751,10 +809,21 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						}
 					}
 
-					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, overrideRegion)
+					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
 					if c, ok := meta.(*conns.AWSClient); ok {
-						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx))
+						ctx = tftags.NewContext(ctx, c.DefaultTagsConfig(ctx), c.IgnoreTagsConfig(ctx), c.TagPolicyConfig(ctx))
 						ctx = c.RegisterLogger(ctx)
+					}
+
+					if getProviderMeta != nil {
+						var metadata providerMeta
+						if err := getProviderMeta(&metadata); err != nil {
+							return ctx, fmt.Errorf("getting provider_meta: %w", err)
+						}
+
+						if len(metadata.UserAgent) > 0 {
+							ctx = useragent.Context(ctx, useragent.FromSlice(metadata.UserAgent))
+						}
 					}
 
 					return ctx, nil
@@ -1153,4 +1222,41 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]any) *tftags.IgnoreC
 	}
 
 	return ignoreConfig
+}
+
+func expandTagPolicyConfig(path cty.Path, severity string) (*tftags.TagPolicyConfig, diag.Diagnostics) {
+	envSeverity := os.Getenv(tftags.TagPolicyComplianceEnvVar)
+	switch {
+	case severity != "" && severity != "disabled":
+		return &tftags.TagPolicyConfig{Severity: severity}, validateTagPolicySeverity(path, severity)
+	case envSeverity != "" && severity != "disabled":
+		return &tftags.TagPolicyConfig{Severity: envSeverity}, validateTagPolicySeverityEnvVar(envSeverity)
+	}
+
+	return nil, nil
+}
+
+func validateTagPolicySeverity(path cty.Path, s string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch s {
+	case "error", "warning", "disabled":
+		return diags
+	}
+	return append(diags, errs.NewInvalidValueAttributeError(path, `Must be one of "error", "warning", or "disabled"`))
+}
+
+const (
+	summaryInvalidEnvironmentVariableValue = "Invalid environment variable value"
+)
+
+func validateTagPolicySeverityEnvVar(s string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch s {
+	case "error", "warning", "disabled":
+		return diags
+	}
+	return append(diags, errs.NewErrorDiagnostic(
+		summaryInvalidEnvironmentVariableValue,
+		fmt.Sprintf(`%s must be one of "error", "warning", or "disabled"`, tftags.TagPolicyComplianceEnvVar),
+	))
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,7 +41,8 @@ func resourceIPAMPool() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(3 * time.Minute),
+			// Cross-region resources take 20+ minutes to be managed by IPAM
+			Create: schema.DefaultTimeout(35 * time.Minute),
 			Update: schema.DefaultTimeout(3 * time.Minute),
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
@@ -138,6 +139,38 @@ func resourceIPAMPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"source_resource": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrResourceID: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						names.AttrResourceOwner: {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"resource_region": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidRegionName,
+						},
+						names.AttrResourceType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.IpamPoolSourceResourceType](),
+						},
+					},
+				},
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -155,7 +188,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 	scopeID := d.Get("ipam_scope_id").(string)
 
 	addressFamily := awstypes.AddressFamily(d.Get("address_family").(string))
-	input := &ec2.CreateIpamPoolInput{
+	input := ec2.CreateIpamPoolInput{
 		AddressFamily:     addressFamily,
 		ClientToken:       aws.String(id.UniqueId()),
 		IpamScopeId:       aws.String(scopeID),
@@ -213,7 +246,39 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.SourceIpamPoolId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateIpamPool(ctx, input)
+	if v, ok := d.GetOk("source_resource"); ok && len(v.([]any)) > 0 {
+		if tfMap := v.([]any)[0].(map[string]any); tfMap != nil {
+			resourceID := tfMap[names.AttrResourceID].(string)
+			resourceOwner := aws.String(tfMap[names.AttrResourceOwner].(string))
+			resourceRegion := tfMap["resource_region"].(string)
+			resourceType := awstypes.IpamPoolSourceResourceType(tfMap[names.AttrResourceType].(string))
+
+			if resourceType == awstypes.IpamPoolSourceResourceTypeVpc {
+				optFn := func(o *ec2.Options) { o.Region = resourceRegion }
+				if _, err := findVPCByID(ctx, conn, resourceID, optFn); err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", resourceID, err)
+				}
+			}
+
+			log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
+
+			// Wait for the resource to be managed by IPAM - can take 20+ minutes
+			if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, addressFamily, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for %s to be managed by IPAM: %s", resourceID, err)
+			}
+
+			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)
+
+			input.SourceResource = &awstypes.IpamPoolSourceResourceRequest{
+				ResourceId:     aws.String(resourceID),
+				ResourceOwner:  resourceOwner,
+				ResourceRegion: aws.String(resourceRegion),
+				ResourceType:   resourceType,
+			}
+		}
+	}
+
+	output, err := conn.CreateIpamPool(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool: %s", err)
@@ -234,7 +299,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	pool, err := findIPAMPoolByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -258,6 +323,17 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("public_ip_source", pool.PublicIpSource)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
+	if v := pool.SourceResource; v != nil {
+		tfMap := map[string]any{
+			names.AttrResourceID:    aws.ToString(v.ResourceId),
+			names.AttrResourceOwner: aws.ToString(v.ResourceOwner),
+			"resource_region":       aws.ToString(v.ResourceRegion),
+			names.AttrResourceType:  v.ResourceType,
+		}
+		d.Set("source_resource", []any{tfMap})
+	} else {
+		d.Set("source_resource", nil)
+	}
 	d.Set(names.AttrState, pool.State)
 
 	setTagsOut(ctx, pool.Tags)
@@ -270,7 +346,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyIpamPoolInput{
+		input := ec2.ModifyIpamPoolInput{
 			IpamPoolId: aws.String(d.Id()),
 		}
 
@@ -308,7 +384,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.ModifyIpamPool(ctx, input)
+		_, err := conn.ModifyIpamPool(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s): %s", d.Id(), err)
@@ -326,7 +402,7 @@ func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.DeleteIpamPoolInput{
+	input := ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
 	}
 
@@ -335,7 +411,7 @@ func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
-	_, err := conn.DeleteIpamPool(ctx, input)
+	_, err := conn.DeleteIpamPool(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags

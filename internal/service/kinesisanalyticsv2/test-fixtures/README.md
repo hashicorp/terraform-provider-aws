@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Amazon Managed Service for Apache Flink Acceptance Test Data
 
 ## `amazon-msf-java-stream-app-1.0.jar`

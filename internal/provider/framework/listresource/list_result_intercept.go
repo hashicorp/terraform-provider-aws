@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package listresource
@@ -6,14 +6,17 @@ package listresource
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"unique"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/interceptors"
@@ -26,6 +29,8 @@ import (
 // Multiple values can be ORed together.
 type when uint16
 
+type When = when
+
 const (
 	Before  when = 1 << iota // Interceptor is invoked before call to method in schema
 	After                    // Interceptor is invoked after successful call to method in schema
@@ -35,12 +40,13 @@ const (
 
 type InterceptorParams struct {
 	C      *conns.AWSClient
+	Data   any
 	Result *list.ListResult
 	When   when
 }
 
-type ListResultInterceptor interface {
-	Read(ctx context.Context, params InterceptorParams) diag.Diagnostics
+type ListResultInterceptor[T InterceptorParams | InterceptorParamsSDK] interface {
+	Read(ctx context.Context, params T) diag.Diagnostics
 }
 
 // TODO: this could be unique as well
@@ -58,7 +64,7 @@ func TagsInterceptor(tags unique.Handle[inttypes.ServicePackageResourceTags]) ta
 func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	sp, serviceName, resourceName, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
+	sp, serviceName, resourceName, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
 	if !ok {
 		return diags
 	}
@@ -100,6 +106,8 @@ func (r tagsInterceptor) Read(ctx context.Context, params InterceptorParams) dia
 			return diags
 		}
 	}
+
+	tagsInContext.TagsOut = nil
 
 	return diags
 }
@@ -212,6 +220,182 @@ func (r setRegionInterceptor) Read(ctx context.Context, params InterceptorParams
 		if diags.HasError() {
 			return diags
 		}
+	}
+
+	return diags
+}
+
+type defaultObjectInterceptor struct{}
+
+func DefaultObjectInterceptor() defaultObjectInterceptor {
+	return defaultObjectInterceptor{}
+}
+
+func (r defaultObjectInterceptor) Read(ctx context.Context, params InterceptorParams) diag.Diagnostics {
+	var diags diag.Diagnostics
+	switch params.When {
+	case Before:
+		if reflect.ValueOf(params.Data).Kind() != reflect.Ptr {
+			diags.AddError(
+				"Internal Error",
+				"data object must be a pointer")
+			return diags
+		}
+
+		objData := dereferencePointer(reflect.ValueOf(params.Data))
+
+		for tfName, fieldName := range tfFieldToStructFieldMap() {
+			field := objData.FieldByName(fieldName)
+			if !field.IsValid() {
+				continue
+			}
+
+			if !implementsAttrValue(field) {
+				diags.AddError(
+					"Internal Error",
+					"An unexpected error occurred. "+
+						"This is always an error in the provider. "+
+						"Please report the following to the provider developer:\n\n"+
+						fmt.Sprintf("Expected field %s to implement attr.Value, got: %T", fieldName, objData.FieldByName(fieldName).Interface()),
+				)
+				return diags
+			}
+
+			switch field.Interface().(attr.Value).Type(ctx).(type) {
+			case basetypes.MapTypable:
+				if field.Type() == reflect.TypeFor[tftags.Map]() {
+					field.Set(reflect.ValueOf(tftags.NewMapValueNull()))
+				}
+			case basetypes.ObjectTypable:
+				if field.Type() == reflect.TypeFor[timeouts.Value]() {
+					timeoutsType, d := params.Result.Resource.Schema.TypeAtPath(ctx, path.Root(tfName))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+					nullObj, d := newNullObject(timeoutsType)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					t := timeouts.Value{}
+					t.Object = nullObj
+					field.Set(reflect.ValueOf(t))
+				}
+			}
+		}
+
+		return diags
+	}
+
+	return diags
+}
+
+func dereferencePointer(value reflect.Value) reflect.Value {
+	if value.Kind() == reflect.Ptr {
+		return value.Elem()
+	}
+	return value
+}
+
+func implementsAttrValue(field reflect.Value) bool {
+	return field.Type().Implements(reflect.TypeFor[attr.Value]())
+}
+
+func tfFieldToStructFieldMap() map[string]string {
+	return map[string]string{
+		names.AttrTags:     "Tags",
+		names.AttrTagsAll:  "TagsAll",
+		names.AttrTimeouts: "Timeouts",
+	}
+}
+
+func newNullObject(typ attr.Type) (obj basetypes.ObjectValue, diags diag.Diagnostics) {
+	i, ok := typ.(attr.TypeWithAttributeTypes)
+	if !ok {
+		diags.AddError(
+			"Internal Error",
+			"An unexpected error occurred. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Expected value type to implement attr.TypeWithAttributeTypes, got: %T", typ),
+		)
+		return
+	}
+
+	attrTypes := i.AttributeTypes()
+
+	obj = basetypes.NewObjectNull(attrTypes)
+
+	return obj, diags
+}
+
+type InterceptorParamsSDK struct {
+	C            *conns.AWSClient
+	ResourceData *schema.ResourceData
+	When         when
+}
+
+type tagsInterceptorSDK struct {
+	interceptors.HTags
+}
+
+func TagsInterceptorSDK(tags unique.Handle[inttypes.ServicePackageResourceTags]) tagsInterceptorSDK {
+	return tagsInterceptorSDK{
+		HTags: interceptors.HTags(tags),
+	}
+}
+
+func (r tagsInterceptorSDK) Read(ctx context.Context, params InterceptorParamsSDK) diag.Diagnostics {
+	var diags diag.Diagnostics
+	sp, _, _, _, tagsInContext, ok := interceptors.InfoFromContext(ctx, params.C)
+	if !ok {
+		return diags
+	}
+
+	switch params.When {
+	case After:
+		// If the R handler didn't set tags, try and read them from the service API.
+		if tagsInContext.TagsOut.IsNone() {
+			// Some old resources may not have the required attribute set after Read:
+			// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+			if identifier := r.GetIdentifierSDKv2(ctx, params.ResourceData); identifier != "" {
+				if err := r.ListTags(ctx, sp, params.C, identifier); err != nil {
+					diags.Append(diag.NewErrorDiagnostic(
+						"Error Listing Tags",
+						fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+					))
+					return diags
+				}
+			}
+		}
+
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(sp.ServicePackageName()).IgnoreConfig(params.C.IgnoreTagsConfig(ctx))
+
+		// The resource's configured tags can now include duplicate tags that have been configured on the provider.
+		if err := params.ResourceData.Set(names.AttrTags, tags.ResolveDuplicates(ctx, params.C.DefaultTagsConfig(ctx), params.C.IgnoreTagsConfig(ctx), params.ResourceData, names.AttrTags, nil).Map()); err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Error Setting Tags",
+				fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+			))
+			return diags
+		}
+
+		// Computed tags_all do.
+		if err := params.ResourceData.Set(names.AttrTagsAll, tags.Map()); err != nil {
+			diags.Append(diag.NewErrorDiagnostic(
+				"Error Listing TagsAll",
+				fmt.Sprintf("An error occurred while listing tags for %s: %s", sp.ServicePackageName(), err.Error()),
+			))
+			return diags
+		}
+
+		// reset tags in context for next resource
+		tagsInContext.TagsOut = nil
+
+		return diags
 	}
 
 	return diags

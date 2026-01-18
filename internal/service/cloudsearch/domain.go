@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch
@@ -561,7 +561,7 @@ func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.DomainStatusList)
@@ -585,7 +585,7 @@ func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.
 	}
 
 	if output == nil || output.AvailabilityOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AvailabilityOptions, nil
@@ -599,7 +599,7 @@ func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.Clie
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -623,7 +623,7 @@ func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearc
 	}
 
 	if output == nil || output.DomainEndpointOptions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainEndpointOptions, nil
@@ -637,7 +637,7 @@ func findScalingParametersByName(ctx context.Context, conn *cloudsearch.Client, 
 	}
 
 	if output.Options == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Options, nil
@@ -661,7 +661,7 @@ func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.Cl
 	}
 
 	if output == nil || output.ScalingParameters == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ScalingParameters, nil
@@ -671,7 +671,7 @@ func statusDomainDeleting(conn *cloudsearch.Client, name string) retry.StateRefr
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -687,7 +687,7 @@ func statusDomainProcessing(conn *cloudsearch.Client, name string) retry.StateRe
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findDomainByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

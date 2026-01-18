@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -15,12 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/aws/aws-sdk-go-v2/service/amp/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,6 +31,8 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.RuleGroupsNamespaceDescription")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
@@ -97,7 +99,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 	rgn, err := findRuleGroupNamespaceByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Prometheus Rule Group Namespace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -204,8 +206,7 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -214,17 +215,17 @@ func findRuleGroupNamespaceByARN(ctx context.Context, conn *amp.Client, arn stri
 	}
 
 	if output == nil || output.RuleGroupsNamespace == nil || output.RuleGroupsNamespace.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuleGroupsNamespace, nil
 }
 
-func statusRuleGroupNamespace(ctx context.Context, conn *amp.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRuleGroupNamespace(conn *amp.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRuleGroupNamespaceByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -243,7 +244,7 @@ func waitRuleGroupNamespaceCreated(ctx context.Context, conn *amp.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeCreating),
 		Target:  enum.Slice(types.RuleGroupsNamespaceStatusCodeActive),
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Refresh: statusRuleGroupNamespace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -263,7 +264,7 @@ func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *amp.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeUpdating),
 		Target:  enum.Slice(types.RuleGroupsNamespaceStatusCodeActive),
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Refresh: statusRuleGroupNamespace(conn, id),
 		Timeout: timeout,
 	}
 
@@ -283,7 +284,7 @@ func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *amp.Client, id str
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleGroupsNamespaceStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusRuleGroupNamespace(ctx, conn, id),
+		Refresh: statusRuleGroupNamespace(conn, id),
 		Timeout: timeout,
 	}
 

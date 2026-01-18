@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3outposts
@@ -224,7 +224,7 @@ func findEndpointByARN(ctx context.Context, conn *s3outposts.Client, arn string)
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outposts.ListEndpointsInput) ([]awstypes.Endpoint, error) {
@@ -254,7 +254,7 @@ func statusEndpoint(conn *s3outposts.Client, arn string) retry.StateRefreshFunc 
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findEndpointByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

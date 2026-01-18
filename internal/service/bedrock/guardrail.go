@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock
@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -152,9 +153,39 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 							CustomType: fwtypes.NewSetNestedObjectTypeOf[guardrailContentFilterConfigModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"input_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterAction](),
+									},
+									"input_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"input_modalities": schema.ListAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
+									},
 									"input_strength": schema.StringAttribute{
 										Required:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.GuardrailFilterStrength](),
+									},
+									"output_action": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.GuardrailContentFilterAction](),
+									},
+									"output_enabled": schema.BoolAttribute{
+										Optional: true,
+									},
+									"output_modalities": schema.ListAttribute{
+										Optional:    true,
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										ElementType: types.StringType,
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
 									},
 									"output_strength": schema.StringAttribute{
 										Required:   true,
@@ -526,7 +557,7 @@ func (r *guardrailResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	out, err := findGuardrailByTwoPartKey(ctx, conn, state.GuardrailID.ValueString(), state.Version.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -678,7 +709,7 @@ func (r *guardrailResource) ImportState(ctx context.Context, req resource.Import
 }
 
 func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusCreating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
 		Refresh:                   statusGuardrail(ctx, conn, id, version),
@@ -696,7 +727,7 @@ func waitGuardrailCreated(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.GuardrailStatusUpdating),
 		Target:                    enum.Slice(awstypes.GuardrailStatusReady),
 		Refresh:                   statusGuardrail(ctx, conn, id, version),
@@ -714,7 +745,7 @@ func waitGuardrailUpdated(ctx context.Context, conn *bedrock.Client, id string, 
 }
 
 func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, version string, timeout time.Duration) (*bedrock.GetGuardrailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.GuardrailStatusDeleting, awstypes.GuardrailStatusReady),
 		Target:  []string{},
 		Refresh: statusGuardrail(ctx, conn, id, version),
@@ -729,10 +760,10 @@ func waitGuardrailDeleted(ctx context.Context, conn *bedrock.Client, id string, 
 	return nil, err
 }
 
-func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) retry.StateRefreshFunc {
+func statusGuardrail(ctx context.Context, conn *bedrock.Client, id, version string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findGuardrailByTwoPartKey(ctx, conn, id, version)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -753,7 +784,7 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	output, err := conn.GetGuardrail(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -764,7 +795,7 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -799,9 +830,15 @@ type guardrailContentPolicyConfigModel struct {
 }
 
 type guardrailContentFilterConfigModel struct {
-	InputStrength  fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"input_strength"`
-	OutputStrength fwtypes.StringEnum[awstypes.GuardrailFilterStrength]    `tfsdk:"output_strength"`
-	Type           fwtypes.StringEnum[awstypes.GuardrailContentFilterType] `tfsdk:"type"`
+	InputAction      fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"input_action"`
+	InputEnabled     types.Bool                                                `tfsdk:"input_enabled"`
+	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"input_modalities"`
+	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"input_strength"`
+	OutputAction     fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"output_action"`
+	OutputEnabled    types.Bool                                                `tfsdk:"output_enabled"`
+	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"output_modalities"`
+	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"output_strength"`
+	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType]   `tfsdk:"type"`
 }
 
 type guardrailContentFiltersTierConfigModel struct {
