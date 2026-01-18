@@ -8,8 +8,6 @@ description: |-
 
 # Action: aws_events_put_events
 
-~> **Note:** `aws_events_put_events` is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
-
 Sends custom events to Amazon EventBridge so that they can be matched to rules. This action provides an imperative way to emit events from Terraform plans (e.g., deployment notifications) while still allowing Terraform to manage when the emission occurs through `action_trigger` lifecycle events.
 
 ## Example Usage

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagentcore_test
@@ -161,7 +161,7 @@ func TestAccBedrockAgentCoreAPIKeyCredentialProvider_disappears(t *testing.T) {
 				Config: testAccAPIKeyCredentialProviderConfig_basic(rName, "secret-value-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyCredentialProviderExists(ctx, resourceName, &p),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrockagentcore.ResourceAPIKeyCredentialProvider, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

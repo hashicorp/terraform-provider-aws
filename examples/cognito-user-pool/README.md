@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Cognito User Pool example
 
 This example creates a Cognito User Pool, IAM roles and lambdas.

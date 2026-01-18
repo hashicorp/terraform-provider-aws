@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -129,7 +130,7 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterEp, err := findDBClusterEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -217,7 +218,7 @@ func findDBClusterEndpointByID(ctx context.Context, conn *rds.Client, id string)
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterEndpointIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -256,11 +257,11 @@ func findDBClusterEndpoints(ctx context.Context, conn *rds.Client, input *rds.De
 	return output, nil
 }
 
-func statusClusterEndpoint(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusClusterEndpoint(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDBClusterEndpointByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -273,7 +274,7 @@ func statusClusterEndpoint(ctx context.Context, conn *rds.Client, id string) ret
 }
 
 func waitClusterEndpointCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterEndpointStatusCreating},
 		Target:     []string{clusterEndpointStatusAvailable},
 		Refresh:    statusClusterEndpoint(ctx, conn, id),
@@ -292,7 +293,7 @@ func waitClusterEndpointCreated(ctx context.Context, conn *rds.Client, id string
 }
 
 func waitClusterEndpointDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBClusterEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{clusterEndpointStatusAvailable, clusterEndpointStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusClusterEndpoint(ctx, conn, id),

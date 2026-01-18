@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -120,7 +120,7 @@ func findDestinationPolicyByName(ctx context.Context, conn *cloudwatchlogs.Clien
 	}
 
 	if output.AccessPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

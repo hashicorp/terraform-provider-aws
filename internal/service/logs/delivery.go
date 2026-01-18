@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -366,7 +366,7 @@ func findDelivery(ctx context.Context, conn *cloudwatchlogs.Client, input *cloud
 	}
 
 	if output == nil || output.Delivery == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Delivery, nil

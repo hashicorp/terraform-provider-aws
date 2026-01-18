@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -13,13 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -168,6 +170,24 @@ func resourcePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"scan_action": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"malware_scanner": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
+									},
+									"scan_mode": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ScanMode](),
+									},
+								},
+							},
+						},
 						"schedule_expression_timezone": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -178,6 +198,11 @@ func resourcePlan() *schema.Resource {
 							Optional: true,
 							Default:  60,
 						},
+						"target_logically_air_gapped_backup_vault_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"target_vault_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -185,6 +210,33 @@ func resourcePlan() *schema.Resource {
 								validation.StringLenBetween(2, 50),
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
 							),
+						},
+					},
+				},
+			},
+			"scan_setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"malware_scanner": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MalwareScanner](),
+						},
+						"resource_types": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+							},
+						},
+						"scanner_role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -213,6 +265,10 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		BackupPlanTags: getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("scan_setting"); ok && v.(*schema.Set).Len() > 0 {
+		input.BackupPlan.ScanSettings = expandScanSettings(v.(*schema.Set).List())
+	}
+
 	output, err := conn.CreateBackupPlan(ctx, input)
 
 	if err != nil {
@@ -230,7 +286,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findPlanByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -250,6 +306,9 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if err := d.Set(names.AttrRule, flattenBackupRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
+	if err := d.Set("scan_setting", flattenScanSettings(output.BackupPlan.ScanSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting scan_setting: %s", err)
+	}
 	d.Set(names.AttrVersion, output.VersionId)
 
 	return diags
@@ -259,12 +318,13 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	if d.HasChanges("advanced_backup_setting", names.AttrRule) {
+	if d.HasChanges("advanced_backup_setting", names.AttrRule, "scan_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlan: &awstypes.BackupPlanInput{
 				AdvancedBackupSettings: expandAdvancedBackupSetting(d.Get("advanced_backup_setting").(*schema.Set).List()),
 				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
 				Rules:                  expandBackupRuleInputs(ctx, d.Get(names.AttrRule).(*schema.Set).List()),
+				ScanSettings:           expandScanSettings(d.Get("scan_setting").(*schema.Set).List()),
 			},
 			BackupPlanId: aws.String(d.Id()),
 		}
@@ -316,7 +376,7 @@ func findPlan(ctx context.Context, conn *backup.Client, input *backup.GetBackupP
 	output, err := conn.GetBackupPlan(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -327,7 +387,7 @@ func findPlan(ctx context.Context, conn *backup.Client, input *backup.GetBackupP
 	}
 
 	if output == nil || output.BackupPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -360,6 +420,9 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 		} else {
 			continue
 		}
+		if v, ok := tfMap["scan_action"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.ScanActions = expandScanActions(v.List())
+		}
 		if v, ok := tfMap[names.AttrSchedule].(string); ok && v != "" {
 			apiObject.ScheduleExpression = aws.String(v)
 		}
@@ -368,6 +431,9 @@ func expandBackupRuleInputs(ctx context.Context, tfList []any) []awstypes.Backup
 		}
 		if v, ok := tfMap["start_window"].(int); ok {
 			apiObject.StartWindowMinutes = aws.Int64(int64(v))
+		}
+		if v, ok := tfMap["target_logically_air_gapped_backup_vault_arn"].(string); ok && v != "" {
+			apiObject.TargetLogicallyAirGappedBackupVaultArn = aws.String(v)
 		}
 		if v, ok := tfMap["target_vault_name"].(string); ok && v != "" {
 			apiObject.TargetBackupVaultName = aws.String(v)
@@ -450,18 +516,73 @@ func expandLifecycle(tfMap map[string]any) *awstypes.Lifecycle {
 	return apiObject
 }
 
+func expandScanActions(tfList []any) []awstypes.ScanAction {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.ScanAction
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+		apiObject := awstypes.ScanAction{}
+		if v, ok := tfMap["malware_scanner"].(string); ok && v != "" {
+			apiObject.MalwareScanner = awstypes.MalwareScanner(v)
+		}
+		if v, ok := tfMap["scan_mode"].(string); ok && v != "" {
+			apiObject.ScanMode = awstypes.ScanMode(v)
+		}
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
+func expandScanSettings(tfList []any) []awstypes.ScanSetting {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.ScanSetting
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.ScanSetting{}
+		if v, ok := tfMap["malware_scanner"].(string); ok && v != "" {
+			apiObject.MalwareScanner = awstypes.MalwareScanner(v)
+		}
+		if v, ok := tfMap["resource_types"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.ResourceTypes = flex.ExpandStringValueSet(v)
+		}
+
+		if v, ok := tfMap["scanner_role_arn"].(string); ok && v != "" {
+			apiObject.ScannerRoleArn = aws.String(v)
+		}
+		apiObjects = append(apiObjects, apiObject)
+	}
+	return apiObjects
+}
+
 func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) []any { // nosemgrep:ci.backup-in-func-name
 	tfList := []any{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
-			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
-			"rule_name":                    aws.ToString(apiObject.RuleName),
-			names.AttrSchedule:             aws.ToString(apiObject.ScheduleExpression),
-			"schedule_expression_timezone": aws.ToString(apiObject.ScheduleExpressionTimezone),
-			"start_window":                 aws.ToInt64(apiObject.StartWindowMinutes),
-			"target_vault_name":            aws.ToString(apiObject.TargetBackupVaultName),
+			"completion_window":                            aws.ToInt64(apiObject.CompletionWindowMinutes),
+			"enable_continuous_backup":                     aws.ToBool(apiObject.EnableContinuousBackup),
+			"rule_name":                                    aws.ToString(apiObject.RuleName),
+			names.AttrSchedule:                             aws.ToString(apiObject.ScheduleExpression),
+			"schedule_expression_timezone":                 aws.ToString(apiObject.ScheduleExpressionTimezone),
+			"start_window":                                 aws.ToInt64(apiObject.StartWindowMinutes),
+			"target_logically_air_gapped_backup_vault_arn": aws.ToString(apiObject.TargetLogicallyAirGappedBackupVaultArn),
+			"target_vault_name":                            aws.ToString(apiObject.TargetBackupVaultName),
 		}
 
 		if v := apiObject.CopyActions; len(v) > 0 {
@@ -474,6 +595,10 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 
 		if v := keyValueTags(ctx, apiObject.RecoveryPointTags).IgnoreAWS().Map(); len(v) > 0 {
 			tfMap["recovery_point_tags"] = v
+		}
+
+		if v := apiObject.ScanActions; len(v) > 0 {
+			tfMap["scan_action"] = flattenScanActions(v)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -531,4 +656,45 @@ func flattenLifecycle(apiObject *awstypes.Lifecycle) []any {
 	}
 
 	return []any{tfMap}
+}
+
+func flattenScanActions(apiObjects []awstypes.ScanAction) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		if v := apiObject.MalwareScanner; v != "" {
+			tfMap["malware_scanner"] = string(v)
+		}
+		if v := apiObject.ScanMode; v != "" {
+			tfMap["scan_mode"] = string(v)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
+}
+
+func flattenScanSettings(apiObjects []awstypes.ScanSetting) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{}
+		if v := apiObject.MalwareScanner; v != "" {
+			tfMap["malware_scanner"] = string(v)
+		}
+		if v := apiObject.ResourceTypes; len(v) > 0 {
+			tfMap["resource_types"] = flex.FlattenStringValueSet(v)
+		}
+		if v := apiObject.ScannerRoleArn; v != nil {
+			tfMap["scanner_role_arn"] = aws.ToString(v)
+		}
+		tfList = append(tfList, tfMap)
+	}
+	return tfList
 }

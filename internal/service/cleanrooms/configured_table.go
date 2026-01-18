@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cleanrooms
@@ -14,13 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,7 +32,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetConfiguredTableOutput")
-func ResourceConfiguredTable() *schema.Resource {
+func resourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,
 		ReadWithoutTimeout:   resourceConfiguredTableRead,
@@ -113,7 +113,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
-	input := &cleanrooms.CreateConfiguredTableInput{
+	input := cleanrooms.CreateConfiguredTableInput{
 		Name:           aws.String(d.Get(names.AttrName).(string)),
 		AllowedColumns: flex.ExpandStringValueSet(d.Get("allowed_columns").(*schema.Set)),
 		TableReference: expandTableReference(d.Get("table_reference").([]any)),
@@ -130,13 +130,13 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateConfiguredTable(ctx, input)
+	out, err := conn.CreateConfiguredTable(ctx, &input)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.ConfiguredTable.Id))
 
@@ -150,7 +150,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := findConfiguredTableByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Clean Rooms Configured Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -181,7 +181,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &cleanrooms.UpdateConfiguredTableInput{
+		input := cleanrooms.UpdateConfiguredTableInput{
 			ConfiguredTableIdentifier: aws.String(d.Id()),
 		}
 
@@ -193,7 +193,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		_, err := conn.UpdateConfiguredTable(ctx, input)
+		_, err := conn.UpdateConfiguredTable(ctx, &input)
 		if err != nil {
 			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionUpdating, ResNameConfiguredTable, d.Id(), err)
 		}
@@ -208,11 +208,11 @@ func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting Clean Rooms Configured Table %s", d.Id())
-	in := &cleanrooms.DeleteConfiguredTableInput{
+	input := cleanrooms.DeleteConfiguredTableInput{
 		ConfiguredTableIdentifier: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteConfiguredTable(ctx, in)
+	_, err := conn.DeleteConfiguredTable(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -226,16 +226,15 @@ func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetConfiguredTableOutput, error) {
-	in := &cleanrooms.GetConfiguredTableInput{
+	input := cleanrooms.GetConfiguredTableInput{
 		ConfiguredTableIdentifier: aws.String(id),
 	}
 
-	out, err := conn.GetConfiguredTable(ctx, in)
+	out, err := conn.GetConfiguredTable(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+			LastError: err,
 		}
 	}
 
@@ -244,7 +243,7 @@ func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id st
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

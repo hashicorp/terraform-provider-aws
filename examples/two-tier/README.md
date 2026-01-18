@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Basic Two-Tier AWS Architecture
 
 This provides a template for running a simple two-tier architecture on Amazon

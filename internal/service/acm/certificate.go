@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acm
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // nosemgrep: go/sast/internal/crypto/sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -61,6 +61,8 @@ const (
 // @Testing(tlsKey=true)
 // @Testing(importIgnore="certificate_body;private_key)
 // @Testing(generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
@@ -420,7 +422,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -788,7 +790,7 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw any) bool {
 		return c[:i]
 	}
 
-	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
+	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new)))) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1 -- SHA1 used for backward compatibility with older provider state normalization, not cryptographic security
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 
@@ -797,8 +799,7 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -807,7 +808,7 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 	}
 
 	if output == nil || output.Certificate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Certificate, nil
@@ -826,8 +827,7 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 
 	if status := output.Status; status == types.CertificateStatusValidationTimedOut {
 		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+			Message: string(status),
 		}
 	}
 
@@ -842,17 +842,17 @@ func findCertificateRenewalByARN(ctx context.Context, conn *acm.Client, arn stri
 	}
 
 	if certificate.RenewalSummary == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return certificate.RenewalSummary, nil
 }
 
-func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateDomainValidationsAvailable(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		certificate, err := findCertificateByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -889,7 +889,7 @@ func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.
 func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Client, arn string, timeout time.Duration) (*types.CertificateDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
+		Refresh: statusCertificateDomainValidationsAvailable(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -902,11 +902,11 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.Cl
 	return nil, err
 }
 
-func statusCertificateRenewal(ctx context.Context, conn *acm.Client, arn string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCertificateRenewal(conn *acm.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCertificateRenewalByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -922,7 +922,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RenewalStatusPendingAutoRenewal),
 		Target:  enum.Slice(types.RenewalStatusSuccess),
-		Refresh: statusCertificateRenewal(ctx, conn, arn),
+		Refresh: statusCertificateRenewal(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -930,7 +930,7 @@ func waitCertificateRenewed(ctx context.Context, conn *acm.Client, arn string, t
 
 	if output, ok := outputRaw.(*types.RenewalSummary); ok {
 		if output.RenewalStatus == types.RenewalStatusFailed {
-			tfresource.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
+			retry.SetLastError(err, errors.New(string(output.RenewalStatusReason)))
 		}
 
 		return output, err

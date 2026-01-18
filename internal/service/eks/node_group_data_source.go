@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -176,6 +176,26 @@ func dataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"update_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_unavailable": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_unavailable_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"update_strategy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -230,6 +250,13 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta a
 	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting taints: %s", err)
+	}
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
+		}
+	} else {
+		d.Set("update_config", nil)
 	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 
