@@ -15,15 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_notifications_managed_notification_additional_channel_association", name="Managed Notification Additional Channel Association")
@@ -41,7 +41,7 @@ type managedNotificationAdditionalChannelAssociationResource struct {
 func (r *managedNotificationAdditionalChannelAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
+			"channel_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -68,15 +68,15 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Create(ctx con
 
 	conn := r.Meta().NotificationsClient(ctx)
 
+	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ChannelARN)
 	input := notifications.AssociateManagedNotificationAdditionalChannelInput{
-		ChannelArn:                          fwflex.StringFromFramework(ctx, data.ARN),
-		ManagedNotificationConfigurationArn: fwflex.StringFromFramework(ctx, data.ManagedNotificationConfigurationARN),
+		ChannelArn:                          aws.String(channelARN),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
-
 	_, err := conn.AssociateManagedNotificationAdditionalChannel(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Managed Notification Additional Channel Association (%s,%s)", data.ManagedNotificationConfigurationARN.ValueString(), data.ARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelARN), err.Error())
 
 		return
 	}
@@ -93,10 +93,10 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Read(ctx conte
 
 	conn := r.Meta().NotificationsClient(ctx)
 
-	managedNotificationConfigurationARN, channelArn := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ARN)
-	err := findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, channelArn)
+	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ChannelARN)
+	_, err := findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, channelARN)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -104,7 +104,7 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Read(ctx conte
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelArn), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelARN), err.Error())
 
 		return
 	}
@@ -121,11 +121,11 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Delete(ctx con
 
 	conn := r.Meta().NotificationsClient(ctx)
 
+	managedNotificationConfigurationARN, channelARN := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ChannelARN)
 	input := notifications.DisassociateManagedNotificationAdditionalChannelInput{
-		ChannelArn:                          fwflex.StringFromFramework(ctx, data.ARN),
-		ManagedNotificationConfigurationArn: fwflex.StringFromFramework(ctx, data.ManagedNotificationConfigurationARN),
+		ChannelArn:                          aws.String(channelARN),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
-
 	_, err := conn.DisassociateManagedNotificationAdditionalChannel(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -133,7 +133,7 @@ func (r *managedNotificationAdditionalChannelAssociationResource) Delete(ctx con
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Managed Notification Additional Channel Association (%s,%s)", data.ManagedNotificationConfigurationARN.ValueString(), data.ARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting User Notifications Managed Notification Additional Channel Association (%s,%s)", managedNotificationConfigurationARN, channelARN), err.Error())
 
 		return
 	}
@@ -151,43 +151,59 @@ func (r *managedNotificationAdditionalChannelAssociationResource) ImportState(ct
 		return
 	}
 
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrARN), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("channel_arn"), parts[1])...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("managed_notification_arn"), parts[0])...)
 }
 
-func findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, managedNotificationConfigurationArn, channelArn string) error {
+func findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx context.Context, conn *notifications.Client, managedNotificationConfigurationARN, channelARN string) (*awstypes.ManagedNotificationChannelAssociationSummary, error) {
 	input := notifications.ListManagedNotificationChannelAssociationsInput{
-		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationArn),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
 
-	pages := notifications.NewListManagedNotificationChannelAssociationsPaginator(conn, &input)
+	return findManagedNotificationChannelAssociation(ctx, conn, &input, func(v *awstypes.ManagedNotificationChannelAssociationSummary) bool {
+		return aws.ToString(v.ChannelIdentifier) == channelARN
+	})
+}
+
+// TODO: Duplicated in https://github.com/hashicorp/terraform-provider-aws/pull/45185.
+func findManagedNotificationChannelAssociation(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) (*awstypes.ManagedNotificationChannelAssociationSummary, error) {
+	output, err := findManagedNotificationChannelAssociations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findManagedNotificationChannelAssociations(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) ([]awstypes.ManagedNotificationChannelAssociationSummary, error) {
+	var output []awstypes.ManagedNotificationChannelAssociationSummary
+
+	pages := notifications.NewListManagedNotificationChannelAssociationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: &input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		for _, association := range page.ChannelAssociations {
-			if aws.ToString(association.ChannelIdentifier) == channelArn {
-				return nil
+		for _, v := range page.ChannelAssociations {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 	}
 
-	return &retry.NotFoundError{
-		LastRequest: &input,
-	}
+	return output, nil
 }
 
 type managedNotificationAdditionalChannelAssociationResourceModel struct {
-	ARN                                 fwtypes.ARN `tfsdk:"arn"`
+	ChannelARN                          fwtypes.ARN `tfsdk:"channel_arn"`
 	ManagedNotificationConfigurationARN fwtypes.ARN `tfsdk:"managed_notification_arn"`
 }

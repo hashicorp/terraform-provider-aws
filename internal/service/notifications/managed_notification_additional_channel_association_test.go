@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnotifications "github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,8 +46,8 @@ func TestAccNotificationsManagedNotificationAdditionalChannelAssociation_basic(t
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-				ImportStateIdFunc:                    testAccManagedNotificationAdditionalChannelAssociationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: "channel_arn",
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", "managed_notification_arn", "channel_arn"),
 			},
 		},
 	})
@@ -96,9 +95,9 @@ func testAccCheckManagedNotificationAdditionalChannelAssociationDestroy(ctx cont
 				continue
 			}
 
-			err := tfnotifications.FindManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_arn"], rs.Primary.Attributes[names.AttrARN])
+			_, err := tfnotifications.FindManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_arn"], rs.Primary.Attributes["channel_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -122,20 +121,9 @@ func testAccCheckManagedNotificationAdditionalChannelAssociationExists(ctx conte
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NotificationsClient(ctx)
 
-		err := tfnotifications.FindManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_arn"], rs.Primary.Attributes[names.AttrARN])
+		_, err := tfnotifications.FindManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["managed_notification_arn"], rs.Primary.Attributes["channel_arn"])
 
 		return err
-	}
-}
-
-func testAccManagedNotificationAdditionalChannelAssociationImportStateIDFunc(n string) func(*terraform.State) (string, error) {
-	return func(state *terraform.State) (string, error) {
-		rs, ok := state.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes["managed_notification_arn"] + intflex.ResourceIdSeparator + rs.Primary.Attributes[names.AttrARN], nil
 	}
 }
 
@@ -150,7 +138,7 @@ resource "aws_notificationscontacts_email_contact" "test" {
 }
 
 resource "aws_notifications_managed_notification_additional_channel_association" "test" {
-  arn                      = aws_notificationscontacts_email_contact.test.arn
+  channel_arn              = aws_notificationscontacts_email_contact.test.arn
   managed_notification_arn = "arn:${data.aws_partition.current.partition}:notifications::${data.aws_caller_identity.current.account_id}:managed-notification-configuration/category/AWS-Health/sub-category/Security"
 }
 `, rName, rEmailAddress)

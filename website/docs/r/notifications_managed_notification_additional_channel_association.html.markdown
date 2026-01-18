@@ -20,7 +20,7 @@ resource "aws_notificationscontacts_email_contact" "example" {
 }
 
 resource "aws_notifications_managed_notification_additional_channel_association" "example" {
-  arn                      = aws_notificationscontacts_email_contact.example.arn
+  channel_arn              = aws_notificationscontacts_email_contact.example.arn
   managed_notification_arn = "arn:aws:notifications::123456789012:managed-notification-configuration/category/AWS-Health/sub-category/Security"
 }
 ```
@@ -29,7 +29,7 @@ resource "aws_notifications_managed_notification_additional_channel_association"
 
 The following arguments are required:
 
-* `arn` - (Required) ARN of the channel to associate with the managed notification.
+* `channel_arn` - (Required) ARN of the channel to associate with the managed notification.
 * `managed_notification_arn` - (Required) ARN of the managed notification to associate the channel with.
 
 ## Attribute Reference
