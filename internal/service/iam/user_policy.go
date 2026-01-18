@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -120,7 +121,7 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	policyDocument, err := findUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM User Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -188,7 +189,7 @@ func findUserPolicy(ctx context.Context, conn *iam.Client, input *iam.GetUserPol
 	output, err := conn.GetUserPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return "", &retry.NotFoundError{
+		return "", &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -199,7 +200,7 @@ func findUserPolicy(ctx context.Context, conn *iam.Client, input *iam.GetUserPol
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.PolicyDocument), nil

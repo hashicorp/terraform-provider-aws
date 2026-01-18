@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
@@ -230,57 +230,6 @@ func TestValidCIDRNetworkAddress(t *testing.T) {
 				t.Fatalf("%d/%d: Expected err: %q, to include %q",
 					i+1, len(cases), errs[0], tc.ExpectedErrSubstr)
 			}
-		}
-	}
-}
-
-func TestValidIPv4CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", true},
-		{"10.2.2.0/1234", false},
-		{"10/24", false},
-		{"10.2.2.2/24", false},
-		{"::/0", false},
-		{"2000::/15", false},
-		{"", false},
-	} {
-		err := ValidateIPv4CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
-		}
-	}
-}
-
-func TestValidIPv6CIDRBlock(t *testing.T) {
-	t.Parallel()
-
-	for _, ts := range []struct {
-		cidr  string
-		valid bool
-	}{
-		{"10.2.2.0/24", false},
-		{"10.2.2.0/1234", false},
-		{"::/0", true},
-		{"::0/0", true},
-		{"2000::/15", true},
-		{"2001::/15", false},
-		{"2001:db8::/122", true},
-		{"", false},
-	} {
-		err := ValidateIPv6CIDRBlock(ts.cidr)
-		if !ts.valid && err == nil {
-			t.Fatalf("Input '%s' should error but didn't!", ts.cidr)
-		}
-		if ts.valid && err != nil {
-			t.Fatalf("Got unexpected error for '%s' input: %s", ts.cidr, err)
 		}
 	}
 }

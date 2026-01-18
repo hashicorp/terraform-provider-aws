@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -137,6 +137,26 @@ func dataSourceLoadBalancer() *schema.Resource {
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"health_check_logs": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrBucket: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrPrefix: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"idle_timeout": {
 				Type:     schema.TypeInt,
@@ -320,6 +340,10 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err := d.Set("connection_logs", []any{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+	}
+
+	if err := d.Set("health_check_logs", []any{flattenLoadBalancerHealthCheckLogsAttributes(attributes)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting health_check_logs: %s", err)
 	}
 
 	loadBalancerAttributes.flatten(d, attributes)

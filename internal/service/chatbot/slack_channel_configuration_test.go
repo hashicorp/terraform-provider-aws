@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchatbot "github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,7 +130,7 @@ func testAccSlackChannelConfiguration_disappears(t *testing.T) {
 				Config: testAccSlackChannelConfigurationConfig_basic(rName, channelID, teamID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfchatbot.ResourceSlackChannelConfiguration, testResourceSlackChannelConfiguration),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func testAccCheckSlackChannelConfigurationDestroy(ctx context.Context) resource.
 
 			_, err := tfchatbot.FindSlackChannelConfigurationByARN(ctx, conn, rs.Primary.Attributes["chat_configuration_arn"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

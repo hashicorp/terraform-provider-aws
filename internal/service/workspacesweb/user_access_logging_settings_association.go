@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -20,7 +20,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 // @FrameworkResource("aws_workspacesweb_user_access_logging_settings_association", name="User Access Logging Settings Association")
@@ -92,7 +92,7 @@ func (r *userAccessLoggingSettingsAssociationResource) Read(ctx context.Context,
 
 	// Check if the association exists by getting the user access logging settings and checking associated portals
 	output, err := findUserAccessLoggingSettingsByARN(ctx, conn, data.UserAccessLoggingSettingsARN.ValueString())
-	if tfretry.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return

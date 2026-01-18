@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -392,6 +392,8 @@ func RegisterSweepers() {
 		},
 		F: sweepVPCs,
 	})
+
+	awsv2.Register("aws_vpn_concentrator", sweepVPNConcentrators, "aws_vpn_connection")
 
 	resource.AddTestSweepers("aws_vpn_connection", &resource.Sweeper{
 		Name: "aws_vpn_connection",
@@ -3231,6 +3233,35 @@ func sweepRouteServerPropagations(ctx context.Context, client *conns.AWSClient) 
 					framework.NewAttribute("route_server_id", routeServerID),
 					framework.NewAttribute("route_table_id", aws.ToString(v.RouteTableId))))
 			}
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepVPNConcentrators(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribeVpnConcentratorsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribeVpnConcentratorsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.VpnConcentrators {
+			vpnConcentratorID := aws.ToString(v.VpnConcentratorId)
+
+			if state := aws.ToString(v.State); state == vpnConcentratorStateDeleted {
+				log.Printf("[INFO] Skipping VPN Concentrator %s: State=%s", vpnConcentratorID, state)
+				continue
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPNConcentratorResource, client,
+				framework.NewAttribute("vpn_concentrator_id", vpnConcentratorID)))
 		}
 	}
 

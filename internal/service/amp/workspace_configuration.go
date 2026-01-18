@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -25,13 +25,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -169,7 +169,7 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, request resou
 
 	out, err := findWorkspaceConfigurationByID(ctx, conn, data.WorkspaceID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -238,8 +238,7 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -248,17 +247,17 @@ func findWorkspaceConfigurationByID(ctx context.Context, conn *amp.Client, id st
 	}
 
 	if output == nil || output.WorkspaceConfiguration == nil || output.WorkspaceConfiguration.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WorkspaceConfiguration, nil
 }
 
-func statusWorkspaceConfiguration(ctx context.Context, conn *amp.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusWorkspaceConfiguration(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findWorkspaceConfigurationByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -274,14 +273,14 @@ func waitWorkspaceConfigurationUpdated(ctx context.Context, conn *amp.Client, id
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceConfigurationStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceConfigurationStatusCodeActive),
-		Refresh: statusWorkspaceConfiguration(ctx, conn, id),
+		Refresh: statusWorkspaceConfiguration(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.WorkspaceConfigurationDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.StatusReason)))
 
 		return output, err
 	}

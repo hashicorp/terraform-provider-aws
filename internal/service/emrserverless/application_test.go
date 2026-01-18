@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emrserverless_test
@@ -17,6 +17,39 @@ import (
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestPrometheusRemoteWriteURLPattern(t *testing.T) {
+	t.Parallel()
+
+	regex := regexache.MustCompile(tfemrserverless.PrometheusRemoteWriteURLPattern)
+
+	validURLs := []string{
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces/test-workspace/api/v1/remote_write",     //lintignore:AWSAT003
+		"https://aps-workspaces.eusc-de-east-1.amazonaws.eu/workspaces/test-workspace/api/v1/remote_write", //lintignore:AWSAT003
+		"https://aps-workspaces.eu-west-1.amazonaws.com/workspaces/my_workspace-123/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-gov-west-1.amazonaws.com/workspaces/workspace.name/api/v1/remote_write", //lintignore:AWSAT003
+	}
+
+	for _, url := range validURLs {
+		if !regex.MatchString(url) {
+			t.Errorf("Expected %q to be valid", url)
+		}
+	}
+
+	invalidURLs := []string{
+		"https://aps-workspaces.invalid-region.amazonaws.com/workspaces/test/api/v1/remote_write",
+		"http://aps-workspaces.us-east-1.amazonaws.com/workspaces/test/api/v1/remote_write",   //lintignore:AWSAT003
+		"https://aps-workspaces.us-east-1.amazonaws.com/workspaces//api/v1/remote_write",      //lintignore:AWSAT003
+		"https://aps-workspaces.us--east-1.amazonaws.com/workspaces/test/api/v1/remote_write", // double dash
+		"https://aps-workspaces.us-east-.amazonaws.com/workspaces/test/api/v1/remote_write",   // trailing dash
+	}
+
+	for _, url := range invalidURLs {
+		if regex.MatchString(url) {
+			t.Errorf("Expected %q to be invalid", url)
+		}
+	}
+}
 
 func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -369,8 +402,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "emr-6.6.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, t, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

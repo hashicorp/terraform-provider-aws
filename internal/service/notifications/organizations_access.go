@@ -305,7 +305,7 @@ func getOrganizationsAccess(ctx context.Context, conn *notifications.Client) (*n
 	}
 
 	if output == nil || output.NotificationsAccessForOrganization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

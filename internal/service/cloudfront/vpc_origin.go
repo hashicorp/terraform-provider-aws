@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,7 +171,7 @@ func (r *vpcOriginResource) Read(ctx context.Context, request resource.ReadReque
 
 	output, err := findVPCOriginByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -252,7 +253,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	id := data.ID.ValueString()
 	etag, err := vpcOriginETag(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return
 	}
 
@@ -276,7 +277,7 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
 		etag, err = vpcOriginETag(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return
 		}
 
@@ -330,7 +331,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	output, err := conn.GetVpcOrigin(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -341,17 +342,17 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	}
 
 	if output == nil || output.VpcOrigin == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findVPCOriginByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -364,7 +365,7 @@ func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) re
 }
 
 func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeploying},
 		Target:  []string{vpcOriginStatusDeployed},
 		Refresh: vpcOriginStatus(ctx, conn, id),
@@ -381,7 +382,7 @@ func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id stri
 }
 
 func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{vpcOriginStatusDeployed, vpcOriginStatusDeploying},
 		Target:  []string{},
 		Refresh: vpcOriginStatus(ctx, conn, id),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflexv2models "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -76,7 +76,7 @@ func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.70),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotLocale, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflexv2models.ResourceBotLocale, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +132,7 @@ func testAccCheckBotLocaleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tflexv2models.FindBotLocaleByThreePartKey(ctx, conn, rs.Primary.Attributes["locale_id"], rs.Primary.Attributes["bot_id"], rs.Primary.Attributes["bot_version"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package statecheck
@@ -29,8 +29,8 @@ func TestStateValue_ValuesSame(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					stateValue.GetStateValue("test_resource.one", tfjsonpath.New("string_attribute")),
@@ -38,8 +38,8 @@ func TestStateValue_ValuesSame(t *testing.T) {
 			},
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
@@ -63,8 +63,8 @@ func TestStateValue_ValuesNotSame(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "same"
-				}
+  string_attribute = "same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					stateValue.GetStateValue("test_resource.one", tfjsonpath.New("string_attribute")),
@@ -72,8 +72,8 @@ func TestStateValue_ValuesNotSame(t *testing.T) {
 			},
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "not same"
-				}
+  string_attribute = "not same"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),
@@ -98,8 +98,8 @@ func TestStateValue_NotInitialized(t *testing.T) {
 		Steps: []r.TestStep{
 			{
 				Config: `resource "test_resource" "one" {
-					string_attribute = "value"
-				}
+  string_attribute = "value"
+}
 				`,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue("test_resource.one", tfjsonpath.New("string_attribute"), stateValue.Value()),

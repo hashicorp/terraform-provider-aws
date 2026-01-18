@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda_test
@@ -203,6 +203,35 @@ func TestAccLambdaInvokeAction_complexPayload(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvokeActionConfig_basic(rName, testData, inputJSON),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvokeAction(ctx, rName, inputJSON, expectedResult),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvokeAction_tenantId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	testData := "value3"
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	expectedResult := fmt.Sprintf(`{"key1":"value1","key2":"value2","key3":%q}`, testData)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInvokeActionConfig_tenantId(rName, testData, inputJSON),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvokeAction(ctx, rName, inputJSON, expectedResult),
 				),
@@ -558,4 +587,53 @@ resource "terraform_data" "trigger" {
   }
 }
 `, inputJSON, clientContext))
+}
+
+func testAccInvokeActionConfig_function_tenant(rName, testData string) string {
+	return acctest.ConfigCompose(
+		testAccInvokeActionConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs18.x"
+
+  tenancy_config {
+    tenant_isolation_mode = "PER_TENANT"
+  }
+  environment {
+    variables = {
+      TEST_DATA = %[2]q
+    }
+  }
+}
+`, rName, testData))
+}
+
+func testAccInvokeActionConfig_tenantId(rName, testData, inputJSON string) string {
+	return acctest.ConfigCompose(
+		testAccInvokeActionConfig_function_tenant(rName, testData),
+		fmt.Sprintf(`
+action "aws_lambda_invoke" "test" {
+  config {
+    function_name = aws_lambda_function.test.function_name
+    payload       = %[1]q
+    tenant_id     = "tenant-1"
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_lambda_invoke.test]
+    }
+  }
+}
+`, inputJSON))
 }

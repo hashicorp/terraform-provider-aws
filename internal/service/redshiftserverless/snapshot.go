@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package redshiftserverless
@@ -12,13 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -122,7 +123,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	out, err := findSnapshotByName(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -195,7 +196,7 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	output, err := conn.GetSnapshot(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "snapshot") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -206,17 +207,17 @@ func findSnapshotByName(ctx context.Context, conn *redshiftserverless.Client, na
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Snapshot, nil
 }
 
-func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSnapshotByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -229,7 +230,7 @@ func statusSnapshot(ctx context.Context, conn *redshiftserverless.Client, name s
 }
 
 func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusAvailable),
 		Refresh: statusSnapshot(ctx, conn, name),
@@ -246,7 +247,7 @@ func waitSnapshotAvailable(ctx context.Context, conn *redshiftserverless.Client,
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.Snapshot, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusAvailable),
 		Target:  []string{},
 		Refresh: statusSnapshot(ctx, conn, name),

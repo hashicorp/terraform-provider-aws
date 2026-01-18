@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -138,7 +138,7 @@ func TestAccWAFV2APIKey_disappears(t *testing.T) {
 				Config: testAccAPIKeyConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceAPIKey, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfwafv2.ResourceAPIKey, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -162,7 +162,7 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfwafv2.FindAPIKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_key"], awstypes.Scope(rs.Primary.Attributes[names.AttrScope]))
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

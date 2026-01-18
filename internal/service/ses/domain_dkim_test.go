@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -64,7 +64,7 @@ func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
 				Config: testAccDomainDKIMConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainDKIMExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

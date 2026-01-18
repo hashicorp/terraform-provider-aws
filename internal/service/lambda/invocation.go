@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
 
 import (
 	"context"
-	"crypto/md5"
+	"crypto/md5" // nosemgrep: go/sast/internal/crypto/md5 -- MD5 used for non-cryptographic resource ID generation only
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -88,6 +88,10 @@ func resourceInvocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"terraform_key": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -154,6 +158,9 @@ func buildInput(d *schema.ResourceData, action invocationAction) ([]byte, error)
 		return nil, err
 	}
 
+	if newInputMap == nil {
+		newInputMap = make(map[string]any)
+	}
 	newInputMap[d.Get("terraform_key").(string)] = map[string]any{
 		names.AttrAction: action,
 		"prev_input":     oldInputMap,
@@ -213,6 +220,9 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		Payload:        payload,
 		Qualifier:      aws.String(qualifier),
 	}
+	if v, ok := d.GetOk("tenant_id"); ok {
+		input.TenantId = aws.String(v.(string))
+	}
 
 	output, err := conn.Invoke(ctx, input)
 
@@ -224,7 +234,7 @@ func invoke(ctx context.Context, conn *lambda.Client, d *schema.ResourceData, ac
 		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, string(output.Payload))
 	}
 
-	resultHash := fmt.Sprintf("%x", md5.Sum(payload))
+	resultHash := fmt.Sprintf("%x", md5.Sum(payload)) // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-md5 -- MD5 used for non-cryptographic resource ID generation only
 	id, err := flex.FlattenResourceId([]string{functionName, qualifier, resultHash}, invocationResourceIDPartCount, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

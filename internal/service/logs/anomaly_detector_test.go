@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -128,7 +128,7 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 				Config: testAccAnomalyDetectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, t, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceAnomalyDetector, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -103,7 +103,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta any)
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, region)
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
-	} else if !tfresource.NotFound(err) {
+	} else if !retry.NotFound(err) {
 		log.Printf("[WARN] Reading S3 Bucket (%s) Website: %s", bucket, err)
 	}
 

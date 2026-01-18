@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package customerprofiles
@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/customerprofiles"
-	"github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/customerprofiles/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_customerprofiles_domain", name="Domain")
 // @Tags(identifierAttribute="arn")
-func ResourceDomain() *schema.Resource {
+func resourceDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainCreate,
 		ReadWithoutTimeout:   resourceDomainRead,
@@ -35,169 +35,172 @@ func ResourceDomain() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomainName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"dead_letter_queue_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_encryption_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"default_expiration_days": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"matching": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auto_merging": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"conflict_resolution": conflictResolutionSchema(),
-									"consolidation": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"matching_attributes_list": {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem: &schema.Schema{
-														Type: schema.TypeList,
-														Elem: &schema.Schema{Type: schema.TypeString},
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"dead_letter_queue_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_encryption_key": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"default_expiration_days": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"matching": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auto_merging": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"conflict_resolution": conflictResolutionSchema(),
+										"consolidation": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"matching_attributes_list": {
+														Type:     schema.TypeList,
+														Required: true,
+														Elem: &schema.Schema{
+															Type: schema.TypeList,
+															Elem: &schema.Schema{Type: schema.TypeString},
+														},
 													},
 												},
 											},
 										},
-									},
-									names.AttrEnabled: {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"min_allowed_confidence_score_for_merging": {
-										Type:     schema.TypeFloat,
-										Optional: true,
+										names.AttrEnabled: {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"min_allowed_confidence_score_for_merging": {
+											Type:     schema.TypeFloat,
+											Optional: true,
+										},
 									},
 								},
 							},
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"exporting_config": exportingConfigSchema(),
-						"job_schedule": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"day_of_the_week": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.JobScheduleDayOfTheWeek](),
-									},
-									"time": {
-										Type:     schema.TypeString,
-										Required: true,
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"exporting_config": exportingConfigSchema(),
+							"job_schedule": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"day_of_the_week": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.JobScheduleDayOfTheWeek](),
+										},
+										"time": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"rule_based_matching": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_types_selector": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAddress: {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"attribute_matching_model": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.AttributeMatchingModel](),
-									},
-									"email_address": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"phone_number": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"conflict_resolution": conflictResolutionSchema(),
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-						"exporting_config": exportingConfigSchema(),
-						"matching_rules": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrRule: {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+				"rule_based_matching": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_types_selector": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAddress: {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"attribute_matching_model": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.AttributeMatchingModel](),
+										},
+										"email_address": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"phone_number": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
 									},
 								},
 							},
-						},
-						"max_allowed_rule_level_for_matching": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"max_allowed_rule_level_for_merging": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						names.AttrStatus: {
-							Type:             schema.TypeString,
-							Computed:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.RuleBasedMatchingStatus](),
+							"conflict_resolution": conflictResolutionSchema(),
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"exporting_config": exportingConfigSchema(),
+							"matching_rules": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrRule: {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"max_allowed_rule_level_for_matching": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"max_allowed_rule_level_for_merging": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Computed:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.RuleBasedMatchingStatus](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -212,7 +215,7 @@ func conflictResolutionSchema() *schema.Schema {
 				"conflict_resolving_model": {
 					Type:             schema.TypeString,
 					Required:         true,
-					ValidateDiagFunc: enum.Validate[types.ConflictResolvingModel](),
+					ValidateDiagFunc: enum.Validate[awstypes.ConflictResolvingModel](),
 				},
 				"source_name": {
 					Type:     schema.TypeString,
@@ -257,7 +260,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	name := d.Get(names.AttrDomainName).(string)
-	input := &customerprofiles.CreateDomainInput{
+	input := customerprofiles.CreateDomainInput{
 		DomainName: aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
@@ -282,7 +285,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.RuleBasedMatching = expandRuleBasedMatching(v.([]any))
 	}
 
-	output, err := conn.CreateDomain(ctx, input)
+	output, err := conn.CreateDomain(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Customer Profiles Domain (%s): %s", name, err)
@@ -297,7 +300,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	output, err := FindDomainByDomainName(ctx, conn, d.Id())
+	output, err := findDomainByDomainName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Customer Profiles Domain with DomainName (%s) not found, removing from state", d.Id())
@@ -327,7 +330,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &customerprofiles.UpdateDomainInput{
+		input := customerprofiles.UpdateDomainInput{
 			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 		}
 
@@ -351,7 +354,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.RuleBasedMatching = expandRuleBasedMatching(d.Get("rule_based_matching").([]any))
 		}
 
-		_, err := conn.UpdateDomain(ctx, input)
+		_, err := conn.UpdateDomain(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Customer Profiles Domain (%s): %s", d.Id(), err)
@@ -371,7 +374,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 	_, err := conn.DeleteDomain(ctx, &input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -382,14 +385,18 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func FindDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, domainName string) (*customerprofiles.GetDomainOutput, error) {
-	input := &customerprofiles.GetDomainInput{
+func findDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, domainName string) (*customerprofiles.GetDomainOutput, error) {
+	input := customerprofiles.GetDomainInput{
 		DomainName: aws.String(domainName),
 	}
 
+	return findDomain(ctx, conn, &input)
+}
+
+func findDomain(ctx context.Context, conn *customerprofiles.Client, input *customerprofiles.GetDomainInput) (*customerprofiles.GetDomainOutput, error) {
 	output, err := conn.GetDomain(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}
@@ -400,13 +407,13 @@ func FindDomainByDomainName(ctx context.Context, conn *customerprofiles.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func expandMatching(tfMap []any) *types.MatchingRequest {
+func expandMatching(tfMap []any) *awstypes.MatchingRequest {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -416,7 +423,7 @@ func expandMatching(tfMap []any) *types.MatchingRequest {
 		return nil
 	}
 
-	apiObject := &types.MatchingRequest{}
+	apiObject := &awstypes.MatchingRequest{}
 
 	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
@@ -437,7 +444,7 @@ func expandMatching(tfMap []any) *types.MatchingRequest {
 	return apiObject
 }
 
-func expandAutoMerging(tfMap []any) *types.AutoMerging {
+func expandAutoMerging(tfMap []any) *awstypes.AutoMerging {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -447,7 +454,7 @@ func expandAutoMerging(tfMap []any) *types.AutoMerging {
 		return nil
 	}
 
-	apiObject := &types.AutoMerging{}
+	apiObject := &awstypes.AutoMerging{}
 
 	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
@@ -468,7 +475,7 @@ func expandAutoMerging(tfMap []any) *types.AutoMerging {
 	return apiObject
 }
 
-func expandConflictResolution(tfMap []any) *types.ConflictResolution {
+func expandConflictResolution(tfMap []any) *awstypes.ConflictResolution {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -478,10 +485,10 @@ func expandConflictResolution(tfMap []any) *types.ConflictResolution {
 		return nil
 	}
 
-	apiObject := &types.ConflictResolution{}
+	apiObject := &awstypes.ConflictResolution{}
 
 	if v, ok := tfList["conflict_resolving_model"]; ok {
-		apiObject.ConflictResolvingModel = types.ConflictResolvingModel(v.(string))
+		apiObject.ConflictResolvingModel = awstypes.ConflictResolvingModel(v.(string))
 	}
 
 	if v, ok := tfList["source_name"]; ok && v != "" {
@@ -491,7 +498,7 @@ func expandConflictResolution(tfMap []any) *types.ConflictResolution {
 	return apiObject
 }
 
-func expandConsolidation(tfMap []any) *types.Consolidation {
+func expandConsolidation(tfMap []any) *awstypes.Consolidation {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -501,7 +508,7 @@ func expandConsolidation(tfMap []any) *types.Consolidation {
 		return nil
 	}
 
-	apiObject := &types.Consolidation{}
+	apiObject := &awstypes.Consolidation{}
 
 	if v, ok := tfList["matching_attributes_list"]; ok {
 		apiObject.MatchingAttributesList = expandMatchingAttributesList(v.([]any))
@@ -510,7 +517,7 @@ func expandConsolidation(tfMap []any) *types.Consolidation {
 	return apiObject
 }
 
-func expandExportingConfig(tfMap []any) *types.ExportingConfig {
+func expandExportingConfig(tfMap []any) *awstypes.ExportingConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -520,7 +527,7 @@ func expandExportingConfig(tfMap []any) *types.ExportingConfig {
 		return nil
 	}
 
-	apiObject := &types.ExportingConfig{}
+	apiObject := &awstypes.ExportingConfig{}
 
 	if v, ok := tfList["s3_exporting"]; ok {
 		apiObject.S3Exporting = expandS3ExportingConfig(v.([]any))
@@ -529,7 +536,7 @@ func expandExportingConfig(tfMap []any) *types.ExportingConfig {
 	return apiObject
 }
 
-func expandS3ExportingConfig(tfMap []any) *types.S3ExportingConfig {
+func expandS3ExportingConfig(tfMap []any) *awstypes.S3ExportingConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -539,7 +546,7 @@ func expandS3ExportingConfig(tfMap []any) *types.S3ExportingConfig {
 		return nil
 	}
 
-	apiObject := &types.S3ExportingConfig{}
+	apiObject := &awstypes.S3ExportingConfig{}
 
 	if v, ok := tfList[names.AttrS3BucketName]; ok {
 		apiObject.S3BucketName = aws.String(v.(string))
@@ -552,7 +559,7 @@ func expandS3ExportingConfig(tfMap []any) *types.S3ExportingConfig {
 	return apiObject
 }
 
-func expandJobSchedule(tfMap []any) *types.JobSchedule {
+func expandJobSchedule(tfMap []any) *awstypes.JobSchedule {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -562,10 +569,10 @@ func expandJobSchedule(tfMap []any) *types.JobSchedule {
 		return nil
 	}
 
-	apiObject := &types.JobSchedule{}
+	apiObject := &awstypes.JobSchedule{}
 
 	if v, ok := tfList["day_of_the_week"]; ok {
-		apiObject.DayOfTheWeek = types.JobScheduleDayOfTheWeek(v.(string))
+		apiObject.DayOfTheWeek = awstypes.JobScheduleDayOfTheWeek(v.(string))
 	}
 
 	if v, ok := tfList["time"]; ok {
@@ -575,7 +582,7 @@ func expandJobSchedule(tfMap []any) *types.JobSchedule {
 	return apiObject
 }
 
-func expandRuleBasedMatching(tfMap []any) *types.RuleBasedMatchingRequest {
+func expandRuleBasedMatching(tfMap []any) *awstypes.RuleBasedMatchingRequest {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -585,7 +592,7 @@ func expandRuleBasedMatching(tfMap []any) *types.RuleBasedMatchingRequest {
 		return nil
 	}
 
-	apiObject := &types.RuleBasedMatchingRequest{}
+	apiObject := &awstypes.RuleBasedMatchingRequest{}
 
 	if v, ok := tfList[names.AttrEnabled]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
@@ -618,7 +625,7 @@ func expandRuleBasedMatching(tfMap []any) *types.RuleBasedMatchingRequest {
 	return apiObject
 }
 
-func expandAttributesTypesSelector(tfMap []any) *types.AttributeTypesSelector {
+func expandAttributesTypesSelector(tfMap []any) *awstypes.AttributeTypesSelector {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -628,10 +635,10 @@ func expandAttributesTypesSelector(tfMap []any) *types.AttributeTypesSelector {
 		return nil
 	}
 
-	apiObject := &types.AttributeTypesSelector{}
+	apiObject := &awstypes.AttributeTypesSelector{}
 
 	if v, ok := tfList["attribute_matching_model"]; ok {
-		apiObject.AttributeMatchingModel = types.AttributeMatchingModel(v.(string))
+		apiObject.AttributeMatchingModel = awstypes.AttributeMatchingModel(v.(string))
 	}
 
 	if v, ok := tfList[names.AttrAddress]; ok {
@@ -666,12 +673,12 @@ func expandMatchingAttributesList(tfMap []any) [][]string {
 	return result
 }
 
-func expandMatchingRules(tfMap []any) []types.MatchingRule {
+func expandMatchingRules(tfMap []any) []awstypes.MatchingRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiArray := make([]types.MatchingRule, 0, len(tfMap))
+	apiArray := make([]awstypes.MatchingRule, 0, len(tfMap))
 
 	for _, object := range tfMap {
 		if object == nil {
@@ -680,7 +687,7 @@ func expandMatchingRules(tfMap []any) []types.MatchingRule {
 
 		matchingRule := object.(map[string]any)
 
-		apiObject := types.MatchingRule{}
+		apiObject := awstypes.MatchingRule{}
 
 		if v, ok := matchingRule[names.AttrRule]; ok {
 			apiObject.Rule = flex.ExpandStringValueList(v.([]any))
@@ -692,7 +699,7 @@ func expandMatchingRules(tfMap []any) []types.MatchingRule {
 	return apiArray
 }
 
-func flattenMatching(apiObject *types.MatchingResponse) []any {
+func flattenMatching(apiObject *awstypes.MatchingResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -718,7 +725,7 @@ func flattenMatching(apiObject *types.MatchingResponse) []any {
 	return []any{tfMap}
 }
 
-func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []any {
+func flattenRuleBasedMatching(apiObject *awstypes.RuleBasedMatchingResponse) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -753,12 +760,12 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []any 
 		tfMap["max_allowed_rule_level_for_merging"] = aws.ToInt32(v)
 	}
 
-	tfMap[names.AttrStatus] = types.IdentityResolutionJobStatus(apiObject.Status)
+	tfMap[names.AttrStatus] = awstypes.IdentityResolutionJobStatus(apiObject.Status)
 
 	return []any{tfMap}
 }
 
-func flattenAutoMerging(apiObject *types.AutoMerging) []any {
+func flattenAutoMerging(apiObject *awstypes.AutoMerging) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -784,7 +791,7 @@ func flattenAutoMerging(apiObject *types.AutoMerging) []any {
 	return []any{tfMap}
 }
 
-func flattenConflictResolution(apiObject *types.ConflictResolution) []any {
+func flattenConflictResolution(apiObject *awstypes.ConflictResolution) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -800,7 +807,7 @@ func flattenConflictResolution(apiObject *types.ConflictResolution) []any {
 	return []any{tfMap}
 }
 
-func flattenConsolidation(apiObject *types.Consolidation) []any {
+func flattenConsolidation(apiObject *awstypes.Consolidation) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -814,7 +821,7 @@ func flattenConsolidation(apiObject *types.Consolidation) []any {
 	return []any{tfMap}
 }
 
-func flattenExportingConfig(apiObject *types.ExportingConfig) []any {
+func flattenExportingConfig(apiObject *awstypes.ExportingConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -828,7 +835,7 @@ func flattenExportingConfig(apiObject *types.ExportingConfig) []any {
 	return []any{tfMap}
 }
 
-func flattenS3Exporting(apiObject *types.S3ExportingConfig) []any {
+func flattenS3Exporting(apiObject *awstypes.S3ExportingConfig) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -846,7 +853,7 @@ func flattenS3Exporting(apiObject *types.S3ExportingConfig) []any {
 	return []any{tfMap}
 }
 
-func flattenJobSchedule(apiObject *types.JobSchedule) []any {
+func flattenJobSchedule(apiObject *awstypes.JobSchedule) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -862,7 +869,7 @@ func flattenJobSchedule(apiObject *types.JobSchedule) []any {
 	return []any{tfMap}
 }
 
-func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []any {
+func flattenAttributeTypesSelector(apiObject *awstypes.AttributeTypesSelector) []any {
 	if apiObject == nil {
 		return nil
 	}
@@ -886,7 +893,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []an
 	return []any{tfMap}
 }
 
-func flattenMatchingRules(apiObject []types.MatchingRule) []any {
+func flattenMatchingRules(apiObject []awstypes.MatchingRule) []any {
 	if apiObject == nil {
 		return nil
 	}

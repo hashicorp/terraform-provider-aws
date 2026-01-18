@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -13,7 +13,6 @@ package flex
 //   go test -v -update-golden .
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/google/go-cmp/cmp"
 )
 
 var updateGolden = flag.Bool("update-golden", false, "update golden files")
@@ -106,13 +106,10 @@ func compareWithGolden(t *testing.T, goldenPath string, got any) {
 
 	// Read and compare with existing golden file
 	want := readGolden(t, goldenPath)
-	if bytes.Equal(bytes.TrimSpace(want), bytes.TrimSpace(data)) {
-		return // Files match, test passes
-	}
 
-	// Files differ, fail the test with detailed output
-	t.Fatalf("comparison failed for golden file %s\nExpected content from: %s\nActual content:\n%s",
-		goldenPath, goldenPath, string(data))
+	if diff := cmp.Diff(data, want); diff != "" {
+		t.Fatalf("comparison failed for golden file %s\n%s", goldenPath, diff)
+	}
 }
 
 // autoGenerateGoldenPath creates a golden file path from test name and case description.
@@ -124,8 +121,8 @@ func autoGenerateGoldenPath(t *testing.T, fullTestName, testCaseName string) str
 	// fullTestName might be "TestExpandLogging_collections/Collection_of_primitive_types_Source_and_slice_or_map_of_primtive_types_Target"
 	// We want to extract "TestExpandLogging_collections"
 	baseName := fullTestName
-	if slashIndex := strings.Index(fullTestName, "/"); slashIndex != -1 {
-		baseName = fullTestName[:slashIndex]
+	if before, _, ok := strings.Cut(fullTestName, "/"); ok {
+		baseName = before
 	}
 
 	// Convert TestExpandLogging_collections -> expand_logging_collections

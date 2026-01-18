@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -15,7 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -172,7 +173,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := waitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
+	output, err := waitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (*kms.CreateKeyOutput, error) {
 		return conn.CreateKey(ctx, &input)
 	})
 
@@ -220,7 +221,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -381,7 +382,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		tags, err := listTags(ctx, conn, keyID)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{LastError: err}
+			return nil, &sdkretry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -407,7 +408,7 @@ func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
 	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -420,7 +421,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -431,7 +432,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	}
 
 	if output == nil || output.KeyMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KeyMetadata, nil
@@ -459,7 +460,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -470,7 +471,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -484,7 +485,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -495,7 +496,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return aws.Bool(output.KeyRotationEnabled), output.RotationPeriodInDays, nil
@@ -630,11 +631,11 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
+func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -650,7 +651,7 @@ func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID s
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -675,7 +676,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
 		Refresh: statusKeyState(ctx, conn, keyID),
@@ -695,7 +696,7 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -726,7 +727,7 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 	checkFunc := func(ctx context.Context) (bool, error) {
 		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -752,7 +753,7 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

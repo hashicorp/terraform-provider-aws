@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
@@ -215,11 +215,11 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	}
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errStr := err.Error()
-		if err, ok := errs.As[*json.SyntaxError](err); ok {
-			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+		if syntaxErr, ok := errs.As[*json.SyntaxError](err); ok {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s, at byte offset %d", k, syntaxErr.Error(), syntaxErr.Offset))
+		} else {
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %w", k, err))
 		}
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
@@ -231,54 +231,10 @@ func ValidIAMPolicyJSON(v any, k string) (ws []string, errors []error) {
 	return //nolint:nakedret // Just a long function.
 }
 
-// ValidateIPv4CIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The IP address is an IPv4 address
-// - The CIDR block is the CIDR block for the network
-func ValidateIPv4CIDRBlock(cidr string) error {
-	ip, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	ipv4 := ip.To4()
-	if ipv4 == nil {
-		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
-	}
-
-	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
-// ValidateIPv6CIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The IP address is an IPv6 address
-// - The CIDR block is the CIDR block for the network
-func ValidateIPv6CIDRBlock(cidr string) error {
-	ip, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	ipv4 := ip.To4()
-	if ipv4 != nil {
-		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
-	}
-
-	if !inttypes.CIDRBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
 // ValidIPv4CIDRNetworkAddress ensures that the string value is a valid IPv4 CIDR that
 // represents a network address - it adds an error otherwise
 func ValidIPv4CIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
-	if err := ValidateIPv4CIDRBlock(v.(string)); err != nil {
+	if err := inttypes.ValidateIPv4CIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -289,7 +245,7 @@ func ValidIPv4CIDRNetworkAddress(v any, k string) (ws []string, errors []error) 
 // ValidIPv6CIDRNetworkAddress ensures that the string value is a valid IPv6 CIDR that
 // represents a network address - it adds an error otherwise
 func ValidIPv6CIDRNetworkAddress(v any, k string) (ws []string, errors []error) {
-	if err := ValidateIPv6CIDRBlock(v.(string)); err != nil {
+	if err := inttypes.ValidateIPv6CIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
