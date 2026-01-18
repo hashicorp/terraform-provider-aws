@@ -3,7 +3,7 @@
 
 plugin "aws" {
   enabled = true
-  version = "0.41.0"
+  version = "0.45.0"
   source  = "github.com/terraform-linters/tflint-ruleset-aws"
 }
 
@@ -51,9 +51,5 @@ rule "aws_iam_saml_provider_invalid_saml_metadata_document" {
 
 # Rule needs to be disabled due to bad email regex in the linter rule
 rule "aws_guardduty_member_invalid_email" {
-  enabled = false
-}
-
-rule "aws_api_gateway_domain_name_invalid_security_policy" {
   enabled = false
 }
