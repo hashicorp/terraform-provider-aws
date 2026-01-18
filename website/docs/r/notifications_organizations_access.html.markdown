@@ -30,22 +30,15 @@ The following arguments are required:
 
 * `enabled` - (Required) Whether to enable organizations access for AWS User Notifications in AWS Organizations. When set to `true`, enables organizations access. When set to `false`, disables organizations access.
 
-The following arguments are optional:
-
-* `timeouts` - (Optional) Configuration block for resource timeouts. See [Timeouts](#timeouts) for details.
-
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `id` - AWS account ID.
+This resource exports no additional attributes.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`) How long to wait for the organizations access to be enabled or disabled during resource creation.
-* `read` - (Default `10m`) How long to wait for the organizations access status to stabilize during read operations.
 * `update` - (Default `10m`) How long to wait for the organizations access to be enabled or disabled during resource updates.
 * `delete` - (Default `10m`) How long to wait for the organizations access to be disabled during resource deletion.
 
