@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_connect_user_hierarchy_group", name="User Hierarchy Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserHierarchyGroupCreate,

@@ -30,6 +30,7 @@ import (
 // @SDKResource("aws_sesv2_contact_list", name="Contact List")
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceContactList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactListCreate,

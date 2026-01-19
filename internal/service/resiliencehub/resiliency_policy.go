@@ -41,6 +41,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehub;resiliencehub.DescribeResiliencyPolicyOutput")
 // @Testing(importStateIdAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResiliencyPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resiliencyPolicyResource{}
 

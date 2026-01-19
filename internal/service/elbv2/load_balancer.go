@@ -44,6 +44,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.LoadBalancer")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,

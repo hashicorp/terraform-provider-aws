@@ -46,6 +46,7 @@ const (
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
 // @Testing(importIgnore="create_base_policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,

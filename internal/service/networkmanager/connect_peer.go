@@ -33,6 +33,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(importIgnore="state")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectPeerCreate,

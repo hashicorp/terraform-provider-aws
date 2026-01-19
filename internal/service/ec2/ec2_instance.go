@@ -54,6 +54,7 @@ import (
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

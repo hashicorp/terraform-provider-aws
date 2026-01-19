@@ -26,6 +26,7 @@ import (
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
