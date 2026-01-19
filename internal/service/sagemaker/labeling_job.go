@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -50,6 +52,24 @@ type labelingJobResource struct {
 func (r *labelingJobResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"label_attribute_name": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,126}$`), ""),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"label_category_config_s3_uri": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"labeling_job_arn": framework.ARNAttributeComputedOnly(),
 			"labeling_job_name": schema.StringAttribute{
 				Required: true,
@@ -71,6 +91,395 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"human_task_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[humanTaskConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"max_concurrent_task_count": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 5000),
+							},
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+						},
+						"number_of_human_workers_per_data_object": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 9),
+							},
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+						},
+						"pre_human_task_lambda_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   false,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"task_availability_lifetime_in_seconds": schema.Int32Attribute{
+							Optional: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+						},
+						"task_description": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 255),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"task_keywords": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							ElementType: types.StringType,
+							Optional:    true,
+							Validators: []validator.Set{
+								setvalidator.SizeBetween(1, 5),
+								setvalidator.ValueStringsAre(
+									stringvalidator.LengthBetween(1, 30),
+								),
+							},
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+						"task_time_limit_in_seconds": schema.Int32Attribute{
+							Required: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.RequiresReplace(),
+							},
+						},
+						"workteam_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"annotation_consolidation_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[annotationConsolidationConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"annotation_consolidation_lambda_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"public_workforce_task_price": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[publicWorkforceTaskPriceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"amount_in_usd": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[usdModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"cents": schema.Int32Attribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.RequiresReplace(),
+													},
+												},
+												"dollars": schema.Int32Attribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.RequiresReplace(),
+													},
+												},
+												"tenth_fractions_of_a_cent": schema.Int32Attribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.Int32{
+														int32planmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"ui_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[uiConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"human_task_ui_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"ui_template_s3_uri": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+										},
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"input_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobInputConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"data_attributes": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobDataAttributesModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"content_classifiers": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringEnumType[awstypes.ContentClassifier](),
+										Optional:   true,
+										PlanModifiers: []planmodifier.Set{
+											setplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+							},
+						},
+						"data_source": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobDataSourceModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"s3_data_source": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobS3DataSourceModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"manifest_s3_uri": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+													},
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+									"sns_data_source": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobSNSDataSourceModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrSNSTopicARN: schema.StringAttribute{
+													CustomType: fwtypes.ARNType,
+													Required:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"labeling_job_algorithms_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobAlgorithmsConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"initial_active_learning_model_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"labeling_job_algorithm_specification_arn": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"labeling_job_resource_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobResourceConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"volume_kms_key_id": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									names.AttrVPCConfig: schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[vpcConfigModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrSecurityGroupIDs: schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Required:    true,
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
+													},
+												},
+												names.AttrSubnets: schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Required:    true,
+													PlanModifiers: []planmodifier.Set{
+														setplanmodifier.RequiresReplace(),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"output_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobOutputConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"s3_output_path": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						names.AttrSNSTopicARN: schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
 			"stopping_conditions": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobStoppingConditionsModel](ctx),
 				Validators: []validator.List{
@@ -241,12 +650,94 @@ func findLabelingJob(ctx context.Context, conn *sagemaker.Client, input *sagemak
 
 type labelingJobResourceModel struct {
 	framework.WithRegionModel
-	LabelingJobARN     types.String                                                        `tfsdk:"labeling_job_arn"`
-	LabelingJobName    types.String                                                        `tfsdk:"labeling_job_name"`
-	RoleARN            fwtypes.ARN                                                         `tfsdk:"role_arn"`
-	StoppingConditions fwtypes.ListNestedObjectValueOf[labelingJobStoppingConditionsModel] `tfsdk:"stopping_conditions"`
-	Tags               tftags.Map                                                          `tfsdk:"tags"`
-	TagsAll            tftags.Map                                                          `tfsdk:"tags_all"`
+	HumanTaskConfig          fwtypes.ListNestedObjectValueOf[humanTaskConfigModel]               `tfsdk:"human_task_config"`
+	InputConfig              fwtypes.ListNestedObjectValueOf[labelingJobInputConfigModel]        `tfsdk:"input_config"`
+	LabelAttributeName       types.String                                                        `tfsdk:"label_attribute_name"`
+	LabelCategoryConfigS3URI types.String                                                        `tfsdk:"label_category_config_s3_uri"`
+	LabelingJobARN           types.String                                                        `tfsdk:"labeling_job_arn"`
+	LabelingJobName          types.String                                                        `tfsdk:"labeling_job_name"`
+	OutputConfig             fwtypes.ListNestedObjectValueOf[labelingJobOutputConfigModel]       `tfsdk:"output_config"`
+	RoleARN                  fwtypes.ARN                                                         `tfsdk:"role_arn"`
+	StoppingConditions       fwtypes.ListNestedObjectValueOf[labelingJobStoppingConditionsModel] `tfsdk:"stopping_conditions"`
+	Tags                     tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                          `tfsdk:"tags_all"`
+}
+
+type humanTaskConfigModel struct {
+	AnnotationConsolidationConfig     fwtypes.ListNestedObjectValueOf[annotationConsolidationConfigModel] `tfsdk:"annotation_consolidation_config"`
+	MaxConcurrentTaskCount            types.Int32                                                         `tfsdk:"max_concurrent_task_count"`
+	NumberOfHumanWorkersPerDataObject types.Int32                                                         `tfsdk:"number_of_human_workers_per_data_object"`
+	PreHumanTaskLambdaARN             fwtypes.ARN                                                         `tfsdk:"pre_human_task_lambda_arn"`
+	PublicWorkforceTaskPrice          fwtypes.ListNestedObjectValueOf[publicWorkforceTaskPriceModel]      `tfsdk:"public_workforce_task_price"`
+	TaskAvailabilityLifetimeInSeconds types.Int32                                                         `tfsdk:"task_availability_lifetime_in_seconds"`
+	TaskDescription                   types.String                                                        `tfsdk:"task_description"`
+	TaskKeywords                      fwtypes.SetOfString                                                 `tfsdk:"task_keywords"`
+	TaskTimeLimitInSeconds            types.Int64                                                         `tfsdk:"task_time_limit_in_seconds"`
+	UIConfig                          fwtypes.ListNestedObjectValueOf[uiConfigModel]                      `tfsdk:"ui_config"`
+	WorkteamARN                       fwtypes.ARN                                                         `tfsdk:"workteam_arn"`
+}
+
+type annotationConsolidationConfigModel struct {
+	AnnotationConsolidationLambdaARN fwtypes.ARN `tfsdk:"annotation_consolidation_lambda_arn"`
+}
+
+type publicWorkforceTaskPriceModel struct {
+	AmountInUSD fwtypes.ListNestedObjectValueOf[usdModel] `tfsdk:"amount_in_usd"`
+}
+
+type usdModel struct {
+	Cents                 types.Int32 `tfsdk:"cents"`
+	Dollars               types.Int32 `tfsdk:"dollars"`
+	TenthFractionsOfACent types.Int32 `tfsdk:"tenth_fractions_of_a_cent"`
+}
+
+type uiConfigModel struct {
+	HumanTaskUIARN  fwtypes.ARN  `tfsdk:"human_task_ui_arn"`
+	UITemplateS3URI types.String `tfsdk:"ui_template_s3_uri"`
+}
+
+type labelingJobInputConfigModel struct {
+	DataAttributes fwtypes.ListNestedObjectValueOf[labelingJobDataAttributesModel] `tfsdk:"data_attributes"`
+	DataSource     fwtypes.ListNestedObjectValueOf[labelingJobDataSourceModel]     `tfsdk:"data_source"`
+}
+
+type labelingJobDataSourceModel struct {
+	S3DataSource  fwtypes.ListNestedObjectValueOf[labelingJobS3DataSourceModel]  `tfsdk:"s3_data_source"`
+	SNSDataSource fwtypes.ListNestedObjectValueOf[labelingJobSNSDataSourceModel] `tfsdk:"sns_data_source"`
+}
+
+type labelingJobS3DataSourceModel struct {
+	ManifestS3URI types.String `tfsdk:"manifest_s3_uri"`
+}
+
+type labelingJobSNSDataSourceModel struct {
+	SNSTopicARN fwtypes.ARN `tfsdk:"sns_topic_arn"`
+}
+
+type labelingJobDataAttributesModel struct {
+	ContentClassifiers fwtypes.SetOfStringEnum[awstypes.ContentClassifier] `tfsdk:"content_classifiers"`
+}
+
+type labelingJobAlgorithmsConfigModel struct {
+	InitialActiveLearningModelARN        fwtypes.ARN                                                     `tfsdk:"initial_active_learning_model_arn"`
+	LabelingJobAlgorithmSpecificationARN fwtypes.ARN                                                     `tfsdk:"labeling_job_algorithm_specification_arn"`
+	LabelingJobResourceConfig            fwtypes.ListNestedObjectValueOf[labelingJobResourceConfigModel] `tfsdk:"labeling_job_resource_config"`
+}
+
+type labelingJobResourceConfigModel struct {
+	VolumeKMSKeyID fwtypes.ARN                                     `tfsdk:"volume_kms_key_id"`
+	VPCConfig      fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"vpc_config"`
+}
+
+type vpcConfigModel struct {
+	SecurityGroupIDs fwtypes.SetOfString `tfsdk:"security_group_ids"`
+	Subnets          fwtypes.SetOfString `tfsdk:"subnets"`
+}
+
+type labelingJobOutputConfigModel struct {
+	KMSKeyID     fwtypes.ARN  `tfsdk:"kms_key_id"`
+	S3OutputPath types.String `tfsdk:"s3_output_path"`
+	SNSTopicARN  fwtypes.ARN  `tfsdk:"sns_topic_arn"`
 }
 
 type labelingJobStoppingConditionsModel struct {
