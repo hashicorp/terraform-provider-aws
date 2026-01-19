@@ -594,10 +594,25 @@ func (r *labelingJobResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().SageMakerClient(ctx)
 
 	name := fwflex.StringValueFromFramework(ctx, data.LabelingJobName)
+	output, err := findLabelingJobByName(ctx, conn, name)
+
+	if retry.NotFound(err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker AI Labeling Job (%s)", name), err.Error())
+		return
+	}
+
+	if output.LabelingJobStatus == awstypes.LabelingJobStatusFailed {
+		return
+	}
+
 	input := sagemaker.StopLabelingJobInput{
 		LabelingJobName: aws.String(name),
 	}
-	_, err := conn.StopLabelingJob(ctx, &input)
+	_, err = conn.StopLabelingJob(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return

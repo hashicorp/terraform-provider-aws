@@ -61,6 +61,75 @@ func testAccLabelingJob_basic(t *testing.T) {
 	})
 }
 
+func testAccLabelingJob_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_labeling_job.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLabelingJobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLabelingJobExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsagemaker.ResourceLabelingJob, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccLabelingJob_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_labeling_job.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLabelingJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLabelingJobConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLabelingJobExists(ctx, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "labeling_job_name"),
+				ImportStateVerifyIdentifierAttribute: "labeling_job_name",
+			},
+		},
+	})
+}
+
 func testAccCheckLabelingJobDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
@@ -200,4 +269,52 @@ resource "aws_sagemaker_labeling_job" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
+}
+
+func testAccLabelingJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccLabelingJobConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_labeling_job" "test" {
+  label_attribute_name = "testlabel"
+  labeling_job_name    = %[1]q
+  role_arn             = aws_iam_role.test.arn
+
+  label_category_config_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.categories.key}"
+
+  human_task_config {
+    number_of_human_workers_per_data_object = 1
+    task_description                        = "Apply the labels provided to specific words or phrases within the larger text block."
+    task_title                              = "Named entity Recognition task"
+    task_time_limit_in_seconds              = 28800
+    workteam_arn                            = aws_sagemaker_workteam.test.arn
+
+    ui_config {
+      human_task_ui_arn = "arn:${data.aws_partition.current.partition}:sagemaker:${data.aws_region.current.region}:394669845002:human-task-ui/NamedEntityRecognition"
+    }
+
+    pre_human_task_lambda_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:081040173940:function:PRE-NamedEntityRecognition"
+
+    annotation_consolidation_config {
+      annotation_consolidation_lambda_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:081040173940:function:ACS-NamedEntityRecognition"
+    }
+  }
+
+  input_config {
+    data_source {
+      sns_data_source {
+        sns_topic_arn = aws_sns_topic.test.arn
+      }
+    }
+  }
+
+  output_config {
+    s3_output_path = "s3://${aws_s3_bucket.test.bucket}/"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, tagKey1, tagValue1))
 }

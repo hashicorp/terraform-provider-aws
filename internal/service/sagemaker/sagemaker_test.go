@@ -146,7 +146,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial,
 		},
 		"LabelingJob": {
-			acctest.CtBasic: testAccLabelingJob_basic,
+			acctest.CtBasic:      testAccLabelingJob_basic,
+			acctest.CtDisappears: testAccLabelingJob_disappears,
+			"tags":               testAccLabelingJob_tags,
 		},
 	}
 
