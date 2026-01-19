@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -88,7 +89,7 @@ func TestAccKMSExternalKey_disappears(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceExternalKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceExternalKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -558,7 +559,7 @@ func testAccCheckExternalKeyHasPolicy(ctx context.Context, name string, expected
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
@@ -580,7 +581,7 @@ func testAccCheckExternalKeyDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

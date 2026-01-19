@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -86,7 +86,7 @@ func TestAccFSxDataRepositoryAssociation_disappears(t *testing.T) {
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(rName, rName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceDataRepositoryAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceDataRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,7 +117,7 @@ func TestAccFSxDataRepositoryAssociation_disappears_ParentFileSystem(t *testing.
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(rName, rName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffsx.ResourceLustreFileSystem(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -573,7 +573,7 @@ func testAccCheckDataRepositoryAssociationDestroy(ctx context.Context) resource.
 
 			_, err := tffsx.FindDataRepositoryAssociationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

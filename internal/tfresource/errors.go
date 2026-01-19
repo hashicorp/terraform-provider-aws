@@ -1,9 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
 
 import (
+	"errors"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
@@ -33,3 +35,49 @@ var TimedOut = retry.TimedOut
 // which handles both Plugin SDK V2 and internal error types. For net-new usage,
 // prefer calling retry.SetLastError directly.
 var SetLastError = retry.SetLastError
+
+// From github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry:
+
+// RetryError forces client code to choose whether or not a given error is retryable.
+type RetryError struct {
+	err         error
+	isRetryable bool
+}
+
+func (e *RetryError) Error() string {
+	return e.err.Error()
+}
+
+func (e *RetryError) Unwrap() error {
+	return e.err
+}
+
+// RetryableError is a helper to create a RetryError that's retryable from a
+// given error. To prevent logic errors, will return an error when passed a
+// nil error.
+func RetryableError(err error) *RetryError {
+	if err == nil {
+		return &RetryError{
+			err: errors.New("empty retryable error received. " +
+				"This is a bug with the Terraform AWS Provider and should be " +
+				"reported as a GitHub issue in the provider repository."),
+			isRetryable: false,
+		}
+	}
+	return &RetryError{err: err, isRetryable: true}
+}
+
+// NonRetryableError is a helper to create a RetryError that's _not_ retryable
+// from a given error. To prevent logic errors, will return an error when
+// passed a nil error.
+func NonRetryableError(err error) *RetryError {
+	if err == nil {
+		return &RetryError{
+			err: errors.New("empty non-retryable error received. " +
+				"This is a bug with the Terraform AWS Provider and should be " +
+				"reported as a GitHub issue in the provider repository."),
+			isRetryable: false,
+		}
+	}
+	return &RetryError{err: err, isRetryable: false}
+}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rbin
@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rbin"
 	"github.com/aws/aws-sdk-go-v2/service/rbin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -213,7 +213,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findRuleByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RBin Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -322,8 +322,7 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -332,17 +331,17 @@ func findRuleByID(ctx context.Context, conn *rbin.Client, id string) (*rbin.GetR
 	}
 
 	if output == nil || output.Identifier == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRule(ctx context.Context, conn *rbin.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRule(conn *rbin.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRuleByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -358,7 +357,7 @@ func waitRuleCreated(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
-		Refresh:                   statusRule(ctx, conn, id),
+		Refresh:                   statusRule(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -376,7 +375,7 @@ func waitRuleUpdated(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RuleStatusPending),
 		Target:                    enum.Slice(types.RuleStatusAvailable),
-		Refresh:                   statusRule(ctx, conn, id),
+		Refresh:                   statusRule(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -394,7 +393,7 @@ func waitRuleDeleted(ctx context.Context, conn *rbin.Client, id string, timeout 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RuleStatusPending, types.RuleStatusAvailable),
 		Target:  []string{},
-		Refresh: statusRule(ctx, conn, id),
+		Refresh: statusRule(conn, id),
 		Timeout: timeout,
 	}
 

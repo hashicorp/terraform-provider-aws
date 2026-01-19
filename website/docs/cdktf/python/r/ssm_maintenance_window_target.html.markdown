@@ -103,6 +103,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_maintenance_window_target.example
+  identity = {
+    window_id = "mw-0c50858d01EXAMPLE"
+    id        = "23639a0b-ddbc-4bca-9e72-78d96EXAMPLE"
+  }
+}
+
+resource "aws_ssm_maintenance_window_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `window_id` - (String) ID of the maintenance window.
+* `id` - (String) ID of the maintenance window target.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM Maintenance Window targets using `WINDOW_ID/WINDOW_TARGET_ID`. For example:
 
 ```python
@@ -126,4 +154,4 @@ Using `terraform import`, import SSM Maintenance Window targets using `WINDOW_ID
 % terraform import aws_ssm_maintenance_window_target.example mw-0c50858d01EXAMPLE/23639a0b-ddbc-4bca-9e72-78d96EXAMPLE
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-8716dd3aed621b76012dead6aa22e71c66c1000751f5bcc3d304bf6e3c8d7174 -->
+<!-- cache-key: cdktf-0.20.8 input-3a90a45f7edeb19456221d335d09db0b291cc3bb88ba2933bed5c8358ec69b15 -->

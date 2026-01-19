@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -16,13 +16,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -115,7 +116,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -211,18 +212,18 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 	}
 
 	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
-	input := &backup.DescribeBackupVaultInput{
+	input := backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
 
-	output, err := findVault(ctx, conn, input)
+	output, err := findVault(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -235,7 +236,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	output, err := conn.DescribeBackupVault(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -246,7 +247,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -265,7 +266,7 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	output, err := conn.DescribeRecoveryPoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -276,17 +277,17 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
+func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -299,7 +300,7 @@ func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultNa
 }
 
 func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),
@@ -309,7 +310,7 @@ func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

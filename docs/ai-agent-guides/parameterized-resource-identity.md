@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding Resource Identity to parameterized Resources
 
 You are working on the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws), specifically focused on adding [resource identity](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity) to Plugin SDKV2 resources whose identity is composed from multiple parameters (parameterized).
@@ -66,7 +69,42 @@ data "aws_region" "current" {
 
 Repeat steps 2 and 3 for each resource in the service. When all resources are complete, proceed to the next section.
 
-## 4. Submit a pull request
+## 4. Update import documentation
+
+- Update the import section of the registry documentation for each resource following the template below.
+
+````markdown
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = <resource-name>.example
+  identity = {
+    <required key/value pairs here>
+  }
+}
+
+resource "<resource-name>" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+<required attributes here>
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+````
+
+- The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.
+- Refer to `website/docs/r/kms_key.html.markdown` for a reference implementation.
+
+## 5. Submit a pull request
 
 **!!!Important!!!**: Ask for confirmation before proceeding with this step.
 

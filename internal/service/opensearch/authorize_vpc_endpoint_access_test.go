@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,9 +49,8 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateId:                        domainName,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
-				ImportStateIdFunc:                    testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, ",", names.AttrDomainName, "account"),
 			},
 		},
 	})
@@ -79,7 +76,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,9 +93,8 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
-
-			if tfresource.NotFound(err) {
+			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -106,45 +102,31 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 				return err
 			}
 
-			return fmt.Errorf("Elastic Beanstalk Application Version %s still exists", rs.Primary.ID)
+			return fmt.Errorf("OpenSearch Authorize VPC Endpoint Access %s still exists", rs.Primary.Attributes[names.AttrDomainName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name string, authorizevpcendpointaccess *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
+func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, n string, v *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+		output, err := tfopensearch.FindAuthorizeVPCEndpointAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["account"])
+
 		if err != nil {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, rs.Primary.ID, err)
+			return err
 		}
 
-		*authorizevpcendpointaccess = *resp
+		*v = *output
 
 		return nil
-	}
-}
-
-func testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrDomainName], nil
 	}
 }
 

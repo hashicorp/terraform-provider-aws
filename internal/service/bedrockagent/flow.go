@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent
@@ -27,14 +27,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1004,7 +1005,7 @@ func (r *flowResource) Read(ctx context.Context, request resource.ReadRequest, r
 
 	output, err := findFlowByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -1118,7 +1119,7 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 	output, err := conn.GetFlow(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1129,7 +1130,7 @@ func findFlowByID(ctx context.Context, conn *bedrockagent.Client, id string) (*b
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1684,7 +1685,7 @@ func (m *promptFlowNodeSourceConfigurationModel) Flatten(ctx context.Context, v 
 		}
 
 		if t.Value.AdditionalModelRequestFields != nil {
-			json, err := smithyjson.SmithyDocumentToString(t.Value.AdditionalModelRequestFields)
+			json, err := tfsmithy.DocumentToJSONString(t.Value.AdditionalModelRequestFields)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Encoding JSON",
@@ -1733,7 +1734,7 @@ func (m promptFlowNodeSourceConfigurationModel) Expand(ctx context.Context) (res
 
 		additionalFields := promptFlowNodeSourceConfigurationInline.AdditionalModelRequestFields
 		if !additionalFields.IsNull() {
-			json, err := smithyjson.SmithyDocumentFromString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
+			json, err := tfsmithy.DocumentFromJSONString(fwflex.StringValueFromFramework(ctx, additionalFields), document.NewLazyDocument)
 			if err != nil {
 				diags.Append(diag.NewErrorDiagnostic(
 					"Decoding JSON",

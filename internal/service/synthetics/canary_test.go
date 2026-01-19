@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,6 +41,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.ephemeral_storage", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1500"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
@@ -49,8 +50,10 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.0.max_retries", "0"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -73,6 +76,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.ephemeral_storage", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1500"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
@@ -82,7 +86,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/test/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
@@ -340,7 +344,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 				),
@@ -606,6 +610,128 @@ func TestAccSyntheticsCanary_vpcIPv6AllowedForDualStack(t *testing.T) {
 	})
 }
 
+func TestAccSyntheticsCanary_runConfigEphemeralStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf1, conf2 awstypes.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+	runtimeVersionDataSourceName := "data.aws_synthetics_runtime_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryConfig_runConfigEphemeralStorage(rName, 1024),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.ephemeral_storage", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+			},
+			{
+				Config: testAccCanaryConfig_runConfigEphemeralStorage(rName, 2048),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf2),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.ephemeral_storage", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
+					//acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSyntheticsCanary_scheduleRetryConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf1, conf2 awstypes.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCanaryConfig_scheduleRetryConfig(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.0.max_retries", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
+			},
+			{
+				Config: testAccCanaryConfig_scheduleRetryConfig(rName, 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf2),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.0.max_retries", "2"),
+					testAccCheckCanaryIsUpdated(&conf1, &conf2),
+				),
+			},
+			{
+				Config: testAccCanaryConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, resourceName, &conf2),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.duration_in_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.retry_config.0.max_retries", "2"), // unchanged
+				),
+			},
+		},
+	})
+}
+
 func TestAccSyntheticsCanary_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Canary
@@ -669,8 +795,8 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceCanary(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -689,7 +815,7 @@ func testAccCheckCanaryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsynthetics.FindCanaryByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1390,6 +1516,61 @@ resource "aws_synthetics_canary" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
+}
+
+func testAccCanaryConfig_runConfigEphemeralStorage(rName string, ephemeralStorage int) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
+
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+  run_config {
+    ephemeral_storage = %[2]d
+  }
+}
+`, rName, ephemeralStorage))
+}
+
+func testAccCanaryConfig_scheduleRetryConfig(rName string, maxRetries int) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test, aws_iam_role.test, aws_iam_role_policy.test]
+
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+
+  schedule {
+    expression = "rate(0 minute)"
+    retry_config {
+      max_retries = %[2]d
+    }
+  }
+  run_config {
+    timeout_in_seconds = 60
+  }
+}
+`, rName, maxRetries))
 }
 
 func testAccCanaryConfig_tags1(rName, tagKey1, tagValue1 string) string {

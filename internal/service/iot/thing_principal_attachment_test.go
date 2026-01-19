@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -153,7 +153,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 
 			_, err := tfiot.FindThingPrincipalAttachmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["thing"], rs.Primary.Attributes[names.AttrPrincipal])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -208,7 +208,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 				return nil
 			}
 		} else if err != nil {
-			return fmt.Errorf("Error: cannot describe thing %s: %s", thingName, err)
+			return fmt.Errorf("Error: cannot describe thing %s: %w", thingName, err)
 		} else if !exists {
 			return fmt.Errorf("Error: Thing (%s) does not exist, but expected to be", thingName)
 		}
@@ -218,7 +218,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error: Cannot list thing (%s) principals: %s", thingName, err)
+			return fmt.Errorf("Error: Cannot list thing (%s) principals: %w", thingName, err)
 		}
 
 		if len(res.Principals) != len(principalARNs) {

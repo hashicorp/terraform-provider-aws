@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -676,6 +677,10 @@ func resourceInstance() *schema.Resource {
 				ConflictsWith: []string{
 					"s3_import",
 				},
+			},
+			"upgrade_rollout_order": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"upgrade_storage_config": {
 				Type:     schema.TypeBool,
@@ -1939,10 +1944,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
 	} else {
 		v, err = findDBInstanceByID(ctx, conn, d.Id())
-		if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+		if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 			// Retry with `identifier`
 			v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
-			if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+			if retry.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
 				return diags
@@ -2069,6 +2074,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
+	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
 	d.Set(names.AttrUsername, v.MasterUsername)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
@@ -2818,7 +2824,7 @@ func findDBInstanceByID(ctx context.Context, conn *rds.Client, id string, optFns
 	output, err := findDBInstance(ctx, conn, input, tfslices.PredicateTrue[*types.DBInstance](), optFns...)
 
 	// in case a DB has an *identifier* starting with "db-""
-	if idLooksLikeDbiResourceID && tfresource.NotFound(err) {
+	if idLooksLikeDbiResourceID && retry.NotFound(err) {
 		input = &rds.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(id),
 		}
@@ -2851,7 +2857,7 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if errs.IsA[*types.DBInstanceNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -2871,11 +2877,11 @@ func findDBInstances(ctx context.Context, conn *rds.Client, input *rds.DescribeD
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options)) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findDBInstanceByID(ctx, conn, id, optFns...)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -2912,11 +2918,13 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 			instanceStatusResettingMasterCredentials,
 			instanceStatusStarting,
 			instanceStatusStopping,
+			instanceStatusStorageConfigUpgrade,
 			instanceStatusStorageFull,
+			instanceStatusStorageInitialization,
 			instanceStatusUpgrading,
 		},
 		Target:  []string{instanceStatusAvailable, instanceStatusStorageOptimization},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -2950,7 +2958,7 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusUpgrading,
 		},
 		Target:                    []string{instanceStatusStopped},
-		Refresh:                   statusDBInstance(ctx, conn, id),
+		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 		Delay:                     10 * time.Second,
@@ -2994,7 +3002,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageOptimization,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstance(ctx, conn, id),
+		Refresh: statusDBInstance(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3021,7 +3029,7 @@ func findBlueGreenDeploymentByID(ctx context.Context, conn *rds.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.BlueGreenDeploymentIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -3047,7 +3055,7 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.BlueGreenDeploymentNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -3067,11 +3075,11 @@ func findBlueGreenDeployments(ctx context.Context, conn *rds.Client, input *rds.
 	return output, nil
 }
 
-func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusBlueGreenDeployment(conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findBlueGreenDeploymentByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -3084,8 +3092,9 @@ func statusBlueGreenDeployment(ctx context.Context, conn *rds.Client, id string)
 
 func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.BlueGreenDeployment, error) {
 	options := tfresource.Options{
-		PollInterval: 10 * time.Second,
-		Delay:        1 * time.Minute,
+		PollInterval:              10 * time.Second,
+		Delay:                     1 * time.Minute,
+		ContinuousTargetOccurence: 3,
 	}
 	for _, fn := range optFns {
 		fn(&options)
@@ -3094,7 +3103,7 @@ func waitBlueGreenDeploymentAvailable(ctx context.Context, conn *rds.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"AVAILABLE"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3120,7 +3129,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"AVAILABLE", "SWITCHOVER_IN_PROGRESS"},
 		Target:  []string{"SWITCHOVER_COMPLETED"},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
@@ -3129,7 +3138,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
 		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err
@@ -3150,7 +3159,7 @@ func waitBlueGreenDeploymentDeleted(ctx context.Context, conn *rds.Client, id st
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PROVISIONING", "AVAILABLE", "SWITCHOVER_IN_PROGRESS", "SWITCHOVER_COMPLETED", "INVALID_CONFIGURATION", "SWITCHOVER_FAILED", "DELETING"},
 		Target:  []string{},
-		Refresh: statusBlueGreenDeployment(ctx, conn, id),
+		Refresh: statusBlueGreenDeployment(conn, id),
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)

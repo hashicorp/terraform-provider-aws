@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspaces
@@ -14,16 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -194,6 +195,13 @@ func resourceDirectory() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tenancy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.Tenancy](),
+			},
 			"user_identity_type": {
 				Type:             schema.TypeString,
 				Computed:         true,
@@ -360,12 +368,15 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	workspaceType := types.WorkspaceType(d.Get("workspace_type").(string))
 	input := workspaces.RegisterWorkspaceDirectoryInput{
 		Tags:          getTagsIn(ctx),
-		Tenancy:       types.TenancyShared,
 		WorkspaceType: workspaceType,
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("tenancy"); ok {
+		input.Tenancy = types.Tenancy(v.(string))
 	}
 
 	switch workspaceType {
@@ -492,7 +503,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	directory, err := findDirectoryByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -534,6 +545,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 	d.Set("workspace_directory_name", directory.WorkspaceDirectoryName)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("workspace_type", directory.WorkspaceType)
+	d.Set("tenancy", directory.Tenancy)
 
 	return diags
 }
@@ -706,12 +718,12 @@ func findDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) 
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+	if inttypes.IsZero(output) {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.State; state == types.WorkspaceDirectoryStateDeregistered {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -747,11 +759,11 @@ func findDirectories(ctx context.Context, conn *workspaces.Client, input *worksp
 	return output, nil
 }
 
-func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
+func statusDirectory(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDirectoryByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -767,7 +779,7 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.WorkspaceDirectoryStateRegistering),
 		Target:  enum.Slice(types.WorkspaceDirectoryStateRegistered),
 		Refresh: statusDirectory(ctx, conn, directoryID),
@@ -777,7 +789,7 @@ func waitDirectoryRegistered(ctx context.Context, conn *workspaces.Client, direc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}
@@ -789,7 +801,7 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			types.WorkspaceDirectoryStateRegistering,
 			types.WorkspaceDirectoryStateRegistered,
@@ -803,7 +815,7 @@ func waitDirectoryDeregistered(ctx context.Context, conn *workspaces.Client, dir
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.WorkspaceDirectory); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

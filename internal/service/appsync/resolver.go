@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync
@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -237,12 +240,12 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta an
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AppSync Resolver (%s): %s", id, err)
+		return smerr.Append(ctx, diags, err, smerr.ID, id)
 	}
 
 	d.SetId(id)
 
-	return append(diags, resourceResolverRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceResolverRead(ctx, d, meta))
 }
 
 func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -251,25 +254,25 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	apiID, typeName, fieldName, err := resolverParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	resolver, err := findResolverByThreePartKey(ctx, conn, apiID, typeName, fieldName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AppSync Resolver (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Appsync Resolver (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	d.Set("api_id", apiID)
 	d.Set(names.AttrARN, resolver.ResolverArn)
 	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting caching_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("code", resolver.Code)
 	d.Set("data_source", resolver.DataSourceName)
@@ -277,15 +280,15 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("kind", resolver.Kind)
 	d.Set("max_batch_size", resolver.MaxBatchSize)
 	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting pipeline_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set("request_template", resolver.RequestMappingTemplate)
 	d.Set("response_template", resolver.ResponseMappingTemplate)
 	if err := d.Set("runtime", flattenRuntime(resolver.Runtime)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting runtime: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting sync_config: %s", err)
+		return smerr.Append(ctx, diags, err)
 	}
 	d.Set(names.AttrType, resolver.TypeName)
 
@@ -298,7 +301,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	apiID, typeName, fieldName, err := resolverParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	input := &appsync.UpdateResolverInput{
@@ -352,10 +355,10 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating AppSync Resolver (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
-	return append(diags, resourceResolverRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceResolverRead(ctx, d, meta))
 }
 
 func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -364,7 +367,7 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta an
 
 	apiID, typeName, fieldName, err := resolverParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return smerr.Append(ctx, diags, err)
 	}
 
 	log.Printf("[INFO] Deleting Appsync Resolver: %s", d.Id())
@@ -382,7 +385,7 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)
+		return smerr.Append(ctx, diags, err, smerr.ID, d.Id())
 	}
 
 	return diags
@@ -401,7 +404,7 @@ func resolverParseResourceID(id string) (string, string, string, error) {
 	parts := strings.SplitN(id, resolverResourceIDSeparator, 3)
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sTYPE-NAME%[2]sFIELD-NAME", id, resolverResourceIDSeparator)
+		return "", "", "", smarterr.NewError(fmt.Errorf("unexpected format for ID (%[1]s), expected API-ID%[2]sTYPE-NAME%[2]sFIELD-NAME", id, resolverResourceIDSeparator))
 	}
 
 	return parts[0], parts[1], parts[2], nil
@@ -428,18 +431,15 @@ func findResolverByThreePartKey(ctx context.Context, conn *appsync.Client, apiID
 	output, err := conn.GetResolver(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
+		return nil, smarterr.NewError(&sdkretry.NotFoundError{LastError: err, LastRequest: input})
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.Resolver == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.Resolver, nil

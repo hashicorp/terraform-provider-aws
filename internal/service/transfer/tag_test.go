@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -9,6 +9,7 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,12 +24,12 @@ func testAccTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -51,15 +52,20 @@ func testAccTag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceTag(), resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -74,12 +80,12 @@ func testAccTag_value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
@@ -92,7 +98,7 @@ func testAccTag_value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
@@ -110,12 +116,12 @@ func testAccTag_system(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy(ctx),
+		CheckDestroy:             testAccCheckTagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "aws:transfer:customHostname", "abc.example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(ctx, resourceName),
+					testAccCheckTagExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "aws:transfer:customHostname"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "abc.example.com"),
 				),

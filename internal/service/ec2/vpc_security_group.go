@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -269,7 +270,7 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	sg, err := findSecurityGroupByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -431,7 +432,7 @@ func forceRevokeSecurityGroupRules(ctx context.Context, conn *ec2.Client, id str
 
 	rules, err := rulesInSGsTouchingThis(ctx, conn, id, searchAll)
 	if err != nil {
-		return fmt.Errorf("describing security group rules: %s", err)
+		return fmt.Errorf("describing security group rules: %w", err)
 	}
 
 	for _, rule := range rules {
@@ -495,7 +496,7 @@ func rulesInSGsTouchingThis(ctx context.Context, conn *ec2.Client, id string, se
 	} else {
 		sgs, err := relatedSGs(ctx, conn, id)
 		if err != nil {
-			return nil, fmt.Errorf("describing security group rules: %s", err)
+			return nil, fmt.Errorf("describing security group rules: %w", err)
 		}
 
 		input = &ec2.DescribeSecurityGroupRulesInput{

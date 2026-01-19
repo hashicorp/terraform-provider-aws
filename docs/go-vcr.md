@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Go-VCR
 
 The Terraform AWS provider utilizes [`go-vcr`](https://github.com/dnaeon/go-vcr) to improve acceptance test performance and reduce costs.
@@ -89,11 +92,28 @@ If the service includes resources with generated tags tests, two additional `@Ta
 Add the following annotations to the resource definition:
 
 ```go
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
+// @Testing(existsTakesT=true, destroyTakesT=true)
 ```
 
 ### Validating Changes
+
+#### Compilation Checks
+
+Once code changes are made, do some basic verification to ensure the provider and tests still compile.
+
+To verify the provider compiles:
+
+```sh
+make build
+```
+
+To verify tests compile:
+
+```sh
+go test ./internal/service/<service-name>
+```
+
+#### Acceptance Tests
 
 The most time consuming part of enabling `go-vcr` for a service is validating acceptance test results.
 **The full acceptance test suite should run in `RECORD_ONLY` mode with no errors.**

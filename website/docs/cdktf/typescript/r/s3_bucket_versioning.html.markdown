@@ -171,6 +171,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_versioning.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `expectedBucketOwner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket versioning using the `bucket` or using the `bucket` and `expectedBucketOwner` separated by a comma (`,`). For example:
 
 If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
@@ -231,4 +258,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-126e307ddd056204d888b70a85a42477befa2ef1cf9ac175430fbba51fbef6dc -->
+<!-- cache-key: cdktf-0.20.8 input-67ba9ebe8b17da03806b3cffeb1d1e332bc8acaf2f9d4e27a456f7c3fca84ffc -->

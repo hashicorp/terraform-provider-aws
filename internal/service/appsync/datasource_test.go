@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -14,18 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccDataSource_basic(t *testing.T) {
+func TestAccAppSyncDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,12 +57,12 @@ func testAccDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDataSource_description(t *testing.T) {
+func TestAccAppSyncDataSource_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,12 +91,12 @@ func testAccDataSource_description(t *testing.T) {
 	})
 }
 
-func testAccDataSource_DynamoDB_region(t *testing.T) {
+func TestAccAppSyncDataSource_DynamoDB_region(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -127,12 +127,12 @@ func testAccDataSource_DynamoDB_region(t *testing.T) {
 	})
 }
 
-func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
+func TestAccAppSyncDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -237,12 +237,12 @@ func TestAccAppSyncDataSource_OpenSearchService_region(t *testing.T) {
 	})
 }
 
-func testAccDataSource_HTTP_endpoint(t *testing.T) {
+func TestAccAppSyncDataSource_HTTP_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -275,12 +275,12 @@ func testAccDataSource_HTTP_endpoint(t *testing.T) {
 	})
 }
 
-func testAccDataSource_type(t *testing.T) {
+func TestAccAppSyncDataSource_type(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -304,14 +304,14 @@ func testAccDataSource_type(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_dynamoDB(t *testing.T) {
+func TestAccAppSyncDataSource_Type_dynamoDB(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	dynamodbTableResourceName := "aws_dynamodb_table.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -403,12 +403,12 @@ func TestAccAppSyncDataSource_Type_openSearchService(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_http(t *testing.T) {
+func TestAccAppSyncDataSource_Type_http(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -432,12 +432,12 @@ func testAccDataSource_Type_http(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_httpAuth(t *testing.T) {
+func TestAccAppSyncDataSource_Type_httpAuth(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -466,12 +466,12 @@ func testAccDataSource_Type_httpAuth(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_relationalDatabase(t *testing.T) {
+func TestAccAppSyncDataSource_Type_relationalDatabase(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -495,12 +495,12 @@ func testAccDataSource_Type_relationalDatabase(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
+func TestAccAppSyncDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -526,14 +526,14 @@ func testAccDataSource_Type_relationalDatabaseWithOptions(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_lambda(t *testing.T) {
+func TestAccAppSyncDataSource_Type_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -558,14 +558,14 @@ func testAccDataSource_Type_lambda(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_eventBridge(t *testing.T) {
+func TestAccAppSyncDataSource_Type_eventBridge(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	iamRoleResourceName := "aws_iam_role.test"
 	eventBusResourceName := "aws_cloudwatch_event_bus.test"
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -590,12 +590,12 @@ func testAccDataSource_Type_eventBridge(t *testing.T) {
 	})
 }
 
-func testAccDataSource_Type_none(t *testing.T) {
+func TestAccAppSyncDataSource_Type_none(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_datasource.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -628,7 +628,7 @@ func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappsync.FindDataSourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1223,16 +1223,10 @@ resource "aws_secretsmanager_secret_version" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = %[2]q
-  engine_mode         = "serverless"
   database_name       = "mydb"
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true
-
-  scaling_configuration {
-    min_capacity = 1
-    max_capacity = 2
-  }
 }
 
 resource "aws_iam_role" "test" {

@@ -210,6 +210,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_acmpca_certificate_authority.example
+  identity = {
+    "arn" = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the ACM PCA certificate authority.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
 ```python
@@ -233,4 +254,4 @@ Using `terraform import`, import `aws_acmpca_certificate_authority` using the ce
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-449076f65ae9804f638028cc528cd156eddcb4de1fdb91f7fea07302be21940d -->
+<!-- cache-key: cdktf-0.20.8 input-7f068faadf09f5948fb1160e8f7b3ba4f4d753a219c92e8cc0589d135c5bf266 -->

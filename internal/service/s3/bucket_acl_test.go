@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -286,8 +286,7 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.owner.0.display_name",
@@ -314,7 +313,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 					testAccCheckBucketACLExists(ctx, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
 					// will result in a missing Bucket ACL resource
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -458,8 +457,7 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.grant.1.grantee.0.display_name",
@@ -507,8 +505,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.grant.1.grantee.0.display_name",
@@ -547,8 +544,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.grant.1.grantee.0.display_name",
@@ -607,8 +603,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.grant.1.grantee.0.display_name",
@@ -660,8 +655,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// DisplayName is eventually consistent for the ACL grantee and owner.
-				// Ignore verification to prevent flaky test results.
+				// DisplayName is deprecated and will be inconsistently returned between July and November 2025.
 				ImportStateVerifyIgnore: []string{
 					"access_control_policy.0.grant.0.grantee.0.display_name",
 					"access_control_policy.0.owner.0.display_name",

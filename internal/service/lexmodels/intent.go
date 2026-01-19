@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels
@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -469,22 +468,18 @@ func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.PutIntent(ctx, input)
 
 		if errs.IsA[*awstypes.ConflictException](err) {
-			return retry.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
+			return tfresource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
 		}
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutIntent(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating intent %s: %s", d.Id(), err)

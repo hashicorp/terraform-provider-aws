@@ -69,6 +69,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sns_topic_data_protection_policy.example
+  identity = {
+    "arn" = "arn:aws:sns:us-west-2:123456789012:example"
+  }
+}
+
+resource "aws_sns_topic_data_protection_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the SNS topic.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SNS Data Protection Topic Policy using the topic ARN. For example:
 
 ```python
@@ -92,4 +113,4 @@ Using `terraform import`, import SNS Data Protection Topic Policy using the topi
 % terraform import aws_sns_topic_data_protection_policy.example arn:aws:sns:us-west-2:123456789012:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-fa6285f071ab1063e4f4c21bca9a097eb24f2c329073952be63105a08db4aebb -->
+<!-- cache-key: cdktf-0.20.8 input-01afa0be562e4572ba9ae5423cb983156a13be458e3f14acc63d1403db8e7db3 -->

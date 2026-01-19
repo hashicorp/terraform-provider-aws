@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: golangci-lint Checks
 
 on:
@@ -27,8 +30,8 @@ jobs:
     name: 1 of 5
     runs-on: custom-ubuntu-22.04-large
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
           cache: false
@@ -41,7 +44,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci.yml
@@ -50,8 +53,8 @@ jobs:
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
           cache: false
@@ -64,7 +67,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci2.yml
@@ -78,8 +81,8 @@ jobs:
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
           cache: false
@@ -92,7 +95,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci3.yml
@@ -106,8 +109,8 @@ jobs:
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
           cache: false
@@ -120,7 +123,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci4.yml
@@ -134,8 +137,8 @@ jobs:
     needs: [golangci-linta]
     runs-on: custom-ubuntu-22.04-xl
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
           cache: false
@@ -148,7 +151,7 @@ jobs:
             awk '{print $2}'
           )" >> $GITHUB_OUTPUT
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@1481404843c368bc19ca9406f87d6e0fc97bdcfd # v7.0.0
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: "${{ steps.golangci-lint-version.outputs.version }}"
           args: --config .ci/.golangci5.yml

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package accessanalyzer
@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -40,6 +40,8 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -241,7 +243,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	analyzer, err := findAnalyzerByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Access Analyzer Analyzer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -306,8 +308,7 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -316,7 +317,7 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	}
 
 	if output == nil || output.Analyzer == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analyzer, nil
@@ -396,25 +397,15 @@ func expandInternalAccessAnalysisRuleCriteria(tfMap map[string]any) *types.Inter
 	apiObject := &types.InternalAccessAnalysisRuleCriteria{}
 
 	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			accountID, ok := v.(string)
-			if !ok {
-				continue
-			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
-		}
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap["resource_arns"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			apiObject.ResourceArns = append(apiObject.ResourceArns, v.(string))
-		}
+		apiObject.ResourceArns = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap["resource_types"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			apiObject.ResourceTypes = append(apiObject.ResourceTypes, types.ResourceType(v.(string)))
-		}
+		apiObject.ResourceTypes = flex.ExpandStringyValueList[types.ResourceType](tfList)
 	}
 
 	return apiObject
@@ -477,17 +468,14 @@ func expandAnalysisRuleCriteria(tfMap map[string]any) *types.AnalysisRuleCriteri
 	apiObject := &types.AnalysisRuleCriteria{}
 
 	if tfList, ok := tfMap["account_ids"].([]any); ok && len(tfList) > 0 {
-		for _, v := range tfList {
-			accountID, ok := v.(string)
-			if !ok {
-				continue
-			}
-			apiObject.AccountIds = append(apiObject.AccountIds, accountID)
-		}
+		apiObject.AccountIds = flex.ExpandStringValueList(tfList)
 	}
 
 	if tfList, ok := tfMap[names.AttrResourceTags].([]any); ok && len(tfList) > 0 {
 		for _, v := range tfList {
+			if v == nil {
+				continue
+			}
 			apiObject.ResourceTags = append(apiObject.ResourceTags, flex.ExpandStringValueMap(v.(map[string]any)))
 		}
 	}

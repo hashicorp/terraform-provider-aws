@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -151,6 +151,10 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName+"nonexist"),
+				ExpectError: regexache.MustCompile(`Service Quotas Service Quota`),
+			},
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(

@@ -1,9 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
 
 import (
+	"iter"
 	"slices"
 )
 
@@ -158,12 +159,32 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringable interface {
+type Stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringable](s S) []string {
+func Strings[S ~[]E, E Stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})
+}
+
+// CollectWithError collects values from seq into a new slice and returns it.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result is nil.
+func CollectWithError[E any](seq iter.Seq2[E, error]) ([]E, error) {
+	return AppendSeqWithError([]E(nil), seq)
+}
+
+// AppendSeqWithError appends the values from seq to the slice and returns the extended slice.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result preserves the nilness of s.
+func AppendSeqWithError[S ~[]E, E any](s S, seq iter.Seq2[E, error]) (S, error) {
+	for v, err := range seq {
+		if err != nil {
+			return nil, err
+		}
+		s = append(s, v)
+	}
+	return s, nil
 }

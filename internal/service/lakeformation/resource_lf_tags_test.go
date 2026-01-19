@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation_test
@@ -29,7 +29,10 @@ func testAccResourceLFTags_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
@@ -56,7 +59,10 @@ func testAccResourceLFTags_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_resource_lf_tags.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -65,7 +71,7 @@ func testAccResourceLFTags_disappears(t *testing.T) {
 				Config: testAccResourceLFTagsConfig_basic(rName, []string{"copse"}, "copse"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTags(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflakeformation.ResourceResourceLFTags(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +85,10 @@ func testAccResourceLFTags_database(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
@@ -115,7 +124,10 @@ func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
@@ -161,7 +173,10 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
@@ -236,7 +251,10 @@ func testAccResourceLFTags_table(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),
@@ -272,7 +290,10 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseLFTagsDestroy(ctx),

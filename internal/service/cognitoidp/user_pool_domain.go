@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp
@@ -13,13 +13,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -136,7 +137,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 
 	desc, err := findUserPoolDomain(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cognito User Pool Domain %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -242,7 +243,7 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	output, err := conn.DescribeUserPoolDomain(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -257,17 +258,17 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	// 	"DomainDescription": {}
 	// }
 	if output == nil || output.DomainDescription == nil || output.DomainDescription.Status == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainDescription, nil
 }
 
-func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Client, domain string) retry.StateRefreshFunc {
+func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Client, domain string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findUserPoolDomain(ctx, conn, domain)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -280,7 +281,7 @@ func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Cli
 }
 
 func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusTypeCreating, awstypes.DomainStatusTypeUpdating),
 		Target:  enum.Slice(awstypes.DomainStatusTypeActive),
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
@@ -297,7 +298,7 @@ func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusTypeUpdating),
 		Target:  enum.Slice(awstypes.DomainStatusTypeActive),
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
@@ -314,7 +315,7 @@ func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovide
 }
 
 func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DomainStatusTypeUpdating, awstypes.DomainStatusTypeDeleting),
 		Target:  []string{},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),

@@ -42,6 +42,21 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
+### Cross-region enabled AWS services
+
+```terraform
+resource "aws_vpc_endpoint" "s3" {
+  region         = "us-west-2"
+  vpc_id         = aws_vpc.main.id
+  service_name   = "com.amazonaws.us-east-2.s3"
+  service_region = "us-east-2"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
 ### Interface Endpoint Type
 
 ```terraform
@@ -180,7 +195,9 @@ If no security groups are specified, the VPC's [default security group](https://
 ### dns_options
 
 * `dns_record_ip_type` - (Optional) The DNS records created for the endpoint. Valid values are `ipv4`, `dualstack`, `service-defined`, and `ipv6`.
-* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Indicates whether to enable private DNS only for inbound endpoints. This option is available only for services that support both gateway and interface endpoints. It routes traffic that originates from the VPC to the gateway endpoint and traffic that originates from on-premises to the interface endpoint. Default is `false`. Can only be specified if private_dns_enabled is `true`.
+* `private_dns_only_for_inbound_resolver_endpoint` - (Optional) Boolean indicating whether to enable private DNS only for inbound endpoints. This option is available only for interface endpoints of services that support both gateway and interface endpoints. A gateway endpoint for the same service must be created before an interface endpoint is created. Traffic originating from the VPC is routed to the gateway endpoint, while traffic originating from on-premises is routed to the interface endpoint. Defaults to `false`. This argument can be specified only if `private_dns_enabled` is `true`.
+* `private_dns_preference` - (Optional) Preference for which private domains have a private hosted zone created for and associated with the specified VPC. Valid values are `ALL_DOMAINS`, `VERIFIED_DOMAINS_ONLY`, `VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS`, and `SPECIFIED_DOMAINS_ONLY`. Only supported when `private_dns_enabled` is `true` and when the `vpc_endpoint_type` is `ServiceNetwork` or `Resource`.
+* `private_dns_specified_domains` - (Optional) List of private domains to create private hosted zones for and associate with the specified VPC. Must be specified when `private_dns_enabled` is `true` and `private_dns_preference` is set to either `VERIFIED_DOMAINS_AND_SPECIFIED_DOMAINS` or `SPECIFIED_DOMAINS_ONLY`. In all other cases, this argument must not be specified.
 
 ### subnet_configuration
 
@@ -218,11 +235,37 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint.example
+  identity = {
+    id = "vpce-3ecf2a57"
+  }
+}
+
+resource "aws_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the VPC endpoint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```terraform
 import {
-  to = aws_vpc_endpoint.endpoint1
+  to = aws_vpc_endpoint.example
   id = "vpce-3ecf2a57"
 }
 ```
@@ -230,5 +273,5 @@ import {
 Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
-% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+% terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```

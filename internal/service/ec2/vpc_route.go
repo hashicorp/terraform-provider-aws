@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,16 +51,21 @@ var routeValidTargets = []string{
 }
 
 // @SDKResource("aws_route", name="Route")
+// @IdentityAttribute("route_table_id")
+// @IdentityAttribute("destination_cidr_block", optional="true", testNotNull="true")
+// @IdentityAttribute("destination_ipv6_cidr_block", optional="true")
+// @IdentityAttribute("destination_prefix_list_id", optional="true")
+// @ImportIDHandler("routeImportID")
+// @Testing(preIdentityVersion="6.10.0")
+// @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Route")
+// @Testing(generator=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
 		ReadWithoutTimeout:   resourceRouteRead,
 		UpdateWithoutTimeout: resourceRouteUpdate,
 		DeleteWithoutTimeout: resourceRouteDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRouteImport,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -248,7 +255,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if route.Origin == awstypes.RouteOriginCreateRoute {
 			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
 		}
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
@@ -306,7 +313,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
 		d.SetId("")
 		return diags
@@ -483,28 +490,6 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "_")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", d.Id())
-	}
-
-	routeTableID := idParts[0]
-	destination := idParts[1]
-	d.Set("route_table_id", routeTableID)
-	if strings.Contains(destination, ":") {
-		d.Set(routeDestinationIPv6CIDRBlock, destination)
-	} else if strings.Contains(destination, ".") {
-		d.Set(routeDestinationCIDRBlock, destination)
-	} else {
-		d.Set(routeDestinationPrefixListID, destination)
-	}
-
-	d.SetId(routeCreateID(routeTableID, destination))
-
-	return []*schema.ResourceData{d}, nil
-}
-
 // routeDestinationAttribute returns the attribute key and value of the route's destination.
 func routeDestinationAttribute(d *schema.ResourceData) (string, string, error) {
 	for _, key := range routeValidDestinations {
@@ -526,4 +511,36 @@ func routeTargetAttribute(d *schema.ResourceData) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("route target attribute not specified")
+}
+
+var _ inttypes.SDKv2ImportID = routeImportID{}
+
+type routeImportID struct{}
+
+func (routeImportID) Create(d *schema.ResourceData) string {
+	_, destination, _ := routeDestinationAttribute(d)
+	routeTableID := d.Get("route_table_id").(string)
+	return routeCreateID(routeTableID, destination)
+}
+
+func (routeImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.Split(id, "_")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ROUTETABLEID_DESTINATION", id)
+	}
+
+	routeTableID := parts[0]
+	destination := parts[1]
+	result := map[string]string{
+		"route_table_id": routeTableID,
+	}
+	if strings.Contains(destination, ":") {
+		result[routeDestinationIPv6CIDRBlock] = destination
+	} else if strings.Contains(destination, ".") {
+		result[routeDestinationCIDRBlock] = destination
+	} else {
+		result[routeDestinationPrefixListID] = destination
+	}
+
+	return routeCreateID(routeTableID, destination), result, nil
 }

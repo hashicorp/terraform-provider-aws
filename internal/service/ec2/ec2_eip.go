@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,12 +16,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -216,7 +215,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -261,7 +260,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 	switch {
 	case err == nil:
 		d.Set("ptr_record", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 		d.Set("ptr_record", nil)
 	case tfawserr.ErrMessageContains(err, "InvalidAction", "not valid for this web service"):
 		d.Set("ptr_record", nil)
@@ -339,7 +338,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 			timeout = 10 * time.Minute // IPAM eventual consistency
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
-			return findIPAMPoolAllocationsForEIP(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
+			return findIPAMPoolAllocationForResource(ctx, conn, ipamPoolID, d.Get("allocation_id").(string))
 		})
 
 		if err != nil {
@@ -385,7 +384,7 @@ func associateEIP(ctx context.Context, conn *ec2.Client, allocationID, instanceI
 			return findEIPByAssociationID(ctx, conn, aws.ToString(output.AssociationId))
 		},
 		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return true, err
 			}
 
@@ -429,26 +428,4 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 
 func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string {
 	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
-}
-
-func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]awstypes.IpamPoolAllocation, error) {
-	input := ec2.GetIpamPoolAllocationsInput{
-		IpamPoolId: aws.String(ipamPoolID),
-	}
-
-	output, err := findIPAMPoolAllocations(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	output = tfslices.Filter(output, func(v awstypes.IpamPoolAllocation) bool {
-		return v.ResourceType == awstypes.IpamPoolAllocationResourceTypeEip && aws.ToString(v.ResourceId) == eipAllocationID
-	})
-
-	if len(output) == 0 {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
 }

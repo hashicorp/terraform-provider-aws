@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -201,7 +201,7 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceUserHierarchyStructure(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -241,7 +241,7 @@ func testAccCheckUserHierarchyStructureDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfconnect.FindUserHierarchyStructureByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

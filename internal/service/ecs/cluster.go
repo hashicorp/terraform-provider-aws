@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ecs
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -234,7 +235,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return findClusterByNameOrARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -368,7 +369,7 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	output, err := conn.DescribeClusters(ctx, input)
 
 	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -379,7 +380,7 @@ func findClusters(ctx context.Context, conn *ecs.Client, input *ecs.DescribeClus
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Clusters, nil
@@ -413,7 +414,7 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	}
 
 	if status := aws.ToString(output.Status); status == clusterStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}
@@ -422,11 +423,11 @@ func findClusterByNameOrARN(ctx context.Context, conn *ecs.Client, nameOrARN str
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *ecs.Client, arn string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *ecs.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		cluster, err := findClusterByNameOrARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -442,7 +443,7 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterStatusProvisioning},
 		Target:  []string{clusterStatusActive},
 		Refresh: statusCluster(ctx, conn, arn),
@@ -460,7 +461,7 @@ func waitClusterAvailable(ctx context.Context, conn *ecs.Client, arn string) (*a
 }
 
 func waitClusterDeleted(ctx context.Context, conn *ecs.Client, arn string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{clusterStatusActive, clusterStatusDeprovisioning},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, arn),

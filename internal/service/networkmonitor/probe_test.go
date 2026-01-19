@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor_test
@@ -18,9 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +63,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -88,14 +88,14 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 				Config: testAccProbeConfig_basic(rName, "10.0.0.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProbeExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmonitor.ResourceProbe, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmonitor.ResourceProbe, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -152,7 +152,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
 				),
 			},
@@ -171,7 +171,7 @@ func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfnetworkmonitor.FindProbeByTwoPartKey(ctx, conn, rs.Primary.Attributes["monitor_name"], rs.Primary.Attributes["probe_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -209,7 +209,7 @@ func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc
 		description := "Created By Amazon CloudWatch Network Monitor for " + rName
 		v, err := tfec2.FindSecurityGroupByDescriptionAndVPCID(ctx, conn, description, aws.ToString(vpc.VpcId))
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			// Already gone.
 			return nil
 		}

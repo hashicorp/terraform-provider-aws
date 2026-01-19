@@ -208,6 +208,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_s3_bucket_acl.example
+  identity = {
+    bucket = "bucket-name"
+  }
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `bucket` (String) S3 bucket name.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `acl` (String) Canned ACL to apply to the bucket.
+* `expected_bucket_owner` (String) Account ID of the expected bucket owner.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket ACL using `bucket`, `expected_bucket_owner`, and/or `acl`, depending on your situation. For example:
 
 If the owner (account ID) of the source bucket is the _same_ account used to configure the Terraform AWS Provider, and the source bucket is **not configured** with a
@@ -310,4 +338,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.20.8 input-3aada0850722c6ecfb720f5ddfd620079bf7a304e0571315561f737c10c1bd1e -->
+<!-- cache-key: cdktf-0.20.8 input-35b35d3883e6c8c2e971479ebfbbffa2dce4657d6c400bc995c57dbb78f88ca6 -->

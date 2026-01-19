@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,7 +74,7 @@ func TestAccIAMAccessKey_disappears(t *testing.T) {
 				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccessKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccessKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,7 +171,7 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				return nil
 			}
 
@@ -242,11 +242,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 		// have it. We can verify that decrypting it does not error
 		_, err := pgpkeys.DecryptBytes(secret, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting secret: %s", err)
+			return fmt.Errorf("Error decrypting secret: %w", err)
 		}
 		_, err = pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("Error decrypting password: %s", err)
+			return fmt.Errorf("Error decrypting password: %w", err)
 		}
 
 		return nil

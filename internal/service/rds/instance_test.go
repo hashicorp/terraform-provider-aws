@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -102,6 +103,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestMatchResourceAttr(resourceName, "upgrade_rollout_order", regexache.MustCompile(`^(first|second|last)$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
 				),
 			},
@@ -223,7 +225,7 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3065,7 +3067,6 @@ func TestAccRDSInstance_ReplicateSourceDB_mssqlDomain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
-
 	domain := acctest.RandomDomain().String()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -6618,7 +6619,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 		CheckDestroy: testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -6626,7 +6627,60 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName),
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
+					testAccCheckDBInstanceRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
+					"skip_final_snapshot",
+					"delete_automated_backups",
+					"latest_restorable_time", // This causes intermittent failures when the value increments
+					"blue_green_update",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroupNonTFamilyInstances(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	parameterGroupResourceName := "aws_db_parameter_group.test"
+	parameterGroupDataSource := "data.aws_db_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, parameterGroupDataSource, names.AttrName),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
@@ -7868,7 +7922,7 @@ func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8011,7 +8065,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8042,7 +8096,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 			_, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {
-				if !tfresource.NotFound(err) {
+				if !retry.NotFound(err) {
 					return err
 				}
 			} else {
@@ -8051,7 +8105,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 
 			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -8093,10 +8147,10 @@ func dbInstanceIdentity(v *types.DBInstance) string {
 }
 
 func testAccCheckDBInstanceExists(ctx context.Context, n string, v *types.DBInstance) resource.TestCheckFunc {
-	return testAccCheckDBInstanceExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckDBInstanceExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckDBInstanceExistsWithProvider(ctx context.Context, n string, v *types.DBInstance, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -11112,11 +11166,10 @@ resource "aws_security_group_rule" "test" {
 }
 
 resource "aws_directory_service_directory" "directory" {
-  name                = %[2]q
-  password_wo         = ephemeral.aws_secretsmanager_random_password.test.random_password
-  password_wo_version = 1
-  type                = "MicrosoftAD"
-  edition             = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
@@ -14168,10 +14221,14 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_parameterGroup(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
   identifier              = %[1]q
@@ -14234,10 +14291,14 @@ resource "aws_db_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_basic(rName string) string {
+func testAccInstanceConfig_BlueGreenDeployment_basic(rName string, excludeTFamilyInstances bool) string {
+	instanceConfig := testAccInstanceConfig_orderableClassMySQL()
+	if excludeTFamilyInstances {
+		instanceConfig = strings.Replace(instanceConfig, "db.t", "frodo", -1)
+	}
 	return acctest.ConfigCompose(
 		acctest.ConfigRandomPassword(),
-		testAccInstanceConfig_orderableClassMySQL(),
+		instanceConfig,
 		fmt.Sprintf(`
 data "aws_db_parameter_group" "test" {
   name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"

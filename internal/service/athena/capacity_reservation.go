@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena
@@ -19,13 +19,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,7 +140,7 @@ func (r *capacityReservationResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	out, err := findCapacityReservationByName(ctx, conn, state.Name.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -268,7 +269,7 @@ func (r *capacityReservationResource) buildARN(ctx context.Context, name string)
 }
 
 func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusPending, awstypes.CapacityReservationStatusUpdatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusActive),
 		Refresh: statusCapacityReservation(ctx, conn, name),
@@ -284,7 +285,7 @@ func waitCapacityReservationActive(ctx context.Context, conn *athena.Client, nam
 }
 
 func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, name string, timeout time.Duration) (*awstypes.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatusActive, awstypes.CapacityReservationStatusCancelling),
 		Target:  enum.Slice(awstypes.CapacityReservationStatusCancelled),
 		Refresh: statusCapacityReservation(ctx, conn, name),
@@ -299,10 +300,10 @@ func waitCapacityReservationCancelled(ctx context.Context, conn *athena.Client, 
 	return nil, err
 }
 
-func statusCapacityReservation(ctx context.Context, conn *athena.Client, name string) retry.StateRefreshFunc {
+func statusCapacityReservation(ctx context.Context, conn *athena.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		out, err := findCapacityReservationByName(ctx, conn, name)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -322,7 +323,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	out, err := conn.GetCapacityReservation(ctx, &input)
 	if err != nil {
 		if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: &input,
 			}
@@ -332,7 +333,7 @@ func findCapacityReservationByName(ctx context.Context, conn *athena.Client, nam
 	}
 
 	if out == nil || out.CapacityReservation == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.CapacityReservation, nil

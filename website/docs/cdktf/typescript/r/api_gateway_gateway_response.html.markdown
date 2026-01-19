@@ -50,9 +50,9 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `region` - (Optional) Region where this resource will be managed. See the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) for supported values. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) String identifier of the associated REST API.
-* `responseType` - (Required) Response type of the associated GatewayResponse.
+* `responseType` - (Required) Response type of the associated GatewayResponse. See the [AWS Documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/supported-gateway-response-types.html) for supported values.
 * `statusCode` - (Optional) HTTP status code of the Gateway Response.
 * `responseTemplates` - (Optional) Map of templates used to transform the response body.
 * `responseParameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
@@ -93,4 +93,4 @@ Using `terraform import`, import `aws_api_gateway_gateway_response` using `REST-
 % terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a14260c5eb0c0d600fe4e89fb6f7dce663f8f56bb8fa71be9037b76a5f392f2e -->
+<!-- cache-key: cdktf-0.20.8 input-df7afda40954057b384652854e0fc9036a5dfa8759b7295e2cdfba4a7773b39d -->

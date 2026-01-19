@@ -56,9 +56,10 @@ resource "aws_bcmdataexports_export" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `export` - (Required) The details of the export, including data query, name, description, and destination configuration.  See the [`export` argument reference](#export-argument-reference) below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `export` Argument Reference
 
@@ -110,6 +111,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `update` - (Default `30m`)
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_bcmdataexports_export.example
+  identity = {
+    "arn" = "arn:aws:bcm-data-exports:us-east-1:123456789012:export/example-export"
+  }
+}
+
+resource "aws_bcmdataexports_export" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the BCM Data Exports export.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 

@@ -280,6 +280,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ssm_association.example
+  identity = {
+    association_id = "10abcdef-0abc-1234-5678-90abcdef123456"
+  }
+}
+
+resource "aws_ssm_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `association_id` - (String) ID of the SSM association.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM associations using the `association_id`. For example:
 
 ```python
@@ -294,13 +320,13 @@ from imports.aws.ssm_association import SsmAssociation
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SsmAssociation.generate_config_for_import(self, "testAssociation", "10abcdef-0abc-1234-5678-90abcdef123456")
+        SsmAssociation.generate_config_for_import(self, "example", "10abcdef-0abc-1234-5678-90abcdef123456")
 ```
 
 Using `terraform import`, import SSM associations using the `association_id`. For example:
 
 ```console
-% terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+% terraform import aws_ssm_association.example 10abcdef-0abc-1234-5678-90abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5fe5232a9cc9742c566017ff3af937294fa88eaef1762535f8458c37e6d137fc -->
+<!-- cache-key: cdktf-0.20.8 input-bdcd8c40c95f9504d338b3f797b45803fb20c12c657ed24dae56df644d189711 -->

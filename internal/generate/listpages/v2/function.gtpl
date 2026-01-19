@@ -2,7 +2,7 @@ func {{ .Name }}Pages(ctx context.Context, conn *{{ .AWSService }}.Client, input
 	for {
 		output, err := conn.{{ .AWSName }}(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.{{ .OutputPaginator }}) == ""

@@ -1,0 +1,34 @@
+```release-note:enhancement
+resource/aws_organizations_account: Add `state` attribute
+```
+```release-note:note
+resource/aws_organizations_account: The `status` attribute is deprecated. Use `state` instead.
+```
+
+```release-note:enhancement
+resource/aws_organizations_organization: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` and `non_master_accounts` blocks
+```
+```release-note:note
+resource/aws_organizations_organization: The `accounts.status` and `non_master_accounts.status` attributes are deprecated. Use the `accounts.state` and `non_master_accounts.state` attributes instead.
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organization: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` and `non_master_accounts` blocks
+```
+```release-note:note
+data-source/aws_organizations_organization: The `accounts.status` and `non_master_accounts.status` attributes are deprecated. Use the `accounts.state` and `non_master_accounts.state` attributes instead.
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organizational_unit_child_accounts: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` block
+```
+```release-note:note
+data-source/aws_organizations_organizational_unit_child_accounts: The `accounts.status` attribute is deprecated. Use `accounts.state` instead.
+```
+
+```release-note:enhancement
+data-source/aws_organizations_organizational_unit_descendant_accounts: Add `state`, `joined_method`, and `joined_timestamp` attributes to the `accounts` block
+```
+```release-note:note
+data-source/aws_organizations_organizational_unit_descendant_accounts: The `accounts.status` attribute is deprecated. Use `accounts.state` instead.
+```

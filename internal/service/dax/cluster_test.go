@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dax_test
@@ -325,7 +325,7 @@ func TestAccDAXCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -377,7 +377,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 		resp, err := conn.DescribeClusters(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("DAX error: %v", err)
+			return fmt.Errorf("DAX error: %w", err)
 		}
 
 		for _, c := range resp.Clusters {

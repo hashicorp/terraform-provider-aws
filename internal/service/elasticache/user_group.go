@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -173,7 +173,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		_, err := conn.ModifyUserGroup(ctx, input)
 
-		if err != nil {
+		if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not a member of user group") {
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
 		}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -171,7 +171,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -609,7 +609,7 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

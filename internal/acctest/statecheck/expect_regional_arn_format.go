@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package statecheck
@@ -43,7 +43,7 @@ func (e expectRegionalARNFormatCheck) CheckState(ctx context.Context, request st
 
 	knownCheck := e.checkFactory(e.arnService, arnString)
 	if err = knownCheck.CheckValue(value); err != nil {
-		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %s", e.base.ResourceAddress(), e.attributePath, err)
+		response.Error = fmt.Errorf("checking value for attribute at path: %s.%s, err: %w", e.base.ResourceAddress(), e.attributePath, err)
 		return
 	}
 }

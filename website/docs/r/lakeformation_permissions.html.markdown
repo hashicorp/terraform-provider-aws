@@ -91,6 +91,7 @@ The resulting permissions depend on whether the table had `IAMAllowedPrincipals`
 
 AllIAMPrincipals is a pseudo-entity group that acts like a Lake Formation principal. The group includes all IAMs in the account that is defined.
 
+```terraform
 resource "aws_lakeformation_permissions" "example" {
   permissions = ["SELECT"]
   principal   = "123456789012:IAMPrincipals"
@@ -101,6 +102,7 @@ resource "aws_lakeformation_permissions" "example" {
     column_names  = ["event"]
   }
 }
+```
 
 ## Using Lake Formation Permissions
 
