@@ -166,7 +166,7 @@ func main() {
 		}
 
 		if !resource.IsDataSource {
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
@@ -216,7 +216,7 @@ func main() {
 			}
 		} else {
 			sourceName = strings.TrimSuffix(sourceName, "_data_source")
-			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_basic.gtpl", sourceName))
 			var configTmpl string
 			if _, err := os.Stat(configTmplFile); err == nil {
 				b, err := os.ReadFile(configTmplFile)
