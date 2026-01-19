@@ -188,7 +188,7 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 		return
 	}
 
-	plan.ID = types.StringValue("autoshift-observer-notification-status")
+	// plan.ID = types.StringValue("autoshift-observer-notification-status")
 	// TIP: -- 3. Populate a Create input structure
 	input := arczonalshift.UpdateAutoshiftObserverNotificationStatusInput{
 		Status: awstypes.AutoshiftObserverNotificationStatus(plan.Status.ValueString()),
@@ -202,13 +202,11 @@ func (r *autoshiftObserverNotificationStatusResource) Create(ctx context.Context
 	// TIP: -- 4. Call the AWS Create function
 	out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 	if out == nil || out.Status == "" {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"))
 		return
 	}
 
@@ -254,7 +252,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	out, err := findAutoshiftObserverNotificationStatus(ctx, conn, state.ID.ValueString())
+	out, err := findAutoshiftObserverNotificationStatus(ctx, conn, "")
 	// TIP: -- 4. Remove resource from state if it is not found
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -262,7 +260,7 @@ func (r *autoshiftObserverNotificationStatusResource) Read(ctx context.Context, 
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -327,11 +325,11 @@ func (r *autoshiftObserverNotificationStatusResource) Update(ctx context.Context
 		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateAutoshiftObserverNotificationStatus(ctx, &input)
 		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, err)
 			return
 		}
 		if out == nil || out.Status == "" {
-			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"))
 			return
 		}
 
@@ -390,7 +388,7 @@ func (r *autoshiftObserverNotificationStatusResource) Delete(ctx context.Context
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -524,7 +522,7 @@ func findAutoshiftObserverNotificationStatus(ctx context.Context, conn *arczonal
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type autoshiftObserverNotificationStatusResourceModel struct {
 	framework.WithRegionModel
-	ID     types.String `tfsdk:"id"`
+	// ID     types.String `tfsdk:"id"`
 	Status types.String `tfsdk:"status"`
 }
 
