@@ -7363,6 +7363,7 @@ func testAccInstanceConfig_rebootMigration(rName string, val string) string {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test.id
 
   maintenance_options {
     reboot_migration = %[2]q
