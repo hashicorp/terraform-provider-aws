@@ -1637,27 +1637,47 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
-	if d.HasChange("maintenance_options") && !d.IsNewResource() {
-		autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
+	// Handle maintenance_options updates.
+	// For new resources: only modify reboot_migration since auto_recovery is set during creation.
+	// For existing resources: modify both if maintenance_options changed.
+	if d.HasChange("maintenance_options") {
+		rebootMigration := d.Get("maintenance_options.0.reboot_migration").(string)
 
-		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
+		if d.IsNewResource() {
+			// For new resources, only call ModifyInstanceMaintenanceOptions if reboot_migration is set,
+			// since auto_recovery is already handled during instance creation.
+			if rebootMigration != "" {
+				log.Printf("[INFO] Modifying instance reboot migration settings %s", d.Id())
 
-		rebootMigration := d.Get("maintenance_options.0.reboot_maintenance").(string)
-		log.Printf("[INFO] Modifying instance reboot migration settings %s", d.Id())
+				input := ec2.ModifyInstanceMaintenanceOptionsInput{
+					RebootMigration: awstypes.InstanceRebootMigrationState(rebootMigration),
+					InstanceId:      aws.String(d.Id()),
+				}
+				_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
 
-		input := ec2.ModifyInstanceMaintenanceOptionsInput{
-			AutoRecovery:    awstypes.InstanceAutoRecoveryState(autoRecovery),
-			RebootMigration: awstypes.InstanceRebootMigrationState(rebootMigration),
-			InstanceId:      aws.String(d.Id()),
-		}
-		_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
+				}
+			}
+		} else {
+			autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
-		}
+			log.Printf("[INFO] Modifying instance maintenance options %s", d.Id())
 
-		if _, err := waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %s", d.Id(), err)
+			input := ec2.ModifyInstanceMaintenanceOptionsInput{
+				AutoRecovery:    awstypes.InstanceAutoRecoveryState(autoRecovery),
+				RebootMigration: awstypes.InstanceRebootMigrationState(rebootMigration),
+				InstanceId:      aws.String(d.Id()),
+			}
+			_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
+			}
+
+			if _, err := waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %s", d.Id(), err)
+			}
 		}
 	}
 

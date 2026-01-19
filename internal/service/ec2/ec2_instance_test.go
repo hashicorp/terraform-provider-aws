@@ -988,6 +988,44 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_rebootMigration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_rebootMigration(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.reboot_migration", "default"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "user_data_replace_on_change"},
+			},
+			{
+				Config: testAccInstanceConfig_rebootMigration(rName, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_options.0.reboot_migration", "disabled"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -7308,6 +7346,26 @@ resource "aws_instance" "test" {
 
   maintenance_options {
     auto_recovery = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, val))
+}
+
+func testAccInstanceConfig_rebootMigration(rName string, val string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceConfig_vpcBase(rName, false, 0),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t2.micro"
+
+  maintenance_options {
+    reboot_migration = %[2]q
   }
 
   tags = {
