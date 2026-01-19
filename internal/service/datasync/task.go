@@ -216,6 +216,12 @@ func resourceTask() *schema.Resource {
 									"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
 							),
 						},
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ScheduleStatus](),
+						},
 					},
 				},
 			},
@@ -664,6 +670,10 @@ func expandTaskSchedule(l []any) *awstypes.TaskSchedule {
 		ScheduleExpression: aws.String(m[names.AttrScheduleExpression].(string)),
 	}
 
+	if v, ok := m[names.AttrStatus].(string); ok && v != "" {
+		schedule.Status = awstypes.ScheduleStatus(v)
+	}
+
 	return schedule
 }
 
@@ -674,6 +684,10 @@ func flattenTaskSchedule(schedule *awstypes.TaskSchedule) []any {
 
 	m := map[string]any{
 		names.AttrScheduleExpression: aws.ToString(schedule.ScheduleExpression),
+	}
+
+	if schedule.Status != "" {
+		m[names.AttrStatus] = string(schedule.Status)
 	}
 
 	return []any{m}
