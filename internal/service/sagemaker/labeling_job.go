@@ -100,7 +100,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"stopping_conditions": framework.ResourceOptionalComputedListOfObjectsAttribute[labelingJobStoppingConditionsModel](ctx, 1, nil, listplanmodifier.RequiresReplace()),
-			names.AttrTags:        tftags.TagsAttribute(),
+			names.AttrTags:        tftags.TagsAttributeForceNew(),
 			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
