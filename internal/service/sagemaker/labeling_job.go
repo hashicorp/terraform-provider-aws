@@ -6,6 +6,7 @@ package sagemaker
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -52,6 +54,12 @@ type labelingJobResource struct {
 func (r *labelingJobResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"failure_reason": schema.StringAttribute{
+				Computed: true,
+			},
+			"job_reference_code": schema.StringAttribute{
+				Computed: true,
+			},
 			"label_attribute_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -70,6 +78,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"label_counters":   framework.ResourceComputedListOfObjectsAttribute[labelCountersModel](ctx),
 			"labeling_job_arn": framework.ARNAttributeComputedOnly(),
 			"labeling_job_name": schema.StringAttribute{
 				Required: true,
@@ -80,6 +89,9 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"labeling_job_status": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -87,8 +99,9 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"stopping_conditions": framework.ResourceOptionalComputedListOfObjectsAttribute[labelingJobStoppingConditionsModel](ctx, 1, nil, listplanmodifier.RequiresReplace()),
+			names.AttrTags:        tftags.TagsAttribute(),
+			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"human_task_config": schema.ListNestedBlock{
@@ -105,6 +118,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					Attributes: map[string]schema.Attribute{
 						"max_concurrent_task_count": schema.Int32Attribute{
 							Optional: true,
+							Computed: true,
 							Validators: []validator.Int32{
 								int32validator.Between(1, 5000),
 							},
@@ -123,13 +137,14 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 						},
 						"pre_human_task_lambda_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
-							Optional:   false,
+							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"task_availability_lifetime_in_seconds": schema.Int32Attribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Int32{
 								int32planmodifier.RequiresReplace(),
 							},
@@ -161,6 +176,15 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 							Required: true,
 							PlanModifiers: []planmodifier.Int32{
 								int32planmodifier.RequiresReplace(),
+							},
+						},
+						"task_title": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 128),
+							},
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
 							},
 						},
 						"workteam_arn": schema.StringAttribute{
@@ -399,8 +423,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"volume_kms_key_id": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Optional:   true,
+										Optional: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -455,8 +478,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrKMSKeyID: schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Optional:   true,
+							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -475,37 +498,6 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 							Optional:   true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
-			"stopping_conditions": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[labelingJobStoppingConditionsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"max_human_labeled_object_count": schema.Int32Attribute{
-							Optional: true,
-							Validators: []validator.Int32{
-								int32validator.AtLeast(1),
-							},
-							PlanModifiers: []planmodifier.Int32{
-								int32planmodifier.RequiresReplace(),
-							},
-						},
-						"max_percentage_of_input_dataset_labeled": schema.Int32Attribute{
-							Optional: true,
-							Validators: []validator.Int32{
-								int32validator.Between(1, 100),
-							},
-							PlanModifiers: []planmodifier.Int32{
-								int32planmodifier.RequiresReplace(),
 							},
 						},
 					},
@@ -534,14 +526,28 @@ func (r *labelingJobResource) Create(ctx context.Context, request resource.Creat
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	_, err := conn.CreateLabelingJob(ctx, &input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateLabelingJob(ctx, &input)
+	}, ErrCodeValidationException)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating SageMaker AI Labeling Job (%s)", name), err.Error())
 		return
 	}
 
-	// Set values for unknowns.
+	const (
+		timeout = 5 * time.Minute
+	)
+	output, err := waitLabelingJobInitialized(ctx, conn, name, timeout)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker AI Labeling Job (%s) initialize", name), err.Error())
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -648,19 +654,57 @@ func findLabelingJob(ctx context.Context, conn *sagemaker.Client, input *sagemak
 	return output, nil
 }
 
+func statusLabelingJob(ctx context.Context, conn *sagemaker.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findLabelingJobByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.LabelingJobStatus), nil
+	}
+}
+
+func waitLabelingJobInitialized(ctx context.Context, conn *sagemaker.Client, name string, timeout time.Duration) (*sagemaker.DescribeLabelingJobOutput, error) {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LabelingJobStatusInitializing),
+		Target:  enum.Slice(awstypes.LabelingJobStatusInProgress, awstypes.LabelingJobStatusCompleted),
+		Refresh: statusLabelingJob(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeLabelingJobOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 type labelingJobResourceModel struct {
 	framework.WithRegionModel
-	HumanTaskConfig          fwtypes.ListNestedObjectValueOf[humanTaskConfigModel]               `tfsdk:"human_task_config"`
-	InputConfig              fwtypes.ListNestedObjectValueOf[labelingJobInputConfigModel]        `tfsdk:"input_config"`
-	LabelAttributeName       types.String                                                        `tfsdk:"label_attribute_name"`
-	LabelCategoryConfigS3URI types.String                                                        `tfsdk:"label_category_config_s3_uri"`
-	LabelingJobARN           types.String                                                        `tfsdk:"labeling_job_arn"`
-	LabelingJobName          types.String                                                        `tfsdk:"labeling_job_name"`
-	OutputConfig             fwtypes.ListNestedObjectValueOf[labelingJobOutputConfigModel]       `tfsdk:"output_config"`
-	RoleARN                  fwtypes.ARN                                                         `tfsdk:"role_arn"`
-	StoppingConditions       fwtypes.ListNestedObjectValueOf[labelingJobStoppingConditionsModel] `tfsdk:"stopping_conditions"`
-	Tags                     tftags.Map                                                          `tfsdk:"tags"`
-	TagsAll                  tftags.Map                                                          `tfsdk:"tags_all"`
+	FailureReason               types.String                                                        `tfsdk:"failure_reason"`
+	HumanTaskConfig             fwtypes.ListNestedObjectValueOf[humanTaskConfigModel]               `tfsdk:"human_task_config"`
+	InputConfig                 fwtypes.ListNestedObjectValueOf[labelingJobInputConfigModel]        `tfsdk:"input_config"`
+	JobReferenceCode            types.String                                                        `tfsdk:"job_reference_code"`
+	LabelAttributeName          types.String                                                        `tfsdk:"label_attribute_name"`
+	LabelCategoryConfigS3URI    types.String                                                        `tfsdk:"label_category_config_s3_uri"`
+	LabelCounters               fwtypes.ListNestedObjectValueOf[labelCountersModel]                 `tfsdk:"label_counters"`
+	LabelingJobAlgorithmsConfig fwtypes.ListNestedObjectValueOf[labelingJobAlgorithmsConfigModel]   `tfsdk:"labeling_job_algorithms_config"`
+	LabelingJobARN              types.String                                                        `tfsdk:"labeling_job_arn"`
+	LabelingJobName             types.String                                                        `tfsdk:"labeling_job_name"`
+	LabelingJobStatus           types.String                                                        `tfsdk:"labeling_job_status"`
+	OutputConfig                fwtypes.ListNestedObjectValueOf[labelingJobOutputConfigModel]       `tfsdk:"output_config"`
+	RoleARN                     fwtypes.ARN                                                         `tfsdk:"role_arn"`
+	StoppingConditions          fwtypes.ListNestedObjectValueOf[labelingJobStoppingConditionsModel] `tfsdk:"stopping_conditions"`
+	Tags                        tftags.Map                                                          `tfsdk:"tags"`
+	TagsAll                     tftags.Map                                                          `tfsdk:"tags_all"`
 }
 
 type humanTaskConfigModel struct {
@@ -672,7 +716,8 @@ type humanTaskConfigModel struct {
 	TaskAvailabilityLifetimeInSeconds types.Int32                                                         `tfsdk:"task_availability_lifetime_in_seconds"`
 	TaskDescription                   types.String                                                        `tfsdk:"task_description"`
 	TaskKeywords                      fwtypes.SetOfString                                                 `tfsdk:"task_keywords"`
-	TaskTimeLimitInSeconds            types.Int64                                                         `tfsdk:"task_time_limit_in_seconds"`
+	TaskTimeLimitInSeconds            types.Int32                                                         `tfsdk:"task_time_limit_in_seconds"`
+	TaskTitle                         types.String                                                        `tfsdk:"task_title"`
 	UIConfig                          fwtypes.ListNestedObjectValueOf[uiConfigModel]                      `tfsdk:"ui_config"`
 	WorkteamARN                       fwtypes.ARN                                                         `tfsdk:"workteam_arn"`
 }
@@ -725,7 +770,7 @@ type labelingJobAlgorithmsConfigModel struct {
 }
 
 type labelingJobResourceConfigModel struct {
-	VolumeKMSKeyID fwtypes.ARN                                     `tfsdk:"volume_kms_key_id"`
+	VolumeKMSKeyID types.String                                    `tfsdk:"volume_kms_key_id"`
 	VPCConfig      fwtypes.ListNestedObjectValueOf[vpcConfigModel] `tfsdk:"vpc_config"`
 }
 
@@ -735,7 +780,7 @@ type vpcConfigModel struct {
 }
 
 type labelingJobOutputConfigModel struct {
-	KMSKeyID     fwtypes.ARN  `tfsdk:"kms_key_id"`
+	KMSKeyID     types.String `tfsdk:"kms_key_id"`
 	S3OutputPath types.String `tfsdk:"s3_output_path"`
 	SNSTopicARN  fwtypes.ARN  `tfsdk:"sns_topic_arn"`
 }
@@ -743,4 +788,12 @@ type labelingJobOutputConfigModel struct {
 type labelingJobStoppingConditionsModel struct {
 	MaxHumanLabeledObjectCount         types.Int32 `tfsdk:"max_human_labeled_object_count"`
 	MaxPercentageOfInputDatasetLabeled types.Int32 `tfsdk:"max_percentage_of_input_dataset_labeled"`
+}
+
+type labelCountersModel struct {
+	FailedNonRetryableError types.Int64 `tfsdk:"failed_non_retryable_error"`
+	HumanLabeled            types.Int64 `tfsdk:"human_labeled"`
+	MachineLabeled          types.Int64 `tfsdk:"machine_labeled"`
+	TotalLabeled            types.Int64 `tfsdk:"total_labeled"`
+	Unlabeled               types.Int64 `tfsdk:"unlabeled"`
 }

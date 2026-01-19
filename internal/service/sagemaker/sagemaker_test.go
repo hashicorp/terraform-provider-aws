@@ -145,6 +145,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
 			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial,
 		},
+		"LabelingJob": {
+			acctest.CtBasic: testAccLabelingJob_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
