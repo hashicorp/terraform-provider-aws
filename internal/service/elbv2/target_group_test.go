@@ -1720,6 +1720,50 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_TCPProtocolHealthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_TCPProtocolHeakthCheckHTTP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_TCPProtocolHeakthCheckTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TargetGroup
@@ -5548,6 +5592,56 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold   = 4
     unhealthy_threshold = 4
     matcher             = "200"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_TCPProtocolHeakthCheckHTTP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_TCPProtocolHeakthCheckTCP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = ""
+    protocol            = "TCP"
+    matcher             = ""
   }
 }
 
