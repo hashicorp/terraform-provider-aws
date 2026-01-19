@@ -5614,9 +5614,9 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = aws_vpc.test.id
 
   health_check {
-    path                = "/"
-    protocol            = "HTTP"
-    matcher             = "200"
+    path     = "/"
+    protocol = "HTTP"
+    matcher  = "200"
   }
 }
 
@@ -5639,9 +5639,9 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = aws_vpc.test.id
 
   health_check {
-    path                = ""
-    protocol            = "TCP"
-    matcher             = ""
+    path     = ""
+    protocol = "TCP"
+    matcher  = ""
   }
 }
 
