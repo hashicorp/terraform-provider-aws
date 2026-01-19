@@ -157,11 +157,13 @@ This resource supports the following arguments:
 * `matcher` (Optional) The HTTP or gRPC codes to use when checking for a successful response from a target.
   The `health_check.protocol` must be one of `HTTP` or `HTTPS` or the `target_type` must be `lambda`.
   Values can be comma-separated individual values (e.g., "200,202") or a range of values (e.g., "200-299").
+  Once the value has been set, removing it has no effect. To unset it, set it to an empty string `""`.
     * For gRPC-based target groups (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is `GRPC`), values can be between `0` and `99`. The default is `12`.
     * When used with an Application Load Balancer (i.e., the `protocol` is one of `HTTP` or `HTTPS` and the `protocol_version` is not `GRPC`), values can be between `200` and `499`. The default is `200`.
     * When used with a Network Load Balancer (i.e., the `protocol` is one of `TCP`, `TCP_UDP`, `UDP`, or `TLS`), values can be between `200` and `599`. The default is `200-399`.
     * When the `target_type` is `lambda`, values can be between `200` and `499`. The default is `200`.
 * `path` - (May be required) Destination for the health check request. Required for HTTP/HTTPS ALB and HTTP NLB. Only applies to HTTP/HTTPS.
+  Once the value has been set, removing it has no effect. To unset it, set it to an empty string `""`.
     * For HTTP and HTTPS health checks, the default is `/`.
     * For gRPC health checks, the default is `/AWS.ALB/healthcheck`.
 * `port` - (Optional) The port the load balancer uses when performing health checks on targets.
