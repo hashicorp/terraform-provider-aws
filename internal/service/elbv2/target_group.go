@@ -111,7 +111,7 @@ func resourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ValidateFunc: validation.Any(
+							ValidateFunc: validation.Any( // nosemgrep:ci.avoid-string-is-empty-validation
 								validation.All(
 									validation.StringLenBetween(1, 1024),
 									verify.StringHasPrefix("/"),
