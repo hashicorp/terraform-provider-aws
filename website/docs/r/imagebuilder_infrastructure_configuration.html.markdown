@@ -52,7 +52,7 @@ The following arguments are optional:
 * `instance_types` - (Optional) Set of EC2 Instance Types.
 * `key_pair` - (Optional) Name of EC2 Key Pair.
 * `logging` - (Optional) Configuration block with logging settings. Detailed below.
-* `placement` - (Optional) Configuration block with placement settings that define where the instances that are launched from your image will run. Detailed below.
+* `placement` - (Optional) Configuration block with placement settings that define where the build and test instances for your image will run. Detailed below.
 * `resource_tags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `security_group_ids` - (Optional) Set of EC2 Security Group identifiers.
 * `sns_topic_arn` - (Optional) Amazon Resource Name (ARN) of SNS Topic.
@@ -74,7 +74,7 @@ The following arguments are required:
 
 * `s3_logs` - (Required) Configuration block with S3 logging settings. Detailed below.
 
-### s3_logs
+#### s3_logs
 
 The following arguments are required:
 
@@ -87,13 +87,15 @@ The following arguments are optional:
 
 ### placement
 
+~> **NOTE:**  If tenancy is set to `host`, then you can optionally specify one target for placement – either `host_id` or `host_resource_group_arn`. If automatic placement is enabled for your host, and you don't specify any placement target, Amazon EC2 will try to find an available host for your build and test instances.
+
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `availability_zone` - (Optional) Availability Zone where your build and test instances will launch.
-* `host_id` - (Optional) ID of the Dedicated Host on which build and test instances run. Conflicts with `host_resource_group_arn`.
-* `host_resource_group_arn` - (Optional) ARN of the host resource group in which to launch build and test instances. Conflicts with `host_id`.
-* `tenancy` - (Optional) Placement tenancy of the instance. Valid values: `default`, `dedicated` and `host`.
+* `host_id` - (Optional) ID of the Dedicated Host on which build and test instances run.
+* `host_resource_group_arn` - (Optional) ARN of the host resource group in which to launch build and test instances.
+* `tenancy` - (Optional) Placement tenancy of the instance. Valid Values: `default`, `dedicated`, `host`. An instance with `default` tenancy runs on shared tenancy hardware. An instance with a tenancy of `dedicated` runs on single-tenant hardware. An instance with a tenancy of `host` runs on a Dedicated Host.
 
 ## Attribute Reference
 
