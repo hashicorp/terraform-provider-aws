@@ -332,6 +332,9 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
+					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+				},
+				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
