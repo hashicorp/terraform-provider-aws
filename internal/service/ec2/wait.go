@@ -46,7 +46,7 @@ const (
 	transitGatewayPeeringAttachmentUpdatedTimeout      = 10 * time.Minute
 	transitGatewayPolicyTableAssociationCreatedTimeout = 5 * time.Minute
 	transitGatewayPolicyTableAssociationDeletedTimeout = 10 * time.Minute
-	transitGatewayRouteTableAssociationCreatedTimeout  = 5 * time.Minute
+	transitGatewayRouteTableAssociationCreatedTimeout  = 15 * time.Minute
 	transitGatewayRouteTableAssociationDeletedTimeout  = 10 * time.Minute
 	transitGatewayPrefixListReferenceTimeout           = 5 * time.Minute
 	transitGatewayRouteCreatedTimeout                  = 2 * time.Minute
