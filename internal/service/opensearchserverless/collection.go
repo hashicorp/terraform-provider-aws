@@ -38,6 +38,7 @@ import (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
 // @Testing(preIdentityVersion="v6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 

@@ -34,6 +34,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="catalog_id")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceIdentityCenterConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIdentityCenterConfiguration{}
 

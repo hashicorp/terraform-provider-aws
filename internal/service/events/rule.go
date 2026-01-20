@@ -38,6 +38,7 @@ import (
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeRuleOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,

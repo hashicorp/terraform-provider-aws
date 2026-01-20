@@ -30,6 +30,7 @@ import (
 
 // @FrameworkResource("aws_servicecatalogappregistry_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationResource{}, nil
 }

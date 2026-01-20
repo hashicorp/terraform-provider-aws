@@ -31,6 +31,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil
 }

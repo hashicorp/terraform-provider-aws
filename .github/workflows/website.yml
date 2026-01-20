@@ -93,7 +93,7 @@ jobs:
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -109,7 +109,7 @@ jobs:
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -137,7 +137,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins

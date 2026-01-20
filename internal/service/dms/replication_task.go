@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="replication_task_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationTask")
 // @Testing(importIgnore="start_replication_task")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationTaskCreate,

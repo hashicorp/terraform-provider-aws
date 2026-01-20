@@ -37,6 +37,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IdentityProvider")
 // @Testing(importStateIdAttribute="identity_provider_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIdentityProviderResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &identityProviderResource{}, nil
 }

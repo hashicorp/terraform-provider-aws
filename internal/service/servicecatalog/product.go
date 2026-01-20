@@ -29,6 +29,7 @@ import (
 // @Tags
 // @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Product")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
