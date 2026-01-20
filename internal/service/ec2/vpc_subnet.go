@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -15,12 +15,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,8 +31,11 @@ import (
 
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
 // @Testing(generator=false)
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -38,9 +43,6 @@ func resourceSubnet() *schema.Resource {
 		ReadWithoutTimeout:   resourceSubnetRead,
 		UpdateWithoutTimeout: resourceSubnetUpdate,
 		DeleteWithoutTimeout: resourceSubnetDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -79,6 +81,7 @@ func resourceSubnet() *schema.Resource {
 			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
@@ -107,20 +110,49 @@ func resourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ipv4_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+			},
+			"ipv4_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+				ConflictsWith: []string{names.AttrCIDRBlock, "customer_owned_ipv4_pool"},
+				RequiredWith:  []string{"ipv4_ipam_pool_id"},
+			},
 			"ipv6_cidr_block": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
 			},
 			"ipv6_cidr_block_association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ipv6_ipam_pool_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"ipv6_cidr_block"},
+			},
 			"ipv6_native": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
+			},
+			"ipv6_netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+				ConflictsWith: []string{"ipv6_cidr_block"},
+				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
 			"map_customer_owned_ip_on_launch": {
 				Type:         schema.TypeBool,
@@ -156,6 +188,20 @@ func resourceSubnet() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+			if d.HasChange("ipv6_cidr_block") {
+				ob, _ := d.GetChange("ipv6_cidr_block")
+				oa, _ := d.GetChange("assign_ipv6_address_on_creation")
+				// If the previous ipv6 subnet was created with assign_ipv6_address_on_creation=true,
+				// resource recreation is required.
+				if ob != nil {
+					if v, ok := oa.(bool); ok && v {
+						return true
+					}
+				}
+			}
+			return false
+		}),
 	}
 }
 
@@ -163,7 +209,7 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateSubnetInput{
+	input := ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSubnet),
 		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -180,19 +226,35 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.CidrBlock = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ipv4_ipam_pool_id"); ok {
+		input.Ipv4IpamPoolId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
+		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
 		input.Ipv6CidrBlock = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipv6_ipam_pool_id"); ok {
+		input.Ipv6IpamPoolId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ipv6_native"); ok {
 		input.Ipv6Native = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
+		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("outpost_arn"); ok {
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateSubnet(ctx, input)
+	output, err := conn.CreateSubnet(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Subnet: %s", err)
@@ -220,7 +282,16 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, false); err != nil {
+	var computedIPv6CidrBlock bool
+	_, cidrExists := d.GetOk("ipv6_cidr_block")
+
+	if v, ok := d.GetOk("ipv6_native"); ok && v.(bool) && !cidrExists {
+		computedIPv6CidrBlock = true
+	} else {
+		computedIPv6CidrBlock = false
+	}
+
+	if err := modifySubnetAttributesOnCreate(ctx, conn, d, subnet, computedIPv6CidrBlock); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -235,7 +306,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return findSubnetByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -245,44 +316,7 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, subnet.SubnetArn)
-	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
-	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
-	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set(names.AttrCIDRBlock, subnet.CidrBlock)
-	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
-	d.Set("enable_dns64", subnet.EnableDns64)
-	d.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
-	d.Set("ipv6_native", subnet.Ipv6Native)
-	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
-	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
-	d.Set("outpost_arn", subnet.OutpostArn)
-	d.Set(names.AttrOwnerID, subnet.OwnerId)
-	d.Set(names.AttrVPCID, subnet.VpcId)
-
-	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
-	d.Set("ipv6_cidr_block_association_id", nil)
-	d.Set("ipv6_cidr_block", nil)
-
-	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
-		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
-			d.Set("ipv6_cidr_block_association_id", v.AssociationId)
-			d.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
-			break
-		}
-	}
-
-	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
-		d.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
-		d.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
-	} else {
-		d.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
-		d.Set("enable_resource_name_dns_a_record_on_launch", nil)
-		d.Set("private_dns_hostname_type_on_launch", nil)
-	}
-
-	setTagsOut(ctx, subnet.Tags)
+	resourceSubnetFlatten(ctx, subnet, d)
 
 	return diags
 }
@@ -309,8 +343,15 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+	// Check if ipv6_cidr_block needs to be modified. When Optional+Computed, removal from config doesn't trigger HasChange()
+	rawConfig := d.GetRawConfig()
+	if currentIPv6, ipv6InConfig := d.Get("ipv6_cidr_block").(string), !rawConfig.GetAttr("ipv6_cidr_block").IsNull(); d.HasChange("ipv6_cidr_block") || (currentIPv6 != "" && !ipv6InConfig) {
+		targetValue := ""
+		if ipv6InConfig {
+			targetValue = d.Get("ipv6_cidr_block").(string)
+		}
+
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), targetValue); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -681,4 +722,45 @@ func modifySubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.C
 	}
 
 	return nil
+}
+
+func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *schema.ResourceData) {
+	rd.Set(names.AttrARN, subnet.SubnetArn)
+	rd.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
+	rd.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
+	rd.Set("availability_zone_id", subnet.AvailabilityZoneId)
+	rd.Set(names.AttrCIDRBlock, subnet.CidrBlock)
+	rd.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
+	rd.Set("enable_dns64", subnet.EnableDns64)
+	rd.Set("enable_lni_at_device_index", subnet.EnableLniAtDeviceIndex)
+	rd.Set("ipv6_native", subnet.Ipv6Native)
+	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
+	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
+	rd.Set("outpost_arn", subnet.OutpostArn)
+	rd.Set(names.AttrOwnerID, subnet.OwnerId)
+	rd.Set(names.AttrVPCID, subnet.VpcId)
+
+	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
+	rd.Set("ipv6_cidr_block_association_id", nil)
+	rd.Set("ipv6_cidr_block", nil)
+
+	for _, v := range subnet.Ipv6CidrBlockAssociationSet {
+		if v.Ipv6CidrBlockState.State == awstypes.SubnetCidrBlockStateCodeAssociated { //we can only ever have 1 IPv6 block associated at once
+			rd.Set("ipv6_cidr_block_association_id", v.AssociationId)
+			rd.Set("ipv6_cidr_block", v.Ipv6CidrBlock)
+			break
+		}
+	}
+
+	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsARecord)
+		rd.Set("private_dns_hostname_type_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.HostnameType)
+	} else {
+		rd.Set("enable_resource_name_dns_aaaa_record_on_launch", nil)
+		rd.Set("enable_resource_name_dns_a_record_on_launch", nil)
+		rd.Set("private_dns_hostname_type_on_launch", nil)
+	}
+
+	setTagsOut(ctx, subnet.Tags)
 }

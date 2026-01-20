@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -13,12 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,6 +44,7 @@ func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"transit_gateway_route_table_id": {
@@ -54,42 +54,6 @@ func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 		},
-		CustomizeDiff: customdiff.Sequence(
-			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
-				if !d.HasChange(names.AttrTransitGatewayAttachmentID) {
-					return nil
-				}
-
-				// See https://github.com/hashicorp/terraform-provider-aws/issues/30085
-				// In all cases, changes should force new except:
-				//   o is not empty string AND
-				//   n is empty string AND
-				//   plan is unknown AND
-				//   state is known
-				o, n := d.GetChange(names.AttrTransitGatewayAttachmentID)
-				if o.(string) == "" || n.(string) != "" {
-					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
-				}
-
-				rawPlan := d.GetRawPlan()
-				plan := rawPlan.GetAttr(names.AttrTransitGatewayAttachmentID)
-				if plan.IsKnown() {
-					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
-				}
-
-				rawState := d.GetRawState()
-				if rawState.IsNull() || !rawState.IsKnown() {
-					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
-				}
-
-				state := rawState.GetAttr(names.AttrTransitGatewayAttachmentID)
-				if !state.IsKnown() {
-					return d.ForceNew(names.AttrTransitGatewayAttachmentID)
-				}
-
-				return nil
-			},
-		),
 	}
 }
 
@@ -131,7 +95,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 
 	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route Table Propagation %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -191,7 +155,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		if enable {
 			input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),

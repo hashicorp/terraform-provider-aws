@@ -72,6 +72,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_trust_store.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:truststore/my-trust-store/73e2d6bc24d8a067"
+  }
+}
+
+resource "aws_lb_trust_store" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the trust store.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Trust Stores using their ARN. For example:
 
 ```python
@@ -95,4 +116,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_trust_store.example arn:aws:elasticloadbalancing:us-west-2:187416307283:truststore/my-trust-store/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9706efee0143cd77bf41122dfe8b7d838fc2c3674434540750e4a362ecc61097 -->
+<!-- cache-key: cdktf-0.20.8 input-6eae6588ffc87a7cf875403bd0acf986dce6072c9a00558603217849032f81cc -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1141,7 +1141,7 @@ func walkWebACLJSON(v reflect.Value) {
 					case reflect.Slice, reflect.Array:
 						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
 						case reflect.Uint8:
-							base64String := itypes.Base64Encode([]byte(str.(string)))
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
 							st[va.key] = base64String
 						default:
 						}
@@ -1188,7 +1188,7 @@ func walkRulesGroupJSON(v reflect.Value) {
 					case reflect.Slice, reflect.Array:
 						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
 						case reflect.Uint8:
-							base64String := itypes.Base64Encode([]byte(str.(string)))
+							base64String := inttypes.Base64Encode([]byte(str.(string)))
 							st[va.key] = base64String
 						default:
 						}
@@ -2539,8 +2539,8 @@ func flattenCookiesMatchPattern(c *awstypes.CookieMatchPattern) any {
 	}
 
 	m := map[string]any{
-		"included_cookies": aws.StringSlice(c.IncludedCookies),
-		"excluded_cookies": aws.StringSlice(c.ExcludedCookies),
+		"included_cookies": c.IncludedCookies,
+		"excluded_cookies": c.ExcludedCookies,
 	}
 
 	if c.All != nil {
@@ -3331,6 +3331,7 @@ func flattenHeader(apiObject *awstypes.ResponseInspectionHeader) []any {
 
 	m := map[string]any{
 		"failure_values": apiObject.FailureValues,
+		names.AttrName:   apiObject.Name,
 		"success_values": apiObject.SuccessValues,
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package secretsmanager
@@ -18,22 +18,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+// @ArnIdentity("secret_id")
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
+// @Testing(importIgnore="rotate_immediately")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretRotationCreate,
 		ReadWithoutTimeout:   resourceSecretRotationRead,
 		UpdateWithoutTimeout: resourceSecretRotationUpdate,
 		DeleteWithoutTimeout: resourceSecretRotationDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -132,7 +134,7 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findSecretByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Rotation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

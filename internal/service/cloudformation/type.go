@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -204,7 +205,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 
 	output, err := findTypeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudFormation Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -323,7 +324,7 @@ func findTypeByARN(ctx context.Context, conn *cloudformation.Client, arn string)
 	}
 
 	if status := output.DeprecatedStatus; status == awstypes.DeprecatedStatusDeprecated {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 			Message:     string(status),
 		}
@@ -345,7 +346,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	output, err := conn.DescribeType(ctx, input)
 
 	if errs.IsA[*awstypes.TypeNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -356,7 +357,7 @@ func findType(ctx context.Context, conn *cloudformation.Client, input *cloudform
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -370,7 +371,7 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	output, err := conn.DescribeTypeRegistration(ctx, input)
 
 	if errs.IsA[*awstypes.CFNRegistryException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -381,17 +382,17 @@ func findTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
+func statusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTypeRegistrationByToken(ctx, conn, registrationToken)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -407,7 +408,7 @@ func waitTypeRegistrationProgressStatusComplete(ctx context.Context, conn *cloud
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RegistrationStatusInProgress),
 		Target:  enum.Slice(awstypes.RegistrationStatusComplete),
 		Refresh: statusTypeRegistrationProgress(ctx, conn, registrationToken),

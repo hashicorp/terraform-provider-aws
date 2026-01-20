@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kafkaconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafkaconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -151,7 +152,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	plugin, err := findCustomPluginByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Custom Plugin (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -225,7 +226,7 @@ func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn s
 	output, err := conn.DescribeCustomPlugin(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -236,17 +237,17 @@ func findCustomPluginByARN(ctx context.Context, conn *kafkaconnect.Client, arn s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn string) retry.StateRefreshFunc {
+func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCustomPluginByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -259,7 +260,7 @@ func statusCustomPlugin(ctx context.Context, conn *kafkaconnect.Client, arn stri
 }
 
 func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomPluginStateCreating),
 		Target:  enum.Slice(awstypes.CustomPluginStateActive),
 		Refresh: statusCustomPlugin(ctx, conn, arn),
@@ -270,7 +271,7 @@ func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn
 
 	if output, ok := outputRaw.(*kafkaconnect.DescribeCustomPluginOutput); ok {
 		if state, stateDescription := output.CustomPluginState, output.StateDescription; state == awstypes.CustomPluginStateCreateFailed && stateDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateDescription.Code), aws.ToString(stateDescription.Message)))
 		}
 
 		return output, err
@@ -280,7 +281,7 @@ func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.Client, arn
 }
 
 func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.Client, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CustomPluginStateDeleting),
 		Target:  []string{},
 		Refresh: statusCustomPlugin(ctx, conn, arn),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,6 +39,11 @@ func resourceLoggingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"enable_monitoring_dashboard": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"firewall_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -114,6 +120,19 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	firewallARN := d.Get("firewall_arn").(string)
 
+	if v := d.Get("enable_monitoring_dashboard"); v != nil {
+		input := &networkfirewall.UpdateLoggingConfigurationInput{
+			FirewallArn:               aws.String(firewallARN),
+			EnableMonitoringDashboard: aws.Bool(v.(bool)),
+		}
+
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tfMap := v.([]any)[0].(map[string]any)
 
@@ -135,7 +154,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	output, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Logging Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -145,6 +164,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Logging Configuration (%s): %s", d.Id(), err)
 	}
 
+	d.Set("enable_monitoring_dashboard", output.EnableMonitoringDashboard)
 	d.Set("firewall_arn", output.FirewallArn)
 	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
@@ -165,10 +185,30 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 
 	o, n := d.GetChange("logging_configuration.0.log_destination_config")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
-	add, del := ns.Difference(os), os.Difference(ns)
+
+	var add, del *schema.Set
+	// To change enable_monitoring_dashboard, all log_destination_config must first be removed.
+	// Then enable_monitoring_dashboard can be changed, followed by adding log_destination_config back.
+	if d.HasChanges("enable_monitoring_dashboard") {
+		add, del = ns, os
+	} else {
+		add, del = ns.Difference(os), os.Difference(ns)
+	}
 
 	if err := deleteLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(del.List())); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if d.HasChanges("enable_monitoring_dashboard") {
+		input := &networkfirewall.UpdateLoggingConfigurationInput{
+			FirewallArn:               output.FirewallArn,
+			EnableMonitoringDashboard: aws.Bool(d.Get("enable_monitoring_dashboard").(bool)),
+		}
+		_, err := conn.UpdateLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
 	if err := addLogDestinationConfigs(ctx, conn, d.Id(), output.LoggingConfiguration, expandLogDestinationConfigs(add.List())); err != nil {
@@ -184,7 +224,7 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 
 	output, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		return diags
 	}
 
@@ -257,7 +297,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Cl
 	output, err := conn.DescribeLoggingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -268,7 +308,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Cl
 	}
 
 	if output == nil || output.LoggingConfiguration == nil || len(output.LoggingConfiguration.LogDestinationConfigs) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -217,6 +217,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_imagebuilder_lifecycle_policy.example
+  identity = {
+    "arn" = "arn:aws:imagebuilder:us-east-1:123456789012:lifecycle-policy/example"
+  }
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Image Builder lifecycle policy.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_lifecycle_policy` using the Amazon Resource Name (ARN). For example:
 
 ```typescript
@@ -247,4 +268,4 @@ Using `terraform import`, import `aws_imagebuilder_lifecycle_policy` using the A
 % terraform import aws_imagebuilder_lifecycle_policy.example arn:aws:imagebuilder:us-east-1:123456789012:lifecycle-policy/example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-74042b25acfc4b6719241c58bddbf49f862d216d2efbeff035ca4083d6ce77df -->
+<!-- cache-key: cdktf-0.20.8 input-1575ad64d4e3084727f6375663bd491cf335b872ccce4a8933b36ac5a1663466 -->

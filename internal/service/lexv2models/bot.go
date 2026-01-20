@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lexv2models
@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -189,7 +190,7 @@ func (r *botResource) Read(ctx context.Context, request resource.ReadRequest, re
 
 	output, err := findBotByID(ctx, conn, data.BotID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -300,7 +301,7 @@ func findBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	output, err := conn.DescribeBot(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -311,7 +312,7 @@ func findBotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lex
 	}
 
 	if output == nil || output.BotId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -321,11 +322,11 @@ func botFailureReasons(failureReasons []string) error {
 	return errors.Join(tfslices.ApplyToAll(failureReasons, errors.New)...)
 }
 
-func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
+func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBotByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -338,7 +339,7 @@ func statusBot(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.S
 }
 
 func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusCreating),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBot(ctx, conn, id),
@@ -349,7 +350,7 @@ func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -358,7 +359,7 @@ func waitBotCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.BotStatusUpdating),
 		Target:                    enum.Slice(awstypes.BotStatusAvailable),
 		Refresh:                   statusBot(ctx, conn, id),
@@ -369,7 +370,7 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -378,7 +379,7 @@ func waitBotUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 }
 
 func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusBot(ctx, conn, id),
@@ -388,7 +389,7 @@ func waitBotDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, ti
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}

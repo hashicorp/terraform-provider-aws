@@ -124,6 +124,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_subnet.example
+  identity = {
+    id = "subnet-9d4a7b6c"
+  }
+}
+
+resource "aws_subnet" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the subnet.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
 ```typescript
@@ -138,7 +164,7 @@ import { Subnet } from "./.gen/providers/aws/subnet";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    Subnet.generateConfigForImport(this, "publicSubnet", "subnet-9d4a7b6c");
+    Subnet.generateConfigForImport(this, "example", "subnet-9d4a7b6c");
   }
 }
 
@@ -147,7 +173,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import subnets using the subnet `id`. For example:
 
 ```console
-% terraform import aws_subnet.public_subnet subnet-9d4a7b6c
+% terraform import aws_subnet.example subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b4187716de12839afdd7a583f39ecff749d095c972888903402ed7a78d349457 -->
+<!-- cache-key: cdktf-0.20.8 input-dc085c9cec6e08e13d26c17e7c9c153184fd5656755b6df1e0c35dc902f59899 -->

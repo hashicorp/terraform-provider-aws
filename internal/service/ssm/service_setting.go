@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -99,7 +100,7 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findServiceSettingByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SSM Service Setting %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -154,7 +155,7 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -165,17 +166,17 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	}
 
 	if output == nil || output.ServiceSetting == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceSetting, nil
 }
 
-func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) retry.StateRefreshFunc {
+func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findServiceSettingByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -188,7 +189,7 @@ func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) retr
 }
 
 func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),
@@ -205,7 +206,7 @@ func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string,
 }
 
 func waitServiceSettingReset(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
 		Refresh: statusServiceSetting(ctx, conn, id),

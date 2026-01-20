@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify
@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,7 +173,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Amplify Domain Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -280,8 +280,7 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -290,17 +289,17 @@ func findDomainAssociationByTwoPartKey(ctx context.Context, conn *amplify.Client
 	}
 
 	if output == nil || output.DomainAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainAssociation, nil
 }
 
-func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusDomainAssociation(conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		domainAssociation, err := findDomainAssociationByTwoPartKey(ctx, conn, appID, domainName)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -329,7 +328,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 			types.DomainStatusAvailable,
 			types.DomainStatusAwaitingAppCname,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 
@@ -337,7 +336,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err
@@ -362,7 +361,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 			types.DomainStatusPendingDeployment,
 			types.DomainStatusAvailable,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 
@@ -370,7 +369,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err
@@ -393,7 +392,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 		Target: enum.Slice(
 			types.DomainStatusAvailable,
 		),
-		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Refresh: statusDomainAssociation(conn, appID, domainName),
 		Timeout: timeout,
 	}
 
@@ -401,7 +400,7 @@ func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, a
 
 	if v, ok := outputRaw.(*types.DomainAssociation); ok {
 		if v.DomainStatus == types.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err

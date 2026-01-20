@@ -17,6 +17,8 @@ AppStream 2.0
 AppSync
 Application Auto Scaling
 Application Migration (Mgn)
+Application Recovery Controller Zonal Shift
+Application Resilience Controller Region Switch
 Application Signals
 Athena
 Audit Manager
@@ -50,7 +52,9 @@ CloudWatch Evidently
 CloudWatch Internet Monitor
 CloudWatch Logs
 CloudWatch Network Monitor
+CloudWatch NetworkFlow Monitor
 CloudWatch Observability Access Manager
+CloudWatch Observability Admin
 CloudWatch RUM
 CloudWatch Synthetics
 CodeArtifact
@@ -158,9 +162,9 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
-Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
+MWAA (Managed Workflows for Apache Airflow) Serverless
 Macie
 Mainframe Modernization
 Managed Grafana
@@ -189,6 +193,7 @@ QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
 RDS (Relational Database)
+RDS Data
 Recycle Bin (RBin)
 Redshift
 Redshift Data
@@ -258,6 +263,7 @@ WAF Classic Regional
 Wavelength
 Web Services Budgets
 Well-Architected Tool
+WorkMail
 WorkSpaces
 WorkSpaces Web
 X-Ray

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package paymentcryptography_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkeyalias "github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +70,7 @@ func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 				Config: testAccKeyAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyAliasExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfkeyalias.ResourceKeyAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfkeyalias.ResourceKeyAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -170,7 +170,7 @@ func testAccCheckKeyAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfkeyalias.FindKeyAliasByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

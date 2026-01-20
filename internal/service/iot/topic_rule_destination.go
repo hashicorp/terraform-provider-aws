@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -102,8 +103,8 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]any)[0].(map[string]any))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, propagationTimeout,
-		func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, propagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.CreateTopicRuleDestination(ctx, input)
 		})
 
@@ -143,7 +144,7 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 
 	output, err := findTopicRuleDestinationByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Topic Rule Destination %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -248,7 +249,7 @@ pageLoop:
 	}
 
 	if destination == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	inputG := &iot.GetTopicRuleDestinationInput{
@@ -258,7 +259,7 @@ pageLoop:
 	output, err := conn.GetTopicRuleDestination(ctx, inputG)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: inputG,
 		}
@@ -269,17 +270,17 @@ pageLoop:
 	}
 
 	if output == nil || output.TopicRuleDestination == nil {
-		return nil, tfresource.NewEmptyResultError(inputG)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TopicRuleDestination, nil
 }
 
-func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn string) retry.StateRefreshFunc {
+func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTopicRuleDestinationByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -292,7 +293,7 @@ func statusTopicRuleDestination(ctx context.Context, conn *iot.Client, arn strin
 }
 
 func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusEnabled)),
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -302,7 +303,7 @@ func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.Client, arn 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -311,7 +312,7 @@ func waitTopicRuleDestinationCreated(ctx context.Context, conn *iot.Client, arn 
 }
 
 func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusDeleting)),
 		Target:  []string{},
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -321,7 +322,7 @@ func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.Client, arn 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -330,7 +331,7 @@ func waitTopicRuleDestinationDeleted(ctx context.Context, conn *iot.Client, arn 
 }
 
 func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusDisabled)),
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -340,7 +341,7 @@ func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.Client, arn
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -349,7 +350,7 @@ func waitTopicRuleDestinationDisabled(ctx context.Context, conn *iot.Client, arn
 }
 
 func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.Client, arn string, timeout time.Duration) (*awstypes.TopicRuleDestination, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(string(awstypes.TopicRuleDestinationStatusInProgress)),
 		Target:  enum.Slice(string(awstypes.TopicRuleDestinationStatusEnabled)),
 		Refresh: statusTopicRuleDestination(ctx, conn, arn),
@@ -359,7 +360,7 @@ func waitTopicRuleDestinationEnabled(ctx context.Context, conn *iot.Client, arn 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TopicRuleDestination); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -405,11 +406,11 @@ func flattenVPCDestinationProperties(apiObject *awstypes.VpcDestinationPropertie
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap[names.AttrSecurityGroups] = aws.StringSlice(v)
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringSlice(v)
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if v := apiObject.VpcId; v != nil {

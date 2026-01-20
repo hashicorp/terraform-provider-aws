@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -26,9 +26,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 	domainName := "aws_datazone_domain.test"
@@ -47,7 +45,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
+				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
@@ -57,7 +55,7 @@ func TestAccDataZoneEnvironmentProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
 				),
 			},
@@ -76,9 +74,7 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 
@@ -92,10 +88,10 @@ func TestAccDataZoneEnvironmentProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
+				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceEnvironmentProfile, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceEnvironmentProfile, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,9 +103,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var environmentprofile datazone.GetEnvironmentProfileOutput
-	epName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_datazone_environment_profile.test"
 	domainName := "aws_datazone_domain.test"
@@ -128,7 +122,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentProfileConfig_basic(epName, dName, pName),
+				Config: testAccEnvironmentProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAWSAccountID, callName, names.AttrAccountID),
@@ -141,7 +135,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
 				),
 			},
@@ -153,7 +147,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_parameters"},
 			},
 			{
-				Config: testAccEnvironmentProfileConfig_update(epName, dName, pName),
+				Config: testAccEnvironmentProfileConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
 					testAccCheckEnvironmentProfileExists(ctx, resourceName, &environmentprofile),
@@ -167,7 +161,7 @@ func TestAccDataZoneEnvironmentProfile_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_identifier", domainName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_blueprint_identifier", blueName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, epName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "project_identifier", projectName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
 				),
@@ -243,9 +237,9 @@ func testAccAuthorizerEnvProfImportStateIdFunc(resourceName string) resource.Imp
 	}
 }
 
-func testAccEnvironmentProfileConfig_base(domainName, projectName string) string {
+func testAccEnvironmentProfileConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_basic(projectName, domainName),
+		testAccProjectConfig_basic(rName),
 		`
 data "aws_caller_identity" "test" {}
 data "aws_region" "test" {}
@@ -265,9 +259,9 @@ resource "aws_datazone_environment_blueprint_configuration" "test" {
 `)
 }
 
-func testAccEnvironmentProfileConfig_basic(rName, domainName, projectName string) string {
+func testAccEnvironmentProfileConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccEnvironmentProfileConfig_base(domainName, projectName),
+		testAccEnvironmentProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id
@@ -285,9 +279,9 @@ resource "aws_datazone_environment_profile" "test" {
 `, rName))
 }
 
-func testAccEnvironmentProfileConfig_update(rName, domainName, projectName string) string {
+func testAccEnvironmentProfileConfig_update(rName string) string {
 	return acctest.ConfigCompose(
-		testAccEnvironmentProfileConfig_base(domainName, projectName),
+		testAccEnvironmentProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_datazone_environment_profile" "test" {
   aws_account_id                   = data.aws_caller_identity.test.account_id

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms
@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func dataSourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,

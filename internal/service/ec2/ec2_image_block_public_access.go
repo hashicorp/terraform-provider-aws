@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -17,18 +17,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
-// @Region(global=true)
 // @SingletonIdentity
+// @IdentityVersion(1, sdkV2IdentityUpgraders="imageBlockPublicAccessIdentityUpgradeV0")
 // @V60SDKv2Fix
 // @NoImport
 // @Testing(checkDestroyNoop=true)
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
+// @Testing(identityTest=false)
+// @Testing(identityVersion="0;v6.0.0")
+// @Testing(identityVersion="1;v6.21.0")
 func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
@@ -93,7 +96,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 
 	output, err := findImageBlockPublicAccessState(ctx, conn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Image Block Public Access %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -106,6 +109,14 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrState, output)
 
 	return diags
+}
+
+var imageBlockPublicAccessIdentityUpgradeV0 = schema.IdentityUpgrader{
+	Version: 0,
+	Upgrade: func(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+		rawState[names.AttrRegion] = meta.(*conns.AWSClient).Region(ctx)
+		return rawState, nil
+	},
 }
 
 func imageBlockPublicAccessDisabledState_Values() []string {

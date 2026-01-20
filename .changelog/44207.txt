@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table_optimizer: Add `iceberg_configuration.run_rate_in_hours` argument to `retention_configuration` and `orphan_file_deletion_configuration` blocks
+```

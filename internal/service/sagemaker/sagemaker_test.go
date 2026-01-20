@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -144,6 +144,11 @@ func TestAccSageMaker_serial(t *testing.T) {
 		"Servicecatalog": {
 			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
 			"Identity":      testAccSageMakerServicecatalogPortfolioStatus_IdentitySerial,
+		},
+		"LabelingJob": {
+			acctest.CtBasic:      testAccLabelingJob_basic,
+			acctest.CtDisappears: testAccLabelingJob_disappears,
+			"tags":               testAccLabelingJob_tags,
 		},
 	}
 

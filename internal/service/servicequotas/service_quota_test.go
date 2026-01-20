@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -253,6 +253,26 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	})
 }
 
+func TestAccServiceQuotasServiceQuota_valueLessThanCurrent(t *testing.T) {
+	ctx := acctest.Context(t)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
+				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value less than current`),
+			},
+		},
+	})
+}
+
 // nosemgrep:ci.servicequotas-in-func-name
 func testAccServiceQuotaConfig_sameValue(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
@@ -309,6 +329,21 @@ resource "aws_servicequotas_service_quota" "test" {
   value        = 1
 }
 `, serviceCode, quotaCode))
+}
+
+func testAccServiceQuotaConfig_valueLessThanCurrent(serviceCode, quotaCode string) string {
+	return fmt.Sprintf(`
+data "aws_servicequotas_service_quota" "test" {
+  quota_code   = %[1]q
+  service_code = %[2]q
+}
+
+resource "aws_servicequotas_service_quota" "test" {
+  quota_code   = data.aws_servicequotas_service_quota.test.quota_code
+  service_code = data.aws_servicequotas_service_quota.test.service_code
+  value        = data.aws_servicequotas_service_quota.test.value - 1
+}
+`, quotaCode, serviceCode)
 }
 
 func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {

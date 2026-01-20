@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -62,7 +63,7 @@ func TestAccAutoScalingNotification_disappears(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceNotification(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceNotification(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,7 +152,7 @@ func testAccCheckNotificationExists(ctx context.Context, n string, groups []stri
 		output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 		if err == nil && len(output) == 0 {
-			err = tfresource.NewEmptyResultError(nil)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		return err
@@ -170,10 +171,10 @@ func testAccCheckNotificationDestroy(ctx context.Context, groups []string) resou
 			output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 			if err == nil && len(output) == 0 {
-				err = tfresource.NewEmptyResultError(nil)
+				err = tfresource.NewEmptyResultError()
 			}
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

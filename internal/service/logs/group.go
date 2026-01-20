@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package logs
@@ -28,10 +28,10 @@ import (
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(destroyTakesT=true)
 // @Testing(existsTakesT=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
-// @IdentityAttribute("name")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.7.0")
 func resourceGroup() *schema.Resource {
@@ -44,6 +44,11 @@ func resourceGroup() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 			names.AttrKMSKeyID: {
@@ -112,6 +117,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		Tags:          getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+		input.DeletionProtectionEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -130,7 +139,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PutRetentionPolicy(ctx, &input)
 		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -158,14 +167,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
-	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
-	d.Set("log_group_class", lg.LogGroupClass)
-	d.Set(names.AttrName, lg.LogGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
-	d.Set("retention_in_days", lg.RetentionInDays)
-	// Support in-place update of non-refreshable attribute.
-	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
+	resourceGroupFlatten(ctx, d, *lg)
 
 	return diags
 }
@@ -181,7 +183,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 				return conn.PutRetentionPolicy(ctx, &input)
 			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
@@ -198,6 +200,29 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("deletion_protection_enabled") {
+		var deletionProtectionEnabled bool
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			deletionProtectionEnabled = v.(bool)
+		} else {
+			deletionProtectionEnabled = false
+		}
+		loggroup, err := findLogGroupByName(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+		}
+		input := cloudwatchlogs.PutLogGroupDeletionProtectionInput{
+			LogGroupIdentifier:        loggroup.LogGroupArn,
+			DeletionProtectionEnabled: aws.Bool(deletionProtectionEnabled),
+		}
+
+		_, err = conn.PutLogGroupDeletionProtection(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) deletion protection: %s", d.Id(), err)
 		}
 	}
 
@@ -264,40 +289,34 @@ func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name s
 
 	return findLogGroup(ctx, conn, &input, func(v *awstypes.LogGroup) bool {
 		return aws.ToString(v.LogGroupName) == name
-	})
+	}, tfslices.WithReturnFirstMatch)
 }
 
-func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup]) (*awstypes.LogGroup, error) {
-	output, err := findLogGroups(ctx, conn, input, filter, tfslices.WithReturnFirstMatch)
+func findLogGroup(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) (*awstypes.LogGroup, error) {
+	opts := tfslices.NewFinderOptions(optFns)
+	var output []awstypes.LogGroup
+	for value, err := range listLogGroups(ctx, conn, input, filter) {
+		if err != nil {
+			return nil, err
+		}
 
-	if err != nil {
-		return nil, err
+		output = append(output, value)
+		if opts.ReturnFirstMatch() {
+			break
+		}
 	}
 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogGroups(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogGroupsInput, filter tfslices.Predicate[*awstypes.LogGroup], optFns ...tfslices.FinderOptionsFunc) ([]awstypes.LogGroup, error) {
-	var output []awstypes.LogGroup
-	opts := tfslices.NewFinderOptions(optFns)
-
-	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.LogGroups {
-			if filter(&v) {
-				output = append(output, v)
-				if opts.ReturnFirstMatch() {
-					return output, nil
-				}
-			}
-		}
-	}
-
-	return output, nil
+func resourceGroupFlatten(_ context.Context, d *schema.ResourceData, lg awstypes.LogGroup) {
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set("deletion_protection_enabled", lg.DeletionProtectionEnabled)
+	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
+	d.Set(names.AttrName, lg.LogGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
+	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 }

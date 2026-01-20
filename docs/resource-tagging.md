@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Tagging Support
 
@@ -533,8 +536,8 @@ For example, the S3 Object uses
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 ```
 
-Some services or resource types are using a new variant of the standard `Exists` and `DestroyCheck` functions that use `acctest.ProviderMeta` internally, and thus take a `testing.T` as a parameter.
-In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(destroyTakesT=true)`, respectively.
+Some older resource types use variants of the standard `Exists` and `DestroyCheck` functions that do not take a `testing.T` parameter.
+In that case, add the annotations `@Testing(existsTakesT=false)` and `@Testing(destroyTakesT=false)`, respectively.
 
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.
@@ -548,7 +551,7 @@ There are multiple methods for overriding the import ID, if needed.
 To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
 If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
 If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
-If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
+If the resource type does not support importing, use the annotation `@NoImport`.
 
 ##### Serialization parameters
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fis
@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -227,6 +227,10 @@ func resourceExperimentTemplate() *schema.Resource {
 									"log_group_arn": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											verify.ValidARN,
+											validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+										),
 									},
 								},
 							},
@@ -409,7 +413,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	experimentTemplate, err := findExperimentTemplateByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] FIS Experiment Template (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -535,8 +539,7 @@ func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -545,7 +548,7 @@ func findExperimentTemplateByID(ctx context.Context, conn *fis.Client, id string
 	}
 
 	if output == nil || output.ExperimentTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ExperimentTemplate, nil
@@ -1329,6 +1332,7 @@ func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 		"Cluster",
 		"Clusters",
 		"DBInstances",
+		"Functions",
 		"Instances",
 		"ManagedResources",
 		"Nodegroups",

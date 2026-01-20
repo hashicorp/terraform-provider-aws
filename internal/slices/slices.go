@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package slices
@@ -58,17 +58,6 @@ func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2
 	return v, nil
 }
 
-// AppliedToEach returns an iterator that yields the slice elements transformed by the function `f`.
-func AppliedToEach[S ~[]E, E any, T any](s S, f func(E) T) iter.Seq[T] {
-	return func(yield func(T) bool) {
-		for _, v := range s {
-			if !yield(f(v)) {
-				return
-			}
-		}
-	}
-}
-
 // Values returns a new slice containing values from the pointers in each element of the original slice `s`.
 func Values[S ~[]*E, E any](s S) []E {
 	return ApplyToAll(s, func(e *E) E {
@@ -81,6 +70,10 @@ type Predicate[T any] func(T) bool
 
 // Filter returns a new slice containing all values that return `true` for the filter function `f`.
 func Filter[S ~[]E, E any](s S, f Predicate[E]) S {
+	if len(s) == 0 {
+		return nil
+	}
+
 	v := S(make([]E, 0, len(s)))
 
 	for _, e := range s {
@@ -166,12 +159,32 @@ func Range[T signed](start, stop, step T) []T {
 	return v
 }
 
-type stringable interface {
+type Stringable interface {
 	~string | ~[]byte | ~[]rune
 }
 
-func Strings[S ~[]E, E stringable](s S) []string {
+func Strings[S ~[]E, E Stringable](s S) []string {
 	return ApplyToAll(s, func(e E) string {
 		return string(e)
 	})
+}
+
+// CollectWithError collects values from seq into a new slice and returns it.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result is nil.
+func CollectWithError[E any](seq iter.Seq2[E, error]) ([]E, error) {
+	return AppendSeqWithError([]E(nil), seq)
+}
+
+// AppendSeqWithError appends the values from seq to the slice and returns the extended slice.
+// The first non-nil error in seq is returned.
+// If seq is empty, the result preserves the nilness of s.
+func AppendSeqWithError[S ~[]E, E any](s S, seq iter.Seq2[E, error]) (S, error) {
+	for v, err := range seq {
+		if err != nil {
+			return nil, err
+		}
+		s = append(s, v)
+	}
+	return s, nil
 }

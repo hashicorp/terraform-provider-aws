@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -30,31 +30,36 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
-
-const (
-	ResNameTable = "Table"
-)
 
 type tableResource struct {
 	framework.ResourceWithModel[tableResourceModel]
 }
 
-func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *tableResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedAt: schema.StringAttribute{
@@ -131,6 +136,8 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableType](),
 				Computed:   true,
@@ -235,438 +242,502 @@ func (r *tableResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *tableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *tableResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data tableResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var plan tableResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	var input s3tables.CreateTableInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Handle metadata separately since it's an interface type
-	if !plan.Metadata.IsNull() && !plan.Metadata.IsUnknown() {
-		metadataModel, d := plan.Metadata.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
+	// Handle metadata separately since it's an interface type.
+	if !data.Metadata.IsNull() && !data.Metadata.IsUnknown() {
+		metadataModel, diags := data.Metadata.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, metadataModel, &input.Metadata)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Expand(ctx, metadataModel, &input.Metadata)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
 	_, err := conn.CreateTable(ctx, &input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating S3 Tables Table (%s)", name), err.Error())
+
 		return
 	}
 
-	if !plan.MaintenanceConfiguration.IsUnknown() && !plan.MaintenanceConfiguration.IsNull() {
-		mc, d := plan.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+	if !data.MaintenanceConfiguration.IsUnknown() && !data.MaintenanceConfiguration.IsNull() {
+		mc, diags := data.MaintenanceConfiguration.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		if !mc.IcebergCompaction.IsNull() {
+			typ := awstypes.TableMaintenanceTypeIcebergCompaction
 			input := s3tables.PutTableMaintenanceConfigurationInput{
-				Name:           plan.Name.ValueStringPointer(),
-				Namespace:      plan.Namespace.ValueStringPointer(),
-				TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-				Type:           awstypes.TableMaintenanceTypeIcebergCompaction,
+				Name:           aws.String(name),
+				Namespace:      aws.String(namespace),
+				TableBucketARN: aws.String(tableBucketARN),
+				Type:           typ,
 			}
 
-			value, d := expandTableMaintenanceIcebergCompaction(ctx, mc.IcebergCompaction)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			value, diags := expandTableMaintenanceIcebergCompaction(ctx, mc.IcebergCompaction)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			input.Value = &value
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
+
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table (%s) maintenance configuration (%s)", name, typ), err.Error())
+
 				return
 			}
 		}
 
 		if !mc.IcebergSnapshotManagement.IsNull() {
+			typ := awstypes.TableMaintenanceTypeIcebergSnapshotManagement
 			input := s3tables.PutTableMaintenanceConfigurationInput{
-				Name:           plan.Name.ValueStringPointer(),
-				Namespace:      plan.Namespace.ValueStringPointer(),
-				TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-				Type:           awstypes.TableMaintenanceTypeIcebergSnapshotManagement,
+				Name:           aws.String(name),
+				Namespace:      aws.String(namespace),
+				TableBucketARN: aws.String(tableBucketARN),
+				Type:           typ,
 			}
 
-			value, d := expandTableMaintenanceIcebergSnapshotManagement(ctx, mc.IcebergSnapshotManagement)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			value, diags := expandTableMaintenanceIcebergSnapshotManagement(ctx, mc.IcebergSnapshotManagement)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			input.Value = &value
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
+
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table (%s) maintenance configuration (%s)", name, typ), err.Error())
+
 				return
 			}
 		}
 	}
 
-	table, err := findTable(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
+	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGT, &data, fwflex.WithFieldNamePrefix("Table"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	plan.Namespace = types.StringValue(table.Namespace[0])
+	data.Namespace = types.StringValue(outputGT.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           plan.Name.ValueStringPointer(),
-		Namespace:      plan.Namespace.ValueStringPointer(),
-		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	plan.MaintenanceConfiguration = maintenanceConfiguration
+	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
-	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
-		Name:           plan.Name.ValueStringPointer(),
-		Namespace:      plan.Namespace.ValueStringPointer(),
-		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-	})
 	switch {
-	case errs.IsA[*awstypes.NotFoundException](err):
+	case retry.NotFound(err):
 	case err != nil:
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
+
+		return
+	default:
+		value, diags := flattenTableMaintenanceConfiguration(ctx, outputGTMC)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		data.MaintenanceConfiguration = value
+	}
+
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
+
+		return
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-		plan.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+		var diags diag.Diagnostics
+		data.EncryptionConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *tableResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data tableResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state tableResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
+	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	if retry.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := findTable(ctx, conn, state.TableBucketARN.ValueString(), state.Namespace.ValueString(), state.Name.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, ResNameTable, state.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flex.WithFieldNamePrefix("Table"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGT, &data, fwflex.WithFieldNamePrefix("Table"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	state.Namespace = types.StringValue(out.Namespace[0])
+	data.Namespace = types.StringValue(outputGT.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           state.Name.ValueStringPointer(),
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
-			err.Error(),
-		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
+
 		return
-	}
-	state.MaintenanceConfiguration = maintenanceConfiguration
-
-	awsEncryptionConfig, err := conn.GetTableEncryption(ctx, &s3tables.GetTableEncryptionInput{
-		Name:           state.Name.ValueStringPointer(),
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
-		if !errs.IsA[*awstypes.NotFoundException](err) {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
-				err.Error(),
-			)
+	default:
+		value, diags := flattenTableMaintenanceConfiguration(ctx, outputGTMC)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-	} else {
+		data.MaintenanceConfiguration = value
+	}
+
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
+
+		return
+	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		resp.Diagnostics.Append(flex.Flatten(ctx, awsEncryptionConfig.EncryptionConfiguration, &encryptionConfiguration)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-		state.EncryptionConfiguration, d = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+		var diags diag.Diagnostics
+		data.EncryptionConfiguration, diags = fwtypes.NewObjectValueOf(ctx, &encryptionConfiguration)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *tableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().S3TablesClient(ctx)
-
-	var plan, state tableResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *tableResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old tableResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) || !plan.Namespace.Equal(state.Namespace) {
+	conn := r.Meta().S3TablesClient(ctx)
+
+	// New name and namespace.
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, new.Name), fwflex.StringValueFromFramework(ctx, new.Namespace), fwflex.StringValueFromFramework(ctx, new.TableBucketARN)
+
+	if !new.Name.Equal(old.Name) || !new.Namespace.Equal(old.Namespace) {
 		input := s3tables.RenameTableInput{
-			TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-			Namespace:      state.Namespace.ValueStringPointer(),
-			Name:           state.Name.ValueStringPointer(),
+			Name:           old.Name.ValueStringPointer(),
+			Namespace:      old.Namespace.ValueStringPointer(),
+			TableBucketARN: aws.String(tableBucketARN),
 		}
 
-		if !plan.Name.Equal(state.Name) {
-			input.NewName = plan.Name.ValueStringPointer()
+		if !new.Name.Equal(old.Name) {
+			input.NewName = aws.String(name)
 		}
 
-		if !plan.Namespace.Equal(state.Namespace) {
-			input.NewNamespaceName = plan.Namespace.ValueStringPointer()
+		if !new.Namespace.Equal(old.Namespace) {
+			input.NewNamespaceName = aws.String(namespace)
 		}
 
 		_, err := conn.RenameTable(ctx, &input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, ResNameTable, state.Name.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("renaming S3 Tables Table (%s)", name), err.Error())
+
+			return
 		}
 	}
 
-	if !plan.MaintenanceConfiguration.Equal(state.MaintenanceConfiguration) {
-		planMC, d := plan.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+	if !new.MaintenanceConfiguration.Equal(old.MaintenanceConfiguration) {
+		newMC, d := new.MaintenanceConfiguration.ToPtr(ctx)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		stateMC, d := state.MaintenanceConfiguration.ToPtr(ctx)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+		oldMC, d := old.MaintenanceConfiguration.ToPtr(ctx)
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		if !planMC.IcebergCompaction.Equal(stateMC.IcebergCompaction) {
+		if !newMC.IcebergCompaction.Equal(oldMC.IcebergCompaction) {
+			typ := awstypes.TableMaintenanceTypeIcebergCompaction
 			input := s3tables.PutTableMaintenanceConfigurationInput{
-				Name:           plan.Name.ValueStringPointer(),
-				Namespace:      plan.Namespace.ValueStringPointer(),
-				TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-				Type:           awstypes.TableMaintenanceTypeIcebergCompaction,
+				Name:           aws.String(name),
+				Namespace:      aws.String(namespace),
+				TableBucketARN: aws.String(tableBucketARN),
+				Type:           typ,
 			}
 
-			value, d := expandTableMaintenanceIcebergCompaction(ctx, planMC.IcebergCompaction)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			value, diags := expandTableMaintenanceIcebergCompaction(ctx, newMC.IcebergCompaction)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			input.Value = &value
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
+
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table (%s) maintenance configuration (%s)", name, typ), err.Error())
+
 				return
 			}
 		}
 
-		if !planMC.IcebergSnapshotManagement.Equal(stateMC.IcebergSnapshotManagement) {
+		if !newMC.IcebergSnapshotManagement.Equal(oldMC.IcebergSnapshotManagement) {
+			typ := awstypes.TableMaintenanceTypeIcebergSnapshotManagement
 			input := s3tables.PutTableMaintenanceConfigurationInput{
-				Name:           plan.Name.ValueStringPointer(),
-				Namespace:      plan.Namespace.ValueStringPointer(),
-				TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-				Type:           awstypes.TableMaintenanceTypeIcebergSnapshotManagement,
+				Name:           aws.String(name),
+				Namespace:      aws.String(namespace),
+				TableBucketARN: aws.String(tableBucketARN),
+				Type:           typ,
 			}
 
-			value, d := expandTableMaintenanceIcebergSnapshotManagement(ctx, planMC.IcebergSnapshotManagement)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			value, d := expandTableMaintenanceIcebergSnapshotManagement(ctx, newMC.IcebergSnapshotManagement)
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			input.Value = &value
 
 			_, err := conn.PutTableMaintenanceConfiguration(ctx, &input)
+
 			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-					err.Error(),
-				)
+				response.Diagnostics.AddError(fmt.Sprintf("putting S3 Tables Table (%s) maintenance configuration (%s)", name, typ), err.Error())
+
 				return
 			}
 		}
 	}
 
-	table, err := findTable(ctx, conn, plan.TableBucketARN.ValueString(), plan.Namespace.ValueString(), plan.Name.ValueString())
+	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, ResNameTable, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s)", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, table, &plan, flex.WithFieldNamePrefix("Table"))...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGT, &new, fwflex.WithFieldNamePrefix("Table"))...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	plan.Namespace = types.StringValue(table.Namespace[0])
+	new.Namespace = types.StringValue(outputGT.Namespace[0])
 
-	awsMaintenanceConfig, err := conn.GetTableMaintenanceConfiguration(ctx, &s3tables.GetTableMaintenanceConfigurationInput{
-		Name:           plan.Name.ValueStringPointer(),
-		Namespace:      plan.Namespace.ValueStringPointer(),
-		TableBucketARN: plan.TableBucketARN.ValueStringPointer(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
-			err.Error(),
-		)
-	}
-	maintenanceConfiguration, d := flattenTableMaintenanceConfiguration(ctx, awsMaintenanceConfig)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+
+	switch {
+	case retry.NotFound(err):
+	case err != nil:
+		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
+
 		return
+	default:
+		value, diags := flattenTableMaintenanceConfiguration(ctx, outputGTMC)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		new.MaintenanceConfiguration = value
 	}
-	plan.MaintenanceConfiguration = maintenanceConfiguration
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *tableResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tableResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data tableResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().S3TablesClient(ctx)
 
-	var state tableResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
+	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	input := s3tables.DeleteTableInput{
-		Name:           state.Name.ValueStringPointer(),
-		Namespace:      state.Namespace.ValueStringPointer(),
-		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteTable(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionDeleting, ResNameTable, state.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	identifier, err := parseTableIdentifier(req.ID)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Invalid Import ID",
-			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
-		)
-		return
-	}
-
-	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
-}
-
-func findTable(ctx context.Context, conn *s3tables.Client, bucketARN, namespace, name string) (*s3tables.GetTableOutput, error) {
-	in := s3tables.GetTableInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
-		TableBucketARN: aws.String(bucketARN),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+	_, err := conn.DeleteTable(ctx, &input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
 	}
 
-	out, err := conn.GetTable(ctx, &in)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting S3 Tables Table (%s)", name), err.Error())
 
+		return
+	}
+}
+
+func (r *tableResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	identifier, err := parseTableIdentifier(request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
+				fmt.Sprintf("Had %q", request.ID),
+		)
+		return
+	}
+
+	identifier.PopulateState(ctx, &response.State, &response.Diagnostics)
+}
+
+func findTableByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableOutput, error) {
+	input := s3tables.GetTableInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	return findTable(ctx, conn, &input)
+}
+
+func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableInput) (*s3tables.GetTableOutput, error) {
+	output, err := conn.GetTable(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return out, nil
+	return output, nil
+}
+
+func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*awstypes.EncryptionConfiguration, error) {
+	input := s3tables.GetTableEncryptionInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	return findTableEncryption(ctx, conn, &input)
+}
+
+func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableEncryptionInput) (*awstypes.EncryptionConfiguration, error) {
+	output, err := conn.GetTableEncryption(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.EncryptionConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.EncryptionConfiguration, nil
+}
+
+func findTableMaintenanceConfigurationByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {
+	input := s3tables.GetTableMaintenanceConfigurationInput{
+		Name:           aws.String(name),
+		Namespace:      aws.String(namespace),
+		TableBucketARN: aws.String(tableBucketARN),
+	}
+
+	return findTableMaintenanceConfiguration(ctx, conn, &input)
+}
+
+func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableMaintenanceConfigurationInput) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {
+	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &sdkretry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 type tableResourceModel struct {
@@ -685,6 +756,8 @@ type tableResourceModel struct {
 	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
 	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
 	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
 	VersionToken             types.String                                              `tfsdk:"version_token"`
 	WarehouseLocation        types.String                                              `tfsdk:"warehouse_location"`
@@ -779,7 +852,7 @@ func expandIcebergCompactionSettings(ctx context.Context, in fwtypes.ObjectValue
 
 	var value awstypes.IcebergCompactionSettings
 
-	diags.Append(flex.Expand(ctx, model, &value)...)
+	diags.Append(fwflex.Expand(ctx, model, &value)...)
 
 	return &awstypes.TableMaintenanceSettingsMemberIcebergCompaction{
 		Value: value,
@@ -790,7 +863,7 @@ func flattenIcebergCompactionSettings(ctx context.Context, in awstypes.TableMain
 	switch t := in.(type) {
 	case *awstypes.TableMaintenanceSettingsMemberIcebergCompaction:
 		var model icebergCompactionSettingsModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
 		result = fwtypes.NewObjectValueOfMust(ctx, &model)
 
 	case *awstypes.UnknownUnionMember:
@@ -849,7 +922,7 @@ func expandIcebergSnapshotManagementSettings(ctx context.Context, in fwtypes.Obj
 
 	var value awstypes.IcebergSnapshotManagementSettings
 
-	diags.Append(flex.Expand(ctx, model, &value)...)
+	diags.Append(fwflex.Expand(ctx, model, &value)...)
 
 	return &awstypes.TableMaintenanceSettingsMemberIcebergSnapshotManagement{
 		Value: value,
@@ -860,7 +933,7 @@ func flattenIcebergSnapshotManagementSettings(ctx context.Context, in awstypes.T
 	switch t := in.(type) {
 	case *awstypes.TableMaintenanceSettingsMemberIcebergSnapshotManagement:
 		var model icebergSnapshotManagementSettingsModel
-		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
 		result = fwtypes.NewObjectValueOfMust(ctx, &model)
 
 	case *awstypes.UnknownUnionMember:
@@ -931,9 +1004,9 @@ func (id tableIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, dia
 
 var tableNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type tableMetadataModel struct {
@@ -955,7 +1028,7 @@ type icebergSchemaFieldModel struct {
 }
 
 var (
-	_ flex.Expander = tableMetadataModel{}
+	_ fwflex.Expander = tableMetadataModel{}
 )
 
 func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Diagnostics) {
@@ -970,7 +1043,7 @@ func (m tableMetadataModel) Expand(ctx context.Context) (out any, diags diag.Dia
 		// Create Iceberg schema
 		var schema awstypes.IcebergMetadata
 
-		diags.Append(flex.Expand(ctx, icebergModel, &schema)...)
+		diags.Append(fwflex.Expand(ctx, icebergModel, &schema)...)
 		if diags.HasError() {
 			return nil, diags
 		}

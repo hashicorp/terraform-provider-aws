@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -20,7 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,6 +33,10 @@ import (
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
+// @IdentityAttribute("alarm_name")
+// @Testing(idAttrDuplicates="alarm_name")
+// @Testing(preIdentityVersion="v6.7.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -41,10 +47,6 @@ func resourceMetricAlarm() *schema.Resource {
 
 		SchemaVersion: 1,
 		MigrateState:  MetricAlarmMigrateState,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"actions_enabled": {
@@ -353,7 +355,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+			return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 		}
 
 		if err != nil {
@@ -361,7 +363,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 }
 
 func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -370,8 +372,8 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Metric Alarm %s not found, removing from state", d.Id())
+	if !d.IsNewResource() && retry.NotFound(err) {
+		smerr.AppendOne(ctx, diags, sdkdiag.NewResourceNotFoundWarningDiagnostic(err), smerr.ID, d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -430,7 +432,7 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
+	return smerr.AppendEnrich(ctx, diags, resourceMetricAlarmRead(ctx, d, meta))
 }
 
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -467,7 +469,7 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))

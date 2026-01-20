@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub
@@ -13,11 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -80,7 +81,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 
 	adminAccount, err := findAdminAccountByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -146,7 +147,7 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Your account is not a member of an organization") {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -166,11 +167,11 @@ func findAdminAccounts(ctx context.Context, conn *securityhub.Client, input *sec
 	return output, nil
 }
 
-func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) retry.StateRefreshFunc {
+func statusAdminAccount(ctx context.Context, conn *securityhub.Client, adminAccountID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findAdminAccountByID(ctx, conn, adminAccountID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -190,7 +191,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *securityhub.Client, admi
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(types.AdminStatusEnabled),
 		Refresh: statusAdminAccount(ctx, conn, adminAccountID),
@@ -207,7 +208,7 @@ func waitAdminAccountCreated(ctx context.Context, conn *securityhub.Client, admi
 }
 
 func waitAdminAccountDeleted(ctx context.Context, conn *securityhub.Client, adminAccountID string) (*types.AdminAccount, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.AdminStatusDisableInProgress),
 		Target:  []string{},
 		Refresh: statusAdminAccount(ctx, conn, adminAccountID),

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,6 +35,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(name="BlockPublicAccessExclusion")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcBlockPublicAccessExclusionResource{}
 
@@ -136,7 +137,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, reques
 
 	output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, data.ExclusionID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

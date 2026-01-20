@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -13,6 +12,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,12 +22,11 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/dlclark/regexp2"
+	"github.com/dlclark/regexp2" // Regexps include Perl syntax.
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
@@ -107,12 +106,8 @@ func main() {
 		}
 
 		if resource.IsGlobal {
-			if resource.isARNFormatGlobal == triBooleanUnset {
-				if resource.IsGlobal {
-					resource.isARNFormatGlobal = triBooleanTrue
-				} else {
-					resource.isARNFormatGlobal = triBooleanFalse
-				}
+			if resource.isARNFormatGlobal == common.TriBooleanUnset {
+				resource.isARNFormatGlobal = common.TriBool(resource.IsGlobal)
 			}
 		}
 
@@ -124,7 +119,8 @@ func main() {
 			"inc": func(i int) int {
 				return i + 1
 			},
-			"NewVersion": version.NewVersion,
+			"NewVersion":            version.NewVersion,
+			"VersionDecrementMinor": common.VersionDecrementMinor,
 		}
 		templates := template.New("identitytests").Funcs(templateFuncMap)
 
@@ -157,19 +153,8 @@ func main() {
 			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
 		}
 
-		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
-		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
 		if configTmplPath == "" {
-			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
-				configTmplFile = tagsConfigTmplFile
-				configTmplPath = tagsConfigTmplPath
-			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
-			}
-		}
-
-		if configTmplPath == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
+			g.Errorf("no config template found for %q at %q", sourceName, basicConfigTmplPath)
 			continue
 		}
 
@@ -205,13 +190,16 @@ func main() {
 				g.Fatalf("parsing config template: %s", err)
 			}
 
-			common := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				RequiredEnvVars:  resource.RequiredEnvVars,
-				WithRName:        (resource.Generator != ""),
+			commonConfig := commonConfig{
+				AdditionalTfVars:     additionalTfVars,
+				RequiredEnvVars:      resource.RequiredEnvVars,
+				RequiredEnvVarValues: resource.RequiredEnvVarValues,
+				WithRName:            (resource.Generator != ""),
 			}
 
-			generateTestConfig(g, testDirPath, "basic", tfTemplates, common)
+			generateTestConfig(g, testDirPath, "basic", tfTemplates, commonConfig)
+
+			var versions []*version.Version
 
 			if resource.PreIdentityVersion != nil {
 				if resource.PreIdentityVersion.Equal(v5_100_0) {
@@ -234,33 +222,39 @@ func main() {
 							g.Fatalf("parsing config template %q: %s", configTmplV5Path, err)
 						}
 					}
-					commonV5 := common
-					commonV5.ExternalProviders = map[string]requiredProvider{
+					commonConfigV5 := commonConfig
+					commonConfigV5.ExternalProviders = map[string]requiredProvider{
 						"aws": {
 							Source:  "hashicorp/aws",
 							Version: "5.100.0",
 						},
 					}
-					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonV5)
+					generateTestConfig(g, testDirPath, "basic_v5.100.0", tfTemplatesV5, commonConfigV5)
 
-					commonV6 := common
-					commonV6.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: "6.0.0",
-						},
-					}
-					generateTestConfig(g, testDirPath, "basic_v6.0.0", tfTemplates, commonV6)
+					versions = append(versions, version.Must(version.NewVersion("6.0.0")))
 				} else {
-					commonPreIdentity := common
-					commonPreIdentity.ExternalProviders = map[string]requiredProvider{
-						"aws": {
-							Source:  "hashicorp/aws",
-							Version: resource.PreIdentityVersion.String(),
-						},
-					}
-					generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", resource.PreIdentityVersion.String()), tfTemplates, commonPreIdentity)
+					versions = append(versions, resource.PreIdentityVersion)
 				}
+			}
+
+			if len(resource.IdentityVersions) > 1 {
+				v := resource.IdentityVersions[1]
+				v, err := common.VersionDecrementMinor(v)
+				if err != nil {
+					g.Fatalf("generating versioned configurations: %s", err)
+				}
+				versions = append(versions, v)
+			}
+
+			for _, version := range versions {
+				common := commonConfig
+				common.ExternalProviders = map[string]requiredProvider{
+					"aws": {
+						Source:  "hashicorp/aws",
+						Version: version.String(),
+					},
+				}
+				generateTestConfig(g, testDirPath, fmt.Sprintf("basic_v%s", version.String()), tfTemplates, common)
 			}
 
 			_, err = tfTemplates.New("region").Parse("\n  region = var.region\n")
@@ -269,9 +263,9 @@ func main() {
 			}
 
 			if resource.GenerateRegionOverrideTest() {
-				common.WithRegion = true
+				commonConfig.WithRegion = true
 
-				generateTestConfig(g, testDirPath, "region_override", tfTemplates, common)
+				generateTestConfig(g, testDirPath, "region_override", tfTemplates, commonConfig)
 			}
 		}
 	}
@@ -355,14 +349,6 @@ func (sr serviceRecords) ARNNamespace() string {
 	return sr.primary.ARNNamespace()
 }
 
-type triBoolean uint
-
-const (
-	triBooleanUnset triBoolean = iota
-	triBooleanTrue
-	triBooleanFalse
-)
-
 type ResourceDatum struct {
 	service                  *serviceRecords
 	FileName                 string
@@ -370,21 +356,15 @@ type ResourceDatum struct {
 	GenerateConfig           bool
 	ARNFormat                string
 	arnAttribute             string
-	isARNFormatGlobal        triBoolean
-	ArnIdentity              bool
-	MutableIdentity          bool
+	isARNFormatGlobal        common.TriBoolean
 	IsGlobal                 bool
-	isSingleton              bool
 	HasRegionOverrideTest    bool
-	identityAttributes       []identityAttribute
-	identityAttribute        string
-	IdentityDuplicateAttrs   []string
 	IDAttrFormat             string
-	HasV6_0NullValuesError   bool
-	HasV6_0RefreshError      bool
 	HasNoPreExistingResource bool
 	PreIdentityVersion       *version.Version
+	IdentityVersions         map[int64]*version.Version
 	tests.CommonArgs
+	common.ResourceIdentity
 }
 
 func (d ResourceDatum) ProviderPackage() string {
@@ -411,8 +391,8 @@ func (d ResourceDatum) IDAttrDuplicates() string {
 	return namesgen.ConstOrQuote(d.idAttrDuplicates)
 }
 
-func (d ResourceDatum) IsARNIdentity() bool {
-	return d.ArnIdentity
+func (d ResourceDatum) IsGlobalARNFormatForRegionalResource() bool {
+	return d.IsARNIdentity() && !d.IsGlobal && d.IsARNFormatGlobal()
 }
 
 func (d ResourceDatum) ARNAttribute() string {
@@ -420,56 +400,39 @@ func (d ResourceDatum) ARNAttribute() string {
 }
 
 func (d ResourceDatum) IsGlobalSingleton() bool {
-	return d.isSingleton && d.IsGlobal
+	return d.IsSingletonIdentity() && d.IsGlobal
 }
 
 func (d ResourceDatum) IsRegionalSingleton() bool {
-	return d.isSingleton && !d.IsGlobal
-}
-
-func (d ResourceDatum) IsSingleton() bool {
-	return d.isSingleton
+	return d.IsSingletonIdentity() && !d.IsGlobal
 }
 
 func (d ResourceDatum) GenerateRegionOverrideTest() bool {
 	return !d.IsGlobal && d.HasRegionOverrideTest
 }
 
-func (d ResourceDatum) HasInherentRegion() bool {
-	return d.IsARNIdentity() || d.IsRegionalSingleton()
-}
-
-func (d ResourceDatum) IdentityAttribute() string {
-	return namesgen.ConstOrQuote(d.identityAttribute)
-}
-
-func (r ResourceDatum) HasIdentityDuplicateAttrs() bool {
-	return len(r.IdentityDuplicateAttrs) > 0
+func (d ResourceDatum) HasInherentRegionImportID() bool {
+	return d.IsARNIdentity() || d.IsRegionalSingleton() || d.IsCustomInherentRegionIdentity()
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
-	return r.isARNFormatGlobal == triBooleanTrue
+	return r.isARNFormatGlobal == common.TriBooleanTrue
 }
 
-func (r ResourceDatum) IdentityAttributes() []identityAttribute {
-	return r.identityAttributes
-}
-
-type identityAttribute struct {
-	name     string
-	Optional bool
-}
-
-func (i identityAttribute) Name() string {
-	return namesgen.ConstOrQuote(i.name)
+func (r ResourceDatum) LatestIdentityVersion() int64 {
+	if len(r.IdentityVersions) == 0 {
+		return 0
+	}
+	return slices.Max(slices.Collect(maps.Keys(r.IdentityVersions)))
 }
 
 type commonConfig struct {
-	AdditionalTfVars  []string
-	WithRName         bool
-	WithRegion        bool
-	ExternalProviders map[string]requiredProvider
-	RequiredEnvVars   []string
+	AdditionalTfVars     []string
+	WithRName            bool
+	WithRegion           bool
+	ExternalProviders    map[string]requiredProvider
+	RequiredEnvVars      []string
+	RequiredEnvVarValues []string
 }
 
 type requiredProvider struct {
@@ -551,10 +514,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		CommonArgs:            tests.InitCommonArgs(),
 		IsGlobal:              false,
 		HasRegionOverrideTest: true,
+		IdentityVersions:      make(map[int64]*version.Version, 0),
 	}
-	hasIdentity := false
 	skip := false
-	generatorSeen := false
 	tlsKey := false
 	var tlsKeyCN string
 
@@ -562,13 +524,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
-			switch annotationName := m[1]; annotationName {
+			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
 				break
 
 			case "FrameworkResource":
-				d.Implementation = tests.ImplementationFramework
-				args := common.ParseArgs(m[3])
+				d.Implementation = common.ImplementationFramework
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -584,8 +545,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				break
 
 			case "SDKResource":
-				d.Implementation = tests.ImplementationSDK
-				args := common.ParseArgs(m[3])
+				d.Implementation = common.ImplementationSDK
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
@@ -597,61 +557,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
-			case "ArnIdentity":
-				hasIdentity = true
-				d.ArnIdentity = true
-				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					d.arnAttribute = "arn"
-					d.identityAttribute = "arn"
-				} else {
-					d.arnAttribute = args.Positional[0]
-					d.identityAttribute = args.Positional[0]
-				}
-
-				var attrs []string
-				if attr, ok := args.Keyword["identityDuplicateAttributes"]; ok {
-					attrs = strings.Split(attr, ";")
-				}
-				if d.Implementation == tests.ImplementationSDK {
-					attrs = append(attrs, "id")
-				}
-				slices.Sort(attrs)
-				attrs = slices.Compact(attrs)
-				d.IdentityDuplicateAttrs = tfslices.ApplyToAll(attrs, func(s string) string {
-					return namesgen.ConstOrQuote(s)
-				})
-
-			case "IdentityAttribute":
-				hasIdentity = true
-				args := common.ParseArgs(m[3])
-				if len(args.Positional) == 0 {
-					v.errs = append(v.errs, fmt.Errorf("no Identity attribute name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
-				}
-
-				identityAttribute := identityAttribute{
-					name: args.Positional[0],
-				}
-
-				if attr, ok := args.Keyword["optional"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid optional value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else {
-						identityAttribute.Optional = b
-					}
-				}
-
-				d.identityAttributes = append(d.identityAttributes, identityAttribute)
-
-			case "SingletonIdentity":
-				hasIdentity = true
-				d.isSingleton = true
-				d.Serialize = true
-
 			case "ArnFormat":
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) > 0 {
 					d.ARNFormat = args.Positional[0]
 				}
@@ -661,29 +567,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["global"]; ok {
-					if b, err := tests.ParseBoolAttr("global", attr); err != nil {
+					if b, err := common.ParseBoolAttr("global", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
-						if b {
-							d.isARNFormatGlobal = triBooleanTrue
-						} else {
-							d.isARNFormatGlobal = triBooleanFalse
-						}
+						d.isARNFormatGlobal = common.TriBool(b)
 					}
 				}
 
 			case "IdAttrFormat":
-				args := common.ParseArgs(m[3])
 				if len(args.Positional) > 0 {
 					d.IDAttrFormat = args.Positional[0]
 				}
 
-			case "MutableIdentity":
-				d.MutableIdentity = true
-
 			case "Region":
-				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["global"]; ok {
 					if global, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid Region/global value (%s): %s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -695,40 +592,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "NoImport":
 				d.NoImport = true
 
-			// TODO: allow underscore?
-			case "V60SDKv2Fix":
-				d.HasV6_0NullValuesError = true
-				d.PreIdentityVersion = v5_100_0
-
-				args := common.ParseArgs(m[3])
-				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
-						v.errs = append(v.errs, err)
-					} else {
-						d.HasV6_0RefreshError = b
-					}
-				}
-
 			case "Testing":
-				args := common.ParseArgs(m[3])
-
 				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 					continue
 				}
 
-				// This needs better handling
-				if _, ok := args.Keyword["generator"]; ok {
-					generatorSeen = true
-				}
-
 				if attr, ok := args.Keyword["idAttrDuplicates"]; ok {
 					d.idAttrDuplicates = attr
 					d.GoImports = append(d.GoImports,
-						tests.GoImport{
+						common.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/config",
 						},
-						tests.GoImport{
+						common.GoImport{
 							Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 						},
 					)
@@ -736,9 +612,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 				if attr, ok := args.Keyword["identityTest"]; ok {
 					switch attr {
-					case "true":
-						hasIdentity = true
-
 					case "false":
 						v.g.Infof("Skipping Identity test for %s.%s", v.packageName, v.functionName)
 						skip = true
@@ -749,7 +622,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["identityRegionOverrideTest"]; ok {
-					if b, err := tests.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
+					if b, err := common.ParseBoolAttr("identityRegionOverrideTest", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -757,7 +630,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["v60NullValuesError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60NullValuesError", attr); err != nil {
+					if b, err := common.ParseBoolAttr("v60NullValuesError", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0NullValuesError = b
@@ -767,7 +640,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["v60RefreshError"]; ok {
-					if b, err := tests.ParseBoolAttr("v60RefreshError", attr); err != nil {
+					if b, err := common.ParseBoolAttr("v60RefreshError", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasV6_0RefreshError = b
@@ -785,14 +658,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.PreIdentityVersion = version
 				}
 				if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
-					if b, err := tests.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+					if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
 						v.errs = append(v.errs, err)
 					} else {
 						d.HasNoPreExistingResource = b
 					}
 				}
 				if attr, ok := args.Keyword["tlsKey"]; ok {
-					if b, err := tests.ParseBoolAttr("tlsKey", attr); err != nil {
+					if b, err := common.ParseBoolAttr("tlsKey", attr); err != nil {
 						v.errs = append(v.errs, err)
 						continue
 					} else {
@@ -802,6 +675,32 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
 					tlsKeyCN = attr
 				}
+				if attr, ok := args.Keyword["identityVersion"]; ok {
+					parts := strings.Split(attr, ";")
+					if len(parts) != 2 {
+						v.errs = append(v.errs, fmt.Errorf("invalid identityVersion value: %q at %s. Should be in format <identity version>;<provider version>.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					var identityVersion int64
+					if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid identity version value: %q at %s. Should be integer value.", parts[0], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						identityVersion = i
+					}
+					providerVersion, err := version.NewVersion(parts[1])
+					if err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid provider version value: %q at %s. Should be version value.", parts[1], fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.IdentityVersions[identityVersion] = providerVersion
+				}
+
+			default:
+				if err := common.ParseResourceIdentity(annotationName, args, d.Implementation, &d.ResourceIdentity, &d.GoImports); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+					continue
+				}
 			}
 		}
 	}
@@ -810,7 +709,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if len(tlsKeyCN) == 0 {
 			tlsKeyCN = "acctest.RandomDomain().String()"
 			d.GoImports = append(d.GoImports,
-				tests.GoImport{
+				common.GoImport{
 					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
@@ -829,50 +728,51 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if d.IsRegionalSingleton() {
-		d.idAttrDuplicates = "region"
-	}
-
 	if d.IsGlobal {
 		d.HasRegionOverrideTest = false
 	}
 
-	if len(d.identityAttributes) == 1 {
-		d.identityAttribute = d.identityAttributes[0].name
-	}
-
-	if hasIdentity {
+	if d.HasResourceIdentity() {
 		if !skip {
+			if err := d.Validate(); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
+			}
+
+			if err := tests.Configure(&d.CommonArgs); err != nil {
+				v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+				return
+			}
 			if d.idAttrDuplicates != "" {
 				d.GoImports = append(d.GoImports,
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/config",
 					},
-					tests.GoImport{
+					common.GoImport{
 						Path: "github.com/hashicorp/terraform-plugin-testing/tfjsonpath",
 					},
 				)
 			}
-			if d.Name == "" {
-				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-				return
+			if d.HasV6_0NullValuesError {
+				d.PreIdentityVersion = v5_100_0
 			}
 			if !d.HasNoPreExistingResource && d.PreIdentityVersion == nil {
 				v.errs = append(v.errs, fmt.Errorf("preIdentityVersion is required when hasNoPreExistingResource is false: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return
 			}
-			if !generatorSeen {
-				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
-				d.GoImports = append(d.GoImports,
-					tests.GoImport{
-						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-						Alias: "sdkacctest",
-					},
-					tests.GoImport{
-						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-					},
-				)
+			if d.IsARNIdentity() {
+				d.arnAttribute = d.IdentityAttributeName()
 			}
+			if d.HasInherentRegionIdentity() {
+				if d.Implementation == common.ImplementationFramework {
+					if !slices.Contains(d.IdentityDuplicateAttrNames, "id") {
+						d.SetImportStateIDAttribute(d.IdentityAttributeName())
+					}
+				}
+			}
+			if d.IsSingletonIdentity() {
+				d.Serialize = true
+			}
+
 			v.identityResources = append(v.identityResources, d)
 		}
 	}

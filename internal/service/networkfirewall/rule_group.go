@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -14,7 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -250,9 +251,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},
@@ -284,9 +288,12 @@ func resourceRuleGroup() *schema.Resource {
 																							Elem: &schema.Resource{
 																								Schema: map[string]*schema.Schema{
 																									"address_definition": {
-																										Type:         schema.TypeString,
-																										Required:     true,
-																										ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+																										Type:     schema.TypeString,
+																										Required: true,
+																										ValidateFunc: validation.Any(
+																											verify.ValidIPv4CIDRNetworkAddress,
+																											verify.ValidIPv6CIDRNetworkAddress,
+																										),
 																									},
 																								},
 																							},
@@ -508,10 +515,10 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	output, err := findRuleGroupByARN(ctx, conn, d.Id())
 
 	if err == nil && output.RuleGroup == nil {
-		err = tfresource.NewEmptyResultError(d.Id())
+		err = tfresource.NewEmptyResultError()
 	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -626,7 +633,7 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 	output, err := conn.DescribeRuleGroup(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -637,17 +644,17 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 	}
 
 	if output == nil || output.RuleGroupResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findRuleGroupByARN(ctx, conn, arn)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -660,7 +667,7 @@ func statusRuleGroup(ctx context.Context, conn *networkfirewall.Client, arn stri
 }
 
 func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeRuleGroupOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRuleGroup(ctx, conn, arn),

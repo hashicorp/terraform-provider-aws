@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -22,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,6 +40,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.IpAccessSettings")
 // @Testing(importStateIdAttribute="ip_access_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIPAccessSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &ipAccessSettingsResource{}, nil
 }
@@ -174,7 +176,7 @@ func (r *ipAccessSettingsResource) Read(ctx context.Context, request resource.Re
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	output, err := findIPAccessSettingsByARN(ctx, conn, data.IPAccessSettingsARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -264,7 +266,7 @@ func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, 
 	output, err := conn.GetIpAccessSettings(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -275,7 +277,7 @@ func findIPAccessSettingsByARN(ctx context.Context, conn *workspacesweb.Client, 
 	}
 
 	if output == nil || output.IpAccessSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IpAccessSettings, nil

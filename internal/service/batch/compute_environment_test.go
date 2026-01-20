@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -231,7 +231,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1930,6 +1930,47 @@ func TestAccBatchComputeEnvironment_createEC2WithoutComputeResources(t *testing.
 	})
 }
 
+func TestAccBatchComputeEnvironment_updateInstanceTypeWithAllocationStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resourceName := "aws_batch_compute_environment.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // set up a basic compute environment with the SPOT_PRICE_CAPACITY_OPTIMIZED allocation strategy
+				Config: testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, "m7i"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "m7i"),
+				),
+			},
+			{
+				Config: testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, "r7i"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.allocation_strategy", "SPOT_PRICE_CAPACITY_OPTIMIZED"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "compute_resources.0.instance_type.*", "r7i"),
+				),
+			},
+		}})
+}
+
 func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
@@ -1941,7 +1982,7 @@ func testAccCheckComputeEnvironmentDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfbatch.FindComputeEnvironmentDetailByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3315,4 +3356,45 @@ resource "aws_batch_compute_environment" "test" {
   type = "MANAGED"
 }
 `, rName))
+}
+
+func testAccComputeEnvironmentConfig_spotCapacityOptimizedAllocationInstanceTypeUpdate(rName, publicKey, instanceType string) string {
+	return acctest.ConfigCompose(
+		testAccComputeEnvironmentConfig_base(rName),
+		testAccComputeEnvironmentConfig_baseForUpdates(rName, publicKey),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "SPOT_PRICE_CAPACITY_OPTIMIZED"
+    bid_percentage      = 100
+    ec2_key_pair        = aws_key_pair.test.id
+    instance_role       = aws_iam_instance_profile.ecs_instance_2.arn
+    ec2_configuration {
+      image_id_override = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+      image_type        = "ECS_AL2"
+    }
+    launch_template {
+      launch_template_id = aws_launch_template.test.id
+      version            = "$Latest"
+    }
+    instance_type = [
+      %[2]q,
+    ]
+    max_vcpus = 16
+    security_group_ids = [
+      aws_security_group.test_2.id
+    ]
+    spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
+    subnets = [
+      aws_subnet.test_2.id
+    ]
+    type = "SPOT"
+  }
+
+  type = "MANAGED"
+}
+`, rName, instanceType))
 }

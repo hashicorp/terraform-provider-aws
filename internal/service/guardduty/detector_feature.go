@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,14 +34,12 @@ func resourceDetectorFeature() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"additional_configuration": {
 				Optional: true,
-				ForceNew: true,
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FeatureAdditionalConfiguration](),
 						},
 						names.AttrStatus: {
@@ -81,8 +80,8 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 		Status: awstypes.FeatureStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]any)) > 0 {
-		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.([]any))
+	if v, ok := d.GetOk("additional_configuration"); ok && v.(*schema.Set).Len() > 0 {
+		feature.AdditionalConfiguration = expandDetectorAdditionalConfigurations(v.(*schema.Set).List())
 	}
 
 	input := &guardduty.UpdateDetectorInput{
@@ -114,7 +113,7 @@ func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, me
 
 	feature, err := findDetectorFeatureByTwoPartKey(ctx, conn, detectorID, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] GuardDuty Detector Feature (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

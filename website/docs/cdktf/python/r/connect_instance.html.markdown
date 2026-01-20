@@ -123,6 +123,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_connect_instance.example
+  identity = {
+    id = "f1288a1f-6193-445a-b47e-af739b2"
+  }
+}
+
+resource "aws_connect_instance" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the connect instance.
+
+#### Optional
+
+- `account_id` (String) AWS Account where this resource is managed.
+- `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Connect instances using the `id`. For example:
 
 ```python
@@ -146,4 +172,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f2e084c0aa859d9f072318d65f092f35ec7650e0623ae2a0a96dbf936a362717 -->
+<!-- cache-key: cdktf-0.20.8 input-59e72550cfaf3a014e12fe99283eb9802b6d2bb0399e638db8def9c77b0acdbb -->

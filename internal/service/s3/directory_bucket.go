@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -27,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,6 +44,7 @@ func isDirectoryBucket(bucket string) bool {
 // @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 // @Tags(identifierAttribute="arn", resourceType="DirectoryBucket")
 // @Testing(importIgnore="force_destroy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -190,9 +191,11 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	conn := r.Meta().S3ExpressClient(ctx)
 
 	bucket := fwflex.StringValueFromFramework(ctx, data.ID)
-	output, err := findBucket(ctx, conn, bucket)
+	// https://github.com/hashicorp/terraform-provider-aws/issues/44095.
+	// Disable S3 Expression session authentication for HeadBucket.
+	output, err := findBucket(ctx, conn, bucket, func(o *s3.Options) { o.DisableS3ExpressSessionAuth = aws.Bool(true) })
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 

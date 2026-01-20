@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagent_knowledge_base: Add `knowledge_base_configuration.kendra_knowledge_base_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_bedrockagent_knowledge_base: Make `knowledge_base_configuration.vector_knowledge_base_configuration` and ``storage_configuration` optional
+```
