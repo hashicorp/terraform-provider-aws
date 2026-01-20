@@ -133,12 +133,27 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 	var healthCheckErr error
 
 	if data.WaitForHealthChecks.ValueBool() {
+		// Count expected Route53 health checks from plan workflows
+		expectedCount := 0
+		for _, workflow := range plan.Workflows {
+			for _, step := range workflow.Steps {
+				if step.ExecutionBlockType == awstypes.ExecutionBlockTypeRoute53HealthCheck {
+					expectedCount++
+				}
+			}
+		}
+
 		// Wait for health check IDs to be populated (takes ~4 minutes)
 		timeout := 5 * time.Minute
 		healthCheckErr = sdkretry.RetryContext(ctx, timeout, func() *sdkretry.RetryError {
 			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 			if healthCheckErr != nil {
 				return sdkretry.NonRetryableError(healthCheckErr)
+			}
+
+			// Wait for expected number of health checks
+			if len(healthChecks) < expectedCount {
+				return sdkretry.RetryableError(fmt.Errorf("waiting for %d Route53 health checks, currently have %d", expectedCount, len(healthChecks)))
 			}
 
 			// Check if all health check IDs are populated
