@@ -985,7 +985,7 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 
 								var apiArcConfig awstypes.ArcRoutingControlConfiguration
 								diags.Append(flex.Expand(ctx, data.CrossAccountRole, &apiArcConfig.CrossAccountRole)...)
-								diags.Append(flex.Expand(ctx, data.ExternalId, &apiArcConfig.ExternalId)...)
+								diags.Append(flex.Expand(ctx, data.ExternalID, &apiArcConfig.ExternalId)...)
 								diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiArcConfig.TimeoutMinutes)...)
 
 								// Handle complex RegionAndRoutingControls conversion
@@ -1271,7 +1271,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 							// Handle ARC RegionAndRoutingControls complex transformation manually
 							var arcConfig arcRoutingControlConfigModel
 							diags.Append(flex.Flatten(ctx, t.Value.CrossAccountRole, &arcConfig.CrossAccountRole)...)
-							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalId)...)
+							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalID)...)
 							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &arcConfig.TimeoutMinutes)...)
 
 							// Handle RegionAndRoutingControls: map[string][]ArcRoutingControlState → []regionAndRoutingControlsModel
@@ -1444,7 +1444,7 @@ type associatedAlarmModel struct {
 	AlarmType          fwtypes.StringEnum[awstypes.AlarmType] `tfsdk:"alarm_type"`
 	ResourceIdentifier types.String                           `tfsdk:"resource_identifier"`
 	CrossAccountRole   types.String                           `tfsdk:"cross_account_role"`
-	ExternalId         types.String                           `tfsdk:"external_id"`
+	ExternalID         types.String                           `tfsdk:"external_id"`
 }
 
 type workflowModel struct {
@@ -1455,10 +1455,10 @@ type workflowModel struct {
 }
 
 type route53HealthCheckConfigModel struct {
-	HostedZoneId     types.String                                    `tfsdk:"hosted_zone_id"`
+	HostedZoneID     types.String                                    `tfsdk:"hosted_zone_id"`
 	RecordName       types.String                                    `tfsdk:"record_name"`
 	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
-	ExternalId       types.String                                    `tfsdk:"external_id"`
+	ExternalID       types.String                                    `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int64                                     `tfsdk:"timeout_minutes"`
 	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_sets"`
 }
@@ -1503,7 +1503,7 @@ type customActionLambdaConfigModel struct {
 type lambdaModel struct {
 	ARN              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalId       types.String `tfsdk:"external_id"`
+	ExternalID       types.String `tfsdk:"external_id"`
 }
 
 type ungracefulModel struct {
@@ -1516,7 +1516,7 @@ type globalAuroraConfigModel struct {
 	GlobalClusterIdentifier types.String                                                 `tfsdk:"global_cluster_identifier"`
 	DatabaseClusterARNs     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
 	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
-	ExternalId              types.String                                                 `tfsdk:"external_id"`
+	ExternalID              types.String                                                 `tfsdk:"external_id"`
 	TimeoutMinutes          types.Int64                                                  `tfsdk:"timeout_minutes"`
 	Ungraceful              fwtypes.ListNestedObjectValueOf[globalAuroraUngracefulModel] `tfsdk:"ungraceful"`
 }
@@ -1537,7 +1537,7 @@ type ec2AsgCapacityIncreaseConfigModel struct {
 type asgModel struct {
 	ARN              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalId       types.String `tfsdk:"external_id"`
+	ExternalID       types.String `tfsdk:"external_id"`
 }
 
 type ec2UngracefulModel struct {
@@ -1557,7 +1557,7 @@ type serviceModel struct {
 	ClusterARN       types.String `tfsdk:"cluster_arn"`
 	ServiceARN       types.String `tfsdk:"service_arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalId       types.String `tfsdk:"external_id"`
+	ExternalID       types.String `tfsdk:"external_id"`
 }
 
 type ecsUngracefulModel struct {
@@ -1583,7 +1583,7 @@ type kubernetesResourceTypeModel struct {
 type eksClusterModel struct {
 	ClusterARN       types.String `tfsdk:"cluster_arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalId       types.String `tfsdk:"external_id"`
+	ExternalID       types.String `tfsdk:"external_id"`
 }
 
 type scalingResourcesModel struct {
@@ -1605,7 +1605,7 @@ type eksUngracefulModel struct {
 // ARC Routing Control Configuration Models
 type arcRoutingControlConfigModel struct {
 	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
-	ExternalId               types.String                                                  `tfsdk:"external_id"`
+	ExternalID               types.String                                                  `tfsdk:"external_id"`
 	TimeoutMinutes           types.Int64                                                   `tfsdk:"timeout_minutes"`
 	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
 }
