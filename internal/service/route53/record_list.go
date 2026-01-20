@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
-	frameworkdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -60,17 +59,10 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 		}
 	}
 
-	if query.ZoneID.IsNull() {
-		stream.Results = list.ListResultsStreamDiagnostics(frameworkdiag.Diagnostics{
-			frameworkdiag.NewErrorDiagnostic("Missing zone_id", "zone_id is required for listing Route53 records"),
-		})
-		return
-	}
-
 	tflog.Info(ctx, "Listing Route 53 Records")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := &route53.ListResourceRecordSetsInput{
-			HostedZoneId: aws.String(query.ZoneID.ValueString()),
+			HostedZoneId: query.ZoneID.ValueStringPointer(),
 		}
 		for item, err := range listRecords(ctx, conn, input) {
 			if err != nil {
@@ -80,7 +72,7 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			}
 
 			// Create a unique ID for this record
-			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), &item)
+			recordID := createRecordIDFromResourceRecordSet(query.ZoneID.ValueString(), item)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), recordID)
 
 			result := request.NewListResult(ctx)
@@ -126,7 +118,7 @@ type listRecordModel struct {
 	ZoneID types.String `tfsdk:"zone_id"`
 }
 
-func createRecordIDFromResourceRecordSet(zoneID string, rrs *awstypes.ResourceRecordSet) string {
+func createRecordIDFromResourceRecordSet(zoneID string, rrs awstypes.ResourceRecordSet) string {
 	parts := []string{
 		zoneID,
 		strings.ToLower(aws.ToString(rrs.Name)),
