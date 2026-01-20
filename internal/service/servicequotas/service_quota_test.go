@@ -389,6 +389,11 @@ resource "aws_servicequotas_service_quota" "test" {
   service_code          = %[2]q
   value                 = %[3]s
   wait_for_fulfillment  = %[4]t
+
+  timeouts {
+    create = "30m"
+    update = "30m"
+  }
 }
 `, quotaCode, serviceCode, value, waitForFulfillment)
 }

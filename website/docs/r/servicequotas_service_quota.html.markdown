@@ -33,6 +33,24 @@ resource "aws_servicequotas_service_quota" "example" {
 }
 ```
 
+### Example Usage with Custom Timeouts
+
+When using `wait_for_fulfillment`, you may want to configure longer timeouts if quota approval typically takes more than the default 10 minutes:
+
+```terraform
+resource "aws_servicequotas_service_quota" "example" {
+  quota_code            = "L-F678F1CE"
+  service_code          = "vpc"
+  value                 = 75
+  wait_for_fulfillment  = true
+
+  timeouts {
+    create = "30m"
+    update = "30m"
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -64,6 +82,8 @@ This resource exports the following attributes in addition to the arguments abov
     * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 
 ## Timeouts
+
+~> **NOTE:** When using `wait_for_fulfillment = true`, quota increase requests may take longer than the default timeout to be approved and enacted by AWS. Consider configuring longer timeouts if needed.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
