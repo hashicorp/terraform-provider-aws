@@ -19,14 +19,22 @@ FEATURES:
 * **New List Resource:** `aws_cleanrooms_configured_table` ([#45956](https://github.com/hashicorp/terraform-provider-aws/issues/45956))
 * **New List Resource:** `aws_cloudfront_key_value_store` ([#45957](https://github.com/hashicorp/terraform-provider-aws/issues/45957))
 * **New List Resource:** `aws_opensearchserverless_collection` ([#46001](https://github.com/hashicorp/terraform-provider-aws/issues/46001))
+* **New List Resource:** `aws_s3_bucket` ([#46004](https://github.com/hashicorp/terraform-provider-aws/issues/46004))
+* **New List Resource:** `aws_s3_object` ([#46002](https://github.com/hashicorp/terraform-provider-aws/issues/46002))
 * **New Resource:** `aws_cloudfront_anycast_ip_list` ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
+* **New Resource:** `aws_notifications_managed_notification_account_contact_association` ([#45185](https://github.com/hashicorp/terraform-provider-aws/issues/45185))
+* **New Resource:** `aws_notifications_managed_notification_additional_channel_association` ([#45186](https://github.com/hashicorp/terraform-provider-aws/issues/45186))
+* **New Resource:** `aws_opensearch_application` ([#43822](https://github.com/hashicorp/terraform-provider-aws/issues/43822))
 * **New Resource:** `aws_ram_resource_associations_exclusive` ([#45883](https://github.com/hashicorp/terraform-provider-aws/issues/45883))
+* **New Resource:** `aws_sagemaker_labeling_job` ([#46041](https://github.com/hashicorp/terraform-provider-aws/issues/46041))
 * **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
+* **New Resource:** `aws_sagemaker_model_card_export_job` ([#46009](https://github.com/hashicorp/terraform-provider-aws/issues/46009))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
 
 ENHANCEMENTS:
 
 * data-source/aws_networkmanager_core_network_policy_document: Add `segment_actions.routing_policy_names` argument ([#45928](https://github.com/hashicorp/terraform-provider-aws/issues/45928))
+* data-source/aws_vpc_ipam_pool: Add `source_resource` attribute ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 * resource/aws_docdb_cluster_instance: Add `certificate_rotation_restart` argument ([#45984](https://github.com/hashicorp/terraform-provider-aws/issues/45984))
 * resource/aws_dynamodb_table: Add support for multi-attribute keys in global secondary indexes. Introduces hash_keys and range_keys to the gsi block and makes hash_key optional for backwards compatibility. ([#45357](https://github.com/hashicorp/terraform-provider-aws/issues/45357))
 * resource/aws_dynamodb_table: Adds warning when `stream_view_type` is set and `stream_enabled` is either `false` or unset. ([#45934](https://github.com/hashicorp/terraform-provider-aws/issues/45934))
@@ -35,7 +43,10 @@ ENHANCEMENTS:
 * resource/aws_sagemaker_endpoint: Retry IAM eventual consistency errors on Create ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
 * resource/aws_sagemaker_monitoring_schedule: Add `monitoring_schedule_config.monitoring_job_definition` argument ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
 * resource/aws_sagemaker_monitoring_schedule: Make `monitoring_schedule_config.monitoring_job_definition_name` argument optional ([#45951](https://github.com/hashicorp/terraform-provider-aws/issues/45951))
+* resource/aws_vpc_ipam_pool: Add `source_resource` argument in support of provisioning of VPC Resource Planning Pools ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 * resource/aws_vpc_ipam_resource_discovery: Add `organizational_unit_exclusion` argument ([#45890](https://github.com/hashicorp/terraform-provider-aws/issues/45890))
+* resource/aws_vpc_subnet: Add `ipv4_ipam_pool_id`, `ipv4_netmask_length`, `ipv6_ipam_pool_id`, and `ipv6_netmask_length` arguments in support of provisioning of subnets using IPAM ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
+* resource/aws_vpc_subnet: Change `ipv6_cidr_block` to Optional and Computed ([#44705](https://github.com/hashicorp/terraform-provider-aws/issues/44705))
 
 BUG FIXES:
 
@@ -43,6 +54,7 @@ BUG FIXES:
 * provider: Fix crash when using custom S3 endpoints with non-standard region strings (e.g., S3-compatible storage like Ceph or MinIO) ([#46000](https://github.com/hashicorp/terraform-provider-aws/issues/46000))
 * provider: When importing resources with `region` defined, in AWS European Sovereign Cloud, prevent failing due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_bcmdataexports_export: Fix `Provider produced inconsistent result after apply` error when querying `CARBON_EMISSIONS` table without `table_configurations` ([#45972](https://github.com/hashicorp/terraform-provider-aws/issues/45972))
+* resource/aws_billing_view: Fix handling of data_filter_expression ([#45293](https://github.com/hashicorp/terraform-provider-aws/issues/45293))
 * resource/aws_cloudformation_stack_set: Fix perpetual diff when using `auto_deployment` with `permission_model` set to `SERVICE_MANAGED` ([#45992](https://github.com/hashicorp/terraform-provider-aws/issues/45992))
 * resource/aws_cloudfront_distribution: Fix `runtime error: invalid memory address or nil pointer dereference` panic when mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
 * resource/aws_cloudfront_distribution: Prevent mistakenly importing a multi-tenant distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
@@ -58,12 +70,14 @@ BUG FIXES:
 * resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_multitenant_cloudfront_distribution: Prevent mistakenly importing a standard distribution ([#45873](https://github.com/hashicorp/terraform-provider-aws/issues/45873))
 * resource/aws_pipes_pipe: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_placement_group: Correct validation of `partition_count` ([#45042](https://github.com/hashicorp/terraform-provider-aws/issues/45042))
 * resource/aws_rds_cluster: Properly set `iam_database_authentication_enabled` when restored from snapshot ([#39461](https://github.com/hashicorp/terraform-provider-aws/issues/39461))
 * resource/aws_redshift_cluster: Changing `port` now works. ([#45870](https://github.com/hashicorp/terraform-provider-aws/issues/45870))
 * resource/aws_route53_health_check: Mark `regions` argument as `Computed` to fix an unexpected `regions` diff when it is not specified ([#45829](https://github.com/hashicorp/terraform-provider-aws/issues/45829))
 * resource/aws_route53_zone: Fixes error where Delete would fail if the remote resource had already been deleted. ([#45985](https://github.com/hashicorp/terraform-provider-aws/issues/45985))
 * resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs ([#45958](https://github.com/hashicorp/terraform-provider-aws/issues/45958))
 * resource/aws_route53recoverycontrolconfig_control_panel: Fix crash when create returns an error ([#45954](https://github.com/hashicorp/terraform-provider-aws/issues/45954))
+* resource/aws_subnet: Mark `ipv6_cidr_block` as `ForceNew` when the existing IPv6 subnet was created with `assign_ipv6_address_on_create = true` ([#46043](https://github.com/hashicorp/terraform-provider-aws/issues/46043))
 * resource/aws_vpc_endpoint: Fix persistent diffs caused by case differences in `ip_address_type` ([#45947](https://github.com/hashicorp/terraform-provider-aws/issues/45947))
 
 ## 6.28.0 (January 7, 2026)

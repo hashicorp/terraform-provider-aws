@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_apprunner_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,

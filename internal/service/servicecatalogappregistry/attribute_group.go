@@ -32,6 +32,7 @@ import (
 // @FrameworkResource("aws_servicecatalogappregistry_attribute_group", name="Attribute Group")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry;servicecatalogappregistry.GetAttributeGroupOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAttributeGroupResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &attributeGroupResource{}, nil
 }

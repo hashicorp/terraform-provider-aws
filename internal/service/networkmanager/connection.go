@@ -33,6 +33,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="arn")
 // @Testing(skipEmptyTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,

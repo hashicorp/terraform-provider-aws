@@ -32,6 +32,7 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="rule.0.bucket_key_enabled")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,

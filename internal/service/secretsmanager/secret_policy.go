@@ -28,6 +28,7 @@ import (
 // @ArnIdentity("secret_arn")
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.GetResourcePolicyOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,

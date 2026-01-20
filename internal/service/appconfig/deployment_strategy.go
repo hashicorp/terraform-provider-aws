@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,

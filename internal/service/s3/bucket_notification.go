@@ -30,6 +30,7 @@ import (
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetBucketNotificationConfigurationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
