@@ -33,7 +33,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontKeyValueStoreServiceID),
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -43,7 +43,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_Basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName),
+					testAccCheckKeyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectIdentity(resourceName, map[string]knownvalue.Check{
@@ -118,7 +118,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_ExistingResource(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontKeyValueStoreServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -127,7 +127,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_ExistingResource(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName),
+					testAccCheckKeyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -176,7 +176,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_ExistingResource_NoRefresh_NoCha
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontKeyValueStoreServiceID),
-		CheckDestroy: testAccCheckKeyDestroy(ctx),
+		CheckDestroy: testAccCheckKeyDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,
@@ -190,7 +190,7 @@ func TestAccCloudFrontKeyValueStoreKey_Identity_ExistingResource_NoRefresh_NoCha
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName),
+					testAccCheckKeyExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
