@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
 
 import (
 	"context"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,11 +15,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_opensearchserverless_security_policy", name="Security Policy")
-func DataSourceSecurityPolicy() *schema.Resource {
+func dataSourceSecurityPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityPolicyRead,
 
@@ -73,31 +74,31 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	securityPolicyName := d.Get(names.AttrName).(string)
-	securityPolicyType := d.Get(names.AttrType).(string)
-	securityPolicy, err := findSecurityPolicyByNameAndType(ctx, conn, securityPolicyName, securityPolicyType)
+	name := d.Get(names.AttrName).(string)
+	securityPolicy, err := findSecurityPolicyByNameAndType(ctx, conn, name, d.Get(names.AttrType).(string))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Security Policy with name (%s) and type (%s): %s", securityPolicyName, securityPolicyType, err)
-	}
-
-	policyBytes, err := securityPolicy.Policy.MarshalSmithyDocument()
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading JSON policy document for OpenSearch Security Policy with name %s and type %s: %s", securityPolicyName, securityPolicyType, err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Serverless Security Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(securityPolicy.Name))
+	d.Set(names.AttrCreatedDate, flex.Int64ToRFC3339StringValue(securityPolicy.CreatedDate))
 	d.Set(names.AttrDescription, securityPolicy.Description)
+	d.Set("last_modified_date", flex.Int64ToRFC3339StringValue(securityPolicy.LastModifiedDate))
 	d.Set(names.AttrName, securityPolicy.Name)
-	d.Set(names.AttrPolicy, string(policyBytes))
+	if securityPolicy.Policy != nil {
+		v, err := tfsmithy.DocumentToJSONString(securityPolicy.Policy)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set(names.AttrPolicy, v)
+	} else {
+		d.Set(names.AttrPolicy, nil)
+	}
 	d.Set("policy_version", securityPolicy.PolicyVersion)
 	d.Set(names.AttrType, securityPolicy.Type)
-
-	createdDate := time.UnixMilli(aws.ToInt64(securityPolicy.CreatedDate))
-	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
-
-	lastModifiedDate := time.UnixMilli(aws.ToInt64(securityPolicy.LastModifiedDate))
-	d.Set("last_modified_date", lastModifiedDate.Format(time.RFC3339))
 
 	return diags
 }

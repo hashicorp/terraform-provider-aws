@@ -44,7 +44,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
 * `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
-* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `aurora-serverless`, `aurora-postgresql-serverless`,`azuredb`, `azure-sql-managed-instance`, `babelfish`, `db2`, `db2-zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`,`redshift-serverless`, `s3`, `sqlserver`, `neptune` ,`sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
+* `engine_name` - (Required) Type of engine for the endpoint. Valid values are `aurora`, `aurora-postgresql`, `aurora-serverless`, `aurora-postgresql-serverless`,`azuredb`, `azure-sql-managed-instance`, `babelfish`, `db2`, `db2-zos`, `docdb`, `dynamodb`, `elasticsearch`, `kafka`, `kinesis`, `mariadb`, `mongodb`, `mysql`, `opensearch`, `oracle`, `postgres`, `redshift`,`redshift-serverless`, `sqlserver`, `neptune` ,`sybase`. Please note that some of engine names are available only for `target` endpoint type (e.g. `redshift`).
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, optional otherwise) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region. When `engine_name` is `redshift`, `kms_key_arn` is the KMS Key for the Redshift target and the parameter `redshift_settings.server_side_encryption_kms_key_id` encrypts the S3 intermediate storage.
 
 The following arguments are optional:
@@ -57,6 +57,7 @@ The following arguments are optional:
 * `kafka_settings` - (Optional) Configuration block for Kafka settings. See below.
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
+* `mysql_settings` - (Optional) Configuration block for MySQL settings. See below.
 * `oracle_settings` - (Optional) Configuration block for Oracle settings. See below.
 * `password` - (Optional) Password to be used to login to the endpoint database.
 * `postgres_settings` - (Optional) Configuration block for Postgres settings. See below.
@@ -134,6 +135,21 @@ The following arguments are optional:
 * `extract_doc_id` - (Optional) Document ID. Use this setting when `nesting_level` is set to `none`. Default is `false`.
 * `nesting_level` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
 
+### mysql_settings
+
+-> Additional information can be found in the [Using MySQL as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MySQL.html).
+
+* `after_connect_script` - (Optional) Script to run immediately after AWS DMS connects to the endpoint.
+* `authentication_method` - (Optional) Authentication method to use. Valid values: `password`, `iam`.
+* `clean_source_metadata_on_mismatch` - (Optional) Whether to clean and recreate table metadata information on the replication instance when a mismatch occurs.
+* `events_poll_interval` - (Optional) Time interval to check the binary log for new changes/events when the database is idle. Default is `5`.
+* `execute_timeout` - (Optional) Client statement timeout (in seconds) for a MySQL source endpoint.
+* `max_file_size` - (Optional) Maximum size (in KB) of any .csv file used to transfer data to a MySQL-compatible database.
+* `parallel_load_threads` - (Optional) Number of threads to use to load the data into the MySQL-compatible target database.
+* `server_timezone` - (Optional) Time zone for the source MySQL database.
+* `service_access_role_arn` - (Optional) ARN of the IAM role to authenticate when connecting to the endpoint.
+* `target_db_type` - (Optional) Where to migrate source tables on the target. Valid values are `specific-database` and `multiple-databases`.
+
 ### oracle_settings
 
 -> Additional information can be found in the [Using Oracle as a Source for AWS DMS documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.Oracle.html).
@@ -159,7 +175,7 @@ The following arguments are optional:
 * `map_jsonb_as_clob` - Optional When true, DMS migrates JSONB values as CLOB.
 * `map_long_varchar_as` - Optional When true, DMS migrates LONG values as VARCHAR.
 * `max_file_size` - (Optional) Specifies the maximum size (in KB) of any .csv file used to transfer data to PostgreSQL. Default is `32,768 KB`.
-* `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test_decoding`.
+* `plugin_name` - (Optional) Specifies the plugin to use to create a replication slot. Valid values: `pglogical`, `test-decoding`.
 * `service_access_role_arn` - (Optional) Specifies the IAM role to use to authenticate the connection.
 * `slot_name` - (Optional) Sets the name of a previously created logical replication slot for a CDC load of the PostgreSQL source instance.
 

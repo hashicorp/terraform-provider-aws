@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package yaml
@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	yaml "github.com/goccy/go-yaml"
 )
 
 // DecodeFromBytes decodes (unmarshals) the given byte slice, containing valid YAML, into `to`.

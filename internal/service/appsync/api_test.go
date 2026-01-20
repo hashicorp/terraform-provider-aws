@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appsync_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -206,7 +206,7 @@ func TestAccAppSyncAPI_disappears(t *testing.T) {
 				Config: testAccAPIConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAPIExists(ctx, resourceName, &api),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPI, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfappsync.ResourceAPI, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -230,7 +230,7 @@ func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfappsync.FindAPIByID(ctx, conn, rs.Primary.Attributes["api_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

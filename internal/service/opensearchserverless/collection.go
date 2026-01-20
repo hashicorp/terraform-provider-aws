@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
@@ -21,20 +21,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
+// @Testing(preIdentityVersion="v6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 
@@ -66,7 +70,7 @@ const (
 
 type collectionResource struct {
 	framework.ResourceWithModel[collectionResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -214,7 +218,7 @@ func (r *collectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
@@ -316,7 +320,7 @@ func (r *collectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusCreating),
 		Target:     enum.Slice(awstypes.CollectionStatusActive),
 		Refresh:    statusCollection(ctx, conn, id),
@@ -329,7 +333,7 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -339,7 +343,7 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 }
 
 func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Client, id string, timeout time.Duration) (*awstypes.CollectionDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CollectionStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusCollection(ctx, conn, id),
@@ -352,7 +356,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -361,11 +365,11 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 	return nil, err
 }
 
-func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
+func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findCollectionByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 

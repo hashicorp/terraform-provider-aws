@@ -157,6 +157,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 * `comment` - (Optional) Free-form text comment.
 * `name` - (Required) Name of the Partition Key.
+* `parameters` - (Optional) Map of key-value pairs.
 * `type` - (Optional) Datatype of data in the Partition Key.
 
 ### storage_descriptor
@@ -258,4 +259,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-b0599e67cec44b876bae716534a719ec60baa512977e559b2dd8388ca7357466 -->
+<!-- cache-key: cdktf-0.20.8 input-8fe2a37ec26abf4874dd227cf62cc4bd408d251a29b815a11ddb8d5883fb766d -->

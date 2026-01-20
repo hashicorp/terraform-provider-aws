@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fms_test
@@ -79,7 +79,7 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffms.ResourceSet, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tffms.ResourceSet, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

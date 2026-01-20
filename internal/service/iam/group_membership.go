@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -80,17 +79,17 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 	var ul []string
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, propagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		pages := iam.NewGetGroupPaginator(conn, input)
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 
 			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			for _, user := range page.Users {
@@ -100,25 +99,6 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		pages := iam.NewGetGroupPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			for _, user := range page.Users {
-				ul = append(ul, aws.ToString(user.UserName))
-			}
-		}
-	}
 
 	var noSuchEntityException *awstypes.NoSuchEntityException
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, noSuchEntityException.ErrorCode()) {

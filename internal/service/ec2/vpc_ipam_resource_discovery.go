@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -15,10 +15,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -75,6 +76,18 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 					},
 				},
 			},
+			"organizational_unit_exclusion": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"organizations_entity_path": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -106,8 +119,8 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	input := &ec2.CreateIpamResourceDiscoveryInput{
-		ClientToken:       aws.String(id.UniqueId()),
+	input := ec2.CreateIpamResourceDiscoveryInput{
+		ClientToken:       aws.String(sdkid.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamResourceDiscovery),
 	}
@@ -116,7 +129,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateIpamResourceDiscovery(ctx, input)
+	output, err := conn.CreateIpamResourceDiscovery(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Resource Discovery: %s", err)
@@ -128,6 +141,16 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("organizational_unit_exclusion"); ok && v.(*schema.Set).Len() > 0 {
+		input := ec2.ModifyIpamResourceDiscoveryInput{
+			AddOrganizationalUnitExclusions: expandAddIPAMOrganizationalUnitExclusions(v.(*schema.Set).List()),
+			IpamResourceDiscoveryId:         aws.String(d.Id()),
+		}
+		if err := updateIPAMResourceDiscovery(ctx, conn, &input, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
@@ -137,7 +160,7 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 
 	rd, err := findIPAMResourceDiscoveryByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IPAM Resource Discovery (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -151,8 +174,13 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDescription, rd.Description)
 	d.Set("ipam_resource_discovery_region", rd.IpamResourceDiscoveryRegion)
 	d.Set("is_default", rd.IsDefault)
-	if err := d.Set("operating_regions", flattenIPAMResourceDiscoveryOperatingRegions(rd.OperatingRegions)); err != nil {
+	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(rd.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
+	}
+	if len(rd.OrganizationalUnitExclusions) > 0 {
+		if err := d.Set("organizational_unit_exclusion", flattenIPAMOrganizationalUnitExclusions(rd.OrganizationalUnitExclusions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting organizational_unit_exclusion: %s", err)
+		}
 	}
 	d.Set(names.AttrOwnerID, rd.OwnerId)
 
@@ -166,7 +194,7 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyIpamResourceDiscoveryInput{
+		input := ec2.ModifyIpamResourceDiscoveryInput{
 			IpamResourceDiscoveryId: aws.String(d.Id()),
 		}
 
@@ -176,35 +204,32 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 
 		if d.HasChange("operating_regions") {
 			o, n := d.GetChange("operating_regions")
-			if o == nil {
-				o = new(schema.Set)
-			}
-			if n == nil {
-				n = new(schema.Set)
-			}
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-			os := o.(*schema.Set)
-			ns := n.(*schema.Set)
-			operatingRegionUpdateAdd := expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-			operatingRegionUpdateRemove := expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
-
-			if len(operatingRegionUpdateAdd) != 0 {
-				input.AddOperatingRegions = operatingRegionUpdateAdd
+			if v := expandAddIPAMOperatingRegions(ns.Difference(os).List()); len(v) != 0 {
+				input.AddOperatingRegions = v
 			}
 
-			if len(operatingRegionUpdateRemove) != 0 {
-				input.RemoveOperatingRegions = operatingRegionUpdateRemove
+			if v := expandRemoveIPAMOperatingRegions(os.Difference(ns).List()); len(v) != 0 {
+				input.RemoveOperatingRegions = v
 			}
 		}
 
-		_, err := conn.ModifyIpamResourceDiscovery(ctx, input)
+		if d.HasChange("organizational_unit_exclusion") {
+			o, n := d.GetChange("organizational_unit_exclusion")
+			os, ns := o.(*schema.Set), n.(*schema.Set)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying IPAM Resource Discovery (%s): %s", d.Id(), err)
+			if v := expandAddIPAMOrganizationalUnitExclusions(ns.Difference(os).List()); len(v) != 0 {
+				input.AddOrganizationalUnitExclusions = v
+			}
+
+			if v := expandRemoveIPAMOrganizationalUnitExclusions(os.Difference(ns).List()); len(v) != 0 {
+				input.RemoveOrganizationalUnitExclusions = v
+			}
 		}
 
-		if _, err := waitIPAMResourceDiscoveryUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) update: %s", d.Id(), err)
+		if err := updateIPAMResourceDiscovery(ctx, conn, &input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -236,48 +261,78 @@ func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenIPAMResourceDiscoveryOperatingRegions(operatingRegions []awstypes.IpamOperatingRegion) []any {
-	regions := []any{}
-	for _, operatingRegion := range operatingRegions {
-		regions = append(regions, flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion))
+func updateIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, input *ec2.ModifyIpamResourceDiscoveryInput, timeout time.Duration) error {
+	id := aws.ToString(input.IpamResourceDiscoveryId)
+
+	// https://docs.aws.amazon.com/vpc/latest/ipam/exclude-ous.html#exclude-ous-create-delete:
+	// "It takes time for IPAM to discover recently created organizational units".
+	err := tfresource.Retry(ctx, ec2PropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
+		_, err := conn.ModifyIpamResourceDiscovery(ctx, input)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "One or more of the organizations entity paths is invalid") {
+			return tfresource.RetryableError(err)
+		}
+
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		return nil
+	}, tfresource.WithDelay(1*time.Minute), tfresource.WithPollInterval(20*time.Second))
+
+	if err != nil {
+		return fmt.Errorf("modifying IPAM Resource Discovery (%s): %w", id, err)
 	}
-	return regions
+
+	if _, err := waitIPAMResourceDiscoveryUpdated(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for IPAM Resource Discovery (%s) update: %w", id, err)
+	}
+
+	return nil
 }
 
-func flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion awstypes.IpamOperatingRegion) map[string]any {
-	region := make(map[string]any)
-	region["region_name"] = aws.ToString(operatingRegion.RegionName)
-	return region
+func flattenIPAMOrganizationalUnitExclusions(apiObjects []awstypes.IpamOrganizationalUnitExclusion) []any {
+	tfList := []any{}
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenIPAMOrganizationalUnitExclusion(apiObject))
+	}
+	return tfList
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(operatingRegions []any) []awstypes.AddIpamOperatingRegion {
-	regionUpdates := make([]awstypes.AddIpamOperatingRegion, 0, len(operatingRegions))
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]any)
-		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(region))
-	}
-	return regionUpdates
+func flattenIPAMOrganizationalUnitExclusion(apiObject awstypes.IpamOrganizationalUnitExclusion) map[string]any {
+	tfMap := make(map[string]any)
+	tfMap["organizations_entity_path"] = aws.ToString(apiObject.OrganizationsEntityPath)
+	return tfMap
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(operatingRegion map[string]any) awstypes.AddIpamOperatingRegion {
-	regionUpdate := awstypes.AddIpamOperatingRegion{
-		RegionName: aws.String(operatingRegion["region_name"].(string)),
+func expandAddIPAMOrganizationalUnitExclusions(tfList []any) []awstypes.AddIpamOrganizationalUnitExclusion {
+	apiObjects := make([]awstypes.AddIpamOrganizationalUnitExclusion, 0, len(tfList))
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObjects = append(apiObjects, expandAddIPAMOrganizationalUnitExclusion(tfMap))
 	}
-	return regionUpdate
+	return apiObjects
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(operatingRegions []any) []awstypes.RemoveIpamOperatingRegion {
-	regionUpdates := make([]awstypes.RemoveIpamOperatingRegion, 0, len(operatingRegions))
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]any)
-		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(region))
+func expandAddIPAMOrganizationalUnitExclusion(tfMap map[string]any) awstypes.AddIpamOrganizationalUnitExclusion {
+	apiObject := awstypes.AddIpamOrganizationalUnitExclusion{
+		OrganizationsEntityPath: aws.String(tfMap["organizations_entity_path"].(string)),
 	}
-	return regionUpdates
+	return apiObject
 }
 
-func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]any) awstypes.RemoveIpamOperatingRegion {
-	regionUpdate := awstypes.RemoveIpamOperatingRegion{
-		RegionName: aws.String(operatingRegion["region_name"].(string)),
+func expandRemoveIPAMOrganizationalUnitExclusions(tfList []any) []awstypes.RemoveIpamOrganizationalUnitExclusion {
+	apiObjects := make([]awstypes.RemoveIpamOrganizationalUnitExclusion, 0, len(tfList))
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]any)
+		apiObjects = append(apiObjects, expandRemoveIPAMOrganizationalUnitExclusion(tfMap))
 	}
-	return regionUpdate
+	return apiObjects
+}
+
+func expandRemoveIPAMOrganizationalUnitExclusion(tfMap map[string]any) awstypes.RemoveIpamOrganizationalUnitExclusion {
+	apiObject := awstypes.RemoveIpamOrganizationalUnitExclusion{
+		OrganizationsEntityPath: aws.String(tfMap["organizations_entity_path"].(string)),
+	}
+	return apiObject
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -157,7 +157,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,7 +264,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

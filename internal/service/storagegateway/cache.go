@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway
@@ -14,10 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,7 +85,7 @@ func resourceCacheCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	})
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway local disk: %s", err)
 	default:
@@ -106,7 +107,7 @@ func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	err = findCacheByTwoPartKey(ctx, conn, gatewayARN, diskID)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -175,7 +176,7 @@ func findCache(ctx context.Context, conn *storagegateway.Client, input *storageg
 	output, err := conn.DescribeCache(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -186,7 +187,7 @@ func findCache(ctx context.Context, conn *storagegateway.Client, input *storageg
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

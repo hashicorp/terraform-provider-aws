@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream
@@ -12,14 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,6 +74,25 @@ func resourceDirectoryConfig() *schema.Resource {
 					},
 				},
 			},
+			"certificate_based_auth_properties": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"certificate_authority_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						names.AttrStatus: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CertificateBasedAuthStatus](),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -84,6 +106,7 @@ func resourceDirectoryConfigCreate(ctx context.Context, d *schema.ResourceData, 
 		DirectoryName:                        aws.String(directoryName),
 		OrganizationalUnitDistinguishedNames: flex.ExpandStringValueSet(d.Get("organizational_unit_distinguished_names").(*schema.Set)),
 		ServiceAccountCredentials:            expandServiceAccountCredentials(d.Get("service_account_credentials").([]any)),
+		CertificateBasedAuthProperties:       expandCertificateBasedAuthProperties(d.Get("certificate_based_auth_properties").([]any)),
 	}
 
 	output, err := conn.CreateDirectoryConfig(ctx, &input)
@@ -103,7 +126,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 
 	directoryConfig, err := findDirectoryConfigByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppStream Directory Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -118,6 +141,9 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("organizational_unit_distinguished_names", flex.FlattenStringValueSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 	if err = d.Set("service_account_credentials", flattenServiceAccountCredentials(directoryConfig.ServiceAccountCredentials, d)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_account_credentials: %s", err)
+	}
+	if err = d.Set("certificate_based_auth_properties", flattenCertificateBasedAuthProperties(directoryConfig.CertificateBasedAuthProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting certificate_based_auth_properties: %s", err)
 	}
 
 	return diags
@@ -137,6 +163,10 @@ func resourceDirectoryConfigUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChange("service_account_credentials") {
 		input.ServiceAccountCredentials = expandServiceAccountCredentials(d.Get("service_account_credentials").([]any))
+	}
+
+	if d.HasChange("certificate_based_auth_properties") {
+		input.CertificateBasedAuthProperties = expandCertificateBasedAuthProperties(d.Get("certificate_based_auth_properties").([]any))
 	}
 
 	_, err := conn.UpdateDirectoryConfig(ctx, &input)
@@ -201,7 +231,7 @@ func findDirectoryConfigs(ctx context.Context, conn *appstream.Client, input *ap
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -237,6 +267,44 @@ func flattenServiceAccountCredentials(apiObject *awstypes.ServiceAccountCredenti
 	tfList := map[string]any{}
 	tfList["account_name"] = aws.ToString(apiObject.AccountName)
 	tfList["account_password"] = d.Get("service_account_credentials.0.account_password").(string)
+
+	return []any{tfList}
+}
+
+func expandCertificateBasedAuthProperties(tfList []any) *awstypes.CertificateBasedAuthProperties {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	attr := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.CertificateBasedAuthProperties{}
+
+	if v, ok := attr["certificate_authority_arn"].(string); ok && v != "" {
+		apiObject.CertificateAuthorityArn = aws.String(v)
+	}
+
+	if v, ok := attr[names.AttrStatus].(string); ok && v != "" {
+		apiObject.Status = awstypes.CertificateBasedAuthStatus(v)
+	}
+
+	return apiObject
+}
+
+func flattenCertificateBasedAuthProperties(apiObject *awstypes.CertificateBasedAuthProperties) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfList := map[string]any{}
+
+	if v := aws.ToString(apiObject.CertificateAuthorityArn); v != "" {
+		tfList["certificate_authority_arn"] = v
+	}
+
+	if v := apiObject.Status; v != "" {
+		tfList[names.AttrStatus] = string(v)
+	}
 
 	return []any{tfList}
 }

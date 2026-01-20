@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package keyspaces_test
@@ -15,9 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,16 +27,16 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PAY_PER_REQUEST"),
@@ -83,17 +82,17 @@ func TestAccKeyspacesTable_disappears(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkeyspaces.ResourceTable(), resourceName),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkeyspaces.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,16 +107,16 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_tags1(rName1, rName2, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -130,7 +129,7 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 			{
 				Config: testAccTableConfig_tags2(rName1, rName2, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -139,7 +138,7 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 			{
 				Config: testAccTableConfig_tags1(rName1, rName2, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -155,16 +154,16 @@ func TestAccKeyspacesTable_clientSideTimestamps(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_clientSideTimestamps(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_side_timestamps.0.status", "ENABLED"),
 				),
@@ -185,16 +184,16 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_multipleColumns(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v),
+					testAccCheckTableExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.clustering_key.*", map[string]string{
@@ -280,16 +279,16 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 	resourceName := "aws_keyspaces_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_allAttributes(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v1),
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "200"),
@@ -319,7 +318,7 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 			{
 				Config: testAccTableConfig_allAttributesUpdated(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v2),
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
 					testAccCheckTableNotRecreated(&v1, &v2),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
@@ -353,16 +352,16 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v1),
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
@@ -385,7 +384,7 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 			{
 				Config: testAccTableConfig_newColumns(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v2),
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
 					testAccCheckTableNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
@@ -420,16 +419,16 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_newColumns(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v1),
+					testAccCheckTableExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
@@ -460,7 +459,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 			{
 				Config: testAccTableConfig_basic(rName1, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableExists(ctx, resourceName, &v2),
+					testAccCheckTableExists(ctx, t, resourceName, &v2),
 					testAccCheckTableRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
@@ -480,9 +479,9 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 	})
 }
 
-func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_keyspaces_table" {
@@ -497,7 +496,7 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfkeyspaces.FindTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -512,7 +511,7 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTableExists(ctx context.Context, n string, v *keyspaces.GetTableOutput) resource.TestCheckFunc {
+func testAccCheckTableExists(ctx context.Context, t *testing.T, n string, v *keyspaces.GetTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -523,7 +522,7 @@ func testAccCheckTableExists(ctx context.Context, n string, v *keyspaces.GetTabl
 			return fmt.Errorf("No Keyspaces Table ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).KeyspacesClient(ctx)
 
 		keyspaceName, tableName, err := tfkeyspaces.TableParseResourceID(rs.Primary.ID)
 

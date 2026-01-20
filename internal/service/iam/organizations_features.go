@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -13,14 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -95,7 +96,7 @@ func (r *organizationsFeaturesResource) Read(ctx context.Context, request resour
 
 	output, err := findOrganizationsFeatures(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -181,7 +182,7 @@ func findOrganizationsFeatures(ctx context.Context, conn *iam.Client) (*iam.List
 	output, err := conn.ListOrganizationsFeatures(ctx, input)
 
 	if errs.IsA[*awstypes.OrganizationNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -192,15 +193,15 @@ func findOrganizationsFeatures(ctx context.Context, conn *iam.Client) (*iam.List
 	}
 
 	if output == nil || len(output.EnabledFeatures) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func updateOrganizationFeatures(ctx context.Context, conn *iam.Client, new, old []awstypes.FeatureType) error {
-	toEnable := itypes.Set[awstypes.FeatureType](new).Difference(old)
-	toDisable := itypes.Set[awstypes.FeatureType](old).Difference(new)
+	toEnable := inttypes.Set[awstypes.FeatureType](new).Difference(old)
+	toDisable := inttypes.Set[awstypes.FeatureType](old).Difference(new)
 
 	if slices.Contains(toEnable, awstypes.FeatureTypeRootCredentialsManagement) {
 		input := &iam.EnableOrganizationsRootCredentialsManagementInput{}

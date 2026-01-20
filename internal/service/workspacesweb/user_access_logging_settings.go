@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb
@@ -18,12 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,6 +35,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.UserAccessLoggingSettings")
 // @Testing(importStateIdAttribute="user_access_logging_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newUserAccessLoggingSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &userAccessLoggingSettingsResource{}, nil
 }
@@ -122,7 +124,7 @@ func (r *userAccessLoggingSettingsResource) Read(ctx context.Context, request re
 	conn := r.Meta().WorkSpacesWebClient(ctx)
 
 	output, err := findUserAccessLoggingSettingsByARN(ctx, conn, data.UserAccessLoggingSettingsARN.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -210,7 +212,7 @@ func findUserAccessLoggingSettingsByARN(ctx context.Context, conn *workspacesweb
 	output, err := conn.GetUserAccessLoggingSettings(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -221,7 +223,7 @@ func findUserAccessLoggingSettingsByARN(ctx context.Context, conn *workspacesweb
 	}
 
 	if output == nil || output.UserAccessLoggingSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserAccessLoggingSettings, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package internetmonitor
@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -215,7 +215,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	monitor, err := findMonitorByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Internet Monitor Monitor (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -351,8 +351,7 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	// if errs.IsA[*types.ResourceNotFoundException](err) {
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -361,17 +360,17 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusMonitor(ctx context.Context, conn *internetmonitor.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusMonitor(conn *internetmonitor.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		monitor, err := findMonitorByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -390,7 +389,7 @@ func waitMonitor(ctx context.Context, conn *internetmonitor.Client, name string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.MonitorConfigStatePending),
 		Target:  enum.Slice(targetState),
-		Refresh: statusMonitor(ctx, conn, name),
+		Refresh: statusMonitor(conn, name),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -399,7 +398,7 @@ func waitMonitor(ctx context.Context, conn *internetmonitor.Client, name string,
 
 	if output, ok := outputRaw.(*internetmonitor.GetMonitorOutput); ok {
 		if status := output.Status; status == types.MonitorConfigStateError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ProcessingStatusInfo)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ProcessingStatusInfo)))
 		}
 
 		return err

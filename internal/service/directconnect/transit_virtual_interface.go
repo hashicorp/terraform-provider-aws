@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect
@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_transit_virtual_interface", name="Transit Virtual Interface")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,
@@ -178,7 +179,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 
 	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Transit Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

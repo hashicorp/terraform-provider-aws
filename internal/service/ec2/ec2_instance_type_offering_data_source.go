@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -30,6 +30,10 @@ func dataSourceInstanceTypeOffering() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
 			names.AttrInstanceType: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,44 +75,42 @@ func dataSourceInstanceTypeOfferingRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
-	var foundInstanceTypes []string
-
-	for _, instanceTypeOffering := range instanceTypeOfferings {
-		foundInstanceTypes = append(foundInstanceTypes, string(instanceTypeOffering.InstanceType))
-	}
-
-	var resultInstanceType string
+	var resultInstanceTypeOffering *awstypes.InstanceTypeOffering
 
 	// Search preferred instance types in their given order and set result
 	// instance type for first match found
 	if v, ok := d.GetOk("preferred_instance_types"); ok {
 		for _, v := range v.([]any) {
 			if v, ok := v.(string); ok {
-				if slices.Contains(foundInstanceTypes, v) {
-					resultInstanceType = v
+				if i := slices.IndexFunc(instanceTypeOfferings, func(e awstypes.InstanceTypeOffering) bool {
+					return string(e.InstanceType) == v
+				}); i != -1 {
+					resultInstanceTypeOffering = &instanceTypeOfferings[i]
 				}
 
-				if resultInstanceType != "" {
+				if resultInstanceTypeOffering != nil {
 					break
 				}
 			}
 		}
 	}
 
-	if resultInstanceType == "" && len(foundInstanceTypes) > 1 {
+	if resultInstanceTypeOffering == nil && len(instanceTypeOfferings) > 1 {
 		return sdkdiag.AppendErrorf(diags, "multiple EC2 Instance Offerings found matching criteria; try different search")
 	}
 
-	if resultInstanceType == "" && len(foundInstanceTypes) == 1 {
-		resultInstanceType = foundInstanceTypes[0]
+	if resultInstanceTypeOffering == nil && len(instanceTypeOfferings) == 1 {
+		resultInstanceTypeOffering = &instanceTypeOfferings[0]
 	}
 
-	if resultInstanceType == "" {
+	if resultInstanceTypeOffering == nil {
 		return sdkdiag.AppendErrorf(diags, "no EC2 Instance Type Offerings found matching criteria; try different search")
 	}
 
-	d.SetId(resultInstanceType)
-	d.Set(names.AttrInstanceType, resultInstanceType)
+	d.SetId(string(resultInstanceTypeOffering.InstanceType))
+	d.Set(names.AttrInstanceType, string(resultInstanceTypeOffering.InstanceType))
+	d.Set(names.AttrLocation, resultInstanceTypeOffering.Location)
+	d.Set("location_type", string(resultInstanceTypeOffering.LocationType))
 
 	return diags
 }

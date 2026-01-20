@@ -2,6 +2,9 @@
 {{ range .RequiredEnvVars -}}
 	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
 {{ end -}}
+{{ range .RequiredEnvVarValues -}}
+	acctest.SkipIfEnvVarNotSet(t, "{{ . }}")
+{{ end -}}
 {{ block "targetName" . }}Missing template "targetName"{{ end }}
 {{- if .Generator }}
 	rName := {{ .Generator }}
@@ -37,7 +40,12 @@
 {{- end }}
 
 {{ define "baseTestname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
+{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end -}}
+{{- if and (eq .ResourceProviderNameUpper "VPC") (eq .Name "VPC") -}}
+VPC
+{{- else -}}
+{{ .ResourceProviderNameUpper }}{{ .Name }}
+{{- end -}}
 {{- end }}
 
 {{ define "Test" -}}

@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Pull Request Target Check
 
 permissions:
@@ -24,28 +27,31 @@ on:
 jobs:
   checks:
     name: pr-target-check
-    runs-on: ubuntu-latest
+    runs-on: custom-ubuntu-22.04-medium
     permissions:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
       - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version-file: go.mod
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+          echo "CACHE_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
+      - uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
-          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+          key: ${{ runner.os }}-go-build-${{ env.CACHE_DATE }}
+          restore-keys: |
+            ${{ runner.os }}-go-build-
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:

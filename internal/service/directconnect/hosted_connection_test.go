@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,9 +60,11 @@ func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func(
 				continue
 			}
 
-			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+			// Get the parent connection ID from the resource attributes
+			parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -86,7 +88,10 @@ func testAccCheckHostedConnectionExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
+		// Get the parent connection ID from the resource state
+		parentConnectionID := rs.Primary.Attributes[names.AttrConnectionID]
+
+		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID, parentConnectionID)
 
 		return err
 	}

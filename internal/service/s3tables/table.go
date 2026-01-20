@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables
@@ -30,17 +30,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_s3tables_table", name="Table")
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3tables;s3tables.GetTableOutput")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -127,6 +136,8 @@ func (r *tableResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.TableType](),
 				Computed:   true,
@@ -247,6 +258,9 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
 	// Handle metadata separately since it's an interface type.
 	if !data.Metadata.IsNull() && !data.Metadata.IsUnknown() {
 		metadataModel, diags := data.Metadata.ToPtr(ctx)
@@ -344,7 +358,7 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -358,17 +372,17 @@ func (r *tableResource) Create(ctx context.Context, request resource.CreateReque
 		data.MaintenanceConfiguration = value
 	}
 
-	outputGTE, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
 		return
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGTE.EncryptionConfiguration, &encryptionConfiguration)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -395,7 +409,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	name, namespace, tableBucketARN := fwflex.StringValueFromFramework(ctx, data.Name), fwflex.StringValueFromFramework(ctx, data.Namespace), fwflex.StringValueFromFramework(ctx, data.TableBucketARN)
 	outputGT, err := findTableByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -417,7 +431,7 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -431,17 +445,17 @@ func (r *tableResource) Read(ctx context.Context, request resource.ReadRequest, 
 		data.MaintenanceConfiguration = value
 	}
 
-	outputGTE, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
+	awsEncryptionConfig, err := findTableEncryptionByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) encryption", name), err.Error())
 
 		return
 	default:
 		var encryptionConfiguration encryptionConfigurationModel
-		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGTE.EncryptionConfiguration, &encryptionConfiguration)...)
+		response.Diagnostics.Append(fwflex.Flatten(ctx, awsEncryptionConfig, &encryptionConfiguration)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -577,7 +591,7 @@ func (r *tableResource) Update(ctx context.Context, request resource.UpdateReque
 	outputGTMC, err := findTableMaintenanceConfigurationByThreePartKey(ctx, conn, tableBucketARN, namespace, name)
 
 	switch {
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	case err != nil:
 		response.Diagnostics.AddError(fmt.Sprintf("reading S3 Tables Table (%s) maintenance configuration", name), err.Error())
 
@@ -622,18 +636,18 @@ func (r *tableResource) Delete(ctx context.Context, request resource.DeleteReque
 	}
 }
 
-func (r *tableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	identifier, err := parseTableIdentifier(req.ID)
+func (r *tableResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	identifier, err := parseTableIdentifier(request.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Invalid Import ID",
 			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
-				fmt.Sprintf("Had %q", req.ID),
+				fmt.Sprintf("Had %q", request.ID),
 		)
 		return
 	}
 
-	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
+	identifier.PopulateState(ctx, &response.State, &response.Diagnostics)
 }
 
 func findTableByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableOutput, error) {
@@ -650,7 +664,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	output, err := conn.GetTable(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -660,13 +674,13 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableEncryptionOutput, error) {
+func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*awstypes.EncryptionConfiguration, error) {
 	input := s3tables.GetTableEncryptionInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
@@ -676,11 +690,11 @@ func findTableEncryptionByThreePartKey(ctx context.Context, conn *s3tables.Clien
 	return findTableEncryption(ctx, conn, &input)
 }
 
-func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableEncryptionInput) (*s3tables.GetTableEncryptionOutput, error) {
+func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTableEncryptionInput) (*awstypes.EncryptionConfiguration, error) {
 	output, err := conn.GetTableEncryption(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -689,11 +703,11 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	if output == nil || output.EncryptionConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
-	return output, nil
+	return output.EncryptionConfiguration, nil
 }
 
 func findTableMaintenanceConfigurationByThreePartKey(ctx context.Context, conn *s3tables.Client, tableBucketARN, namespace, name string) (*s3tables.GetTableMaintenanceConfigurationOutput, error) {
@@ -710,7 +724,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	output, err := conn.GetTableMaintenanceConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError: err,
 		}
 	}
@@ -720,7 +734,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -742,6 +756,8 @@ type tableResourceModel struct {
 	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
 	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
 	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
+	Tags                     tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                `tfsdk:"tags_all"`
 	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
 	VersionToken             types.String                                              `tfsdk:"version_token"`
 	WarehouseLocation        types.String                                              `tfsdk:"warehouse_location"`
@@ -988,9 +1004,9 @@ func (id tableIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, dia
 
 var tableNameValidator = []validator.String{
 	stringvalidator.LengthBetween(1, 255),
-	stringMustContainLowerCaseLettersNumbersUnderscores,
-	stringMustStartWithLetterOrNumber,
-	stringMustEndWithLetterOrNumber,
+	tfstringvalidator.ContainsOnlyLowerCaseLettersNumbersUnderscores,
+	tfstringvalidator.StartsWithLetterOrNumber,
+	tfstringvalidator.EndsWithLetterOrNumber,
 }
 
 type tableMetadataModel struct {

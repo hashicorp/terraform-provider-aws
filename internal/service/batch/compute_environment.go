@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,6 +36,7 @@ import (
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.ComputeEnvironmentDetail")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -269,17 +271,21 @@ func resourceComputeEnvironment() *schema.Resource {
 			"update_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
+					// https://docs.aws.amazon.com/batch/latest/APIReference/API_UpdatePolicy.html
 					Schema: map[string]*schema.Schema{
 						"job_execution_timeout_minutes": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 360),
 						},
 						"terminate_jobs_on_update": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -352,7 +358,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 
 	computeEnvironment, err := findComputeEnvironmentDetailByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -722,7 +728,7 @@ func findComputeEnvironmentDetailByName(ctx context.Context, conn *batch.Client,
 	}
 
 	if status := output.Status; status == awstypes.CEStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -758,11 +764,11 @@ func findComputeEnvironmentDetails(ctx context.Context, conn *batch.Client, inpu
 	return output, nil
 }
 
-func statusComputeEnvironment(ctx context.Context, conn *batch.Client, name string) retry.StateRefreshFunc {
+func statusComputeEnvironment(ctx context.Context, conn *batch.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findComputeEnvironmentDetailByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -775,7 +781,7 @@ func statusComputeEnvironment(ctx context.Context, conn *batch.Client, name stri
 }
 
 func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusCreating),
 		Target:  enum.Slice(awstypes.CEStatusValid),
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -785,7 +791,7 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -794,7 +800,7 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name
 }
 
 func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusUpdating),
 		Target:  enum.Slice(awstypes.CEStatusValid),
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -804,7 +810,7 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -813,7 +819,7 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name
 }
 
 func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name string, timeout time.Duration) (*awstypes.ComputeEnvironmentDetail, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CEStatusDeleting),
 		Target:  []string{},
 		Refresh: statusComputeEnvironment(ctx, conn, name),
@@ -823,7 +829,7 @@ func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -889,7 +895,11 @@ func isUpdatableAllocationStrategyDiff(diff *schema.ResourceDiff) bool {
 }
 
 func isUpdatableAllocationStrategy(allocationStrategy awstypes.CRAllocationStrategy) bool {
-	return allocationStrategy == awstypes.CRAllocationStrategyBestFitProgressive || allocationStrategy == awstypes.CRAllocationStrategySpotCapacityOptimized
+	switch allocationStrategy {
+	case awstypes.CRAllocationStrategyBestFitProgressive, awstypes.CRAllocationStrategySpotCapacityOptimized, awstypes.CRAllocationStrategySpotPriceCapacityOptimized:
+		return true
+	}
+	return false
 }
 
 func expandComputeResource(ctx context.Context, tfMap map[string]any) *awstypes.ComputeResource {

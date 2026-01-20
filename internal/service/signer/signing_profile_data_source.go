@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,6 +75,25 @@ func dataSourceSigningProfile() *schema.Resource {
 					},
 				},
 			},
+			"signing_material": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrCertificateARN: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"signing_parameters": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -109,13 +129,15 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
-	if err := d.Set("signature_validity_period", []any{
-		map[string]any{
-			names.AttrValue: signingProfileOutput.SignatureValidityPeriod.Value,
-			names.AttrType:  signingProfileOutput.SignatureValidityPeriod.Type,
-		},
-	}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
+	if v := signingProfileOutput.SignatureValidityPeriod; v != nil {
+		if err := d.Set("signature_validity_period", []any{
+			map[string]any{
+				names.AttrValue: v.Value,
+				names.AttrType:  v.Type,
+			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signature_validity_period: %s", err)
+		}
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
@@ -132,6 +154,18 @@ func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
+	}
+
+	if signingProfileOutput.SigningMaterial != nil {
+		if err := d.Set("signing_material", flattenSigningMaterial(signingProfileOutput.SigningMaterial)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_material: %s", err)
+		}
+	}
+
+	if signingProfileOutput.SigningParameters != nil {
+		if err := d.Set("signing_parameters", flex.FlattenStringValueMap(signingProfileOutput.SigningParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting signing_parameters: %s", err)
+		}
 	}
 
 	if err := d.Set(names.AttrStatus, signingProfileOutput.Status); err != nil {

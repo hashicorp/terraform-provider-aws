@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
 name: Auto Triage
 
 permissions:
@@ -25,7 +28,7 @@ jobs:
     name: Labelers
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           sparse-checkout: .github
 
@@ -50,7 +53,7 @@ jobs:
 
       - name: Apply Pull Request Service Labels
         if: github.event_name == 'pull_request_target'
-        uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9 # v5.0.0
+        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6.0.1
         with:
           configuration-path: .github/labeler-pr-triage.yml
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +83,7 @@ jobs:
           enable-versioned-regex: 0
           include-title: 1
 
-      - uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.1
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         id: token
         if: github.event_name == 'issues'
         with:

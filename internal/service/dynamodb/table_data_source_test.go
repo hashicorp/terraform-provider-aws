@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -17,9 +16,9 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_dynamodb_table.test"
 	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -44,6 +43,12 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.0.enabled", resourceName, "point_in_time_recovery.0.enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "point_in_time_recovery.0.recovery_period_in_days", resourceName, "point_in_time_recovery.0.recovery_period_in_days"),
 					resource.TestCheckResourceAttrPair(datasourceName, "table_class", resourceName, "table_class"),
+					resource.TestCheckResourceAttr(datasourceName, "warm_throughput.0.read_units_per_second", "12100"),
+					resource.TestCheckResourceAttr(datasourceName, "warm_throughput.0.write_units_per_second", "4100"),
+					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "global_secondary_index.*", map[string]string{
+						"warm_throughput.0.read_units_per_second":  "12200",
+						"warm_throughput.0.write_units_per_second": "4200",
+					}),
 				),
 			},
 		},
@@ -54,9 +59,9 @@ func TestAccDynamoDBTableDataSource_onDemandThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_dynamodb_table.test"
 	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,9 +98,9 @@ func TestAccDynamoDBTableDataSource_pointInTimeRecovery(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_dynamodb_table.test"
 	resourceName := "aws_dynamodb_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -158,6 +163,16 @@ resource "aws_dynamodb_table" "test" {
     read_capacity      = 10
     projection_type    = "INCLUDE"
     non_key_attributes = ["UserId"]
+
+    warm_throughput {
+      read_units_per_second  = 12200
+      write_units_per_second = 4200
+    }
+  }
+
+  warm_throughput {
+    read_units_per_second  = 12100
+    write_units_per_second = 4100
   }
 
   tags = {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -14,6 +14,12 @@ func TestAccConfigService_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AggregateAuthorization": {
+			acctest.CtBasic:      testAccConfigServiceAggregateAuthorization_basic,
+			"deprecatedRegion":   testAccConfigServiceAggregateAuthorization_deprecatedRegion,
+			acctest.CtDisappears: testAccConfigServiceAggregateAuthorization_disappears,
+			"tags":               testAccConfigServiceAggregateAuthorization_tagsSerial,
+		},
 		"ConfigRule": {
 			acctest.CtBasic:      testAccConfigRule_basic,
 			"ownerAws":           testAccConfigRule_ownerAWS,
@@ -23,7 +29,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"scopeTagKey":        testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty":   testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":      testAccConfigRule_Scope_TagValue,
-			"tags":               testAccConfigRule_tags,
+			"tags":               testAccConfigServiceConfigRule_tagsSerial,
 			acctest.CtDisappears: testAccConfigRule_disappears,
 		},
 		"ConfigurationRecorderStatus": {

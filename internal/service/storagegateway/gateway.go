@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway
@@ -18,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -305,31 +306,25 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta any
 		}
 
 		var response *http.Response
-		err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+		err = tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 			response, err = client.Do(request)
 
 			if err != nil {
+				errReturn := fmt.Errorf("making HTTP request: %w", err)
 				if errs.IsA[net.Error](err) {
-					errMessage := fmt.Errorf("making HTTP request: %w", err)
-					log.Printf("[DEBUG] retryable %s", errMessage)
-					return retry.RetryableError(errMessage)
+					return tfresource.RetryableError(errReturn)
 				}
 
-				return retry.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
+				return tfresource.NonRetryableError(errReturn)
 			}
 
-			if slices.Contains([]int{504}, response.StatusCode) {
-				errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
-				log.Printf("[DEBUG] retryable %s", errMessage)
-				return retry.RetryableError(errMessage)
+			if slices.Contains([]int{http.StatusGatewayTimeout}, response.StatusCode) {
+				errReturn := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
+				return tfresource.RetryableError(errReturn)
 			}
 
 			return nil
 		})
-
-		if tfresource.TimedOut(err) {
-			response, err = client.Do(request)
-		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", gatewayIPAddress, err)
@@ -490,7 +485,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	outputDGI, err := findGatewayByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -782,7 +777,7 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	output, err := conn.DescribeGatewayInformation(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -793,7 +788,7 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -850,7 +845,7 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	output, err := conn.DescribeSMBSettings(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -861,7 +856,7 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -879,7 +874,7 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	output, err := conn.DescribeBandwidthRateLimit(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -890,7 +885,7 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -908,7 +903,7 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	output, err := conn.DescribeMaintenanceStartTime(ctx, input)
 
 	if isGatewayNotFoundErr(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -919,7 +914,7 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -930,11 +925,11 @@ const (
 	gatewayStatusNotConnected = "GatewayNotConnected"
 )
 
-func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGatewayByARN(ctx, conn, gatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -950,11 +945,11 @@ func statusGatewayConnected(ctx context.Context, conn *storagegateway.Client, ga
 	}
 }
 
-func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) retry.StateRefreshFunc {
+func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, gatewayARN string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findSMBSettingsByARN(ctx, conn, gatewayARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -967,7 +962,7 @@ func statusGatewayJoinDomain(ctx context.Context, conn *storagegateway.Client, g
 }
 
 func waitGatewayConnected(ctx context.Context, conn *storagegateway.Client, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   []string{gatewayStatusNotConnected},
 		Target:                    []string{gatewayStatusConnected},
 		Refresh:                   statusGatewayConnected(ctx, conn, gatewayARN),
@@ -989,7 +984,7 @@ func waitGatewayJoinDomainJoined(ctx context.Context, conn *storagegateway.Clien
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ActiveDirectoryStatusJoining),
 		Target:  enum.Slice(awstypes.ActiveDirectoryStatusJoined),
 		Refresh: statusGatewayJoinDomain(ctx, conn, gatewayARN),

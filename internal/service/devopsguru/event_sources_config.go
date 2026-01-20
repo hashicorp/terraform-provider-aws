@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,6 +31,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEventSourcesConfigResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &eventSourcesConfigResource{}, nil
 }
@@ -118,7 +120,7 @@ func (r *eventSourcesConfigResource) Read(ctx context.Context, req resource.Read
 	}
 
 	out, err := findEventSourcesConfig(ctx, conn)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -174,7 +176,7 @@ func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devo
 	}
 
 	if out == nil || out.EventSources == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

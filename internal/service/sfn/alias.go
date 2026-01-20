@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sfn
@@ -13,26 +13,27 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sfn_alias", name="Alias")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineAliasOutput")
+// @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -115,7 +116,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 
 	out, err := findAliasByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SFN Alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -192,7 +193,7 @@ func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.Des
 	}
 	out, err := conn.DescribeStateMachineAlias(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -203,7 +204,7 @@ func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.Des
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

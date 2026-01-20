@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,7 +99,7 @@ func TestAccS3BucketPolicy_disappears(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +140,7 @@ func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyTemplate, rName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -481,7 +481,7 @@ func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -519,7 +519,7 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(ctx), acctest.Partition(), bucketName)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(policy, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("Error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
@@ -527,6 +527,23 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
+
+		_, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
+		return err
 	}
 }
 

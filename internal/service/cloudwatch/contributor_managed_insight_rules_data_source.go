@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudwatch
@@ -48,7 +48,7 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 	conn := d.Meta().CloudWatchClient(ctx)
 
 	var data contributorManagedInsightRulesDataSourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -65,7 +65,7 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(
 		ctx,
 		struct {
 			ManagedRules []awstypes.ManagedRuleDescription
@@ -77,7 +77,7 @@ func (d *contributorManagedInsightRulesDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ResourceARN.String())
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data), smerr.ID, data.ResourceARN.String())
 }
 
 type contributorManagedInsightRulesDataSourceModel struct {

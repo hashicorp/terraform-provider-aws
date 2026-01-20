@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ivschat
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,6 +28,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetLoggingConfigurationOutput")
 // @Testing(preIdentityVersion="v6.5.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingConfigurationCreate,
@@ -182,7 +183,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	out, err := findLoggingConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVSChat LoggingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

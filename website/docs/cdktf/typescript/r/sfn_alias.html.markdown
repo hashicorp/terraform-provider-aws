@@ -80,6 +80,21 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sfn_alias.example
+  identity = {
+    "arn" = "arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo"
+  }
+}
+
+resource "aws_sfn_alias" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SFN (Step Functions) Alias using the `arn`. For example:
 
 ```typescript
@@ -110,4 +125,4 @@ Using `terraform import`, import SFN (Step Functions) Alias using the `arn`. For
 % terraform import aws_sfn_alias.foo arn:aws:states:us-east-1:123456789098:stateMachine:myStateMachine:foo
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-222ea80f44b96d6ac90305f77ff3eefadb825a2ad5beaffe683714806b23b99b -->
+<!-- cache-key: cdktf-0.20.8 input-5a9fde9454f62390dc42992e9e95e18de271bd1808bb8c17b4e3144e06a9ec9b -->

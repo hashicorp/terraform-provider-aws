@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,6 +31,7 @@ import (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingEndpointGroup")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomRoutingEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingEndpointGroupCreate,
@@ -162,7 +164,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 
 	endpointGroup, err := findCustomRoutingEndpointGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Custom Routing Endpoint Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -227,7 +229,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	output, err := conn.DescribeCustomRoutingEndpointGroup(ctx, input)
 
 	if errs.IsA[*awstypes.EndpointGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -238,7 +240,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -113,7 +113,7 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +137,7 @@ func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err = tfrds.FindDBProxyTargetByFourPartKey(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -284,14 +284,13 @@ resource "aws_security_group" "test" {
 func testAccProxyTargetConfig_instance(rName string) string {
 	return acctest.ConfigCompose(testAccProxyTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
-  preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
+  engine = "mysql"
 }
 
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = data.aws_rds_engine_version.test.engine
   engine_version             = data.aws_rds_engine_version.test.version
-  preferred_instance_classes = ["db.t3.micro", "db.t2.micro", "db.t3.small"]
+  preferred_instance_classes = ["db.t4g.micro", "db.t3.micro", "db.t4g.small", "db.t3.small"]
 }
 
 resource "aws_db_instance" "test" {

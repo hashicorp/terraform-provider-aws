@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -32,12 +32,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -303,22 +304,18 @@ func (r *resourceLFTagResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var output *lakeformation.AddLFTagsToResourceOutput
-	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, IAMPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		output, err = conn.AddLFTagsToResource(ctx, in)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResource(ctx, in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -392,7 +389,7 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	out, err := findResourceLFTagByID(ctx, conn, state.CatalogID.ValueString(), res)
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -465,26 +462,22 @@ func (r *resourceLFTagResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	err := retry.RetryContext(ctx, deleteTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, deleteTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		_, err = conn.RemoveLFTagsFromResource(ctx, in)
 		if err != nil {
 			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized") {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
+			return tfresource.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
 		}
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResource(ctx, in)
-	}
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -519,7 +512,7 @@ func findResourceLFTagByID(ctx context.Context, conn *lakeformation.Client, cata
 	out, err := conn.GetResourceLFTags(ctx, in)
 
 	if errs.IsA[*awstypes.EntityNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

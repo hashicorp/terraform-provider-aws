@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune
@@ -13,13 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -134,7 +135,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	dbClusterParameterGroup, err := findDBClusterParameterGroupByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -267,7 +268,7 @@ func findDBClusterParameterGroupByName(ctx context.Context, conn *neptune.Client
 
 	// Eventual consistency check.
 	if aws.ToString(output.DBClusterParameterGroupName) != name {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -293,7 +294,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *neptune.Client, inp
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -318,7 +319,7 @@ func findDBClusterParameters(ctx context.Context, conn *neptune.Client, input *n
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

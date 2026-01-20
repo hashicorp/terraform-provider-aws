@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codestarconnections
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codestarconnections/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,6 +29,7 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections/types;awstypes;awstypes.Connection")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -105,7 +107,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 
 	connection, err := findConnectionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeStar Connections Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,7 +165,7 @@ func findConnectionByARN(ctx context.Context, conn *codestarconnections.Client, 
 	output, err := conn.GetConnection(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -174,7 +176,7 @@ func findConnectionByARN(ctx context.Context, conn *codestarconnections.Client, 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

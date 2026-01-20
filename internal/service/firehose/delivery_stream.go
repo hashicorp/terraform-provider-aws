@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package firehose
@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/firehose/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1540,7 +1541,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+	_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 		return conn.CreateDeliveryStream(ctx, input)
 	})
 
@@ -1583,7 +1584,7 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 	sn := d.Get(names.AttrName).(string)
 	s, err := findDeliveryStreamByName(ctx, conn, sn)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Kinesis Firehose Delivery Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1736,7 +1737,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 		}
 
-		_, err := retryDeliveryStreamOp(ctx, func() (any, error) {
+		_, err := retryDeliveryStreamOp(ctx, func(ctx context.Context) (any, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
 
@@ -1808,7 +1809,7 @@ func resourceDeliveryStreamDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func retryDeliveryStreamOp(ctx context.Context, f func() (any, error)) (any, error) {
+func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, error)) (any, error) {
 	return tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
@@ -1842,7 +1843,7 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	output, err := conn.DescribeDeliveryStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1853,17 +1854,17 @@ func findDeliveryStreamByName(ctx context.Context, conn *firehose.Client, name s
 	}
 
 	if output == nil || output.DeliveryStreamDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamDescription, nil
 }
 
-func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
+func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeliveryStreamByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1876,7 +1877,7 @@ func statusDeliveryStream(ctx context.Context, conn *firehose.Client, name strin
 }
 
 func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamStatusCreating),
 		Target:  enum.Slice(types.DeliveryStreamStatusActive),
 		Refresh: statusDeliveryStream(ctx, conn, name),
@@ -1887,7 +1888,7 @@ func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name 
 
 	if output, ok := outputRaw.(*types.DeliveryStreamDescription); ok {
 		if status, failureDescription := output.DeliveryStreamStatus, output.FailureDescription; status == types.DeliveryStreamStatusCreatingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1897,7 +1898,7 @@ func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Client, name 
 }
 
 func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDeliveryStream(ctx, conn, name),
@@ -1908,7 +1909,7 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name 
 
 	if output, ok := outputRaw.(*types.DeliveryStreamDescription); ok {
 		if status, failureDescription := output.DeliveryStreamStatus, output.FailureDescription; status == types.DeliveryStreamStatusDeletingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1924,17 +1925,17 @@ func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *
 	}
 
 	if output.DeliveryStreamEncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryStreamEncryptionConfiguration, nil
 }
 
-func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Client, name string) retry.StateRefreshFunc {
+func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *firehose.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDeliveryStreamEncryptionConfigurationByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -1947,7 +1948,7 @@ func statusDeliveryStreamEncryptionConfiguration(ctx context.Context, conn *fire
 }
 
 func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamEncryptionStatusEnabling),
 		Target:  enum.Slice(types.DeliveryStreamEncryptionStatusEnabled),
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
@@ -1958,7 +1959,7 @@ func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Cli
 
 	if output, ok := outputRaw.(*types.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := output.Status, output.FailureDescription; status == types.DeliveryStreamEncryptionStatusEnablingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err
@@ -1968,7 +1969,7 @@ func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Cli
 }
 
 func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Client, name string, timeout time.Duration) (*types.DeliveryStreamEncryptionConfiguration, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.DeliveryStreamEncryptionStatusDisabling),
 		Target:  enum.Slice(types.DeliveryStreamEncryptionStatusDisabled),
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
@@ -1979,7 +1980,7 @@ func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Cl
 
 	if output, ok := outputRaw.(*types.DeliveryStreamEncryptionConfiguration); ok {
 		if status, failureDescription := output.Status, output.FailureDescription; status == types.DeliveryStreamEncryptionStatusDisablingFailed && failureDescription != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", failureDescription.Type, aws.ToString(failureDescription.Details)))
 		}
 
 		return output, err

@@ -6,7 +6,7 @@ description: |-
   Provides information about a ElastiCache Subnet Group.
 ---
 
-# Resource: aws_elasticache_subnet_group
+# Data Source: aws_elasticache_subnet_group
 
 Provides information about a ElastiCache Subnet Group.
 

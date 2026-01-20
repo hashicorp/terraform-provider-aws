@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package organizations_test
@@ -22,8 +22,8 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func testAccAccount_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -100,7 +100,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -172,7 +172,7 @@ func testAccAccount_AccountUpdate(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -457,7 +457,7 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch
@@ -19,7 +19,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -52,7 +53,6 @@ func resourceDomain() *schema.Resource {
 
 				name := d.Id()
 				ds, err := findDomainByName(ctx, conn, name)
-
 				if err != nil {
 					return nil, fmt.Errorf("reading OpenSearch Domain (%s): %w", name, err)
 				}
@@ -165,6 +165,47 @@ func resourceDomain() *schema.Resource {
 										Type:      schema.TypeString,
 										Optional:  true,
 										Sensitive: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"aiml_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"natural_language_query_generation_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"desired_state": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.NaturalLanguageQueryGenerationDesiredState](),
+									},
+								},
+							},
+						},
+						"s3_vectors_engine": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+										Optional: true,
 									},
 								},
 							},
@@ -524,6 +565,40 @@ func resourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"identity_center_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled_api_access": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"identity_center_instance_arn": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateFunc:     verify.ValidARN,
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"roles_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RolesKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+						"subject_key": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SubjectKeyIdCOption](),
+							DiffSuppressFunc: suppressDiffIfIdentityCenterOptionsDisabled,
+						},
+					},
+				},
+			},
 			names.AttrIPAddressType: {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -680,6 +755,14 @@ func resourceDomain() *schema.Resource {
 	}
 }
 
+func suppressDiffIfIdentityCenterOptionsDisabled(_, _, _ string, d *schema.ResourceData) bool {
+	// `!ok` means the attribute is not set, or the attribute is set to false
+	if _, ok := d.GetOk("identity_center_options.0.enabled_api_access"); !ok {
+		return true
+	}
+	return false
+}
+
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
@@ -714,6 +797,10 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("advanced_security_options"); ok {
 		input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(v.([]any))
+	}
+
+	if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]any)) > 0 {
@@ -826,12 +913,11 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.CreateDomain(ctx, &input)
 		},
 		domainErrorRetryable,
 	)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain (%s): %s", name, err)
 	}
@@ -849,12 +935,32 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDomainConfig(ctx, &input)
 			},
 			domainErrorRetryable,
 		)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
+		}
 
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("identity_center_options"); ok {
+		input := opensearch.UpdateDomainConfigInput{
+			IdentityCenterOptions: expandIdentityCenterOptions(v.([]any)),
+			DomainName:            aws.String(name),
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func(ctx context.Context) (any, error) {
+				return conn.UpdateDomainConfig(ctx, &input)
+			},
+			domainErrorRetryable,
+		)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
@@ -874,7 +980,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	name := d.Get(names.AttrDomainName).(string)
 	ds, err := findDomainByName(ctx, conn, name)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -887,7 +993,6 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	output, err := conn.DescribeDomainConfig(ctx, &opensearch.DescribeDomainConfigInput{
 		DomainName: aws.String(name),
 	})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain (%s) Config: %s", d.Id(), err)
 	}
@@ -916,6 +1021,13 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
 	}
+	if ds.AIMLOptions != nil {
+		if err := d.Set("aiml_options", []any{flattenAIMLOptionsOutput(ds.AIMLOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting aiml_options: %s", err)
+		}
+	} else {
+		d.Set("aiml_options", nil)
+	}
 	d.Set(names.AttrARN, ds.ARN)
 	if v := dc.AutoTuneOptions; v != nil {
 		if err := d.Set("auto_tune_options", []any{flattenAutoTuneOptions(v.Options)}); err != nil {
@@ -941,6 +1053,11 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
+	if ds.IdentityCenterOptions != nil {
+		if err := d.Set("identity_center_options", flattenIdentityCenterOptions(ds.IdentityCenterOptions)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting identity_center_options: %s", err)
+		}
+	}
 	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 	// Remove any disabled log types that aren't in state.
 	var inStateLogTypes []string
@@ -1044,6 +1161,12 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]any))
 		}
 
+		if d.HasChange("aiml_options") {
+			if v, ok := d.GetOk("aiml_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AIMLOptions = expandAIMLOptionsInput(v.([]any)[0].(map[string]any))
+			}
+		}
+
 		if d.HasChange("auto_tune_options") {
 			input.AutoTuneOptions = expandAutoTuneOptions(d.Get("auto_tune_options").([]any)[0].(map[string]any))
 		}
@@ -1100,6 +1223,15 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 				s := options[0].(map[string]any)
 				input.EncryptionAtRestOptions = expandEncryptAtRestOptions(s)
+			}
+		}
+
+		if d.HasChange("identity_center_options") {
+			if v, ok := d.GetOk("identity_center_options"); ok && len(v.([]any)) > 0 {
+				input.IdentityCenterOptions = expandIdentityCenterOptions(d.Get("identity_center_options").([]any))
+			} else {
+				// Identity Center Options is disabled when empty object is provided.
+				input.IdentityCenterOptions = &awstypes.IdentityCenterOptionsInput{}
 			}
 		}
 
@@ -1167,12 +1299,11 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.UpdateDomainConfig(ctx, &input)
 			},
 			domainErrorRetryable,
 		)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s) Config: %s", d.Id(), err)
 		}
@@ -1188,7 +1319,6 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			_, err := conn.UpgradeDomain(ctx, &input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "upgrading OpenSearch Domain (%s): %s", d.Id(), err)
 			}
@@ -1237,7 +1367,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	output, err := conn.DescribeDomain(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -1248,7 +1378,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil

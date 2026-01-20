@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -569,7 +569,7 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 				Config: testAccDocumentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDocument(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -603,7 +603,7 @@ func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

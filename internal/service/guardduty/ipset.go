@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -29,6 +29,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(preCheck="testAccPreCheckDetectorNotExists")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
@@ -93,7 +94,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "creating GuardDuty IPSet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.IpSetStatusActivating, awstypes.IpSetStatusDeactivating),
 		Target:     enum.Slice(awstypes.IpSetStatusActive, awstypes.IpSetStatusInactive),
 		Refresh:    ipsetRefreshStatusFunc(ctx, conn, *resp.IpSetId, detectorID),
@@ -206,7 +207,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.IpSetStatusActive,
 			awstypes.IpSetStatusActivating,
@@ -228,7 +229,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	return diags
 }
 
-func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, ipSetID, detectorID string) retry.StateRefreshFunc {
+func ipsetRefreshStatusFunc(ctx context.Context, conn *guardduty.Client, ipSetID, detectorID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &guardduty.GetIPSetInput{
 			DetectorId: aws.String(detectorID),

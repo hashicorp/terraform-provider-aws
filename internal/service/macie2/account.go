@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2
@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -81,22 +80,18 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.Status = awstypes.MacieStatus(v.(string))
 	}
 
-	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.EnableMacie(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.EnableMacie(ctx, input)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
@@ -166,11 +161,11 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 
 	input := &macie2.DisableMacieInput{}
 
-	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, 4*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DisableMacie(ctx, input)
 
 		if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Cannot disable Macie while associated with an administrator account") {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
 		if err != nil {
@@ -178,15 +173,11 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any
 				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				return nil
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DisableMacie(ctx, input)
-	}
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||

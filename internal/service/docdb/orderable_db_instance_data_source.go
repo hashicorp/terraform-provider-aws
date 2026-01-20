@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package docdb
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -111,7 +111,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if orderableDBInstance == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {
@@ -156,7 +156,7 @@ func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *do
 		}
 
 		for _, v := range page.OrderableDBInstanceOptions {
-			if !itypes.IsZero(&v) {
+			if !inttypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

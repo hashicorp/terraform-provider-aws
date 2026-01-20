@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -163,7 +164,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 
 	cluster, err := findServerlessClusterByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] MSK Serverless Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -221,7 +222,7 @@ func findServerlessClusterByARN(ctx context.Context, conn *kafka.Client, arn str
 	}
 
 	if output.Serverless == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

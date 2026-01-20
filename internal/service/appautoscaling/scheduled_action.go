@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appautoscaling
@@ -6,7 +6,6 @@ package appautoscaling
 import (
 	"context"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,7 +44,7 @@ func resourceScheduledAction() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: suppressEquivalentTime,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
 			},
 			names.AttrName: {
 				Type:     schema.TypeString,
@@ -101,7 +103,7 @@ func resourceScheduledAction() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.IsRFC3339Time,
-				DiffSuppressFunc: suppressEquivalentTime,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentTime,
 			},
 			"timezone": {
 				Type:     schema.TypeString,
@@ -181,7 +183,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -276,41 +278,41 @@ func findScheduledActions(ctx context.Context, conn *applicationautoscaling.Clie
 	return output, nil
 }
 
-func expandScalableTargetAction(l []any) *awstypes.ScalableTargetAction {
-	if len(l) == 0 || l[0] == nil {
+func expandScalableTargetAction(tfList []any) *awstypes.ScalableTargetAction {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]any)
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.ScalableTargetAction{}
 
-	result := &awstypes.ScalableTargetAction{}
-
-	if v, ok := m[names.AttrMaxCapacity]; ok {
+	if v, ok := tfMap[names.AttrMaxCapacity]; ok {
 		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null {
-			result.MaxCapacity = aws.Int32(v)
+			apiObject.MaxCapacity = aws.Int32(v)
 		}
 	}
-	if v, ok := m["min_capacity"]; ok {
+	if v, ok := tfMap["min_capacity"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null {
-			result.MinCapacity = aws.Int32(v)
+			apiObject.MinCapacity = aws.Int32(v)
 		}
 	}
 
-	return result
+	return apiObject
 }
 
-func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []any {
-	if cfg == nil {
+func flattenScalableTargetAction(apiObject *awstypes.ScalableTargetAction) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := make(map[string]any)
-	if cfg.MaxCapacity != nil {
-		m[names.AttrMaxCapacity] = strconv.FormatInt(int64(aws.ToInt32(cfg.MaxCapacity)), 10)
+	tfMap := make(map[string]any)
+
+	if apiObject.MaxCapacity != nil {
+		tfMap[names.AttrMaxCapacity] = flex.Int32ToStringValue(apiObject.MaxCapacity)
 	}
-	if cfg.MinCapacity != nil {
-		m["min_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MinCapacity)), 10)
+	if apiObject.MinCapacity != nil {
+		tfMap["min_capacity"] = flex.Int32ToStringValue(apiObject.MinCapacity)
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }

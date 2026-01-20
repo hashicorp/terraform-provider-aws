@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -27,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,6 +78,14 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
+			names.AttrIPAddressType: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"network_interface_ids": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
@@ -197,7 +205,7 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	id := data.InstanceConnectEndpointID.ValueString()
 	instanceConnectEndpoint, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -261,18 +269,19 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.
 type instanceConnectEndpointResourceModel struct {
 	framework.WithRegionModel
-	InstanceConnectEndpointARN types.String         `tfsdk:"arn"`
-	AvailabilityZone           types.String         `tfsdk:"availability_zone"`
-	DNSName                    types.String         `tfsdk:"dns_name"`
-	FipsDnsName                types.String         `tfsdk:"fips_dns_name"`
-	InstanceConnectEndpointID  types.String         `tfsdk:"id"`
-	NetworkInterfaceIDs        fwtypes.ListOfString `tfsdk:"network_interface_ids"`
-	OwnerID                    types.String         `tfsdk:"owner_id"`
-	PreserveClientIP           types.Bool           `tfsdk:"preserve_client_ip"`
-	SecurityGroupIDs           fwtypes.SetOfString  `tfsdk:"security_group_ids"`
-	SubnetId                   types.String         `tfsdk:"subnet_id"`
-	Tags                       tftags.Map           `tfsdk:"tags"`
-	TagsAll                    tftags.Map           `tfsdk:"tags_all"`
-	Timeouts                   timeouts.Value       `tfsdk:"timeouts"`
-	VpcId                      types.String         `tfsdk:"vpc_id"`
+	InstanceConnectEndpointARN types.String                               `tfsdk:"arn"`
+	AvailabilityZone           types.String                               `tfsdk:"availability_zone"`
+	DNSName                    types.String                               `tfsdk:"dns_name"`
+	FipsDnsName                types.String                               `tfsdk:"fips_dns_name"`
+	InstanceConnectEndpointID  types.String                               `tfsdk:"id"`
+	IPAddressType              fwtypes.StringEnum[awstypes.IpAddressType] `tfsdk:"ip_address_type"`
+	NetworkInterfaceIDs        fwtypes.ListOfString                       `tfsdk:"network_interface_ids"`
+	OwnerID                    types.String                               `tfsdk:"owner_id"`
+	PreserveClientIP           types.Bool                                 `tfsdk:"preserve_client_ip"`
+	SecurityGroupIDs           fwtypes.SetOfString                        `tfsdk:"security_group_ids"`
+	SubnetId                   types.String                               `tfsdk:"subnet_id"`
+	Tags                       tftags.Map                                 `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                 `tfsdk:"tags_all"`
+	Timeouts                   timeouts.Value                             `tfsdk:"timeouts"`
+	VpcId                      types.String                               `tfsdk:"vpc_id"`
 }

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2
@@ -22,6 +22,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/macie2;macie2.GetClassificationExportConfigurationOutput")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceClassificationExportConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClassificationExportConfigurationCreate,

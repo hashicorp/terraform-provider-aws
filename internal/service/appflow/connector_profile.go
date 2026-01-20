@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,6 +32,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.ConnectorProfile")
 // @Testing(importIgnore="connector_profile_config.0.connector_profile_credentials")
 // @Testing(idAttrDuplicates="name")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
@@ -1476,7 +1478,7 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	connectorProfile, err := findConnectorProfileByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -1561,7 +1563,7 @@ func findConnectorProfileByName(ctx context.Context, conn *appflow.Client, name 
 	}
 
 	if output == nil || len(output.ConnectorProfileDetails) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.ConnectorProfileDetails)

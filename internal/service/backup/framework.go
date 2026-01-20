@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup
@@ -13,13 +13,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,6 +31,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
 // @Testing(generator="randomFrameworkName()")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,
@@ -182,7 +184,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findFrameworkByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -271,7 +273,7 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	output, err := conn.DescribeFramework(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -282,17 +284,17 @@ func findFramework(ctx context.Context, conn *backup.Client, input *backup.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusFramework(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {
+func statusFramework(ctx context.Context, conn *backup.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findFrameworkByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -313,7 +315,7 @@ const (
 )
 
 func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{frameworkStatusCreationInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
 		Refresh: statusFramework(ctx, conn, name),
@@ -330,7 +332,7 @@ func waitFrameworkCreated(ctx context.Context, conn *backup.Client, name string,
 }
 
 func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{frameworkStatusUpdateInProgress},
 		Target:  []string{frameworkStatusCompleted, frameworkStatusFailed},
 		Refresh: statusFramework(ctx, conn, name),
@@ -347,7 +349,7 @@ func waitFrameworkUpdated(ctx context.Context, conn *backup.Client, name string,
 }
 
 func waitFrameworkDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeFrameworkOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{frameworkStatusDeletionInProgress},
 		Target:  []string{},
 		Refresh: statusFramework(ctx, conn, name),

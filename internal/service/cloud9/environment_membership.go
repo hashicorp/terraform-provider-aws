@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloud9
@@ -13,12 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9"
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -96,7 +97,7 @@ func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceDa
 
 	env, err := findEnvironmentMembershipByTwoPartKey(ctx, conn, envID, userARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Cloud9 Environment Membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -193,7 +194,7 @@ func findEnvironmentMembershipByTwoPartKey(ctx context.Context, conn *cloud9.Cli
 	output, err := conn.DescribeEnvironmentMemberships(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -204,7 +205,7 @@ func findEnvironmentMembershipByTwoPartKey(ctx context.Context, conn *cloud9.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfresource.AssertSingleValueResult(output.Memberships)

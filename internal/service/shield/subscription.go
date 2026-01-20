@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package shield
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -96,7 +96,7 @@ func (r *subscriptionResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	out, err := findSubscriptionByID(ctx, conn)
-	if errs.IsA[*retry.NotFoundError](err) {
+	if errs.IsA[*sdkretry.NotFoundError](err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -176,7 +176,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 	out, err := conn.DescribeSubscription(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
 			}
@@ -185,7 +185,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 	}
 
 	if out == nil || out.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Subscription, nil

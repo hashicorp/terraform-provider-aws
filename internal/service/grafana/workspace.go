@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package grafana
@@ -15,7 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -270,7 +271,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	workspace, err := findWorkspaceByID(ctx, conn, d.Id())
 
-	if tfresource.NotFound(err) && !d.IsNewResource() {
+	if retry.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -463,7 +464,7 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	output, err := conn.DescribeWorkspace(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -474,17 +475,17 @@ func findWorkspaceByID(ctx context.Context, conn *grafana.Client, id string) (*a
 	}
 
 	if output == nil || output.Workspace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workspace, nil
 }
 
-func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
+func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findWorkspaceByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -497,7 +498,7 @@ func statusWorkspace(ctx context.Context, conn *grafana.Client, id string) retry
 }
 
 func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusCreating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -514,7 +515,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusUpdating, awstypes.WorkspaceStatusVersionUpdating),
 		Target:  enum.Slice(awstypes.WorkspaceStatusActive),
 		Refresh: statusWorkspace(ctx, conn, id),
@@ -531,7 +532,7 @@ func waitWorkspaceUpdated(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.WorkspaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.WorkspaceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusWorkspace(ctx, conn, id),

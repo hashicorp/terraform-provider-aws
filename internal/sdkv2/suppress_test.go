@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -96,6 +96,44 @@ func TestSuppressEquivalentRoundedTime(t *testing.T) {
 
 	for i, tc := range testCases {
 		value := SuppressEquivalentRoundedTime(tc.layout, tc.d)("test_property", tc.old, tc.new, nil)
+
+		if tc.equivalent && !value {
+			t.Fatalf("expected test case %d to be equivalent", i)
+		}
+
+		if !tc.equivalent && value {
+			t.Fatalf("expected test case %d to not be equivalent", i)
+		}
+	}
+}
+
+func TestSuppressEquivalentTime(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old        string
+		new        string
+		equivalent bool
+	}{
+		{
+			old:        "2024-04-19T23:01:23.000Z",
+			new:        "2024-04-19T23:01:23.000Z",
+			equivalent: true,
+		},
+		{
+			old:        "2024-04-19T23:01:23.000Z",
+			new:        "2024-04-19T23:02:23.000Z",
+			equivalent: false,
+		},
+		{
+			old:        "2023-09-24T15:30:00+09:00",
+			new:        "2023-09-24T06:30:00Z",
+			equivalent: true,
+		},
+	}
+
+	for i, tc := range testCases {
+		value := SuppressEquivalentTime("test_property", tc.old, tc.new, nil)
 
 		if tc.equivalent && !value {
 			t.Fatalf("expected test case %d to be equivalent", i)

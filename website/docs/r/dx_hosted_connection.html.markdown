@@ -39,7 +39,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `aws_device` - The Direct Connect endpoint on which the physical connection terminates.
 * `connection_region` - The AWS Region where the connection is located.
 * `has_logical_redundancy` - Indicates whether the connection supports a secondary BGP peer in the same address family (IPv4/IPv6).
-* `id` - The ID of the connection.
+* `id` - The ID of the hosted connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.
 * `lag_id` - The ID of the LAG.
 * `loa_issue_time` - The time of the most recent call to [DescribeLoa](https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeLoa.html) for this connection.
