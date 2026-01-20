@@ -23,8 +23,10 @@ FEATURES:
 * **New List Resource:** `aws_s3_object` ([#46002](https://github.com/hashicorp/terraform-provider-aws/issues/46002))
 * **New Resource:** `aws_cloudfront_anycast_ip_list` ([#43331](https://github.com/hashicorp/terraform-provider-aws/issues/43331))
 * **New Resource:** `aws_notifications_managed_notification_account_contact_association` ([#45185](https://github.com/hashicorp/terraform-provider-aws/issues/45185))
+* **New Resource:** `aws_notifications_managed_notification_additional_channel_association` ([#45186](https://github.com/hashicorp/terraform-provider-aws/issues/45186))
 * **New Resource:** `aws_opensearch_application` ([#43822](https://github.com/hashicorp/terraform-provider-aws/issues/43822))
 * **New Resource:** `aws_ram_resource_associations_exclusive` ([#45883](https://github.com/hashicorp/terraform-provider-aws/issues/45883))
+* **New Resource:** `aws_sagemaker_labeling_job` ([#46041](https://github.com/hashicorp/terraform-provider-aws/issues/46041))
 * **New Resource:** `aws_sagemaker_model_card` ([#45993](https://github.com/hashicorp/terraform-provider-aws/issues/45993))
 * **New Resource:** `aws_sagemaker_model_card_export_job` ([#46009](https://github.com/hashicorp/terraform-provider-aws/issues/46009))
 * **New Resource:** `aws_vpc_security_group_rules_exclusive` ([#45876](https://github.com/hashicorp/terraform-provider-aws/issues/45876))
@@ -75,6 +77,7 @@ BUG FIXES:
 * resource/aws_route53_zone: Fixes error where Delete would fail if the remote resource had already been deleted. ([#45985](https://github.com/hashicorp/terraform-provider-aws/issues/45985))
 * resource/aws_route53profiles_resource_association: Fix `Invalid JSON String Value` error on initial apply and `ConflictException` on subsequent apply when associating Route53 Resolver Query Log Configs ([#45958](https://github.com/hashicorp/terraform-provider-aws/issues/45958))
 * resource/aws_route53recoverycontrolconfig_control_panel: Fix crash when create returns an error ([#45954](https://github.com/hashicorp/terraform-provider-aws/issues/45954))
+* resource/aws_subnet: Mark `ipv6_cidr_block` as `ForceNew` when the existing IPv6 subnet was created with `assign_ipv6_address_on_create = true` ([#46043](https://github.com/hashicorp/terraform-provider-aws/issues/46043))
 * resource/aws_vpc_endpoint: Fix persistent diffs caused by case differences in `ip_address_type` ([#45947](https://github.com/hashicorp/terraform-provider-aws/issues/45947))
 
 ## 6.28.0 (January 7, 2026)
