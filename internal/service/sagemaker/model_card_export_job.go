@@ -135,16 +135,14 @@ func (r *modelCardExportJobResource) Create(ctx context.Context, request resourc
 		return
 	}
 
-	// Set values for unknowns.
 	arn := aws.ToString(outputCMCEJ.ModelCardExportJobArn)
-
 	outputDMCEJ, err := waitModelCardExportJobCompleted(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for SageMaker AI Model Card Export Job (%s) complete", arn), err.Error())
 	}
 
-	// Set unknowns.
+	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, outputDMCEJ, &data)...)
 	if response.Diagnostics.HasError() {
 		return
