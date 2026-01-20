@@ -226,14 +226,6 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		stuff.ImportStateIDFunc = attr
 	}
 
-	if attr, ok := args.Keyword["noImport"]; ok {
-		if b, err := common.ParseBoolAttr("noImport", attr); err != nil {
-			return err
-		} else {
-			stuff.NoImport = b
-		}
-	}
-
 	if attr, ok := args.Keyword["plannableImportAction"]; ok {
 		switch attr {
 		case importActionNoop.String():

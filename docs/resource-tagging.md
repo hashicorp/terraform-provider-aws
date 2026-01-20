@@ -551,7 +551,7 @@ There are multiple methods for overriding the import ID, if needed.
 To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
 If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
 If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
-If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
+If the resource type does not support importing, use the annotation `@NoImport`.
 
 ##### Serialization parameters
 
