@@ -28,9 +28,8 @@ func DataSourcePermissions() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrCatalogID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validCatalogID,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"catalog_resource": {
 				Type:     schema.TypeBool,
@@ -76,10 +75,9 @@ func DataSourcePermissions() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validCatalogID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -92,10 +90,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validCatalogID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -141,10 +138,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validCatalogID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrExpression: {
 							Type:     schema.TypeSet,
@@ -204,10 +200,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validCatalogID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
@@ -234,10 +229,9 @@ func DataSourcePermissions() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrCatalogID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validCatalogID,
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 						"column_names": {
 							Type:     schema.TypeSet,
