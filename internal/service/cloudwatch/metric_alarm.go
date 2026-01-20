@@ -6,6 +6,7 @@ package cloudwatch
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -326,9 +327,19 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	name := d.Get("alarm_name").(string)
+
+	// Check if alarm already exists to prevent silent overwrites
+	existing, err := findMetricAlarmByName(ctx, conn, name)
+	if err != nil && !retry.NotFound(err) {
+		return smerr.Append(ctx, diags, err, smerr.ID, name)
+	}
+	if existing != nil {
+		return smerr.Append(ctx, diags, fmt.Errorf("CloudWatch metric alarm %q already exists", name), smerr.ID, name)
+	}
+
 	input := expandPutMetricAlarmInput(ctx, d)
 
-	_, err := conn.PutMetricAlarm(ctx, input)
+	_, err = conn.PutMetricAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {

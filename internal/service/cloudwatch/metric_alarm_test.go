@@ -1136,3 +1136,49 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 }
 `, rName)
 }
+
+func TestAccCloudWatchMetricAlarm_duplicateName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricAlarmConfig_duplicateName(rName),
+				ExpectError: regexache.MustCompile(`CloudWatch metric alarm ".*" already\s+exists`),
+			},
+		},
+	})
+}
+
+func testAccMetricAlarmConfig_duplicateName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "first" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "120"
+  statistic           = "Average"
+  threshold           = "80"
+}
+
+resource "aws_cloudwatch_metric_alarm" "second" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "3"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "90"
+
+  depends_on = [aws_cloudwatch_metric_alarm.first]
+}
+`, rName)
+}
