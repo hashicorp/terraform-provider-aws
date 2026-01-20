@@ -74,3 +74,121 @@ func TestAccEC2SecurityGroup_List_Basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccEC2SecurityGroup_List_FilterByGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_security_group.expected[0]"
+	resourceName2 := "aws_security_group.expected[1]"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	var id1, id2 string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckSecurityGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecurityGroup/list_filter_group_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith("aws_security_group.expected.0", names.AttrID, getter(&id1)),
+					resource.TestCheckResourceAttrWith("aws_security_group.expected.1", names.AttrID, getter(&id2)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecurityGroup/list_filter_group_ids/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_security_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
+					}),
+					querycheck.ExpectIdentity("aws_security_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEC2SecurityGroup_List_FilterByVPCID(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_security_group.expected[0]"
+	resourceName2 := "aws_security_group.expected[1]"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	var id1, id2 string
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckSecurityGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecurityGroup/list_filter_vpc_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrWith("aws_security_group.expected.0", names.AttrID, getter(&id1)),
+					resource.TestCheckResourceAttrWith("aws_security_group.expected.1", names.AttrID, getter(&id2)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:                    true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SecurityGroup/list_filter_vpc_id/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					querycheck.ExpectIdentity("aws_security_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id1),
+					}),
+					querycheck.ExpectIdentity("aws_security_group.test", map[string]knownvalue.Check{
+						names.AttrAccountID: tfknownvalue.AccountID(),
+						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
+					}),
+				},
+			},
+		},
+	})
+}
