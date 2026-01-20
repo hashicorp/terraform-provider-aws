@@ -763,6 +763,13 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 														stringplanmodifier.RequiresReplace(),
 													},
 												},
+												"parsing_modality": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ParsingModality](),
+													Optional:   true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
+												},
 											},
 											Blocks: map[string]schema.Block{
 												"parsing_prompt": schema.ListNestedBlock{
@@ -1140,8 +1147,9 @@ type transformationLambdaConfigurationModel struct {
 }
 
 type bedrockFoundationModelConfigurationModel struct {
-	ModelArn      fwtypes.ARN                                         `tfsdk:"model_arn"`
-	ParsingPrompt fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
+	ModelArn        fwtypes.ARN                                         `tfsdk:"model_arn"`
+	ParsingModality fwtypes.StringEnum[awstypes.ParsingModality]        `tfsdk:"parsing_modality"`
+	ParsingPrompt   fwtypes.ListNestedObjectValueOf[parsingPromptModel] `tfsdk:"parsing_prompt"`
 }
 
 type parsingPromptModel struct {
