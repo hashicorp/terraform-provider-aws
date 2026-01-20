@@ -478,6 +478,8 @@ for more details of the fields.
   is set to `S3`, this is the path to the output artifact.
 * `type` - (Required) Build output artifact's type. Valid values `CODEPIPELINE`, `NO_ARTIFACTS`, and `S3`.
 
+  **Note:** The `CODEPIPELINE` type is not supported for `secondary_artifacts`.
+
 ### secondary_sources
 
 * `auth` - (Optional) Information about the strategy CodeBuild should use when authenticating with the source code host.
@@ -509,6 +511,8 @@ for more details of the fields.
   `SECRETS_MANAGER`.
 * `resource` - (Required) The ARN of the resource to use for authentication. For type `CODECONNECTIONS` this should be
   an AWS CodeStar Connection. For type `SECRETS_MANAGER` this should be an AWS Secrets Manager secret.
+
+  **Note:** The `CODEPIPELINE` type is not supported for `secondary_sources`.
 
 #### secondary_sources: git_submodules_config
 
