@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_scheduler_schedule: Change default `maximum_event_age_in_seconds` and `maximum_retry_attempts` to 0 to avoid manually changing it in AWS console 
+```
