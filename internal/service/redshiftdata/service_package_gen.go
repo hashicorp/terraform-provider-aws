@@ -35,6 +35,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePackageSDKResource {
 	return []*inttypes.ServicePackageSDKResource{
 		{
+			Factory:  resourceBatchStatement,
+			TypeName: "aws_redshiftdata_batch_statement",
+			Name:     "BatchStatement",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  resourceStatement,
 			TypeName: "aws_redshiftdata_statement",
 			Name:     "Statement",
