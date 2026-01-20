@@ -49,6 +49,7 @@ func newLabelingJobResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type labelingJobResource struct {
 	framework.ResourceWithModel[labelingJobResourceModel]
+	framework.WithNoUpdate
 }
 
 func (r *labelingJobResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -90,7 +91,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"labeling_job_status": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.StringEnumType[awstypes.LabelingJobStatus](),
+				Computed:   true,
 			},
 			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -593,26 +595,15 @@ func (r *labelingJobResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().SageMakerClient(ctx)
 
+	if status := data.LabelingJobStatus.ValueEnum(); status != awstypes.LabelingJobStatusInProgress && status != awstypes.LabelingJobStatusCompleted {
+		return
+	}
+
 	name := fwflex.StringValueFromFramework(ctx, data.LabelingJobName)
-	output, err := findLabelingJobByName(ctx, conn, name)
-
-	if retry.NotFound(err) {
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading SageMaker AI Labeling Job (%s)", name), err.Error())
-		return
-	}
-
-	if output.LabelingJobStatus == awstypes.LabelingJobStatusFailed {
-		return
-	}
-
 	input := sagemaker.StopLabelingJobInput{
 		LabelingJobName: aws.String(name),
 	}
-	_, err = conn.StopLabelingJob(ctx, &input)
+	_, err := conn.StopLabelingJob(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
 		return
@@ -714,7 +705,7 @@ type labelingJobResourceModel struct {
 	LabelingJobAlgorithmsConfig fwtypes.ListNestedObjectValueOf[labelingJobAlgorithmsConfigModel]   `tfsdk:"labeling_job_algorithms_config"`
 	LabelingJobARN              types.String                                                        `tfsdk:"labeling_job_arn"`
 	LabelingJobName             types.String                                                        `tfsdk:"labeling_job_name"`
-	LabelingJobStatus           types.String                                                        `tfsdk:"labeling_job_status"`
+	LabelingJobStatus           fwtypes.StringEnum[awstypes.LabelingJobStatus]                      `tfsdk:"labeling_job_status"`
 	OutputConfig                fwtypes.ListNestedObjectValueOf[labelingJobOutputConfigModel]       `tfsdk:"output_config"`
 	RoleARN                     fwtypes.ARN                                                         `tfsdk:"role_arn"`
 	StoppingConditions          fwtypes.ListNestedObjectValueOf[labelingJobStoppingConditionsModel] `tfsdk:"stopping_conditions"`
