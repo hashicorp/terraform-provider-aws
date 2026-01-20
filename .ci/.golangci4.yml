@@ -13,7 +13,9 @@ linters:
     - nosprintfhostport
     - paralleltest
     - perfsprint
+    - prealloc
     - predeclared
+    - reassign
     - revive
     - staticcheck
   settings:

@@ -5,6 +5,8 @@ version: "2"
 linters:
   default: none
   enable:
+    # !! only add t-z linters here
+    - tagalign
     - tparallel
     - unconvert
     - unparam
@@ -22,6 +24,11 @@ linters:
           - unparam
         text: always receives
   settings:
+    tagalign:
+      sort: true
+      order:
+        - json
+        - tfsdk
     usetesting:
       os-setenv: true
       context-background: false

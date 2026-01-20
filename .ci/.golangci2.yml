@@ -8,10 +8,13 @@ linters:
     # !! only add a-e linters here
     - asasalint
     - asciicheck
+    - bidichk
     - containedctx
     - contextcheck
     - copyloopvar
+    - decorder
     - dogsled
+    - dupword
     - durationcheck
     - errcheck
     - errname
