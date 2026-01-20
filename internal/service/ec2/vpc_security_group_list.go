@@ -15,6 +15,7 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -84,12 +85,14 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	}
 
 	tflog.Info(ctx, "Listing resources")
+
+	var input ec2.DescribeSecurityGroupsInput
+	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
 	stream.Results = func(yield func(list.ListResult) bool) {
-		var input ec2.DescribeSecurityGroupsInput
-		if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
 
 		for item, err := range listSecurityGroups(ctx, conn, &input) {
 			if err != nil {
@@ -111,9 +114,11 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 			tflog.Info(ctx, "Reading resource")
 			diags := resourceSecurityGroupRead(ctx, rd, awsClient)
 			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
+				tflog.Error(ctx, "Reading resource", map[string]any{
+					names.AttrID: groupID,
+					"diags":      sdkdiag.DiagnosticsString(diags),
+				})
+				continue
 			}
 			if rd.Id() == "" {
 				// Resource is logically deleted
@@ -128,8 +133,11 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 
 			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
-				yield(result)
-				return
+				tflog.Error(ctx, "Setting result", map[string]any{
+					names.AttrID: groupID,
+					"diags":      result.Diagnostics,
+				})
+				continue
 			}
 
 			if !yield(result) {
