@@ -63,8 +63,9 @@ func resourceHostedConnection() *schema.Resource {
 				Computed: true,
 			},
 			"lag_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "lag_id is deprecated. Use connection_id instead.",
 			},
 			"loa_issue_time": {
 				Type:     schema.TypeString,
