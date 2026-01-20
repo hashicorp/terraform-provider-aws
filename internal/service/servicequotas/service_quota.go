@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -483,8 +484,8 @@ func flattenMetricInfo(apiObject *awstypes.MetricInfo) []any {
 
 func waitServiceQuotaRequestFulfilled(ctx context.Context, conn *servicequotas.Client, requestID string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{string(awstypes.RequestStatusCaseOpened), string(awstypes.RequestStatusPending)},
-		Target:     []string{string(awstypes.RequestStatusApproved)},
+		Pending:    enum.Slice(awstypes.RequestStatusCaseOpened, awstypes.RequestStatusPending),
+		Target:     enum.Slice(awstypes.RequestStatusApproved),
 		Refresh:    statusServiceQuotaRequest(ctx, conn, requestID),
 		Timeout:    timeout,
 		Delay:      30 * time.Second,

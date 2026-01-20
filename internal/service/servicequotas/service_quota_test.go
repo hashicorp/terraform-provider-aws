@@ -373,7 +373,7 @@ func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_fulfillment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_fulfillment", acctest.CtTrue),
 					// If wait_for_fulfillment works, there should not be a pending request_id.
 					resource.TestCheckResourceAttr(resourceName, "request_id", ""),
 				),
