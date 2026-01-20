@@ -353,7 +353,7 @@ func findImageVersionByName(ctx context.Context, conn *sagemaker.Client, name st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -381,7 +381,7 @@ func findImageVersionByTwoPartKey(ctx context.Context, conn *sagemaker.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -407,7 +407,7 @@ func findImageVersionAliasesByTwoPartKey(ctx context.Context, conn *sagemaker.Cl
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SageMakerImageVersionAliases, nil

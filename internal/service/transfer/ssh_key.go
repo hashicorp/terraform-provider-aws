@@ -180,7 +180,7 @@ func findUserSSHKeyByThreePartKey(ctx context.Context, conn *transfer.Client, se
 	}
 
 	if aws.ToString(sshKey.SshPublicKeyBody) == "" {
-		return nil, nil, tfresource.NewEmptyResultError(nil)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return user, sshKey, nil

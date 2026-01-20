@@ -302,7 +302,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -335,7 +335,7 @@ func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeBackupJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

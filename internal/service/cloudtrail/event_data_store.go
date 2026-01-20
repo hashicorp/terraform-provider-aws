@@ -31,6 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEventDataStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventDataStoreCreate,
@@ -393,7 +394,7 @@ func findEventDataStore(ctx context.Context, conn *cloudtrail.Client, input *clo
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

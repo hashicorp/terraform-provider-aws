@@ -27,6 +27,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.SourceCredentialsInfo")
 // @Testing(importIgnore="token;user_name", plannableImportAction="Replace")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSourceCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSourceCredentialCreate,
@@ -157,7 +158,7 @@ func findSourceCredentials(ctx context.Context, conn *codebuild.Client, input *c
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, v := range output.SourceCredentialsInfos {

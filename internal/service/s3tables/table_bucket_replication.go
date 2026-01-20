@@ -35,6 +35,7 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="version_token")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketReplicationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketReplicationResource{}, nil
 }
@@ -251,7 +252,7 @@ func findTableBucketReplication(ctx context.Context, conn *s3tables.Client, inpu
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

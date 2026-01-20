@@ -682,7 +682,7 @@ func waitGatewayTargetCreated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -700,7 +700,7 @@ func waitGatewayTargetUpdated(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -717,7 +717,7 @@ func waitGatewayTargetDeleted(ctx context.Context, conn *bedrockagentcorecontrol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*bedrockagentcorecontrol.GetGatewayTargetOutput); ok {
-		tfresource.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
+		retry.SetLastError(err, errors.New(strings.Join(out.StatusReasons, "; ")))
 		return out, smarterr.NewError(err)
 	}
 
@@ -763,7 +763,7 @@ func findGatewayTarget(ctx context.Context, conn *bedrockagentcorecontrol.Client
 	}
 
 	if out == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out, nil

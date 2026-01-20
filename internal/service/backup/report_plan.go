@@ -30,6 +30,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup/types;awstypes;awstypes.ReportPlan")
 // @Testing(generator="randomReportPlanName()")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,
@@ -394,7 +395,7 @@ func findReportPlan(ctx context.Context, conn *backup.Client, input *backup.Desc
 	}
 
 	if output == nil || output.ReportPlan == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReportPlan, nil

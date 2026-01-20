@@ -36,6 +36,7 @@ const (
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="id", resourceType="InstanceProfile")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -336,7 +337,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil

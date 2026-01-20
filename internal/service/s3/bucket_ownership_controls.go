@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
@@ -206,7 +207,7 @@ func findOwnershipControls(ctx context.Context, conn *s3.Client, bucket string) 
 	}
 
 	if output == nil || output.OwnershipControls == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.OwnershipControls, nil

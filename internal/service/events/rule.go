@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,6 +38,7 @@ import (
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeRuleOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
@@ -349,15 +351,15 @@ func findRuleByTwoPartKey(ctx context.Context, conn *eventbridge.Client, eventBu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
 const ruleResourceIDSeparator = "/"

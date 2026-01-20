@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_connect_security_profile", name="Security Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityProfileCreate,
@@ -258,7 +259,7 @@ func findSecurityProfile(ctx context.Context, conn *connect.Client, input *conne
 	}
 
 	if output == nil || output.SecurityProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SecurityProfile, nil

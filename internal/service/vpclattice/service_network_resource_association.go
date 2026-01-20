@@ -37,6 +37,7 @@ import (
 // @FrameworkResource("aws_vpclattice_service_network_resource_association", name="Service Network Resource Association")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetServiceNetworkResourceAssociationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newServiceNetworkResourceAssociationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &serviceNetworkResourceAssociationResource{}
 
@@ -222,7 +223,7 @@ func findServiceNetworkResourceAssociationByID(ctx context.Context, conn *vpclat
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -256,7 +257,7 @@ func waitServiceNetworkResourceAssociationCreated(ctx context.Context, conn *vpc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -275,7 +276,7 @@ func waitServiceNetworkResourceAssociationDeleted(ctx context.Context, conn *vpc
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkResourceAssociationOutput); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

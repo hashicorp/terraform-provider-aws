@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(checkDestroyNoop=true)
 // @Testing(importIgnore="state")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
@@ -235,7 +236,7 @@ func findDeployment(ctx context.Context, conn *appconfig.Client, input *appconfi
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

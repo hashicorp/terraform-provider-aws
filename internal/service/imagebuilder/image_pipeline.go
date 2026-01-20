@@ -32,6 +32,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImagePipelineCreate,
@@ -509,7 +510,7 @@ func findImagePipelineByARN(ctx context.Context, conn *imagebuilder.Client, arn 
 	}
 
 	if output == nil || output.ImagePipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImagePipeline, nil

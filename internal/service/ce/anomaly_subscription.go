@@ -37,6 +37,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/costexplorer/types;awstypes;awstypes.AnomalySubscription")
 // @Testing(emailAddress="email_address")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
@@ -247,7 +248,7 @@ func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client
 	}
 
 	if output == nil || len(output.AnomalySubscriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.AnomalySubscriptions[0], nil

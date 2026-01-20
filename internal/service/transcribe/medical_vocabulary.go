@@ -284,7 +284,7 @@ func FindMedicalVocabularyByName(ctx context.Context, conn *transcribe.Client, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

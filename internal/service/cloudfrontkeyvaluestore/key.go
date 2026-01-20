@@ -37,6 +37,7 @@ import (
 // @IdentityAttribute("key")
 // @ImportIDHandler("securityGroupVPCAssociationImportID", setIDAttribute=true)
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -278,7 +279,7 @@ func findKeyByTwoPartKey(ctx context.Context, conn *cloudfrontkeyvaluestore.Clie
 	}
 
 	if output == nil || output.Key == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -303,7 +304,7 @@ func findETagByARN(ctx context.Context, conn *cloudfrontkeyvaluestore.Client, ar
 	}
 
 	if output == nil || output.ETag == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ETag, nil

@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -43,6 +42,8 @@ import (
 // @FrameworkResource("aws_prometheus_scraper", name="Scraper")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amp/types;types.ScraperDescription")
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func newScraperResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &scraperResource{}
 
@@ -510,9 +511,8 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	output, err := conn.DescribeScraper(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -521,14 +521,14 @@ func findScraper(ctx context.Context, conn *amp.Client, input *amp.DescribeScrap
 	}
 
 	if output == nil || output.Scraper == nil || output.Scraper.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Scraper, nil
 }
 
-func statusScraper(ctx context.Context, conn *amp.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScraper(conn *amp.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findScraperByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -544,17 +544,17 @@ func statusScraper(ctx context.Context, conn *amp.Client, id string) sdkretry.St
 }
 
 func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeCreating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -563,17 +563,17 @@ func waitScraperCreated(ctx context.Context, conn *amp.Client, id string, timeou
 }
 
 func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeUpdating),
 		Target:  enum.Slice(awstypes.ScraperStatusCodeActive),
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -582,10 +582,10 @@ func waitScraperUpdated(ctx context.Context, conn *amp.Client, id string, timeou
 }
 
 func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeout time.Duration) (*awstypes.ScraperDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScraperStatusCodeActive, awstypes.ScraperStatusCodeDeleting),
 		Target:  []string{},
-		Refresh: statusScraper(ctx, conn, id),
+		Refresh: statusScraper(conn, id),
 		Timeout: timeout,
 		Delay:   8 * time.Minute,
 	}
@@ -593,7 +593,7 @@ func waitScraperDeleted(ctx context.Context, conn *amp.Client, id string, timeou
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ScraperDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

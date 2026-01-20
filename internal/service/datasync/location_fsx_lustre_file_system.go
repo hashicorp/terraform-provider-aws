@@ -35,6 +35,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxLustreOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxLustreImportStateID")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxLustreFileSystemCreate,
@@ -210,7 +211,7 @@ func findLocationFSxLustreByARN(ctx context.Context, conn *datasync.Client, arn 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

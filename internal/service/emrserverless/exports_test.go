@@ -8,4 +8,6 @@ var (
 	FindApplicationByID = findApplicationByID
 
 	ResourceApplication = resourceApplication
+
+	PrometheusRemoteWriteURLPattern = prometheusRemoteWriteURLPattern
 )

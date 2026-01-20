@@ -27,6 +27,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/inspector/types;types.AssessmentTarget")
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTargetCreate,
@@ -151,7 +152,7 @@ func findAssessmentTargets(ctx context.Context, conn *inspector.Client, input *i
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err := failedItemsError(output.FailedItems); err != nil {

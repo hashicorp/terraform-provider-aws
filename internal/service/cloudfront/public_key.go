@@ -212,7 +212,7 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	}
 
 	if output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

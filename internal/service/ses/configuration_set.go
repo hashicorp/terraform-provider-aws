@@ -323,7 +323,7 @@ func findConfigurationSet(ctx context.Context, conn *ses.Client, input *ses.Desc
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -32,6 +32,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
@@ -474,7 +475,7 @@ func findDistributionConfigurationByARN(ctx context.Context, conn *imagebuilder.
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DistributionConfiguration, nil

@@ -40,6 +40,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sagemaker;sagemaker.DescribeUserProfileOutput")
 // @Testing(preIdentityVersion="6.2.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUserProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserProfileCreate,
@@ -1115,7 +1116,7 @@ func findUserProfileByName(ctx context.Context, conn *sagemaker.Client, domainID
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -1151,7 +1152,7 @@ func waitUserProfileInService(ctx context.Context, conn *sagemaker.Client, domai
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}
@@ -1173,7 +1174,7 @@ func waitUserProfileDeleted(ctx context.Context, conn *sagemaker.Client, domainI
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeUserProfileOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 
 		return output, err
 	}

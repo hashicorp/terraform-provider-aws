@@ -28,6 +28,7 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain", name="Domain")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
@@ -209,7 +210,7 @@ func findDomainByTwoPartKey(ctx context.Context, conn *codeartifact.Client, owne
 	}
 
 	if output == nil || output.Domain == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Domain, nil

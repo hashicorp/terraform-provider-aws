@@ -32,6 +32,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSet")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,
@@ -406,7 +407,7 @@ func findDataSet(ctx context.Context, conn *quicksight.Client, input *quicksight
 	}
 
 	if output == nil || output.DataSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSet, nil
@@ -436,7 +437,7 @@ func findDataSetRefreshProperties(ctx context.Context, conn *quicksight.Client, 
 	}
 
 	if output == nil || output.DataSetRefreshProperties == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSetRefreshProperties, nil
@@ -466,7 +467,7 @@ func findDataSetPermissions(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil

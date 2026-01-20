@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -669,9 +668,8 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	output, err := conn.GetTable(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -680,21 +678,20 @@ func findTableByTwoPartKey(ctx context.Context, conn *keyspaces.Client, keyspace
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.TableStatusDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	return output, nil
 }
 
-func statusTable(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTable(conn *keyspaces.Client, keyspaceName, tableName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
 
 		if retry.NotFound(err) {
@@ -710,10 +707,10 @@ func statusTable(ctx context.Context, conn *keyspaces.Client, keyspaceName, tabl
 }
 
 func waitTableCreated(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusCreating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -727,10 +724,10 @@ func waitTableCreated(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 }
 
 func waitTableDeleted(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusActive, types.TableStatusDeleting),
 		Target:  []string{},
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 	}
 
@@ -744,10 +741,10 @@ func waitTableDeleted(ctx context.Context, conn *keyspaces.Client, keyspaceName,
 }
 
 func waitTableUpdated(ctx context.Context, conn *keyspaces.Client, keyspaceName, tableName string, timeout time.Duration) (*keyspaces.GetTableOutput, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.TableStatusUpdating),
 		Target:  enum.Slice(types.TableStatusActive),
-		Refresh: statusTable(ctx, conn, keyspaceName, tableName),
+		Refresh: statusTable(conn, keyspaceName, tableName),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

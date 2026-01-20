@@ -46,6 +46,7 @@ const (
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
 // @Testing(importIgnore="create_base_policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCoreNetwork() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCoreNetworkCreate,
@@ -354,7 +355,7 @@ func findCoreNetwork(ctx context.Context, conn *networkmanager.Client, input *ne
 	}
 
 	if output == nil || output.CoreNetwork == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetwork, nil
@@ -385,7 +386,7 @@ func findCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, inp
 	}
 
 	if output == nil || output.CoreNetworkPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CoreNetworkPolicy, nil
@@ -594,7 +595,7 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Clie
 				errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(err.ErrorCode), aws.ToString(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errors.Join(errs...))
+			retry.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err

@@ -252,7 +252,7 @@ func waitTargetGroupAttachmentCreated(ctx context.Context, conn *vpclattice.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}
@@ -271,7 +271,7 @@ func waitTargetGroupAttachmentDeleted(ctx context.Context, conn *vpclattice.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.TargetSummary); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ReasonCode)))
 
 		return output, err
 	}

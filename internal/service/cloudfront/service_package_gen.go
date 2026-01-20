@@ -7,6 +7,8 @@ package cloudfront
 
 import (
 	"context"
+	"iter"
+	"slices"
 	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +36,24 @@ func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackage
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newConnectionGroupDataSource,
+			TypeName: "aws_cloudfront_connection_group",
+			Name:     "Connection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newDistributionTenantDataSource,
+			TypeName: "aws_cloudfront_distribution_tenant",
+			Name:     "Distribution Tenant",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newOriginAccessControlDataSource,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
@@ -45,6 +65,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAnycastIPListResource,
+			TypeName: "aws_cloudfront_anycast_ip_list",
+			Name:     "Anycast IP List",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newResourceConnectionFunction,
 			TypeName: "aws_cloudfront_connection_function",
 			Name:     "Connection Function",
@@ -54,10 +83,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newConnectionGroupResource,
+			TypeName: "aws_cloudfront_connection_group",
+			Name:     "Connection Group",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newContinuousDeploymentPolicyResource,
 			TypeName: "aws_cloudfront_continuous_deployment_policy",
 			Name:     "Continuous Deployment Policy",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newDistributionTenantResource,
+			TypeName: "aws_cloudfront_distribution_tenant",
+			Name:     "Distribution Tenant",
+			Tags: unique.Make(inttypes.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			}),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
 			Factory:  newKeyValueStoreResource,
@@ -97,6 +144,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newKeyValueStoreResourceAsListResource,
+			TypeName: "aws_cloudfront_key_value_store",
+			Name:     "Key Value Store",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+			Identity: inttypes.GlobalSingleParameterIdentity(names.AttrName),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

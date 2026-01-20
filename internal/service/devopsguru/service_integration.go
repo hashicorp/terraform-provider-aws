@@ -30,6 +30,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newServiceIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &serviceIntegrationResource{}, nil
 }
@@ -314,7 +315,7 @@ func findServiceIntegration(ctx context.Context, conn *devopsguru.Client) (*awst
 	}
 
 	if out == nil || out.ServiceIntegration == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ServiceIntegration, nil

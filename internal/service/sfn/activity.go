@@ -30,6 +30,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -178,7 +179,7 @@ func findActivityByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.
 	}
 
 	if output == nil || output.CreationDate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

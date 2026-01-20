@@ -24,6 +24,7 @@ import (
 // @Testing(checkDestroyNoop=true)
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRegionSettings() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionSettingsUpdate,
@@ -105,7 +106,7 @@ func findRegionSettings(ctx context.Context, conn *backup.Client) (*backup.Descr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

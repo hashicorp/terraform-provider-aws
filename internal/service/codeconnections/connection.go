@@ -39,6 +39,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codeconnections/types;types.Connection")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionResource{}
 
@@ -338,7 +339,7 @@ func findConnectionByARN(ctx context.Context, conn *codeconnections.Client, arn 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

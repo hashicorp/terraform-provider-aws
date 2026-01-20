@@ -39,6 +39,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineOutput")
 // @Testing(preIdentityVersion="v6.13.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,
@@ -432,7 +433,7 @@ func findStateMachineByARN(ctx context.Context, conn *sfn.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

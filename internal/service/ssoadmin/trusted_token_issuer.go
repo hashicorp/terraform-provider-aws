@@ -41,6 +41,7 @@ import (
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTrustedTokenIssuerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustedTokenIssuerResource{}, nil
 }
@@ -293,7 +294,7 @@ func findTrustedTokenIssuerByARN(ctx context.Context, conn *ssoadmin.Client, arn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

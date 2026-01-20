@@ -202,7 +202,7 @@ func findLexBot(ctx context.Context, conn *connect.Client, input *connect.ListBo
 	}
 
 	if output.LexBot == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LexBot, nil

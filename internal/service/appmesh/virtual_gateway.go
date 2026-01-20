@@ -34,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualGatewayData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualGatewayImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualGatewayCreate,
@@ -832,7 +833,7 @@ func findVirtualGateway(ctx context.Context, conn *appmesh.Client, input *appmes
 	}
 
 	if output == nil || output.VirtualGateway == nil || output.VirtualGateway.Metadata == nil || output.VirtualGateway.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualGateway, nil

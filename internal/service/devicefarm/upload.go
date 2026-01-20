@@ -31,6 +31,7 @@ import (
 // @Testing(preCheckRegion="us-west-2")
 // @Testing(identityRegionOverrideTest=false)
 // @Testing(importIgnore="url", plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUpload() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadCreate,
@@ -205,7 +206,7 @@ func findUploadByARN(ctx context.Context, conn *devicefarm.Client, arn string) (
 	}
 
 	if output == nil || output.Upload == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Upload, nil

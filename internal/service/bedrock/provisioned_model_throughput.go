@@ -213,7 +213,7 @@ func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -246,7 +246,7 @@ func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Cl
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetProvisionedModelThroughputOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}

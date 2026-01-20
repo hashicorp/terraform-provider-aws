@@ -88,7 +88,7 @@ func findQueueURLByName(ctx context.Context, conn *sqs.Client, name string) (*st
 	}
 
 	if output == nil || output.QueueUrl == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QueueUrl, nil

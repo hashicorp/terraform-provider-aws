@@ -36,6 +36,7 @@ import (
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(generator=false)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,
@@ -499,8 +500,7 @@ func enablePolicyType(ctx context.Context, conn *organizations.Client, policyTyp
 }
 
 func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
-	input := organizations.DescribeOrganizationInput{}
-
+	var input organizations.DescribeOrganizationInput
 	output, err := conn.DescribeOrganization(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
@@ -515,7 +515,7 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	}
 
 	if output == nil || output.Organization == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Organization, nil
@@ -539,9 +539,8 @@ func findAccounts(ctx context.Context, conn *organizations.Client, input *organi
 }
 
 func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+	var input organizations.ListAWSServiceAccessForOrganizationInput
+	output, err := findEnabledServicePrincipals(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -587,9 +586,8 @@ func findRoots(ctx context.Context, conn *organizations.Client, input *organizat
 }
 
 func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+	var input organizations.ListRootsInput
+	output, err := findRoots(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err

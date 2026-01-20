@@ -37,6 +37,7 @@ import (
 
 // @FrameworkResource("aws_appconfig_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &environmentResource{}
 
@@ -306,7 +307,7 @@ func findEnvironment(ctx context.Context, conn *appconfig.Client, input *appconf
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

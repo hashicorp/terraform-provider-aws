@@ -259,7 +259,7 @@ func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

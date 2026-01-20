@@ -228,7 +228,7 @@ func findRateBasedRuleByID(ctx context.Context, conn *waf.Client, id string) (*a
 	}
 
 	if output == nil || output.Rule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Rule, nil

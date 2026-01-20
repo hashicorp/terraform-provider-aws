@@ -30,6 +30,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayRouteTableAttachment")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAttachmentCreate,
@@ -234,7 +235,7 @@ func findTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkma
 	}
 
 	if output == nil || output.TransitGatewayRouteTableAttachment == nil || output.TransitGatewayRouteTableAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TransitGatewayRouteTableAttachment, nil
@@ -268,7 +269,7 @@ func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *ne
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -288,7 +289,7 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -307,7 +308,7 @@ func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayRouteTableAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}

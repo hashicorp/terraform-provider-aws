@@ -49,6 +49,7 @@ import (
 // @Testing(subdomainTfVar="common_name;certificate_domain")
 // @Testing(importIgnore="update_token", plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTLSInspectionConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &tlsInspectionConfigurationResource{}
 
@@ -481,7 +482,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	}
 
 	if output == nil || output.TLSInspectionConfigurationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -45,6 +45,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.TrustStore")
 // @Testing(importStateIdAttribute="trust_store_arn")
 // @Testing(importIgnore="certificate_list")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTrustStoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &trustStoreResource{}, nil
 }
@@ -364,7 +365,7 @@ func findTrustStoreByARN(ctx context.Context, conn *workspacesweb.Client, arn st
 	}
 
 	if output == nil || output.TrustStore == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrustStore, nil

@@ -29,6 +29,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.TransitGatewayPeering")
 // @Testing(skipEmptyTags=true)
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTransitGatewayPeering() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringCreate,
@@ -200,7 +201,7 @@ func findTransitGatewayPeering(ctx context.Context, conn *networkmanager.Client,
 	}
 
 	if output == nil || output.TransitGatewayPeering == nil || output.TransitGatewayPeering.Peering == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TransitGatewayPeering, nil
@@ -235,7 +236,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
-		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+		retry.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
 
 		return output, err
 	}
@@ -256,7 +257,7 @@ func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.TransitGatewayPeering); ok {
-		tfresource.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
+		retry.SetLastError(err, peeringsError(output.Peering.LastModificationErrors))
 
 		return output, err
 	}

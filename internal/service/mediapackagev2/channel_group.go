@@ -40,6 +40,7 @@ const (
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccChannelGroupImportStateIdFunc)
 // @Testing(importStateIdAttribute=name)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newChannelGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelGroupResource{}
 
@@ -265,7 +266,7 @@ func findChannelGroupByID(ctx context.Context, conn *mediapackagev2.Client, id s
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_copy_grant", name="Snapshot Copy Grant")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyGrantCreate,

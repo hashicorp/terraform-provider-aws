@@ -225,7 +225,7 @@ func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 	}
 
 	if out == nil || out.CollectionARN == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

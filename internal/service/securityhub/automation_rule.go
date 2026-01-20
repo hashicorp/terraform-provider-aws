@@ -39,6 +39,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/securityhub/types;awstypes;awstypes.AutomationRulesConfig")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &automationRuleResource{}, nil
 }
@@ -540,7 +541,7 @@ func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Rules, nil

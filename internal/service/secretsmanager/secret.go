@@ -40,6 +40,7 @@ import (
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 // @ArnIdentity
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -488,7 +489,7 @@ func findSecret(ctx context.Context, conn *secretsmanager.Client, input *secrets
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

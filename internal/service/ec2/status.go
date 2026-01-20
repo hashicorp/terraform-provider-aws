@@ -13,6 +13,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -1241,6 +1243,55 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) sdkretry.
 	}
 }
 
+func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findIPAMResourceCIDRByThreePartKey(ctx, conn, scopeID, resourceID, addressFamily)
+
+		if retry.NotFound(err) {
+			return new(awstypes.IpamResourceCidr), string(awstypes.IpamManagementStateUnmanaged), nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ManagementState), nil
+	}
+}
+
+const (
+	ipamPoolCIDRAllocationsExist    = "ipam-cidr-allocations-exist"
+	ipamPoolCIDRAllocationsReleased = "ipam-cidr-allocations-released"
+)
+
+func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, optFns ...func(*ec2.Options)) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		input := ec2.GetIpamPoolAllocationsInput{
+			IpamPoolId: aws.String(poolID),
+		}
+
+		allocations, err := findIPAMPoolAllocations(ctx, conn, &input, optFns...)
+
+		if retry.NotFound(err) {
+			return poolID, ipamPoolCIDRAllocationsReleased, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, allocation := range allocations {
+			allocationCIDR := aws.ToString(allocation.Cidr)
+
+			if inttypes.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
+				return allocation, ipamPoolCIDRAllocationsExist, nil
+			}
+		}
+
+		return poolID, ipamPoolCIDRAllocationsReleased, nil
+	}
+}
+
 func statusImage(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findImageByID(ctx, conn, id)
@@ -1680,6 +1731,29 @@ func statusNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func statusNATGatewayAttachedAppliances(ctx context.Context, conn *ec2.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findNATGatewayByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Check if there are any attached appliances that are not in detached state
+		if v := tfslices.Filter(output.AttachedAppliances, func(v awstypes.NatGatewayAttachedAppliance) bool {
+			return v.AttachmentState != awstypes.NatGatewayApplianceStateDetached
+		}); len(v) > 0 {
+			return output, string(v[0].AttachmentState), nil
+		}
+
+		return nil, "", nil
 	}
 }
 

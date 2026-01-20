@@ -194,6 +194,38 @@ func TestAccRoute53ProfilesResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ProfilesResourceAssociation_queryLogConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// See https://github.com/hashicorp/terraform-provider-aws/issues/45268
+	var resourceAssociation awstypes.ProfileResourceAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_resource_association.test"
+	profileName := "aws_route53profiles_profile.test"
+	queryLogConfigName := "aws_route53_resolver_query_log_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAssociationConfig_queryLogConflict(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, queryLogConfigName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
@@ -348,4 +380,28 @@ resource "aws_route53profiles_resource_association" "test" {
   resource_arn = aws_vpc_endpoint.test.arn
 }
 `, rName))
+}
+
+func testAccResourceAssociationConfig_queryLogConflict(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_route53_resolver_query_log_config" "test" {
+  name            = %[1]q
+  destination_arn = aws_s3_bucket.test.arn
+}
+
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53profiles_resource_association" "test" {
+  name         = %[1]q
+  profile_id   = aws_route53profiles_profile.test.id
+  resource_arn = aws_route53_resolver_query_log_config.test.arn
+}
+`, rName)
 }

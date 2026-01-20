@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_dx_connection", name="Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	// Resource with v0 schema (provider v5.0.1).
 	resourceV0 := &schema.Resource{
@@ -412,7 +413,7 @@ func findConnections(ctx context.Context, conn *directconnect.Client, input *dir
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil

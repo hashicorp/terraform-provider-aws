@@ -221,7 +221,7 @@ func findNamespace(ctx context.Context, conn *s3tables.Client, input *s3tables.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

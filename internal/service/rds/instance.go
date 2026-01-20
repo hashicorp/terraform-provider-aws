@@ -56,6 +56,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
 // @Testing(importIgnore="apply_immediately;password")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -3138,7 +3139,7 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds.C
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
 		if status := aws.ToString(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusDetails)))
 		}
 
 		return output, err

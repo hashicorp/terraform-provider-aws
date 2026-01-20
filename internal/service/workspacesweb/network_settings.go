@@ -38,6 +38,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.NetworkSettings")
 // @Testing(importStateIdAttribute="network_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newNetworkSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &networkSettingsResource{}, nil
 }
@@ -243,7 +244,7 @@ func findNetworkSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 	}
 
 	if output == nil || output.NetworkSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.NetworkSettings, nil

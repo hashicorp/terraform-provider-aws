@@ -25,6 +25,7 @@ import (
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(serialize=true)
@@ -184,7 +185,7 @@ func findDomainPermissionsPolicyByTwoPartKey(ctx context.Context, conn *codearti
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

@@ -37,6 +37,7 @@ const (
 // @SDKResource("aws_appsync_graphql_api", name="GraphQL API")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.GraphqlApi")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGraphQLAPI() *schema.Resource {
 	validateAuthorizerResultTTLInSeconds := validation.IntBetween(0, 3600)
 
@@ -586,7 +587,7 @@ func findGraphQLAPIByID(ctx context.Context, conn *appsync.Client, id string) (*
 	}
 
 	if output == nil || output.GraphqlApi == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.GraphqlApi, nil
@@ -608,7 +609,7 @@ func findSchemaCreationStatusByID(ctx context.Context, conn *appsync.Client, id 
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
@@ -641,7 +642,7 @@ func waitSchemaCreated(ctx context.Context, conn *appsync.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*appsync.GetSchemaCreationStatusOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Details)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Details)))
 		return output, smarterr.NewError(err)
 	}
 

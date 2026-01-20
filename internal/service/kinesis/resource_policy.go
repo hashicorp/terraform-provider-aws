@@ -32,6 +32,7 @@ import (
 // We need to ignore `policy` because the JSON body is not normalized
 // @Testing(importIgnore="policy")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourcePolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePolicyResource{}
 
@@ -201,7 +202,7 @@ func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resource
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -138,7 +138,7 @@ func findOutboundWebIdentityFederation(ctx context.Context, conn *iam.Client) (*
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

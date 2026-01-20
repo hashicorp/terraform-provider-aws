@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeChannelOutput")
 // @Testing(importIgnore="start_channel")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceChannelCreate,
@@ -1146,7 +1147,7 @@ func findChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// Channel can still be found with a state of DELETED.

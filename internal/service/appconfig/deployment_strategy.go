@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_appconfig_deployment_strategy", name="Deployment Strategy")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDeploymentStrategy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentStrategyCreate,
@@ -230,7 +231,7 @@ func findDeploymentStrategy(ctx context.Context, conn *appconfig.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

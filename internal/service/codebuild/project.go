@@ -37,6 +37,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.Project")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preCheck="testAccPreCheckSourceCredentialsForServerTypeGithub")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProjectCreate,
@@ -1221,7 +1222,7 @@ func findProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Projects, nil

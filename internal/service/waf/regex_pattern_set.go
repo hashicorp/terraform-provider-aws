@@ -167,7 +167,7 @@ func findRegexPatternSetByID(ctx context.Context, conn *waf.Client, id string) (
 	}
 
 	if output == nil || output.RegexPatternSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RegexPatternSet, nil

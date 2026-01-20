@@ -37,6 +37,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newIndexResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &indexResource{}
 
@@ -267,7 +268,7 @@ func findIndex(ctx context.Context, conn *resourceexplorer2.Client) (*resourceex
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if state := output.State; state == awstypes.IndexStateDeleted {

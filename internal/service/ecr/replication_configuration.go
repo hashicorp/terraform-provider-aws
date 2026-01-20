@@ -171,7 +171,7 @@ func findReplicationConfiguration(ctx context.Context, conn *ecr.Client) (*ecr.D
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil || len(output.ReplicationConfiguration.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

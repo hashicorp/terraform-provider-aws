@@ -31,6 +31,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// smkOrARNPattern validates SMK URLs or ARNs for Pipes source configuration.
+// Original pattern (before ESC support): ^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2})?:(\d{12})?:(.+)$
+// Updated to use canonical region pattern to support ESC regions like eusc-de-east-1.
+var smkOrARNPattern = `^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):(` + inttypes.CanonicalRegionPatternNoAnchors + `)?:(\d{12})?:(.+)$`
+
 // @SDKResource("aws_pipes_pipe", name="Pipe")
 // @Tags(identifierAttribute="arn")
 func resourcePipe() *schema.Resource {
@@ -111,7 +116,7 @@ func resourcePipe() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.Any(
 						verify.ValidARN,
-						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1,2})?:(\d{12})?:(.+)$`), ""),
+						validation.StringMatch(regexache.MustCompile(smkOrARNPattern), ""),
 					),
 				},
 				"source_parameters": sourceParametersSchema(),
@@ -353,7 +358,7 @@ func findPipeByName(ctx context.Context, conn *pipes.Client, name string) (*pipe
 	}
 
 	if output == nil || output.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -387,7 +392,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -407,7 +412,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -425,7 +430,7 @@ func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*pipes.DescribePipeOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

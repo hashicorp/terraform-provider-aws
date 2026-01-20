@@ -141,7 +141,7 @@ func findIdentityMailFromDomainAttributes(ctx context.Context, conn *ses.Client,
 	}
 
 	if output == nil || output.MailFromDomainAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.MailFromDomainAttributes, nil

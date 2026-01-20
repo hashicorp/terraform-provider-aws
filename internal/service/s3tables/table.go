@@ -49,6 +49,7 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importStateIdFunc="testAccTableImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableResource{}, nil
 }
@@ -673,7 +674,7 @@ func findTable(ctx context.Context, conn *s3tables.Client, input *s3tables.GetTa
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -703,7 +704,7 @@ func findTableEncryption(ctx context.Context, conn *s3tables.Client, input *s3ta
 	}
 
 	if output == nil || output.EncryptionConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfiguration, nil
@@ -733,7 +734,7 @@ func findTableMaintenanceConfiguration(ctx context.Context, conn *s3tables.Clien
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

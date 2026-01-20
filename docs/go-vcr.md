@@ -88,15 +88,32 @@ For example, this was the change applied to the `testAccCheckMetricFilterManyExi
 
 #### Generated Tagging Tests
 
-If the service includes resources with generated tags tests, two additional `@Tags` annotations will be required to ensure the generator does not replace the `*testing.T` argument added to the "check exists" and "check destroy" functions by semgrep.
-Add the following annotations to the resource definition:
+If the service includes resources with generated tagging and Resource Identity tests, two `@Testing` annotations must be removed to ensure regenerating the tests does not remove the `*testing.T` arguments.
+Remove the following annotation flags from the resource definition:
 
 ```go
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 ```
 
 ### Validating Changes
+
+#### Compilation Checks
+
+Once code changes are made, do some basic verification to ensure the provider and tests still compile.
+
+To verify the provider compiles:
+
+```sh
+make build
+```
+
+To verify tests compile:
+
+```sh
+go test ./internal/service/<service-name>
+```
+
+#### Acceptance Tests
 
 The most time consuming part of enabling `go-vcr` for a service is validating acceptance test results.
 **The full acceptance test suite should run in `RECORD_ONLY` mode with no errors.**

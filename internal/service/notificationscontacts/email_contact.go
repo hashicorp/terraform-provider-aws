@@ -194,7 +194,7 @@ func findEmailContactByARN(ctx context.Context, conn *notificationscontacts.Clie
 	}
 
 	if output == nil || output.EmailContact == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EmailContact, nil

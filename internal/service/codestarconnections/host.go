@@ -28,6 +28,7 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections;codestarconnections.GetHostOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,
@@ -256,7 +257,7 @@ func findHostByARN(ctx context.Context, conn *codestarconnections.Client, arn st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

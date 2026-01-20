@@ -33,6 +33,7 @@ import (
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(preCheck="testAccPreCheck")
 // @Tags(identifierAttribute="id")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,
@@ -265,7 +266,7 @@ func findAssessmentTemplates(ctx context.Context, conn *inspector.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err := failedItemsError(output.FailedItems); err != nil {

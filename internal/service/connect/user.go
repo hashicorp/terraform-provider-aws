@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_connect_user", name="User")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -407,7 +408,7 @@ func findUser(ctx context.Context, conn *connect.Client, input *connect.Describe
 	}
 
 	if output == nil || output.User == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.User, nil

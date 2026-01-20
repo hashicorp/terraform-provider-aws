@@ -204,7 +204,7 @@ func findTemplate(ctx context.Context, conn *ses.Client, input *ses.GetTemplateI
 	}
 
 	if output == nil || output.Template == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Template, nil

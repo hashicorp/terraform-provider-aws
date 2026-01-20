@@ -286,7 +286,7 @@ func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.Client, arn strin
 	}
 
 	if len(groups) == 0 && len(roles) == 0 && len(users) == 0 {
-		return nil, nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	groupName := tfslices.ApplyToAll(groups, func(v awstypes.PolicyGroup) string { return aws.ToString(v.GroupName) })

@@ -50,6 +50,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(importIgnore="base_model_identifier", plannableImportAction="Replace")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -489,7 +490,7 @@ func findCustomModelByID(ctx context.Context, conn *bedrock.Client, id string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -531,7 +532,7 @@ func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -567,7 +568,7 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}
@@ -586,7 +587,7 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
 
 		return output, err
 	}

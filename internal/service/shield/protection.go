@@ -161,7 +161,7 @@ func findProtection(ctx context.Context, conn *shield.Client, input *shield.Desc
 	}
 
 	if output == nil || output.Protection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Protection, nil

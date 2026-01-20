@@ -29,6 +29,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,
@@ -110,7 +111,7 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	}
 
 	if output == nil || output.EncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EncryptionConfig, nil

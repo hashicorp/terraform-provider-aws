@@ -34,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationEfsOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
@@ -255,7 +256,7 @@ func findLocationEFSByARN(ctx context.Context, conn *datasync.Client, arn string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

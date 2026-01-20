@@ -283,7 +283,7 @@ func findConnectionByTwoPartKey(ctx context.Context, conn *glue.Client, name, ca
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

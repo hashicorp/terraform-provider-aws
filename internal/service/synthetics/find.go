@@ -38,7 +38,7 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 	}
 
 	if output == nil || output.Canary == nil || output.Canary.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Canary, nil
@@ -62,7 +62,7 @@ func FindGroupByName(ctx context.Context, conn *synthetics.Client, name string) 
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil
@@ -86,7 +86,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 	}
 
 	if out == nil || out.Groups == nil || len(out.Groups) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	var group awstypes.GroupSummary
@@ -97,7 +97,7 @@ func FindAssociatedGroup(ctx context.Context, conn *synthetics.Client, canaryArn
 	}
 
 	if group == (awstypes.GroupSummary{}) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &group, nil
@@ -112,7 +112,7 @@ func findRuntimeVersions(ctx context.Context, conn *synthetics.Client) ([]awstyp
 	}
 
 	if output == nil || output.RuntimeVersions == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuntimeVersions, nil

@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_appconfig_extension", name="Extension")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceExtension() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExtensionCreate,
@@ -256,7 +257,7 @@ func findExtension(ctx context.Context, conn *appconfig.Client, input *appconfig
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -593,7 +593,7 @@ func findUserPoolClientByTwoPartKey(ctx context.Context, conn *cognitoidentitypr
 	}
 
 	if output == nil || output.UserPoolClient == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserPoolClient, nil

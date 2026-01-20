@@ -116,7 +116,7 @@ func (testDbServersListDataSource) findExaInfra(ctx context.Context, conn *odb.C
 		return nil, err
 	}
 	if out == nil || out.CloudExadataInfrastructure == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 	return out.CloudExadataInfrastructure, nil
 }

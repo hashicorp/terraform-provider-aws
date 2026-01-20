@@ -222,7 +222,7 @@ func findDeviceFleetByName(ctx context.Context, conn *sagemaker.Client, id strin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

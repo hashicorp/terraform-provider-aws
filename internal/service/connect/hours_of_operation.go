@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_connect_hours_of_operation", name="Hours Of Operation")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHoursOfOperationCreate,
@@ -285,7 +286,7 @@ func findHoursOfOperation(ctx context.Context, conn *connect.Client, input *conn
 	}
 
 	if output == nil || output.HoursOfOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.HoursOfOperation, nil

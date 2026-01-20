@@ -32,6 +32,7 @@ import (
 // @SDKResource("aws_medialive_input", name="Input")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/medialive;medialive.DescribeInputOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInput() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInputCreate,
@@ -464,7 +465,7 @@ func findInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

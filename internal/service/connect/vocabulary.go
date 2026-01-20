@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_connect_vocabulary", name="Vocabulary")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
@@ -251,7 +252,7 @@ func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.De
 	}
 
 	if output == nil || output.Vocabulary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Vocabulary, nil
@@ -285,7 +286,7 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID
 
 	if output, ok := outputRaw.(*awstypes.Vocabulary); ok {
 		if state := output.State; state == awstypes.VocabularyStateCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
 		}
 
 		return output, err

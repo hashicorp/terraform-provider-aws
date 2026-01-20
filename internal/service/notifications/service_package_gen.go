@@ -40,6 +40,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newManagedNotificationAccountContactAssociationResource,
+			TypeName: "aws_notifications_managed_notification_account_contact_association",
+			Name:     "Managed Notification Account Contact Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newNotificationConfigurationResource,
 			TypeName: "aws_notifications_notification_configuration",
 			Name:     "Notification Configuration",

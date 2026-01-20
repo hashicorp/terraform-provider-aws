@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,10 +38,22 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccPrincipalAssociationConfig_baseIAMRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Prevent "waiting for RAM Resource Share (...) Principal (...) Association create: unexpected state 'FAILED', wanted target 'ASSOCIATED'".
+					acctest.CheckSleep(t, 1*time.Minute),
+				),
+			},
+			{
 				Config: testAccPrincipalAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -50,7 +64,7 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccRAMPrincipalAssociation_AccountID(t *testing.T) {
+func TestAccRAMPrincipalAssociation_accountID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var association awstypes.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
@@ -70,6 +84,11 @@ func TestAccRAMPrincipalAssociation_AccountID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -96,12 +115,27 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccPrincipalAssociationConfig_baseIAMRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Prevent "waiting for RAM Resource Share (...) Principal (...) Association create: unexpected state 'FAILED', wanted target 'ASSOCIATED'".
+					acctest.CheckSleep(t, 1*time.Minute),
+				),
+			},
+			{
 				Config: testAccPrincipalAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfram.ResourcePrincipalAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -120,6 +154,13 @@ func TestAccRAMPrincipalAssociation_duplicate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config: testAccPrincipalAssociationConfig_baseIAMRole(rName),
+				Check: resource.ComposeTestCheckFunc(
+					// Prevent "waiting for RAM Resource Share (...) Principal (...) Association create: unexpected state 'FAILED', wanted target 'ASSOCIATED'".
+					acctest.CheckSleep(t, 1*time.Minute),
+				),
+			},
 			{
 				Config:      testAccPrincipalAssociationConfig_duplicate(rName),
 				ExpectError: regexache.MustCompile(`RAM Principal Association .* already exists`),
@@ -175,7 +216,7 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccPrincipalAssociationConfig_basic(rName string) string {
+func testAccPrincipalAssociationConfig_baseIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
   allow_external_principals = false
@@ -198,12 +239,16 @@ resource "aws_iam_role" "test" {
     }]
   })
 }
+`, rName)
+}
 
+func testAccPrincipalAssociationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccPrincipalAssociationConfig_baseIAMRole(rName), `
 resource "aws_ram_principal_association" "test" {
   principal          = aws_iam_role.test.arn
   resource_share_arn = aws_ram_resource_share.test.id
 }
-`, rName)
+`)
 }
 
 func testAccPrincipalAssociationConfig_accountID(rName string) string {
@@ -225,29 +270,7 @@ resource "aws_ram_principal_association" "test" {
 }
 
 func testAccPrincipalAssociationConfig_duplicate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ram_resource_share" "test" {
-  allow_external_principals = false
-  name                      = %[1]q
-}
-
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-    }]
-  })
-}
-
+	return acctest.ConfigCompose(testAccPrincipalAssociationConfig_baseIAMRole(rName), `
 resource "aws_ram_principal_association" "test1" {
   principal          = aws_iam_role.test.arn
   resource_share_arn = aws_ram_resource_share.test.id
@@ -257,5 +280,5 @@ resource "aws_ram_principal_association" "test2" {
   principal          = aws_iam_role.test.arn
   resource_share_arn = aws_ram_principal_association.test1.resource_share_arn
 }
-`, rName)
+`)
 }

@@ -27,6 +27,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;awstypes;awstypes.Certificate")
 // @Testing(generator=false)
 // @Testing(name="Certificate")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificatePut,

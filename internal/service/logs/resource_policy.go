@@ -139,7 +139,7 @@ func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, 
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

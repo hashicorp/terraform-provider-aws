@@ -34,6 +34,7 @@ import (
 // @Testing(useAlternateAccount=true)
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyCreate,
@@ -99,7 +100,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Organizations Resource Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -148,7 +149,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeleteResourcePolicy(ctx, &organizations.DeleteResourcePolicyInput{})
 
 	if errs.IsA[*awstypes.ResourcePolicyNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -159,8 +160,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awstypes.ResourcePolicy, error) {
-	input := organizations.DescribeResourcePolicyInput{}
-
+	var input organizations.DescribeResourcePolicyInput
 	output, err := conn.DescribeResourcePolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.ResourcePolicyNotFoundException](err) {
@@ -174,7 +174,7 @@ func findResourcePolicy(ctx context.Context, conn *organizations.Client) (*awsty
 	}
 
 	if output == nil || output.ResourcePolicy == nil || output.ResourcePolicy.ResourcePolicySummary == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourcePolicy, nil

@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_sesv2_email_identity", name="Email Identity")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,
@@ -282,7 +283,7 @@ func findEmailIdentity(ctx context.Context, conn *sesv2.Client, input *sesv2.Get
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -31,6 +31,7 @@ import (
 // @Testing(skipEmptyTags=true)
 // @Testing(randomBgpAsn="64512;65534")
 // @Testing(randomIPv4Address="172.0.0.0/24")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSiteToSiteVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSiteToSiteVPNAttachmentCreate,
@@ -247,7 +248,7 @@ func findSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Clien
 	}
 
 	if output == nil || output.SiteToSiteVpnAttachment == nil || output.SiteToSiteVpnAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SiteToSiteVpnAttachment, nil
@@ -281,7 +282,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -303,7 +304,7 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
@@ -322,7 +323,7 @@ func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmana
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
-		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+		retry.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
 
 		return output, err
 	}
