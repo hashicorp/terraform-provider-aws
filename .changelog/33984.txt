@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_dx_connection: Allow updating `name`
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Allow updating `name` and `connection_id`
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface: Allow updating `name` and `connection_id`
+```
