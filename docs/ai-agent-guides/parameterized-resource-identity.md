@@ -35,7 +35,7 @@ Use the following steps to add resource identity to an existing resource:
 				}
 ```
 
-- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_tags.gtpl` (e.g., `trust_store_tags.gtpl`).
+- If the service does not use generated tag tests, you will need to create template files in the `testdata/tmpl` directory. For each resource, create a file named `<resource>_basic.gtpl` (e.g., `trust_store_basic.gtpl`).
 - Populate each template file with the configuration from the resource's `_basic` test. If populating from the `_basic` configuration, be sure to replace any string format directives (e.g. `name = %[1]q`) with a corresponding reference to a variable (e.g. `name = var.rName`).
 - The generators will use the template files to generate the resource identity test configuration. These will be located in the `testdata` directory for the service. **Do not manually create test directories or files as they will be generated.**
 - The region template must be included inside each resource block in the template files. Add it as the first line after the resource declaration:
@@ -137,7 +137,7 @@ Relates #42988
 ### Test Failures
 
 - Ensure `PKG` parameter is included in test commands
-- Verify template file names match exactly (`<resource>_tags.gtpl`)
+- Verify template file names match exactly (`<resource>_basic.gtpl`)
 - Check region template placement is inside resource blocks
 - Don't create test directories manually - let the generator create them
 - If a generated test panics because a `testAccCheck*Exists` helper function has incorrect arguments, add a `@Testing(existsType="")` annotation. NEVER modify the function signature of an existing "exists" helper function
