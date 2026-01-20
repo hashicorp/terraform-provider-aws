@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var s3TablesCatalogPattern = regexache.MustCompile(`^\d{12}:s3tablescatalog\/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$`)
-
 func validPrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
