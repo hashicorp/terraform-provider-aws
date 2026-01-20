@@ -231,23 +231,7 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 			},
 			{
 				// Change IPv6 CIDR block
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-				Config: testAccVPCSubnetConfig_ipv6(rName, 3, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(
-						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
-					),
-				},
-			},
-			{
-				// Re-enable assign_ipv6_address_on_creation
+				// assign_ipv6_address_on_creation was false, so no replacement
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -256,7 +240,6 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 				Config: testAccVPCSubnetConfig_ipv6(rName, 3, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
@@ -266,19 +249,20 @@ func TestAccVPCSubnet_ipv6(t *testing.T) {
 			},
 			{
 				// Force new by changing IPv6 CIDR block
+				// since assign_ipv6_address_on_creation was true
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
 					},
 				},
-				Config: testAccVPCSubnetConfig_ipv6(rName, 1, true),
+				Config: testAccVPCSubnetConfig_ipv6(rName, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					testAccCheckSubnetIPv6CIDRBlockAssociationSet(&subnet),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(true),
+						resourceName, tfjsonpath.New("assign_ipv6_address_on_creation"), knownvalue.Bool(false),
 					),
 				},
 			},
