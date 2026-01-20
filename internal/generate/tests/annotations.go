@@ -331,6 +331,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 				Code: "acctest.PreCheckAlternateAccount(t)",
 			})
 			stuff.GoImports = append(stuff.GoImports,
+				// Required to initialize `schema.Provider` map.
 				common.GoImport{
 					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
 				},
