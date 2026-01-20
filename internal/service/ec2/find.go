@@ -652,6 +652,23 @@ func findInstanceTypes(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
+func findInstanceTypesFromInstanceRequirements(ctx context.Context, conn *ec2.Client, input *ec2.GetInstanceTypesFromInstanceRequirementsInput) ([]awstypes.InstanceTypeInfoFromInstanceRequirements, error) {
+	var output []awstypes.InstanceTypeInfoFromInstanceRequirements
+
+	pages := ec2.NewGetInstanceTypesFromInstanceRequirementsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceTypes...)
+	}
+
+	return output, nil
+}
+
 func findInstanceType(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceTypesInput) (*awstypes.InstanceTypeInfo, error) {
 	output, err := findInstanceTypes(ctx, conn, input)
 

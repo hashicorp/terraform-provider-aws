@@ -42,6 +42,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  newInstanceTypesFromInstanceRequirementsDataSource,
+			TypeName: "aws_ec2_instance_types_from_instance_requirements",
+			Name:     "Instance Types From Instance Requirements",
+			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+		},
+		{
 			Factory:  newSpotDataFeedSubscriptionDataSource,
 			TypeName: "aws_spot_datafeed_subscription",
 			Name:     "Spot Data Feed Subscription Data Source",
