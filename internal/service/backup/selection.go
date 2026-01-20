@@ -144,7 +144,6 @@ func resourceSelection() *schema.Resource {
 			"not_resources": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},

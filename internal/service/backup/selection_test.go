@@ -191,6 +191,36 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 	})
 }
 
+func TestAccBackupSelection_withNotResourcesRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.BackupSelection
+	resourceName := "aws_backup_selection.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSelectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSelectionConfig_notResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
+				),
+			},
+			{
+				Config: testAccSelectionConfig_notResourcesRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSelectionExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBackupSelection_updateTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 awstypes.BackupSelection
@@ -467,6 +497,27 @@ resource "aws_backup_selection" "test" {
   }
 
   not_resources = ["arn:${data.aws_partition.current.partition}:fsx:*"]
+  resources     = ["*"]
+}
+`, rName))
+}
+
+func testAccSelectionConfig_notResourcesRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSelectionConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_backup_selection" "test" {
+  plan_id = aws_backup_plan.test.id
+
+  name         = %[1]q
+  iam_role_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/service-role/AWSBackupDefaultServiceRole"
+
+  selection_tag {
+    type  = "STRINGEQUALS"
+    key   = "foo"
+    value = "bar"
+  }
+
   resources     = ["*"]
 }
 `, rName))
