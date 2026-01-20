@@ -45,6 +45,7 @@ import (
 // @FrameworkResource("aws_vpclattice_resource_configuration", name="Resource Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConfigurationResource{}
 

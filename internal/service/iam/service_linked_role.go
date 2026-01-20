@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
 // @ArnIdentity(arnAttribute="id")
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,

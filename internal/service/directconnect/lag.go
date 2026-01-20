@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_dx_lag", name="LAG")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLagCreate,

@@ -41,6 +41,7 @@ import (
 // @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetApplicationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
 
