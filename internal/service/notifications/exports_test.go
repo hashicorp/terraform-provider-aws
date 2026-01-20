@@ -12,6 +12,7 @@ var (
 	ResourceNotificationConfiguration                       = newNotificationConfigurationResource
 	ResourceNotificationHub                                 = newNotificationHubResource
 
+	FindAccessForOrganization                                       = findAccessForOrganization
 	FindChannelAssociationByTwoPartKey                              = findChannelAssociationByTwoPartKey
 	FindEventRuleByARN                                              = findEventRuleByARN
 	FindManagedNotificationAccountContactAssociationByTwoPartKey    = findManagedNotificationAccountContactAssociationByTwoPartKey
