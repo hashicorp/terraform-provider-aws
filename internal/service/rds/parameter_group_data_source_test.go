@@ -31,6 +31,11 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrFamily, resourceName, names.AttrFamily),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						names.AttrName:  "client_encoding",
+						names.AttrValue: "UTF8",
+					}),
 				),
 			},
 		},
