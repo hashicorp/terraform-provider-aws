@@ -7,10 +7,12 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -34,12 +37,18 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePlan{}
+
+	r.SetDefaultCreateTimeout(10 * time.Minute)
+	r.SetDefaultUpdateTimeout(10 * time.Minute)
+	r.SetDefaultDeleteTimeout(10 * time.Minute)
+
 	return r, nil
 }
 
 type resourcePlan struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
+	framework.WithTimeouts
 }
 
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -638,6 +647,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -672,10 +686,10 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.Arn = types.StringValue(aws.ToString(output.Plan.Arn))
 	plan.ID = types.StringValue(aws.ToString(output.Plan.Arn))
 
-	// Read after create to populate computed values
-	planOutput, err := findPlanByARN(ctx, conn, plan.ID.ValueString())
+	// Wait for plan to be available (eventual consistency)
+	planOutput, err := waitPlanCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError("reading ARC Region Switch Plan after create", err.Error())
+		resp.Diagnostics.AddError("waiting for ARC Region Switch Plan create", err.Error())
 		return
 	}
 
@@ -813,6 +827,24 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 		if errors.As(err, &nfe) {
 			return
 		}
+		// Retry if health check allocation is in progress (check error message generically)
+		if errs.Contains(err, "health check allocation is in progress") {
+			_, err = waitPlanDeletable(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
+			if err != nil {
+				resp.Diagnostics.AddError("waiting for ARC Region Switch Plan to be deletable", err.Error())
+				return
+			}
+			// Retry delete
+			_, err = conn.DeletePlan(ctx, &input)
+			if err != nil {
+				if errors.As(err, &nfe) {
+					return
+				}
+				resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
+				return
+			}
+			return
+		}
 		resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
 		return
 	}
@@ -840,6 +872,7 @@ type resourcePlanModel struct {
 	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
 	Tags                         tftags.Map                                           `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
 // Custom expand to handle complex nested transformations
@@ -1598,4 +1631,82 @@ type conditionModel struct {
 
 func (r *resourcePlan) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	// Basic validation is handled by the schema validators
+}
+
+func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn string, timeout time.Duration) (*awstypes.Plan, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{"exists"},
+		Refresh: statusPlan(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Plan); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		plan, err := findPlanByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return plan, "exists", nil
+	}
+}
+
+func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string, timeout time.Duration) (*awstypes.Plan, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"health_check_allocation_in_progress"},
+		Target:  []string{"deletable"},
+		Refresh: statusPlanDeletable(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Plan); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		plan, err := findPlanByARN(ctx, conn, arn)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Try to delete to check if it's ready
+		input := arcregionswitch.DeletePlanInput{
+			Arn: &arn,
+		}
+		_, err = conn.DeletePlan(ctx, &input)
+		if err == nil {
+			// Delete succeeded, plan is gone
+			return plan, "deletable", nil
+		}
+
+		if errs.Contains(err, "health check allocation is in progress") {
+			// Still in progress
+			return plan, "health_check_allocation_in_progress", nil
+		}
+
+		// Other error
+		return nil, "", err
+	}
 }
