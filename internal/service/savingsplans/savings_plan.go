@@ -363,7 +363,7 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 	}
 
 	if out == nil || len(out.SavingsPlans) == 0 {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &out.SavingsPlans[0], nil
