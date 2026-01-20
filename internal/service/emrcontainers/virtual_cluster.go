@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -210,9 +210,8 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *
 	output, err := conn.DescribeVirtualCluster(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -239,17 +238,16 @@ func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id 
 	}
 
 	if output.State == awstypes.VirtualClusterStateTerminated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(output.State),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(output.State),
 		}
 	}
 
 	return output, nil
 }
 
-func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusVirtualCluster(conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findVirtualClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -268,7 +266,7 @@ func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, 
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VirtualClusterStateTerminating),
 		Target:  []string{},
-		Refresh: statusVirtualCluster(ctx, conn, id),
+		Refresh: statusVirtualCluster(conn, id),
 		Timeout: timeout,
 		Delay:   1 * time.Minute,
 	}
