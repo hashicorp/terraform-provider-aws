@@ -15,7 +15,6 @@ Lists Route 53 Record resources.
 ```terraform
 list "aws_route53_record" "example" {
   provider = aws
-  
   config {
     zone_id = aws_route53_zone.example.zone_id
   }
