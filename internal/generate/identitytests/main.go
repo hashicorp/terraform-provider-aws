@@ -515,6 +515,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	skip := false
 	tlsKey := false
 	var tlsKeyCN string
+	isDataSource := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -522,6 +523,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName, args := m[1], common.ParseArgs(m[3]); annotationName {
 			case "FrameworkDataSource":
+				isDataSource = true
 				break
 
 			case "FrameworkResource":
@@ -538,6 +540,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKDataSource":
+				isDataSource = true
 				break
 
 			case "SDKResource":
@@ -607,6 +610,11 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 				if attr, ok := args.Keyword["identityTest"]; ok {
+					if isDataSource {
+						v.errs = append(v.errs, fmt.Errorf("identityTest cannot be specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						skip = true
+						continue
+					}
 					switch attr {
 					case "false":
 						v.g.Infof("Skipping Identity test for %s.%s", v.packageName, v.functionName)
