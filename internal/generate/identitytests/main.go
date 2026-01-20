@@ -702,7 +702,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if d.HasResourceIdentity() {
-		if !skip {
+		if isDataSource {
+			v.errs = append(v.errs, fmt.Errorf("resource identity specified on data source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		} else if !skip {
 			if err := d.Validate(); err != nil {
 				v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
 			}

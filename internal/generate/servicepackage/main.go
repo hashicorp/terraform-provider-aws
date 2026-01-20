@@ -569,6 +569,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.frameworkDataSources[typeName] = d
 				}
 
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				}
+
 				if d.HasV6_0NullValuesError {
 					v.errs = append(v.errs, fmt.Errorf("V60SDKv2Fix not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
@@ -627,6 +631,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkDataSources[typeName] = d
+				}
+
+				if d.HasResourceIdentity() {
+					v.errs = append(v.errs, fmt.Errorf("Resource Identity not supported for Data Sources: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				if d.HasV6_0NullValuesError {
