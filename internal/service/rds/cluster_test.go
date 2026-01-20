@@ -99,7 +99,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database_insights_mode", "standard"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, ""),
 					resource.TestCheckResourceAttr(resourceName, "domain_iam_role_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
@@ -6990,7 +6990,7 @@ data "aws_partition" "current" {}
 `, rName, domain)
 }
 
-func testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow string) string {
+func testAccClusterConfig_deleteAutomatedBackups(rName, preferredBackupWindow string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   cluster_identifier       = %[1]q
@@ -7000,7 +7000,7 @@ resource "aws_rds_cluster" "test" {
   master_password          = "avoid-plaintext-passwords"
   preferred_backup_window  = %[3]q
   skip_final_snapshot      = true
-  delete_automated_backups = false
+  delete_automated_backups = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL, preferredBackupWindow)
 }

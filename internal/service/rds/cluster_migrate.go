@@ -412,7 +412,7 @@ func clusterStateUpgradeV0(_ context.Context, rawState map[string]any, meta any)
 		return nil, nil
 	}
 
-	rawState["delete_automated_backups"] = true
+	rawState["delete_automated_backups"] = false
 
 	return rawState, nil
 }

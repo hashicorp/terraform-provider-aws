@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_db_instance: Default `delete_automated_backups` to `false` to match AWS console.
+```
+
+```release-note:breaking-change
+resource/aws_rds_cluster: Default `delete_automated_backups` to `false` to match AWS console.
+```
