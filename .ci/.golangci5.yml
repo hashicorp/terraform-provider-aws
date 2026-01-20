@@ -25,10 +25,12 @@ linters:
         text: always receives
   settings:
     tagalign:
+      align: false
       sort: true
       order:
         - json
         - tfsdk
+        - autoflex
     usetesting:
       os-setenv: true
       context-background: false
