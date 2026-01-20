@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
@@ -19,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpointsmsvoicev2 "github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,19 +28,19 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 	var phoneNumber awstypes.PhoneNumberInformation
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("iso_country_code"), knownvalue.StringExact("US")),
@@ -68,24 +66,24 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_basic(t *testing.T) {
 func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var phoneNumber awstypes.PhoneNumberInformation
-	phoneNumberName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	snsTopicName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	optOutListName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	phoneNumberName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	snsTopicName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	optOutListName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(true)),
@@ -110,7 +108,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_full(phoneNumberName, snsTopicName, optOutListName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("deletion_protection_enabled"), knownvalue.Bool(false)),
@@ -134,19 +132,19 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_full(t *testing.T) {
 func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelRole(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	snsTopicName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	iamRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	iamRoleNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "updated")
+	snsTopicName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	iamRoleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	iamRoleNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix+"updated")
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_two_way_channel_role(snsTopicName, iamRoleName),
@@ -180,17 +178,17 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelRole(t *testing.T) {
 func TestAccPinpointSMSVoiceV2PhoneNumber_twoWayChannelConnect(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	iamRoleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_two_way_channel_connect(iamRoleName),
@@ -217,19 +215,19 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_disappears(t *testing.T) {
 	var phoneNumber awstypes.PhoneNumberInformation
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfpinpointsmsvoicev2.ResourcePhoneNumber, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -243,19 +241,19 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 	var phoneNumber awstypes.PhoneNumberInformation
 	resourceName := "aws_pinpointsmsvoicev2_phone_number.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckPhoneNumber(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointSMSVoiceV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
+		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPhoneNumberConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -271,7 +269,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -283,7 +281,7 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 			{
 				Config: testAccPhoneNumberConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPhoneNumberExists(ctx, resourceName, &phoneNumber),
+					testAccCheckPhoneNumberExists(ctx, t, resourceName, &phoneNumber),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -295,9 +293,9 @@ func TestAccPinpointSMSVoiceV2PhoneNumber_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPhoneNumberDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_phone_number" {
@@ -321,14 +319,14 @@ func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckPhoneNumberExists(ctx context.Context, n string, v *awstypes.PhoneNumberInformation) resource.TestCheckFunc {
+func testAccCheckPhoneNumberExists(ctx context.Context, t *testing.T, n string, v *awstypes.PhoneNumberInformation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		output, err := tfpinpointsmsvoicev2.FindPhoneNumberByID(ctx, conn, rs.Primary.ID)
 
@@ -343,7 +341,7 @@ func testAccCheckPhoneNumberExists(ctx context.Context, n string, v *awstypes.Ph
 }
 
 func testAccPreCheckPhoneNumber(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointSMSVoiceV2Client(ctx)
+	conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 	input := &pinpointsmsvoicev2.DescribePhoneNumbersInput{}
 
