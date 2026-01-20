@@ -256,11 +256,11 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := conn.CreateSubnet(ctx, &input)
 
+	d.SetId(aws.ToString(output.Subnet.SubnetId))
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Subnet: %s", err)
 	}
-
-	d.SetId(aws.ToString(output.Subnet.SubnetId))
 
 	subnet, err := waitSubnetAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 

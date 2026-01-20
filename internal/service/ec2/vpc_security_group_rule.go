@@ -180,6 +180,8 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", securityGroupID, err)
 	}
 
+	d.SetId(id)
+
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
 		input := &ec2.AuthorizeSecurityGroupIngressInput{
@@ -255,8 +257,6 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) Rule (%s) create: %s", securityGroupID, id, err)
 	}
-
-	d.SetId(id)
 
 	return diags
 }

@@ -179,11 +179,11 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Creating EC2 Network ACL Rule: %#v", input)
 	_, err = conn.CreateNetworkAclEntry(ctx, input)
 
+	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL (%s) Rule (egress: %t)(%d): %s", naclID, egress, ruleNumber, err)
 	}
-
-	d.SetId(networkACLRuleCreateResourceID(naclID, ruleNumber, egress, protocol))
 
 	return append(diags, resourceNetworkACLRuleRead(ctx, d, meta)...)
 }
