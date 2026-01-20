@@ -385,10 +385,10 @@ func TestAccServiceQuotasServiceQuota_waitForFulfillment(t *testing.T) {
 func testAccServiceQuotaConfig_waitForFulfillment(serviceCode, quotaCode, value string, waitForFulfillment bool) string {
 	return fmt.Sprintf(`
 resource "aws_servicequotas_service_quota" "test" {
-  quota_code            = %[1]q
-  service_code          = %[2]q
-  value                 = %[3]s
-  wait_for_fulfillment  = %[4]t
+  quota_code           = %[1]q
+  service_code         = %[2]q
+  value                = %[3]s
+  wait_for_fulfillment = %[4]t
 
   timeouts {
     create = "30m"
