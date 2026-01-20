@@ -200,6 +200,11 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 			if err := waitServiceQuotaRequestFulfilled(ctx, conn, requestID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "Service Quota (%s) request (%s) not fulfilled within the timeout period: %s", id, requestID, err)
 			}
+
+			// After approval, wait for the quota value to be actually updated
+			if err := waitServiceQuotaValueUpdated(ctx, conn, serviceCode, quotaCode, value, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "Service Quota (%s) value not updated to desired value within the timeout period: %s", id, err)
+			}
 		}
 	}
 
@@ -314,6 +319,12 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 		requestID := aws.ToString(output.RequestedQuota.Id)
 		if err := waitServiceQuotaRequestFulfilled(ctx, conn, requestID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Service Quota (%s) request (%s) not fulfilled within the timeout period: %s", d.Id(), requestID, err)
+		}
+
+		// After approval, wait for the quota value to be actually updated
+		value := d.Get(names.AttrValue).(float64)
+		if err := waitServiceQuotaValueUpdated(ctx, conn, serviceCode, quotaCode, value, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Service Quota (%s) value not updated to desired value within the timeout period: %s", d.Id(), err)
 		}
 	}
 
@@ -492,5 +503,41 @@ func statusServiceQuotaRequest(ctx context.Context, conn *servicequotas.Client, 
 		}
 
 		return output, string(output.Status), nil
+	}
+}
+
+func waitServiceQuotaValueUpdated(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string, desiredValue float64, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"pending"},
+		Target:     []string{"updated"},
+		Refresh:    statusServiceQuotaValue(ctx, conn, serviceCode, quotaCode, desiredValue),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func statusServiceQuotaValue(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string, desiredValue float64) retry.StateRefreshFunc {
+	return func(context.Context) (any, string, error) {
+		serviceQuota, err := findServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
+
+		if retry.NotFound(err) {
+			// Quota not yet set, still pending
+			return nil, "pending", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		currentValue := aws.ToFloat64(serviceQuota.Value)
+		if currentValue >= desiredValue {
+			return serviceQuota, "updated", nil
+		}
+
+		return serviceQuota, "pending", nil
 	}
 }

@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_servicequotas_service_quota: Added argument `wait_for_fulfillment` for resource to wait for the respective quota request to be approved/enacted, and for the desired quota value to be returned upon new query, before marking the resource creation state as complete.
+resource/aws_servicequotas_service_quota: Add `wait_for_fulfillment` argument to wait for quota increase request approval and for the desired quota value to be enacted before completing resource creation
 ```
