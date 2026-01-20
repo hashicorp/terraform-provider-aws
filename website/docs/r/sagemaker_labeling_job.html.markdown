@@ -64,7 +64,7 @@ This resource supports the following arguments:
 * `label_attribute_name` - (Required) Attribute name to use for the label in the output manifest file.
 * `label_category_config_s3_uri` - (Optional) S3 URI of the file that defines the categories used to label the data objects.
 * `labeling_job_algorithms_config` - (Optional) Information required to perform automated data labeling.. Fields are documented below.
-* `labeling_job_name` - (Required) Name of the labeling job
+* `labeling_job_name` - (Required) Name of the labeling job.
 * `output_config` - (Required) Location of the output data. Fields are documented below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `role_arn` - (Required) ARN of IAM role that Amazon SageMaker assumes to perform tasks during data labeling.
