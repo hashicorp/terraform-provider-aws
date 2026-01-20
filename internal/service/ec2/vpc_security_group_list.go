@@ -12,9 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -29,9 +33,45 @@ func newSecurityGroupResourceAsListResource() inttypes.ListResourceForSDK {
 }
 
 var _ list.ListResource = &listResourceSecurityGroup{}
+var _ list.ListResourceWithRawV5Schemas = &listResourceSecurityGroup{}
 
 type listResourceSecurityGroup struct {
 	framework.ListResourceWithSDKv2Resource
+}
+
+type listSecurityGroupModel struct {
+	framework.WithRegionModel
+	GroupIDs fwtypes.ListValueOf[types.String] `tfsdk:"group_ids"`
+	Filters  customListFilters                 `tfsdk:"filter"`
+}
+
+func (l *listResourceSecurityGroup) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{
+			"group_ids": listschema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+		},
+		Blocks: map[string]listschema.Block{
+			names.AttrFilter: listschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customListFilterModel](ctx),
+				NestedObject: listschema.NestedBlockObject{
+					Attributes: map[string]listschema.Attribute{
+						names.AttrName: listschema.StringAttribute{
+							Required: true,
+						},
+						names.AttrValues: listschema.ListAttribute{
+							CustomType:  fwtypes.ListOfStringType,
+							ElementType: types.StringType,
+							Required:    true,
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -49,6 +89,11 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	tflog.Info(ctx, "Listing resources")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input ec2.DescribeSecurityGroupsInput
+		if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+
 		for item, err := range listSecurityGroups(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
@@ -95,10 +140,6 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
-}
-
-type listSecurityGroupModel struct {
-	framework.WithRegionModel
 }
 
 func listSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) iter.Seq2[awstypes.SecurityGroup, error] {
