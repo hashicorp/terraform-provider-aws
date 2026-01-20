@@ -48,10 +48,47 @@ list "aws_security_group" "example" {
 }
 ```
 
+### Multiple Filters
+
+```terraform
+list "aws_security_group" "example" {
+  provider = aws
+
+  filter {
+    name   = "vpc-id"
+    values = [aws_vpc.main.id]
+  }
+
+  filter {
+    name   = "group-name"
+    values = ["app-*", "web-*"]
+  }
+
+  filter {
+    name   = "owner-id"
+    values = ["123456789012"]
+  }
+}
+```
+
 ## Argument Reference
 
 This list resource supports the following arguments:
 
-* `group_ids` - (Optional) List of security group IDs to filter results.
-* `filter` - (Optional) One or more name/value pairs to filter off of. See the [EC2 API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html) for supported filters.
+* `group_ids` - (Optional) List of security group IDs to filter results. If specified, only security groups with the provided IDs will be returned.
 * `region` - (Optional) Region to query. Defaults to provider region.
+
+### filter Configuration Block
+
+The `filter` block supports the following:
+
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeSecurityGroups API documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html).
+* `values` - (Required) Set of values for the filter.
+
+#### Common Filter Examples
+
+* `vpc-id` - Filter by VPC ID
+* `group-name` - Filter by security group name (supports wildcards)
+* `description` - Filter by security group description
+* `ip-permission.cidr` - Filter by CIDR range in ingress rules
+* `owner-id` - Filter by AWS account ID
