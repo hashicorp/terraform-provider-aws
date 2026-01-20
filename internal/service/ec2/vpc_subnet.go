@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -187,6 +188,20 @@ func resourceSubnet() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+			if d.HasChange("ipv6_cidr_block") {
+				ob, _ := d.GetChange("ipv6_cidr_block")
+				oa, _ := d.GetChange("assign_ipv6_address_on_creation")
+				// If the previous ipv6 subnet was created with assign_ipv6_address_on_creation=true,
+				// resource recreation is required.
+				if ob != nil {
+					if v, ok := oa.(bool); ok && v {
+						return true
+					}
+				}
+			}
+			return false
+		}),
 	}
 }
 
