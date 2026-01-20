@@ -131,7 +131,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	bucket := d.Get(names.AttrBucket).(string)
 	parsedArn, err := arn.Parse(bucket)
@@ -141,8 +141,12 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	}
 
 	if parsedArn.AccountID == "" {
-		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", bucket)
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	input := &s3control.PutBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
@@ -165,7 +169,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -176,6 +180,10 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	if parsedArn.AccountID == "" {
 		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	output, err := findBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
@@ -200,7 +208,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -211,6 +219,10 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	if parsedArn.AccountID == "" {
 		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	input := &s3control.PutBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
@@ -231,7 +243,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -242,6 +254,10 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	if parsedArn.AccountID == "" {
 		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	log.Printf("[DEBUG] Deleting S3 Control Bucket Lifecycle Configuration: %s", d.Id())
 	_, err = conn.DeleteBucketLifecycleConfiguration(ctx, &s3control.DeleteBucketLifecycleConfigurationInput{

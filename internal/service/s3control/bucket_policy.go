@@ -60,9 +60,13 @@ func resourceBucketPolicy() *schema.Resource {
 
 func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	bucket := d.Get(names.AttrBucket).(string)
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
@@ -87,7 +91,7 @@ func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
 
 	parsedArn, err := arn.Parse(d.Id())
 	if err != nil {
@@ -97,6 +101,10 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	if parsedArn.AccountID == "" {
 		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	output, err := findBucketPolicyByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
@@ -128,7 +136,11 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
@@ -151,7 +163,11 @@ func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+	c := meta.(*conns.AWSClient)
+
+	// Directory Buckets are supported by the standard S3 Control client
+	// The AWS SDK automatically routes to the correct endpoint based on the resource ARN
+	conn := c.S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 

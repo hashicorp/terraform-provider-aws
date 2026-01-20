@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -198,6 +199,14 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 	return c.s3ExpressClient
 }
 
+// S3ExpressControlClient returns an AWS SDK for Go v2 S3 Control API client suitable for use with S3 Express (directory buckets).
+// For Directory Buckets, control plane operations like ListTagsForResource must use the s3express-control.region.amazonaws.com endpoint.
+func (c *AWSClient) S3ExpressControlClient(ctx context.Context) *s3control.Client {
+	return errs.Must(client[*s3control.Client](ctx, c, names.S3Control, map[string]any{
+		"endpoint": fmt.Sprintf("https://s3express-control.%s.%s", c.Region(ctx), c.DNSSuffix(ctx)),
+	}))
+}
+
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
 func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 	return c.s3UsePathStyle
@@ -265,7 +274,7 @@ func (c *AWSClient) DefaultKMSKeyPolicy(ctx context.Context) string {
 			"Resource": "*"
 		}
 	]
-}	
+}
 `, c.Partition(ctx), c.AccountID(ctx))
 }
 
