@@ -5,22 +5,16 @@ package arcregionswitch
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,10 +58,6 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 			},
 			"recovery_time_objective_minutes": fwschema.Int64Attribute{
 				Computed: true,
-			},
-			"wait_for_health_checks": fwschema.BoolAttribute{
-				Optional:    true,
-				Description: "Wait for Route53 health check IDs to be populated (takes ~4 minutes)",
 			},
 			"route53_health_checks": fwschema.ListAttribute{
 				ElementType: types.ObjectType{
@@ -128,61 +118,11 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 		data.RecoveryTimeObjectiveMinutes = types.Int64Null()
 	}
 
-	// Always fetch Route53 health checks
-	var healthChecks []awstypes.Route53HealthCheck
-	var healthCheckErr error
-
-	if data.WaitForHealthChecks.ValueBool() {
-		// Count expected Route53 health checks from plan workflows
-		expectedCount := 0
-		for _, workflow := range plan.Workflows {
-			for _, step := range workflow.Steps {
-				if step.ExecutionBlockType == awstypes.ExecutionBlockTypeRoute53HealthCheck {
-					expectedCount++
-				}
-			}
-		}
-
-		// Wait for health check IDs to be populated (takes ~4 minutes)
-		timeout := 5 * time.Minute
-		healthCheckErr = sdkretry.RetryContext(ctx, timeout, func() *sdkretry.RetryError {
-			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
-			if healthCheckErr != nil {
-				return sdkretry.NonRetryableError(healthCheckErr)
-			}
-
-			// Wait for expected number of health checks
-			if len(healthChecks) < expectedCount {
-				return sdkretry.RetryableError(fmt.Errorf("waiting for %d Route53 health checks, currently have %d", expectedCount, len(healthChecks)))
-			}
-
-			// Check if all health check IDs are populated
-			for _, hc := range healthChecks {
-				if aws.ToString(hc.HealthCheckId) == "" {
-					return sdkretry.RetryableError(fmt.Errorf("waiting for Route53 health check IDs to be populated"))
-				}
-			}
-
-			return nil
-		})
-		if retry.TimedOut(healthCheckErr) {
-			healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
-			if healthCheckErr != nil {
-				resp.Diagnostics.AddError("reading Route53 health checks", healthCheckErr.Error())
-				return
-			}
-		}
-		if healthCheckErr != nil {
-			resp.Diagnostics.AddError("waiting for Route53 health checks", healthCheckErr.Error())
-			return
-		}
-	} else {
-		// Fetch health checks without waiting
-		healthChecks, healthCheckErr = findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
-		if healthCheckErr != nil {
-			resp.Diagnostics.AddError("listing Route53 health checks", healthCheckErr.Error())
-			return
-		}
+	// Fetch Route53 health checks
+	healthChecks, err := findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("listing Route53 health checks", err.Error())
+		return
 	}
 
 	// Convert health checks to Framework types
@@ -248,20 +188,5 @@ type dataSourcePlanModel struct {
 	Description                  types.String `tfsdk:"description"`
 	PrimaryRegion                types.String `tfsdk:"primary_region"`
 	RecoveryTimeObjectiveMinutes types.Int64  `tfsdk:"recovery_time_objective_minutes"`
-	WaitForHealthChecks          types.Bool   `tfsdk:"wait_for_health_checks"`
 	Route53HealthChecks          types.List   `tfsdk:"route53_health_checks"`
-}
-
-func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planArn string) ([]awstypes.Route53HealthCheck, error) {
-	input := arcregionswitch.ListRoute53HealthChecksInput{
-		Arn: aws.String(planArn),
-	}
-
-	output, err := conn.ListRoute53HealthChecks(ctx, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output.HealthChecks, nil
 }
