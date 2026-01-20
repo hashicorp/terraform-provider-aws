@@ -165,6 +165,35 @@ func (r *catalogTableOptimizerResource) Schema(ctx context.Context, _ resource.S
 								},
 							},
 						},
+						"compaction_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[compactionConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"iceberg_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[icebergCompactionConfigurationData](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"strategy": schema.StringAttribute{
+													Optional: true,
+												},
+												"min_input_files": schema.Int32Attribute{
+													Optional: true,
+												},
+												"delete_file_threshold": schema.Int32Attribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -428,6 +457,7 @@ type configurationData struct {
 	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
 	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
 	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
+	CompactionConfiguration         fwtypes.ListNestedObjectValueOf[compactionConfigurationData]         `tfsdk:"compaction_configuration"`
 }
 
 type retentionConfigurationData struct {
@@ -449,6 +479,16 @@ type icebergOrphanFileDeletionConfigurationData struct {
 	Location                        types.String `tfsdk:"location"`
 	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
 	RunRateInHours                  types.Int32  `tfsdk:"run_rate_in_hours"`
+}
+
+type compactionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergCompactionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergCompactionConfigurationData struct {
+	Strategy            types.String `tfsdk:"strategy"`
+	MinInputFiles       types.Int32  `tfsdk:"min_input_files"`
+	DeleteFileThreshold types.Int32  `tfsdk:"delete_file_threshold"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
