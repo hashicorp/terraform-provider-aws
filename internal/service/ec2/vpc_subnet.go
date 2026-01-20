@@ -190,8 +190,14 @@ func resourceSubnet() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.ForceNewIf("ipv6_cidr_block", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
 			if d.HasChange("ipv6_cidr_block") {
-				if _, ok := d.GetOk("assign_ipv6_address_on_creation"); ok {
-					return true
+				ob, _ := d.GetChange("ipv6_cidr_block")
+				oa, _ := d.GetChange("assign_ipv6_address_on_creation")
+				// If the previous ipv6 subnet was created with assign_ipv6_address_on_creation=true,
+				// resource recreation is required.
+				if ob != nil {
+					if v, ok := oa.(bool); ok && v {
+						return true
+					}
 				}
 			}
 			return false
