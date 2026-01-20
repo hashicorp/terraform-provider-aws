@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -41,17 +40,16 @@ type listResourceSecurityGroup struct {
 
 type listSecurityGroupModel struct {
 	framework.WithRegionModel
-	GroupIDs fwtypes.ListValueOf[types.String] `tfsdk:"group_ids"`
-	Filters  customListFilters                 `tfsdk:"filter"`
+	GroupIDs fwtypes.ListOfString `tfsdk:"group_ids"`
+	Filters  customListFilters    `tfsdk:"filter"`
 }
 
 func (l *listResourceSecurityGroup) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
 	response.Schema = listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"group_ids": listschema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Optional:    true,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
 			},
 		},
 		Blocks: map[string]listschema.Block{
@@ -63,9 +61,8 @@ func (l *listResourceSecurityGroup) ListResourceConfigSchema(ctx context.Context
 							Required: true,
 						},
 						names.AttrValues: listschema.ListAttribute{
-							CustomType:  fwtypes.ListOfStringType,
-							ElementType: types.StringType,
-							Required:    true,
+							CustomType: fwtypes.ListOfStringType,
+							Required:   true,
 						},
 					},
 				},
