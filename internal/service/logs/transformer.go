@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // Copyright 2025 Twilio Inc.
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package logs
 
 import (
