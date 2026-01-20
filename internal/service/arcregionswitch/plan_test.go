@@ -1086,10 +1086,9 @@ resource "aws_arcregionswitch_plan" "test" {
   }
 }
 
-# Data source to get health check IDs (with wait)
+# Data source to get health check IDs
 data "aws_arcregionswitch_plan" "test" {
-  arn                    = aws_arcregionswitch_plan.test.arn
-  wait_for_health_checks = true
+  arn = aws_arcregionswitch_plan.test.arn
 }
 
 # Filter health checks by region

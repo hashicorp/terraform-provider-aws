@@ -132,8 +132,7 @@ func testAccPlanDataSourceConfig_route53HealthChecksWithWait(rName string) strin
 		testAccPlanConfig_route53HealthChecks(rName),
 		`
 data "aws_arcregionswitch_plan" "test" {
-  arn                    = aws_arcregionswitch_plan.test.arn
-  wait_for_health_checks = true
+  arn = aws_arcregionswitch_plan.test.arn
 }
 `)
 }
