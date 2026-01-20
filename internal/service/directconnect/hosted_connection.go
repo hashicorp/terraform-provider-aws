@@ -62,10 +62,6 @@ func resourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"lag_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"loa_issue_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -92,11 +88,6 @@ func resourceHostedConnection() *schema.Resource {
 			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			names.AttrRegion: {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "region is deprecated. Use connection_region instead.",
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -162,14 +153,12 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("connection_region", connection.Region)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
-	d.Set("lag_id", connection.LagId)
 	d.Set("loa_issue_time", aws.ToTime(connection.LoaIssueTime).Format(time.RFC3339))
 	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set(names.AttrProviderName, connection.ProviderName)
-	d.Set(names.AttrRegion, connection.Region)
 	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan", connection.Vlan)
 

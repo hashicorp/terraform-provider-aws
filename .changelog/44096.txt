@@ -1,0 +1,3 @@
+```release-note:deprecation
+resource/aws_dx_hosted_connection: Deprecation of attributes `lag_id` and `region`
+```
