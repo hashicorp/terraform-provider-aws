@@ -36,7 +36,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -470,7 +469,7 @@ func statusPhoneNumber(conn *pinpointsmsvoicev2.Client, id string) retry.StateRe
 }
 
 func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusPending, awstypes.NumberStatusAssociating),
 		Target:  enum.Slice(awstypes.NumberStatusActive),
 		Refresh: statusPhoneNumber(conn, id),
@@ -487,7 +486,7 @@ func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusDisassociating),
 		Target:  []string{},
 		Refresh: statusPhoneNumber(conn, id),

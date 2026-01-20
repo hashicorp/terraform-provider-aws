@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -311,7 +310,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
 		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
 		Refresh: statusEnvironmentStatus(conn, id),
@@ -335,7 +334,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEnvironmentStatus(conn, id),

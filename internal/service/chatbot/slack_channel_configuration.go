@@ -31,7 +31,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -364,7 +363,7 @@ func statusSlackChannelConfiguration(conn *chatbot.Client, arn string) retry.Sta
 }
 
 func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{slackChannelConfigurationAvailable},
 		Refresh:    statusSlackChannelConfiguration(conn, arn),
@@ -383,7 +382,7 @@ func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 }
 
 func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{slackChannelConfigurationAvailable},
 		Target:     []string{},
 		Refresh:    statusSlackChannelConfiguration(conn, arn),
