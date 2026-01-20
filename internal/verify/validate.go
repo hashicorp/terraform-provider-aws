@@ -27,8 +27,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
-var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+var (
+	accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|aws-marketplace|\d{12}|cw.{10})$`)
+	partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+)
 
 // validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
 var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
@@ -107,7 +109,6 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 		}
 
 		parsedARN, err := arn.Parse(value)
-
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %w", k, value, err))
 			return ws, errors
@@ -358,6 +359,20 @@ func ValidRegionName(v any, k string) (ws []string, errors []error) {
 	if !inttypes.IsAWSRegion(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Region: %q",
+			k, value))
+	}
+
+	return
+}
+
+func ValidAvailabilityZoneName(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// Pattern: region + single letter suffix (e.g, us-east-1a, us-west-2b)
+	pattern := `^[a-z]{2,4}(?:-[a-z]+)+-\d{1,2}[a-z]$`
+	if !regexache.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't look like AWS Availability Zone: %q",
 			k, value))
 	}
 

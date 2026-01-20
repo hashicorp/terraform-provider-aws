@@ -147,6 +147,42 @@ func TestValidRegionName(t *testing.T) {
 	}
 }
 
+func TestValidAvailabilityZoneName(t *testing.T) {
+	t.Parallel()
+
+	validNames := []string{
+		"us-east-1a",
+		"eu-west-1c",
+		"ap-southeast-1a",
+		"us-gov-west-1a",
+		"us-isof-south-1a",
+		"eusc-de-east-1a",
+		"ca-central-1d",
+	}
+	for _, v := range validNames {
+		_, errors := ValidAvailabilityZoneName(v, "availability_zone")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Availability Zone: %q", v, errors)
+		}
+	}
+
+	invalidNames := []string{
+		"invalid",
+		"us-east-1",
+		"us-east-1aa",
+		"us-east-123a",
+		"US-EAST-1A",
+		"us-east-1-",
+		"1a",
+	}
+	for _, v := range invalidNames {
+		_, errors := ValidAvailabilityZoneName(v, "availability_zone")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid Availability Zone", v)
+		}
+	}
+}
+
 func TestValidARN(t *testing.T) {
 	t.Parallel()
 
@@ -189,8 +225,8 @@ func TestValidARN(t *testing.T) {
 		"arn",
 		"123456789012",
 		"arn:aws",
-		"arn:aws:logs",            //lintignore:AWSAT005
-		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
+		"arn:aws:logs",            // lintignore:AWSAT005
+		"arn:aws:logs:region:*:*", // lintignore:AWSAT005
 	}
 	for _, v := range invalidNames {
 		_, errors := ValidARN(v, "arn")
