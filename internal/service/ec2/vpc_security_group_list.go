@@ -93,7 +93,6 @@ func (l *listResourceSecurityGroup) List(ctx context.Context, request list.ListR
 	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
-
 		for item, err := range listSecurityGroups(ctx, conn, &input) {
 			if err != nil {
 				result := fwdiag.NewListResultErrorDiagnostic(err)
