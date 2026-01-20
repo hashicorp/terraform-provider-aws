@@ -578,6 +578,16 @@ make website-misspell
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
+#### placeholder-check
+
+Use the target `website-placeholder-check` to check the documentation for `skaff` placeholders:
+
+```console
+make website-placeholder-check
+```
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
 #### terrafmt
 
 Use the target `website-terrafmt` to check formatting of Terraform configuration in documentation:

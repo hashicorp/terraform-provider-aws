@@ -140,7 +140,7 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks
+ci-quick: tools go-build testacc-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint1 import-lint provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-placeholder-check website-terrafmt yamllint ## [CI] Run quicker CI checks
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -1016,7 +1016,7 @@ vcr-enable: ## Enable VCR testing
 	$(MAKE) fmt
 	goimports -w ./$(PKG_NAME)/
 
-website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
+website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-placeholder-check website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -1085,6 +1085,10 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 website-misspell: ## [CI] Website Checks / misspell
 	@echo "make: Website Checks / misspell..."
 	@misspell -error -source text website/
+
+website-placeholder-check: ## [CI] Website Checks / website-placeholder-check
+	@echo "make: Website Checks / website-placeholder-check..."
+	@$(GO_VER) run tools/website-placeholder-check/main.go website/docs/r
 
 website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
@@ -1261,6 +1265,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	website-lint-fix \
 	website-markdown-lint \
 	website-misspell \
+	website-placeholder-check \
 	website-terrafmt \
 	website-terrafmt-fix \
 	website-tflint \
