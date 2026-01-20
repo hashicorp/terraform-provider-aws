@@ -364,7 +364,7 @@ func resourceFunction() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      128,
-				ValidateFunc: validation.IntBetween(128, 10240),
+				ValidateFunc: validation.IntBetween(128, 32768),
 			},
 			"package_type": {
 				Type:             schema.TypeString,
