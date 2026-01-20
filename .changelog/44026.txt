@@ -1,0 +1,5 @@
+data-source/aws_db_parameter_group: Add `parameters` attribute
+```
+
+```release-note:enhancement
+data-source/aws_rds_cluster_parameter_group: Add `parameters` attribute
