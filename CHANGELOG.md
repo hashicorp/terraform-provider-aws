@@ -53,6 +53,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ecr_lifecycle_policy_document: Add `rule.action.target_storage_class` and `rule.selection.storage_class` to JSON serialization ([#45909](https://github.com/hashicorp/terraform-provider-aws/issues/45909))
+* data-source/aws_lakeformation_permissions: Remove incorrect validation from `catalog_id`, `data_location.catalog_id`, `database.catalog_id`, `lf_tag_policy.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#43931](https://github.com/hashicorp/terraform-provider-aws/issues/43931))
 * provider: Fix crash when using custom S3 endpoints with non-standard region strings (e.g., S3-compatible storage like Ceph or MinIO) ([#46000](https://github.com/hashicorp/terraform-provider-aws/issues/46000))
 * provider: When importing resources with `region` defined, in AWS European Sovereign Cloud, prevent failing due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_bcmdataexports_export: Fix `Provider produced inconsistent result after apply` error when querying `CARBON_EMISSIONS` table without `table_configurations` ([#45972](https://github.com/hashicorp/terraform-provider-aws/issues/45972))
@@ -67,6 +68,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Fixes error when `name` is known after apply ([#45917](https://github.com/hashicorp/terraform-provider-aws/issues/45917))
 * resource/aws_eks_cluster: Fix `kubernetes_network_config` argument name in EKS Auto Mode validation error message ([#45997](https://github.com/hashicorp/terraform-provider-aws/issues/45997))
 * resource/aws_emrserverless_application: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
+* resource/aws_lakeformation_permissions: Remove incorrect validation from `catalog_id`, `data_location.catalog_id`, `database.catalog_id`, `lf_tag_policy.catalog_id`, `table.catalog_id`, and `table_with_columns.catalog_id` arguments ([#43931](https://github.com/hashicorp/terraform-provider-aws/issues/43931))
 * resource/aws_lambda_event_source_mapping: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
 * resource/aws_lambda_invocation: Fix panic when deleting or replacing resource with empty input in CRUD lifecycle scope ([#45967](https://github.com/hashicorp/terraform-provider-aws/issues/45967))
 * resource/aws_lambda_permission: Prevent failing on AWS European Sovereign Cloud regions due to region validation requiring region names to start with "[a-z]{2}-" ([#45895](https://github.com/hashicorp/terraform-provider-aws/issues/45895))
