@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2SecurityGroup_List_Basic(t *testing.T) {
+func TestAccVPCSecurityGroup_List_Basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_security_group.test[0]"
@@ -75,7 +75,7 @@ func TestAccEC2SecurityGroup_List_Basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroup_List_FilterByGroupIDs(t *testing.T) {
+func TestAccVPCSecurityGroup_List_FilterByGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_security_group.expected[0]"
@@ -134,7 +134,7 @@ func TestAccEC2SecurityGroup_List_FilterByGroupIDs(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecurityGroup_List_FilterByVPCID(t *testing.T) {
+func TestAccVPCSecurityGroup_List_FilterByVPCID(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName1 := "aws_security_group.expected[0]"
