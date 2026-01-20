@@ -16,7 +16,6 @@ linters:
     - dogsled
     # ../internal/service/appautoscaling/policy.go:560:14: Duplicate words (Scaling) found (dupword)
     # log.Printf("[WARN] Application Auto Scaling Scaling Policy (%s) not found, removing from state", d.Id())
-    # 		       ^
     # - dupword
     - durationcheck
     - errcheck
