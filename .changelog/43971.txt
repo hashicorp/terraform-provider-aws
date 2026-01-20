@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_controltower_landing_zone: Fix to landing zone manifest attribute `retentionDays` being parsed as a string from AWS
+```

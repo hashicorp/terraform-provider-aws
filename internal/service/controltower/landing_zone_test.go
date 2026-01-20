@@ -128,6 +128,48 @@ func testAccLandingZone_tags(t *testing.T) {
 	})
 }
 
+func testAccLandingZone_noDiffWithIntegerRetentionDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_controltower_landing_zone.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLandingZoneConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, landingZoneVersion),
+				),
+			},
+			{
+				Config: testAccLandingZoneConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "controltower", "landingzone/${id}"),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, landingZoneVersion),
+				),
+				// This is the key assertion - no plan changes should occur
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func testAccPreCheckNoLandingZone(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -158,6 +159,11 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta a
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		v, err = fixRetentionDaysType(v)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "fixing retentionDays type in manifest_json: %s", err)
 		}
 
 		d.Set("manifest_json", v)
@@ -327,4 +333,30 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 	}
 
 	return tfMap
+}
+
+// fixRetentionDaysType ensures that retentionDays values are always numbers in the manifest JSON returned from AWS
+func fixRetentionDaysType(manifestJSON string) (string, error) {
+	var manifest map[string]any
+	if err := json.DecodeFromBytes([]byte(manifestJSON), &manifest); err != nil {
+		return "", err
+	}
+
+	if loggingBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["loggingBucket"].(map[string]any); ok {
+		if retentionDays, ok := loggingBucket["retentionDays"].(string); ok {
+			if days, err := strconv.Atoi(retentionDays); err == nil {
+				loggingBucket["retentionDays"] = days
+			}
+		}
+	}
+
+	if accessBucket, ok := manifest["centralizedLogging"].(map[string]any)["configurations"].(map[string]any)["accessLoggingBucket"].(map[string]any); ok {
+		if retentionDays, ok := accessBucket["retentionDays"].(string); ok {
+			if days, err := strconv.Atoi(retentionDays); err == nil {
+				accessBucket["retentionDays"] = days
+			}
+		}
+	}
+
+	return json.EncodeToString(manifest)
 }
