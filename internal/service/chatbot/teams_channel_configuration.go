@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -31,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -322,9 +322,8 @@ func findTeamsChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -350,8 +349,8 @@ const (
 	teamsChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusTeamsChannelConfiguration(ctx context.Context, conn *chatbot.Client, teamID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusTeamsChannelConfiguration(conn *chatbot.Client, teamID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findTeamsChannelConfigurationByTeamID(ctx, conn, teamID)
 
 		if retry.NotFound(err) {
@@ -369,7 +368,7 @@ func waitTeamsChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{teamsChannelConfigurationAvailable},
-		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -388,7 +387,7 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    []string{teamsChannelConfigurationAvailable},
 		Target:     []string{},
-		Refresh:    statusTeamsChannelConfiguration(ctx, conn, teamID),
+		Refresh:    statusTeamsChannelConfiguration(conn, teamID),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
