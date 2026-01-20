@@ -22,6 +22,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tests"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
@@ -222,6 +223,7 @@ type ResourceDatum struct {
 	goImports                         []common.GoImport
 	HasIdentityFix                    bool
 	common.ResourceIdentity
+	tests.CommonArgs
 }
 
 func (r ResourceDatum) IsARNFormatGlobal() bool {
@@ -331,6 +333,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		IsGlobal:                          false,
 		regionOverrideEnabled:             true,
 		ValidateRegionOverrideInPartition: true,
+		CommonArgs:                        tests.InitCommonArgs(),
 	}
 
 	annotations := make(map[string]bool)
@@ -439,6 +442,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "IdentityFix":
 				d.HasIdentityFix = true
 
+			// Needed to validate `hasNoPreExistingResource`, `preIdentityVersion`, and `identityVersion`
+			// TODO: These fields should be moved out of `@Testing`
+			case "Testing":
+				if err := tests.ParseTestingAnnotations(args, &d.CommonArgs); err != nil {
+					v.errs = append(v.errs, fmt.Errorf("%s: %w", fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+					continue
+				}
+
 			default:
 				if err := common.ParseResourceIdentity(annotationName, args, implementation, &d.ResourceIdentity, &d.goImports); err != nil {
 					v.errs = append(v.errs, fmt.Errorf("%s.%s: %w", v.packageName, v.functionName, err))
@@ -451,6 +462,16 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	if d.HasResourceIdentity() {
 		if d.wrappedImport == common.TriBooleanUnset {
 			d.wrappedImport = common.TriBooleanTrue
+		}
+	} else {
+		if d.HasNoPreExistingResource {
+			v.errs = append(v.errs, fmt.Errorf("hasNoPreExistingResource specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if d.PreIdentityVersion != nil {
+			v.errs = append(v.errs, fmt.Errorf("preIdentityVersion specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+		}
+		if len(d.IdentityVersions) > 0 {
+			v.errs = append(v.errs, fmt.Errorf("IdentityVersions specified without Resource Identity: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 		}
 	}
 
