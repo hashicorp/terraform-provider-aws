@@ -683,7 +683,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.Arn = types.StringValue(aws.ToString(output.Plan.Arn))
+	plan.ARN = types.StringValue(aws.ToString(output.Plan.Arn))
 	plan.ID = types.StringValue(aws.ToString(output.Plan.Arn))
 
 	// Wait for plan to be available (eventual consistency)
@@ -700,7 +700,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
-	plan.Arn = types.StringValue(aws.ToString(planOutput.Arn))
+	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -733,7 +733,7 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	// Set ID and ARN explicitly since they might need special handling
 	state.ID = types.StringValue(aws.ToString(plan.Arn))
-	state.Arn = types.StringValue(aws.ToString(plan.Arn))
+	state.ARN = types.StringValue(aws.ToString(plan.Arn))
 
 	// Handle tags
 	tags, err := listTags(ctx, conn, aws.ToString(plan.Arn))
@@ -803,7 +803,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
-	plan.Arn = types.StringValue(aws.ToString(planOutput.Arn))
+	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -854,25 +854,6 @@ func (r *resourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schem
 	var diags fwdiag.Diagnostics
 	// Basic validation is handled by the schema validators
 	return diags
-}
-
-type resourcePlanModel struct {
-	framework.WithRegionModel
-	Arn                          types.String                                         `tfsdk:"arn"`
-	ID                           types.String                                         `tfsdk:"id"`
-	Name                         types.String                                         `tfsdk:"name"`
-	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
-	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
-	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
-	Description                  types.String                                         `tfsdk:"description"`
-	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
-	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
-	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
-	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
-	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
-	Tags                         tftags.Map                                           `tfsdk:"tags"`
-	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
 }
 
 // Custom expand to handle complex nested transformations
@@ -1019,9 +1000,9 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 									for _, rc := range regionControls {
 										region := rc.Region.ValueString()
 
-										if !rc.RoutingControlArns.IsNull() && !rc.RoutingControlArns.IsUnknown() {
+										if !rc.RoutingControlARNs.IsNull() && !rc.RoutingControlARNs.IsUnknown() {
 											var arns []string
-											diags.Append(rc.RoutingControlArns.ElementsAs(ctx, &arns, false)...)
+											diags.Append(rc.RoutingControlARNs.ElementsAs(ctx, &arns, false)...)
 											if diags.HasError() {
 												return nil, diags
 											}
@@ -1308,7 +1289,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 										}
 									}
 
-									diags.Append(flex.Flatten(ctx, arns, &regionModel.RoutingControlArns)...)
+									diags.Append(flex.Flatten(ctx, arns, &regionModel.RoutingControlARNs)...)
 
 									regionControls = append(regionControls, regionModel)
 								}
@@ -1426,6 +1407,38 @@ func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	return output.Plan, nil
 }
 
+func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, planARN string) ([]awstypes.Route53HealthCheck, error) {
+	input := arcregionswitch.ListRoute53HealthChecksInput{
+		Arn: aws.String(planARN),
+	}
+
+	output, err := conn.ListRoute53HealthChecks(ctx, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output.HealthChecks, nil
+}
+
+type resourcePlanModel struct {
+	framework.WithRegionModel
+	ARN                          types.String                                         `tfsdk:"arn"`
+	ID                           types.String                                         `tfsdk:"id"`
+	Name                         types.String                                         `tfsdk:"name"`
+	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
+	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
+	Regions                      fwtypes.ListOfString                                 `tfsdk:"regions"`
+	Description                  types.String                                         `tfsdk:"description"`
+	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
+	RecoveryTimeObjectiveMinutes types.Int64                                          `tfsdk:"recovery_time_objective_minutes"`
+	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
+	Workflows                    fwtypes.ListNestedObjectValueOf[workflowModel]       `tfsdk:"workflow"`
+	Triggers                     fwtypes.ListNestedObjectValueOf[triggerModel]        `tfsdk:"triggers"`
+	Tags                         tftags.Map                                           `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                           `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                       `tfsdk:"timeouts"`
+}
+
 type associatedAlarmModel struct {
 	MapBlockKey        types.String                           `tfsdk:"map_block_key"`
 	AlarmType          fwtypes.StringEnum[awstypes.AlarmType] `tfsdk:"alarm_type"`
@@ -1488,7 +1501,7 @@ type customActionLambdaConfigModel struct {
 }
 
 type lambdaModel struct {
-	Arn              types.String `tfsdk:"arn"`
+	ARN              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalId       types.String `tfsdk:"external_id"`
 }
@@ -1501,7 +1514,7 @@ type ungracefulModel struct {
 type globalAuroraConfigModel struct {
 	Behavior                fwtypes.StringEnum[awstypes.GlobalAuroraDefaultBehavior]     `tfsdk:"behavior"`
 	GlobalClusterIdentifier types.String                                                 `tfsdk:"global_cluster_identifier"`
-	DatabaseClusterArns     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
+	DatabaseClusterARNs     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
 	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
 	ExternalId              types.String                                                 `tfsdk:"external_id"`
 	TimeoutMinutes          types.Int64                                                  `tfsdk:"timeout_minutes"`
@@ -1522,7 +1535,7 @@ type ec2AsgCapacityIncreaseConfigModel struct {
 }
 
 type asgModel struct {
-	Arn              types.String `tfsdk:"arn"`
+	ARN              types.String `tfsdk:"arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalId       types.String `tfsdk:"external_id"`
 }
@@ -1541,8 +1554,8 @@ type ecsCapacityIncreaseConfigModel struct {
 }
 
 type serviceModel struct {
-	ClusterArn       types.String `tfsdk:"cluster_arn"`
-	ServiceArn       types.String `tfsdk:"service_arn"`
+	ClusterARN       types.String `tfsdk:"cluster_arn"`
+	ServiceARN       types.String `tfsdk:"service_arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalId       types.String `tfsdk:"external_id"`
 }
@@ -1568,7 +1581,7 @@ type kubernetesResourceTypeModel struct {
 }
 
 type eksClusterModel struct {
-	ClusterArn       types.String `tfsdk:"cluster_arn"`
+	ClusterARN       types.String `tfsdk:"cluster_arn"`
 	CrossAccountRole types.String `tfsdk:"cross_account_role"`
 	ExternalId       types.String `tfsdk:"external_id"`
 }
@@ -1599,7 +1612,7 @@ type arcRoutingControlConfigModel struct {
 
 type regionAndRoutingControlsModel struct {
 	Region             types.String      `tfsdk:"region"`
-	RoutingControlArns fwtypes.ListOfARN `tfsdk:"routing_control_arns"`
+	RoutingControlARNs fwtypes.ListOfARN `tfsdk:"routing_control_arns"`
 }
 
 // Parallel Configuration Models
@@ -1642,12 +1655,67 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Plan); ok {
-		return output, err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	plan, ok := outputRaw.(*awstypes.Plan)
+	if !ok {
+		return nil, nil
+	}
+
+	// Check if plan has Route53HealthCheck steps
+	hasRoute53HealthChecks := false
+	expectedCount := 0
+	for _, workflow := range plan.Workflows {
+		for _, step := range workflow.Steps {
+			if step.ExecutionBlockType == awstypes.ExecutionBlockTypeRoute53HealthCheck {
+				hasRoute53HealthChecks = true
+				expectedCount++
+			}
+		}
+	}
+
+	// If plan has Route53 health checks, wait for them to be allocated
+	if hasRoute53HealthChecks {
+		healthCheckConf := &retry.StateChangeConf{
+			Pending: []string{"pending"},
+			Target:  []string{"allocated"},
+			Refresh: statusRoute53HealthChecks(ctx, conn, arn, expectedCount),
+			Timeout: timeout,
+		}
+
+		_, err = healthCheckConf.WaitForStateContext(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return plan, nil
+}
+
+func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		healthChecks, err := findRoute53HealthChecks(ctx, conn, arn)
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Wait for expected number of health checks to exist
+		if len(healthChecks) < expectedCount {
+			return healthChecks, "pending", nil
+		}
+
+		// Wait for all health check IDs to be populated
+		for _, hc := range healthChecks {
+			if aws.ToString(hc.HealthCheckId) == "" {
+				return healthChecks, "pending", nil
+			}
+		}
+
+		// All health checks exist with IDs populated
+		return healthChecks, "allocated", nil
+	}
 }
 
 func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
