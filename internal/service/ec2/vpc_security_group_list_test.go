@@ -184,7 +184,7 @@ func TestAccEC2SecurityGroup_List_FilterByVPCID(t *testing.T) {
 					}),
 					querycheck.ExpectIdentity("aws_security_group.test", map[string]knownvalue.Check{
 						names.AttrAccountID: tfknownvalue.AccountID(),
-						names.AttrRegion:    knownvalue.StringExact(acctest.Region()),
+						names.AttrRegion:    tfknownvalue.StringExact(acctest.Region()),
 						names.AttrID:        tfknownvalue.StringPtrExact(&id2),
 					}),
 				},
