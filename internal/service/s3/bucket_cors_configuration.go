@@ -31,6 +31,7 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(importIgnore="cors_rule.0.max_age_seconds")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,

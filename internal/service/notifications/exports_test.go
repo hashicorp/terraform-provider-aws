@@ -7,12 +7,14 @@ package notifications
 var (
 	ResourceChannelAssociation                              = newChannelAssociationResource
 	ResourceEventRule                                       = newEventRuleResource
+	ResourceManagedNotificationAccountContactAssociation    = newManagedNotificationAccountContactAssociationResource
 	ResourceManagedNotificationAdditionalChannelAssociation = newManagedNotificationAdditionalChannelAssociationResource
 	ResourceNotificationConfiguration                       = newNotificationConfigurationResource
 	ResourceNotificationHub                                 = newNotificationHubResource
 
 	FindChannelAssociationByTwoPartKey                              = findChannelAssociationByTwoPartKey
 	FindEventRuleByARN                                              = findEventRuleByARN
+	FindManagedNotificationAccountContactAssociationByTwoPartKey    = findManagedNotificationAccountContactAssociationByTwoPartKey
 	FindManagedNotificationAdditionalChannelAssociationByTwoPartKey = findManagedNotificationAdditionalChannelAssociationByTwoPartKey
 	FindNotificationConfigurationByARN                              = findNotificationConfigurationByARN
 	FindNotificationHubByRegion                                     = findNotificationHubByRegion

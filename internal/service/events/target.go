@@ -43,6 +43,7 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge/types;types.Target")
 // @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,

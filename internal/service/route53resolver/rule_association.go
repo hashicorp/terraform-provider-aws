@@ -30,6 +30,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(domainTfVar="domain")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRuleAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleAssociationCreate,

@@ -37,6 +37,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.NamespaceInfoV2")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &namespaceResource{}
 

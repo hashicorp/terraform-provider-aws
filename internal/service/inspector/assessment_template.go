@@ -33,6 +33,7 @@ import (
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(preCheck="testAccPreCheck")
 // @Tags(identifierAttribute="id")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAssessmentTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAssessmentTemplateCreate,

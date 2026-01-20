@@ -27,6 +27,7 @@ import (
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild;codebuild.GetResourcePolicyOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,

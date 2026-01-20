@@ -41,6 +41,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.DataProtectionSettings")
 // @Testing(importStateIdAttribute="data_protection_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDataProtectionSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &dataProtectionSettingsResource{}, nil
 }

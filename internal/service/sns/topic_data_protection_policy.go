@@ -27,6 +27,7 @@ import (
 // @SDKResource("aws_sns_topic_data_protection_policy", name="Topic Data Protection Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,

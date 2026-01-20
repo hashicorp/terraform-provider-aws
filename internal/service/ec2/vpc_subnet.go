@@ -34,6 +34,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Subnet")
 // @Testing(generator=false)
 // @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

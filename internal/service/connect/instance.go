@@ -50,6 +50,7 @@ var (
 // @Testing(preIdentityVersion="6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,

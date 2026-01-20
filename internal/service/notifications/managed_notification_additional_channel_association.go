@@ -22,8 +22,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @FrameworkResource("aws_notifications_managed_notification_additional_channel_association", name="Managed Notification Additional Channel Association")
@@ -163,44 +161,6 @@ func findManagedNotificationAdditionalChannelAssociationByTwoPartKey(ctx context
 	return findManagedNotificationChannelAssociation(ctx, conn, &input, func(v *awstypes.ManagedNotificationChannelAssociationSummary) bool {
 		return aws.ToString(v.ChannelIdentifier) == channelARN
 	})
-}
-
-// TODO: Duplicated in https://github.com/hashicorp/terraform-provider-aws/pull/45185.
-func findManagedNotificationChannelAssociation(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) (*awstypes.ManagedNotificationChannelAssociationSummary, error) {
-	output, err := findManagedNotificationChannelAssociations(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findManagedNotificationChannelAssociations(ctx context.Context, conn *notifications.Client, input *notifications.ListManagedNotificationChannelAssociationsInput, filter tfslices.Predicate[*awstypes.ManagedNotificationChannelAssociationSummary]) ([]awstypes.ManagedNotificationChannelAssociationSummary, error) {
-	var output []awstypes.ManagedNotificationChannelAssociationSummary
-
-	pages := notifications.NewListManagedNotificationChannelAssociationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.ChannelAssociations {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
-	}
-
-	return output, nil
 }
 
 type managedNotificationAdditionalChannelAssociationResourceModel struct {

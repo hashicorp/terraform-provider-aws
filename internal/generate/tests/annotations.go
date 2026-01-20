@@ -24,12 +24,12 @@ type CommonArgs struct {
 
 	// CheckDestroy
 	CheckDestroyNoop bool
-	DestroyTakesT    bool
+	destroyTakesNoT  bool
 
 	// CheckExists
 	HasExistsFunc  bool
 	ExistsTypeName string
-	ExistsTakesT   bool
+	existsTakesNoT bool
 
 	// Import
 	NoImport               bool
@@ -99,6 +99,14 @@ func (c CommonArgs) AdditionalTfVars() map[string]TFVar {
 	})
 }
 
+func (c CommonArgs) DestroyTakesT() bool {
+	return !c.destroyTakesNoT
+}
+
+func (c CommonArgs) ExistsTakesT() bool {
+	return !c.existsTakesNoT
+}
+
 type importAction int
 
 const (
@@ -163,7 +171,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("destroyTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.DestroyTakesT = b
+			stuff.destroyTakesNoT = !b
 		}
 	}
 
@@ -191,7 +199,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		if b, err := common.ParseBoolAttr("existsTakesT", attr); err != nil {
 			return err
 		} else {
-			stuff.ExistsTakesT = b
+			stuff.existsTakesNoT = !b
 		}
 	}
 
@@ -324,7 +332,7 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			})
 			stuff.GoImports = append(stuff.GoImports,
 				common.GoImport{
-					Path: "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema",
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 				},
 			)
 		}
@@ -335,6 +343,14 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 			return err
 		} else {
 			stuff.AlternateRegionProvider = b
+			stuff.PreChecks = append(stuff.PreChecks, CodeBlock{
+				Code: "acctest.PreCheckMultipleRegion(t, 2)",
+			})
+			stuff.GoImports = append(stuff.GoImports,
+				common.GoImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
 		}
 	}
 
