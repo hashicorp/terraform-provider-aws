@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas
@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -157,7 +158,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	defaultQuota, err := findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx, conn, serviceCode, quotaCode)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Service Quotas default Service Quota (%s/%s): %s", serviceCode, quotaCode, err)
 	}
@@ -175,7 +175,13 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	id := serviceQuotaCreateResourceID(serviceCode, quotaCode)
-	if value := d.Get(names.AttrValue).(float64); value > quotaValue {
+	value := d.Get(names.AttrValue).(float64)
+
+	if value < quotaValue {
+		return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) with value less than current", id)
+	}
+
+	if value > quotaValue {
 		input := servicequotas.RequestServiceQuotaIncreaseInput{
 			DesiredValue: aws.Float64(value),
 			QuotaCode:    aws.String(quotaCode),
@@ -183,7 +189,6 @@ func resourceServiceQuotaCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		output, err := conn.RequestServiceQuotaIncrease(ctx, &input)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting Service Quotas Service Quota (%s) increase: %s", id, err)
 		}
@@ -343,8 +348,9 @@ func findDefaultServiceQuotaByServiceCodeAndQuotaCode(ctx context.Context, conn 
 	output, err := conn.GetAWSDefaultServiceQuota(ctx, &input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
@@ -372,8 +378,9 @@ func findServiceQuota(ctx context.Context, conn *servicequotas.Client, input *se
 	output, err := conn.GetServiceQuota(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
@@ -408,8 +415,9 @@ func findRequestedServiceQuotaChange(ctx context.Context, conn *servicequotas.Cl
 	output, err := conn.GetRequestedServiceQuotaChange(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError: err,
+		return nil, &sdkretry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -382,7 +382,7 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 
 		decryptedPassword, err := pgpkeys.DecryptBytes(password, key)
 		if err != nil {
-			return fmt.Errorf("decrypting password: %s", err)
+			return fmt.Errorf("decrypting password: %w", err)
 		}
 
 		iamAsCreatedUserSession, err := config.LoadDefaultConfig(ctx,
@@ -390,14 +390,14 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, secretAccessKey, "")),
 		)
 		if err != nil {
-			return fmt.Errorf("creating session: %s", err)
+			return fmt.Errorf("creating session: %w", err)
 		}
 
-		return retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+		return tfresource.Retry(ctx, 2*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 			iamAsCreatedUser := iam.NewFromConfig(iamAsCreatedUserSession)
 			newPassword, err := tfiam.GeneratePassword(20)
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			_, err = iamAsCreatedUser.ChangePassword(ctx, &iam.ChangePasswordInput{
 				OldPassword: aws.String(decryptedPassword.String()),
@@ -406,16 +406,16 @@ func testDecryptPasswordAndTest(ctx context.Context, nProfile, nAccessKey, key s
 			if err != nil {
 				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
 				if errs.IsA[*awstypes.EntityTemporarilyUnmodifiableException](err) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if tfawserr.ErrCodeEquals(err, "InvalidClientTokenId") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 				if tfawserr.ErrMessageContains(err, "AccessDenied", "not authorized to perform: iam:ChangePassword") {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
 
-				return retry.NonRetryableError(fmt.Errorf("changing decrypted password: %s", err))
+				return tfresource.NonRetryableError(fmt.Errorf("changing decrypted password: %w", err))
 			}
 
 			return nil

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -6,7 +6,6 @@ package ec2
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -14,17 +13,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,7 +98,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
@@ -143,7 +139,7 @@ func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -208,48 +204,6 @@ func volumeAttachmentID(name, volumeID, instanceID string) string {
 	return fmt.Sprintf("vai-%d", create.StringHashcode(buf.String()))
 }
 
-func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) (*awstypes.VolumeAttachment, error) {
-	input := ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"attachment.device":      deviceName,
-			"attachment.instance-id": instanceID,
-		}),
-		VolumeIds: []string{volumeID},
-	}
-
-	output, err := findEBSVolume(ctx, conn, &input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State; state == awstypes.VolumeStateAvailable || state == awstypes.VolumeStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.VolumeId) != volumeID {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	for _, v := range output.Attachments {
-		if v.State == awstypes.VolumeAttachmentStateDetached {
-			continue
-		}
-
-		if aws.ToString(v.Device) == deviceName && aws.ToString(v.InstanceId) == instanceID {
-			return &v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
-}
-
 func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id string, force bool, timeout time.Duration) error {
 	tflog.Info(ctx, "Stopping EC2 Instance", map[string]any{
 		"ec2_instance_id": id,
@@ -270,93 +224,4 @@ func stopVolumeAttachmentInstance(ctx context.Context, conn *ec2.Client, id stri
 	}
 
 	return nil
-}
-
-func waitVolumeAttachmentInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(
-			awstypes.InstanceStateNamePending,
-			awstypes.InstanceStateNameRunning,
-			awstypes.InstanceStateNameShuttingDown,
-			awstypes.InstanceStateNameStopping,
-		),
-		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
-		Refresh:    statusVolumeAttachmentInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitVolumeAttachmentInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
-		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
-		Refresh:    statusVolumeAttachmentInstanceState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Instance); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*awstypes.VolumeAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.VolumeAttachmentStateDetaching),
-		Target:     []string{},
-		Refresh:    statusVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VolumeAttachment); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusVolumeAttachmentInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
-		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
-			InstanceIds: []string{id},
-		})
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State.Name), nil
-	}
 }

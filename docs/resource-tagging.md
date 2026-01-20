@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Tagging Support
 
@@ -503,6 +506,10 @@ By default, the common name for the certificate is `example.com`.
 To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>)` to reference an existing variable.
 For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
 and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
+
+Some acceptance tests require a TLS ECDSA public key PEM.
+This can be included by setting the annotation `@Testing(tlsEcdsaPublicKeyPem=true)`.
+The Terraform variable name will be `rTlsEcdsaPublicKeyPem`.
 
 Some acceptance tests related to networking require a random BGP ASN value.
 This can be included by setting the annotation `@Testing(randomBsgAsn="<low end>;<high end>)`,

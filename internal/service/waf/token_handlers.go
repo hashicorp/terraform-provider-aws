@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package waf
@@ -30,7 +30,7 @@ func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (any, err
 	const (
 		timeout = 15 * time.Minute
 	)
-	return tfresource.RetryWhenIsA[*awstypes.WAFStaleDataException](ctx, timeout, func() (any, error) {
+	return tfresource.RetryWhenIsA[any, *awstypes.WAFStaleDataException](ctx, timeout, func(ctx context.Context) (any, error) {
 		input := &waf.GetChangeTokenInput{}
 		output, err := t.connection.GetChangeToken(ctx, input)
 

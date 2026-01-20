@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -17,12 +17,7 @@ import (
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
-type fieldNamePrefixCtxKey string
-
 const (
-	fieldNamePrefixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_PREFIX_RECURSE"
-	fieldNameSuffixRecurse fieldNamePrefixCtxKey = "FIELD_NAME_SUFFIX_RECURSE"
-
 	mapBlockKeyFieldName = "MapBlockKey"
 )
 
@@ -33,6 +28,7 @@ const (
 type autoFlexer interface {
 	convert(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, fieldOpts) diag.Diagnostics
 	getOptions() AutoFlexOptions
+	handleXMLWrapperCollapse(context.Context, path.Path, reflect.Value, path.Path, reflect.Value, reflect.Type, reflect.Type, map[string]bool) diag.Diagnostics
 }
 
 // autoFlexValues returns the underlying `reflect.Value`s of `from` and `to`.
@@ -74,7 +70,12 @@ var (
 	plural = pluralize.NewClient()
 )
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) {
+type fuzzyFieldFinder struct {
+	prefixRecursionDepth int
+	suffixRecursionDepth int
+}
+
+func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string, typeFrom reflect.Type, typeTo reflect.Type, flexer autoFlexer) (reflect.StructField, bool) { //nolint:unparam
 	// first precedence is exact match (case sensitive)
 	if fieldTo, ok := typeTo.FieldByName(fieldNameFrom); ok {
 		return fieldTo, true
@@ -117,26 +118,38 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 	// fourth precedence is using field name prefix
 	if v := opts.fieldNamePrefix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(fieldNamePrefixRecurse) == nil {
+		if fff.prefixRecursionDepth == 0 {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, fieldNamePrefixRecurse, true)
+			fff.prefixRecursionDepth++
 			if trimmed, ok := strings.CutPrefix(fieldNameFrom, v); ok {
-				return findFieldFuzzy(ctx, trimmed, typeFrom, typeTo, flexer)
+				if fieldTo, ok := fff.findField(ctx, trimmed, typeFrom, typeTo, flexer); ok {
+					fff.prefixRecursionDepth--
+					return fieldTo, true
+				}
+			} else {
+				if fieldTo, ok := fff.findField(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer); ok {
+					fff.prefixRecursionDepth--
+					return fieldTo, true
+				}
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, typeFrom, typeTo, flexer)
+			// no match via prefix mutation; fall through to suffix handling on the original name
 		}
 	}
 
 	// fifth precedence is using field name suffix
 	if v := opts.fieldNameSuffix; v != "" {
 		v = strings.ReplaceAll(v, " ", "")
-		if ctx.Value(fieldNameSuffixRecurse) == nil {
+		if fff.suffixRecursionDepth == 0 {
 			// so it will only recurse once
-			ctx = context.WithValue(ctx, fieldNameSuffixRecurse, true)
+			fff.suffixRecursionDepth++
 			if strings.HasSuffix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+				fieldTo, ok := fff.findField(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+				fff.suffixRecursionDepth--
+				return fieldTo, ok
 			}
-			return findFieldFuzzy(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+			fieldTo, ok := fff.findField(ctx, fieldNameFrom+v, typeFrom, typeTo, flexer)
+			fff.suffixRecursionDepth--
+			return fieldTo, ok
 		}
 	}
 
@@ -154,8 +167,10 @@ func autoflexTags(field reflect.StructField) (string, tagOptions) {
 }
 
 type fieldOpts struct {
-	legacy    bool
-	omitempty bool
+	legacy          bool
+	omitempty       bool
+	xmlWrapper      bool
+	xmlWrapperField string
 }
 
 // valueWithElementsAs extends the Value interface for values that have an ElementsAs method.

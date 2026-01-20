@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # S3 Bucket Integration for API Gateway
 
 This example demonstrates how to create an S3 Proxy using AWS API Gateway. It takes you through listing the buckets of the API caller, but provides an example of all of the resources needed to extend the API to manipulating bucket contents. It follows [this article](https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html) on AWS.

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkmediapipelines
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -497,15 +498,15 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 
 	// Retry when forbidden exception is received; iam role propagation is eventually consistent
 	var out *chimesdkmediapipelines.CreateMediaInsightsPipelineConfigurationOutput
-	createError := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
+	createError := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.CreateMediaInsightsPipelineConfiguration(ctx, in)
 		if err != nil {
 			var forbiddenException *awstypes.ForbiddenException
 			if errors.As(err, &forbiddenException) {
-				return retry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		return nil
@@ -530,7 +531,7 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 
 	out, err := findMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -581,15 +582,15 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 		}
 
 		// Retry when forbidden exception is received; iam role propagation is eventually consistent
-		updateError := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
+		updateError := tfresource.Retry(ctx, iamPropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
 			var err error
 			_, err = conn.UpdateMediaInsightsPipelineConfiguration(ctx, in)
 			if err != nil {
 				var forbiddenException *awstypes.ForbiddenException
 				if errors.As(err, &forbiddenException) {
-					return retry.RetryableError(err)
+					return tfresource.RetryableError(err)
 				}
-				return retry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 
 			return nil
@@ -610,7 +611,7 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
 
 	// eventual consistency may cause an initial failure
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Second, func(ctx context.Context) (any, error) {
 		return conn.DeleteMediaInsightsPipelineConfiguration(ctx, &chimesdkmediapipelines.DeleteMediaInsightsPipelineConfigurationInput{
 			Identifier: aws.String(d.Id()),
 		})
@@ -633,7 +634,7 @@ func findMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chime
 	}
 	out, err := conn.GetMediaInsightsPipelineConfiguration(ctx, in)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

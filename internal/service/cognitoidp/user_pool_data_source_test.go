@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -153,7 +153,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 		}
 		numAttributes, err := strconv.Atoi(numAttributesStr)
 		if err != nil {
-			return fmt.Errorf("error parsing schema_attributes.#: %s", err)
+			return fmt.Errorf("error parsing schema_attributes.#: %w", err)
 		}
 
 		// Loop through the schema_attributes and check the mutable key in each attribute

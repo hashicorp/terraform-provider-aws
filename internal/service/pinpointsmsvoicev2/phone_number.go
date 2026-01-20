@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpointsmsvoicev2
@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -35,6 +35,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -128,11 +130,14 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"two_way_channel_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(
 						path.MatchRelative().AtParent().AtName("two_way_channel_enabled"),
+					),
+					stringvalidator.Any(
+						fwvalidators.ARN(),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^connect\.[a-z0-9-]+\.amazonaws.com$`), "Must be connect.{region}.amazonaws.com"),
 					),
 				},
 			},
@@ -262,7 +267,7 @@ func (r *phoneNumberResource) Read(ctx context.Context, request resource.ReadReq
 
 	out, err := findPhoneNumberByID(ctx, conn, data.PhoneNumberID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -390,7 +395,7 @@ type phoneNumberResourceModel struct {
 	Tags                      tftags.Map                                         `tfsdk:"tags"`
 	TagsAll                   tftags.Map                                         `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                     `tfsdk:"timeouts"`
-	TwoWayChannelARN          fwtypes.ARN                                        `tfsdk:"two_way_channel_arn"`
+	TwoWayChannelARN          types.String                                       `tfsdk:"two_way_channel_arn"`
 	TwoWayEnabled             types.Bool                                         `tfsdk:"two_way_channel_enabled"`
 	TwoWayChannelRole         fwtypes.ARN                                        `tfsdk:"two_way_channel_role"`
 }
@@ -407,7 +412,7 @@ func findPhoneNumberByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, i
 	}
 
 	if status := output.Status; status == awstypes.NumberStatusDeleted {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
 		}
@@ -434,7 +439,7 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -450,11 +455,11 @@ func findPhoneNumbers(ctx context.Context, conn *pinpointsmsvoicev2.Client, inpu
 	return output, nil
 }
 
-func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) retry.StateRefreshFunc {
+func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPhoneNumberByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -467,7 +472,7 @@ func statusPhoneNumber(ctx context.Context, conn *pinpointsmsvoicev2.Client, id 
 }
 
 func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusPending, awstypes.NumberStatusAssociating),
 		Target:  enum.Slice(awstypes.NumberStatusActive),
 		Refresh: statusPhoneNumber(ctx, conn, id),
@@ -484,7 +489,7 @@ func waitPhoneNumberActive(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 }
 
 func waitPhoneNumberDeleted(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string, timeout time.Duration) (*awstypes.PhoneNumberInformation, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NumberStatusDisassociating),
 		Target:  []string{},
 		Refresh: statusPhoneNumber(ctx, conn, id),

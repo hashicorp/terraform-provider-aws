@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -407,7 +408,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return findImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 AMI %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -564,13 +565,15 @@ func updateDescription(ctx context.Context, conn *ec2.Client, id string, descrip
 	}
 
 	_, err := conn.ModifyImageAttribute(ctx, &input)
+
 	if err != nil {
-		return fmt.Errorf("updating description: %s", err)
+		return fmt.Errorf("updating description: %w", err)
 	}
 
 	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+
 	if err != nil {
-		return fmt.Errorf("updating description: waiting for completion: %s", err)
+		return fmt.Errorf("updating description: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -815,7 +818,7 @@ func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.Client, imageID,
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -842,7 +845,7 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -873,7 +876,7 @@ func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, ima
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func(ctx context.Context) (bool, error) {
 		output, err := findImageByID(ctx, conn, imageID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 

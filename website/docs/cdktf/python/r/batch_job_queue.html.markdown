@@ -131,6 +131,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_job_queue.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:job-queue/sample"
+  }
+}
+
+resource "aws_batch_job_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the job queue.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Queue using the `arn`. For example:
 
 ```python
@@ -154,4 +175,4 @@ Using `terraform import`, import Batch Job Queue using the `arn`. For example:
 % terraform import aws_batch_job_queue.test_queue arn:aws:batch:us-east-1:123456789012:job-queue/sample
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37fb5948b82b6d02f3c030c5344c58b0afb4c5093fb42d030bf6bd2e25e61ecc -->
+<!-- cache-key: cdktf-0.20.8 input-c38de45e559b7329079a0b392d71a4f0c2d6e7a9d9c847783c896ae691a600bf -->

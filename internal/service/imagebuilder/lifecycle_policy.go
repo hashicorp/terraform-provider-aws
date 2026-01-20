@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -24,11 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -170,6 +171,10 @@ func (r *lifecyclePolicyResource) Schema(ctx context.Context, request resource.S
 											Attributes: map[string]schema.Attribute{
 												"is_public": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Bool{
+														boolplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"regions": schema.ListAttribute{
 													CustomType:  fwtypes.ListOfStringType,
@@ -312,7 +317,7 @@ func (r *lifecyclePolicyResource) Create(ctx context.Context, request resource.C
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateLifecyclePolicy(ctx, input)
 	}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
@@ -362,7 +367,7 @@ func (r *lifecyclePolicyResource) Read(ctx context.Context, request resource.Rea
 
 	policy, err := findLifecyclePolicyByARN(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -414,7 +419,7 @@ func (r *lifecyclePolicyResource) Update(ctx context.Context, request resource.U
 		// Additional fields.
 		input.ClientToken = aws.String(sdkid.UniqueId())
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateLifecyclePolicy(ctx, input)
 		}, errCodeInvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions")
 
@@ -460,7 +465,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	output, err := conn.GetLifecyclePolicy(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -70,7 +70,7 @@ func sweepRestAPIs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	input := apigateway.GetRestApisInput{}
 	conn := client.APIGatewayClient(ctx)
@@ -159,7 +159,7 @@ func sweepClientCertificates(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayClient(ctx)
 	input := apigateway.GetClientCertificatesInput{}
@@ -200,7 +200,7 @@ func sweepUsagePlans(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayClient(ctx)
 	input := apigateway.GetUsagePlansInput{}
@@ -242,7 +242,7 @@ func sweepAPIKeys(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayClient(ctx)
 	input := apigateway.GetApiKeysInput{}
@@ -283,7 +283,7 @@ func sweepDomainNames(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.APIGatewayClient(ctx)
 	input := apigateway.GetDomainNamesInput{}
@@ -305,7 +305,7 @@ func sweepDomainNames(region string) error {
 		for _, v := range page.Items {
 			r := resourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.DomainName))
+			d.SetId(domainNameCreateResourceID(aws.ToString(v.DomainName), aws.ToString(v.DomainNameId)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

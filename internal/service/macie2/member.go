@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2
@@ -14,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -142,7 +143,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findMemberByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -265,7 +266,7 @@ func inviteMember(ctx context.Context, conn *macie2.Client, d *schema.ResourceDa
 	}
 
 	if _, err := waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Macie Member (%s) invite: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Macie Member (%s) invite: %w", d.Id(), err)
 	}
 
 	return nil
@@ -279,7 +280,7 @@ func findMemberByID(ctx context.Context, conn *macie2.Client, id string) (*macie
 	output, err := conn.GetMember(ctx, &input)
 
 	if isMemberNotFoundError(err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -337,11 +338,11 @@ func findMembers(ctx context.Context, conn *macie2.Client, input *macie2.ListMem
 	return output, nil
 }
 
-func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) retry.StateRefreshFunc {
+func statusMemberRelationship(ctx context.Context, conn *macie2.Client, adminAccountID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findMemberNotAssociated(ctx, conn, adminAccountID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -357,7 +358,7 @@ func waitMemberInvited(ctx context.Context, conn *macie2.Client, adminAccountID 
 	const (
 		timeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RelationshipStatusCreated, awstypes.RelationshipStatusEmailVerificationInProgress),
 		Target:  enum.Slice(awstypes.RelationshipStatusInvited, awstypes.RelationshipStatusEnabled, awstypes.RelationshipStatusPaused),
 		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),

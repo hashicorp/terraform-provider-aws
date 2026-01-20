@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -29,7 +29,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(state, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -53,7 +53,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(stateStopped, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(stateStopped, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -66,7 +66,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceStateConfig_basic(stateRunning, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(stateRunning, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -90,7 +90,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
+				Config: testAccInstanceStateConfig_basic(state, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
@@ -128,7 +128,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccInstanceStateConfig_basic(state string, force string) string {
+func testAccInstanceStateConfig_basic(state string, force bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
@@ -141,7 +141,7 @@ resource "aws_instance" "test" {
 resource "aws_ec2_instance_state" "test" {
   instance_id = aws_instance.test.id
   state       = %[1]q
-  force       = %[2]s
+  force       = %[2]t
 }
 `, state, force))
 }

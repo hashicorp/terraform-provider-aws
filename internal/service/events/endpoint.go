@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package events
@@ -14,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -167,7 +168,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (any, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateEndpoint(ctx, input)
 	}, errCodeValidationException, "cannot be assumed by principal")
 
@@ -193,7 +194,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	output, err := findEndpointByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Global Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -310,7 +311,7 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	output, err := conn.DescribeEndpoint(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -327,11 +328,11 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findEndpointByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -344,7 +345,7 @@ func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateCreating),
 		Target:  enum.Slice(types.EndpointStateActive),
 		Refresh: statusEndpointState(ctx, conn, name),
@@ -363,7 +364,7 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateUpdating),
 		Target:  enum.Slice(types.EndpointStateActive),
 		Refresh: statusEndpointState(ctx, conn, name),
@@ -382,7 +383,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 }
 
 func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.EndpointStateDeleting),
 		Target:  []string{},
 		Refresh: statusEndpointState(ctx, conn, name),

@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -24,10 +23,7 @@ func TestResourceSetRegionInStateInterceptor_Read(t *testing.T) {
 
 	const name = "example"
 
-	region := os.Getenv("AWS_DEFAULT_REGION")
-	if region == "" {
-		t.Skip("AWS_DEFAULT_REGION env var must be set for ResourceSetRegionInStateInterceptor test.")
-	}
+	region := "a_region"
 
 	ctx := context.Background()
 	client := mockClient{region: region}
@@ -64,13 +60,14 @@ func TestResourceSetRegionInStateInterceptor_Read(t *testing.T) {
 			req := resource.ReadRequest{State: tc.startState}
 			resp := resource.ReadResponse{State: tc.startState}
 
-			if diags := icpt.read(ctx, interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
+			icpt.read(ctx, interceptorOptions[resource.ReadRequest, resource.ReadResponse]{
 				c:        client,
 				request:  &req,
 				response: &resp,
 				when:     After,
-			}); diags.HasError() {
-				t.Fatalf("unexpected diags: %s", diags)
+			})
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diags: %s", resp.Diagnostics)
 			}
 
 			if tc.expectSet {

@@ -46,9 +46,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `awsAccountId` - (Optional) AWS account ID.
+* `awsAccountId` - (Optional) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -58,4 +58,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - The group description.
 * `principalId` - The principal ID of the group.
 
-<!-- cache-key: cdktf-0.20.8 input-415cb96cad764eacf7ebdf664654cc86d7aaf26447d7e6c87b7ea6ab87193f4a -->
+<!-- cache-key: cdktf-0.20.8 input-d3941b152ee4275935e81b02c91820003562cea8d1776ba02def8260a2a007bf -->

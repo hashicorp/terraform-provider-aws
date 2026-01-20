@@ -28,6 +28,10 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new NetworkmanagerTransitGatewayPeering(this, "example", {
       coreNetworkId: Token.asString(awsccNetworkmanagerCoreNetworkExample.id),
+      dependsOn: [
+        awsEc2TransitGatewayPolicyTableExample,
+        awsNetworkmanagerCoreNetworkPolicyAttachmentExample,
+      ],
       transitGatewayArn: Token.asString(awsEc2TransitGatewayExample.arn),
     });
   }
@@ -99,4 +103,4 @@ Using `terraform import`, import `aws_networkmanager_transit_gateway_peering` us
 % terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-5d328a617581b03e7038485d8d90fa9f8d0a7017dea14dd79e2a5b154f7ebb84 -->
+<!-- cache-key: cdktf-0.20.8 input-03141fbe1e304c38136d09441ab42224acf76da1f217b7cdcea4ff011b06f8a2 -->

@@ -42,6 +42,21 @@ resource "aws_vpc_endpoint" "s3" {
 }
 ```
 
+### Cross-region enabled AWS services
+
+```terraform
+resource "aws_vpc_endpoint" "s3" {
+  region         = "us-west-2"
+  vpc_id         = aws_vpc.main.id
+  service_name   = "com.amazonaws.us-east-2.s3"
+  service_region = "us-east-2"
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
 ### Interface Endpoint Type
 
 ```terraform
@@ -186,7 +201,7 @@ If no security groups are specified, the VPC's [default security group](https://
 
 * `ipv4` - (Optional) The IPv4 address to assign to the endpoint network interface in the subnet. You must provide an IPv4 address if the VPC endpoint supports IPv4.
 * `ipv6` - (Optional) The IPv6 address to assign to the endpoint network interface in the subnet. You must provide an IPv6 address if the VPC endpoint supports IPv6.
-* `subnet` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
+* `subnet_id` - (Optional) The ID of the subnet. Must have a corresponding subnet in the `subnet_ids` argument.
 
 ## Timeouts
 
@@ -218,11 +233,37 @@ DNS blocks (for `dns_entry`) support the following attributes:
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_endpoint.example
+  identity = {
+    id = "vpce-3ecf2a57"
+  }
+}
+
+resource "aws_vpc_endpoint" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` - (String) ID of the VPC endpoint.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```terraform
 import {
-  to = aws_vpc_endpoint.endpoint1
+  to = aws_vpc_endpoint.example
   id = "vpce-3ecf2a57"
 }
 ```
@@ -230,5 +271,5 @@ import {
 Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For example:
 
 ```console
-% terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
+% terraform import aws_vpc_endpoint.example vpce-3ecf2a57
 ```

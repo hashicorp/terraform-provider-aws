@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudsearch
@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -101,7 +101,7 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 
 	accessPolicy, err := findAccessPolicyByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CloudSearch Domain Service Access Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -174,8 +174,7 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Clien
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -190,11 +189,11 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Clien
 	return output.AccessPolicies, nil
 }
 
-func statusAccessPolicyState(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusAccessPolicyState(conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findAccessPoliciesStatusByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -210,7 +209,7 @@ func waitAccessPolicyActive(ctx context.Context, conn *cloudsearch.Client, name 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OptionStateProcessing),
 		Target:  enum.Slice(types.OptionStateActive),
-		Refresh: statusAccessPolicyState(ctx, conn, name),
+		Refresh: statusAccessPolicyState(conn, name),
 		Timeout: timeout,
 	}
 

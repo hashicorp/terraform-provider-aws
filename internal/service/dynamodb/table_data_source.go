@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,236 +24,241 @@ import (
 func dataSourceTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attribute": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Computed: true,
+
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"attribute": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"billing_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"global_secondary_index": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hash_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"on_demand_throughput": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_read_request_units": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"max_write_request_units": {
-										Type:     schema.TypeInt,
-										Computed: true,
+				"billing_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deletion_protection_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"global_secondary_index": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hash_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"on_demand_throughput": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_read_request_units": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"max_write_request_units": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"projection_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"read_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"write_capacity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"hash_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"local_secondary_index": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"non_key_attributes": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"projection_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"range_key": {
-							Type:     schema.TypeString,
-							Computed: true,
+							"projection_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"read_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"warm_throughput": sdkv2.ComputedOnlyFromSchema(warmThroughputSchema()),
+							"write_capacity": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"on_demand_throughput": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_read_request_units": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"max_write_request_units": {
-							Type:     schema.TypeInt,
-							Computed: true,
+				"hash_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"local_secondary_index": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"non_key_attributes": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"projection_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"range_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"point_in_time_recovery": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"recovery_period_in_days": {
-							Type:     schema.TypeInt,
-							Computed: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"on_demand_throughput": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_read_request_units": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"max_write_request_units": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"range_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"replica": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"region_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"point_in_time_recovery": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"recovery_period_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"range_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"read_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"replica": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"region_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrStreamARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"stream_label": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"stream_view_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"table_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"ttl": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Computed: true,
+				"server_side_encryption": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"write_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				names.AttrStreamARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"stream_label": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"stream_view_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"table_class": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"ttl": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"warm_throughput": sdkv2.ComputedOnlyFromSchema(warmThroughputSchema()),
+				"write_capacity": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -334,11 +340,14 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		d.Set("table_class", awstypes.TableClassStandard)
 	}
 
+	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting warm_throughput: %s", err)
+	}
+
 	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	}
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &describeBackupsInput)
-
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table (%s) Continuous Backups: %s", d.Id(), err)

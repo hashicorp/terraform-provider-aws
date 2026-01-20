@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -13,38 +13,42 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-framework/list"
+	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kms_key", name="Key")
 // @Tags(identifierAttribute="id")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
+// @Testing(preIdentityVersion="v6.10.0")
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
 		ReadWithoutTimeout:   resourceKeyRead,
 		UpdateWithoutTimeout: resourceKeyUpdate,
 		DeleteWithoutTimeout: resourceKeyDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(iamPropagationTimeout),
@@ -222,7 +226,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 
 	key, err := findKeyInfo(ctx, conn, d.Id(), d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -383,7 +387,7 @@ func findKeyInfo(ctx context.Context, conn *kms.Client, keyID string, isNewResou
 		tags, err := listTags(ctx, conn, keyID)
 
 		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, &retry.NotFoundError{LastError: err}
+			return nil, &sdkretry.NotFoundError{LastError: err}
 		}
 
 		if err != nil {
@@ -409,7 +413,7 @@ func findKeyByID(ctx context.Context, conn *kms.Client, keyID string, optFns ...
 
 	// Once the CMK is in the pending (replica) deletion state Terraform considers it logically deleted.
 	if state := output.KeyState; state == awstypes.KeyStatePendingDeletion || state == awstypes.KeyStatePendingReplicaDeletion {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     string(state),
 			LastRequest: input,
 		}
@@ -422,7 +426,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	output, err := conn.DescribeKey(ctx, input, optFns...)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -446,7 +450,7 @@ func findDefaultKeyARNForService(ctx context.Context, conn *kms.Client, service,
 	})
 
 	if err != nil {
-		return "", fmt.Errorf("reading KMS Key (%s): %s", keyID, err)
+		return "", fmt.Errorf("reading KMS Key (%s): %w", keyID, err)
 	}
 
 	return aws.ToString(key.Arn), nil
@@ -461,7 +465,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	output, err := conn.GetKeyPolicy(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -486,7 +490,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	output, err := conn.GetKeyRotationStatus(ctx, &input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, nil, &retry.NotFoundError{
+		return nil, nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -526,7 +530,7 @@ func updateKeyDescription(ctx context.Context, conn *kms.Client, resourceTypeNam
 func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, keyID string, enabled bool) error {
 	var action string
 
-	updateFunc := func() (any, error) {
+	updateFunc := func(ctx context.Context) (any, error) {
 		var err error
 
 		if enabled {
@@ -548,7 +552,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.Client, resourceTypeName, k
 		return nil, err
 	}
 
-	if _, err := tfresource.RetryWhenIsA[*awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
+	if _, err := tfresource.RetryWhenIsA[any, *awstypes.NotFoundException](ctx, propagationTimeout, updateFunc); err != nil {
 		return fmt.Errorf("%s %s (%s): %w", action, resourceTypeName, keyID, err)
 	}
 
@@ -632,11 +636,11 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.Client, resourceTyp
 	return nil
 }
 
-func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) retry.StateRefreshFunc {
+func statusKeyState(ctx context.Context, conn *kms.Client, keyID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -652,7 +656,7 @@ func waitKeyDescriptionPropagated(ctx context.Context, conn *kms.Client, keyID s
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -677,7 +681,7 @@ func waitKeyDeleted(ctx context.Context, conn *kms.Client, keyID string) (*awsty
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateDisabled, awstypes.KeyStateEnabled),
 		Target:  []string{},
 		Refresh: statusKeyState(ctx, conn, keyID),
@@ -697,7 +701,7 @@ func waitKeyPolicyPropagated(ctx context.Context, conn *kms.Client, keyID, polic
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyPolicyByTwoPartKey(ctx, conn, keyID, policyNameDefault)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -728,7 +732,7 @@ func waitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.Client, key
 	checkFunc := func(ctx context.Context) (bool, error) {
 		rotation, rotationPeriodGot, err := findKeyRotationEnabledByKeyID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -754,7 +758,7 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	checkFunc := func(ctx context.Context) (bool, error) {
 		output, err := findKeyByID(ctx, conn, keyID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return false, nil
 		}
 
@@ -773,4 +777,94 @@ func waitKeyStatePropagated(ctx context.Context, conn *kms.Client, keyID string,
 	)
 
 	return tfresource.WaitUntil(ctx, timeout, checkFunc, opts)
+}
+
+// @SDKListResource("aws_kms_key")
+func keyResourceAsListResource() inttypes.ListResourceForSDK {
+	l := keyListResource{}
+	l.SetResourceSchema(resourceKey())
+	return &l
+}
+
+type keyListResource struct {
+	framework.ResourceWithConfigure
+	framework.ListResourceWithSDKv2Resource
+	framework.ListResourceWithSDKv2Tags
+}
+
+type keyListResourceModel struct {
+	framework.WithRegionModel
+}
+
+func (l *keyListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
+	response.Schema = listschema.Schema{
+		Attributes: map[string]listschema.Attribute{},
+		Blocks:     map[string]listschema.Block{},
+	}
+}
+
+func (l *keyListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
+	var query keyListResourceModel
+	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
+		if diags := request.Config.Get(ctx, &query); diags.HasError() {
+			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			return
+		}
+	}
+
+	awsClient := l.Meta()
+	conn := awsClient.KMSClient(ctx)
+
+	tflog.Info(ctx, "Listing KMS keys")
+	stream.Results = func(yield func(list.ListResult) bool) {
+		var input kms.ListKeysInput
+		pages := kms.NewListKeysPaginator(conn, &input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				result := fwdiag.NewListResultErrorDiagnostic(err)
+				yield(result)
+				return
+			}
+
+			for _, key := range page.Keys {
+				id := aws.ToString(key.KeyId)
+				ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
+
+				result := request.NewListResult(ctx)
+
+				rd := l.ResourceData()
+				rd.SetId(id)
+
+				diags := resourceKeyRead(ctx, rd, awsClient)
+				if diags.HasError() || rd.Id() == "" {
+					// Resource can't be read or is logically deleted.
+					// Log and continue.
+					tflog.Error(ctx, "Reading KMS key", map[string]any{
+						names.AttrID: id,
+						"diags":      sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
+
+				if err := l.SetTags(ctx, awsClient, rd); err != nil {
+					result = fwdiag.NewListResultErrorDiagnostic(err)
+					yield(result)
+					return
+				}
+
+				result.DisplayName = id
+
+				l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+				if result.Diagnostics.HasError() {
+					yield(result)
+					return
+				}
+
+				if !yield(result) {
+					return
+				}
+			}
+		}
+	}
 }

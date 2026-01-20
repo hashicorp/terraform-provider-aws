@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -6,6 +6,7 @@ package codebuild_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -19,8 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,6 +94,12 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalAllPullRequests)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubWrite)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubMaintain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubAdmin)),
 				),
 			},
 			{
@@ -475,6 +483,118 @@ func TestAccCodeBuildWebhook_upgradeV5_94_1(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildWebhook_gitHubWithPullRequestBuildPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(
+					rName,
+					string(types.PullRequestBuildCommentApprovalAllPullRequests),
+					enum.Slice(
+						types.PullRequestBuildApproverRoleGithubRead,
+						types.PullRequestBuildApproverRoleGithubWrite,
+						types.PullRequestBuildApproverRoleGithubMaintain,
+						types.PullRequestBuildApproverRoleGithubAdmin,
+					),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalAllPullRequests)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubRead)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubWrite)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubMaintain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubAdmin)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+			{
+				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(
+					rName,
+					string(types.PullRequestBuildCommentApprovalForkPullRequests),
+					enum.Slice(
+						types.PullRequestBuildApproverRoleGithubMaintain,
+						types.PullRequestBuildApproverRoleGithubAdmin,
+					),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalForkPullRequests)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubMaintain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubAdmin)),
+				),
+			},
+			{
+				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicyNoApproverRoles(
+					rName,
+					string(types.PullRequestBuildCommentApprovalDisabled),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalDisabled)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildWebhook_gitHubWithPullRequestBuildPolicyNoApproverRoles(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_gitHubWithPullRequestBuildPolicyNoApproverRoles(
+					rName,
+					string(types.PullRequestBuildCommentApprovalAllPullRequests),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.requires_comment_approval", string(types.PullRequestBuildCommentApprovalAllPullRequests)),
+					resource.TestCheckResourceAttr(resourceName, "pull_request_build_policy.0.approver_roles.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubWrite)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubMaintain)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "pull_request_build_policy.0.approver_roles.*", string(types.PullRequestBuildApproverRoleGithubAdmin)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWebhookFilter(webhook *types.Webhook, expectedFilters [][]types.WebhookFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		got, want := webhook.FilterGroups, expectedFilters
@@ -497,7 +617,7 @@ func testAccCheckWebhookDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindWebhookByProjectName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -542,7 +662,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_gitHub(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 }
@@ -579,7 +699,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_buildType(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   build_type   = %[1]q
   project_name = aws_codebuild_project.test.name
@@ -588,7 +708,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_branchFilter(rName, branchFilter string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
 resource "aws_codebuild_webhook" "test" {
   branch_filter = %[1]q
   project_name  = aws_codebuild_project.test.name
@@ -597,7 +717,7 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_filterGroup(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name = aws_codebuild_project.test.name
 
@@ -657,10 +777,33 @@ resource "aws_codebuild_webhook" "test" {
 }
 
 func testAccWebhookConfig_manualCreation(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), `
 resource "aws_codebuild_webhook" "test" {
   project_name    = aws_codebuild_project.test.name
   manual_creation = true
 }
 `)
+}
+
+func testAccWebhookConfig_gitHubWithPullRequestBuildPolicy(rName, requiresCommentApproval string, approverRoles []string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
+resource "aws_codebuild_webhook" "test" {
+  project_name = aws_codebuild_project.test.name
+  pull_request_build_policy {
+    requires_comment_approval = %[1]q
+    approver_roles            = ["%[2]s"]
+  }
+}
+`, requiresCommentApproval, strings.Join(approverRoles, "\", \"")))
+}
+
+func testAccWebhookConfig_gitHubWithPullRequestBuildPolicyNoApproverRoles(rName, requiresCommentApproval string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_basicGitHub(rName), fmt.Sprintf(`
+resource "aws_codebuild_webhook" "test" {
+  project_name = aws_codebuild_project.test.name
+  pull_request_build_policy {
+    requires_comment_approval = %[1]q
+  }
+}
+`, requiresCommentApproval))
 }

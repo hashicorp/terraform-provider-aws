@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sns
@@ -11,6 +11,7 @@ var (
 	ResourceTopicPolicy               = resourceTopicPolicy
 	ResourceTopicSubscription         = resourceTopicSubscription
 
+	FindDataProtectionPolicyByARN                  = findDataProtectionPolicyByARN
 	FindPlatformApplicationAttributesByARN         = findPlatformApplicationAttributesByARN
 	FindSubscriptionAttributesByARN                = findSubscriptionAttributesByARN
 	FindTopicAttributesByARN                       = findTopicAttributesByARN

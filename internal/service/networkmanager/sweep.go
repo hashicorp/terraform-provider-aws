@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -123,7 +123,7 @@ func sweepGlobalNetworks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
@@ -164,7 +164,7 @@ func sweepCoreNetworks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListCoreNetworksInput{}
@@ -205,7 +205,7 @@ func sweepConnectAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListAttachmentsInput{
@@ -248,7 +248,7 @@ func sweepDirectConnectGatewayAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListAttachmentsInput{
@@ -294,7 +294,7 @@ func sweepSiteToSiteVPNAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListAttachmentsInput{
@@ -337,7 +337,7 @@ func sweepTransitGatewayPeerings(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListPeeringsInput{
@@ -380,7 +380,7 @@ func sweepTransitGatewayRouteTableAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListAttachmentsInput{
@@ -423,7 +423,7 @@ func sweepVPCAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.ListAttachmentsInput{
@@ -466,7 +466,7 @@ func sweepSites(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
@@ -528,7 +528,7 @@ func sweepDevices(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
@@ -590,7 +590,7 @@ func sweepLinks(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
@@ -652,7 +652,7 @@ func sweepLinkAssociations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}
@@ -713,7 +713,7 @@ func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.NetworkManagerClient(ctx)
 	input := &networkmanager.DescribeGlobalNetworksInput{}

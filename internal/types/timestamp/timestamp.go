@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package timestamp
@@ -53,7 +53,7 @@ func (t Timestamp) ValidateOnceAWeekWindowFormat() error {
 func (t Timestamp) ValidateUTCFormat() error {
 	_, err := time.Parse(time.RFC3339, t.String())
 	if err != nil {
-		return fmt.Errorf("must be in RFC3339 time format %q. Example: %s", time.RFC3339, err)
+		return fmt.Errorf("must be in RFC3339 time format %q: %w", time.RFC3339, err)
 	}
 
 	return nil

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Dependency Updates
 
 Generally, dependency updates are handled by maintainers.
@@ -12,7 +15,6 @@ Ensure that the following steps are tracked within the issue and completed withi
 
 - Update go version in `go.mod`
 - Verify `make test lint` works as expected
-- Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
 - Update `docs/development-environment.md`
 - Update `.go-version`

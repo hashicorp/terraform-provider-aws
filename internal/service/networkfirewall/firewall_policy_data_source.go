@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall
@@ -87,6 +87,18 @@ func dataSourceFirewallPolicy() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"flow_timeouts": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"tcp_idle_timeout_seconds": {
+														Type:     schema.TypeInt,
+														Computed: true,
+													},
+												},
+											},
+										},
 										"rule_order": {
 											Type:     schema.TypeString,
 											Computed: true,
@@ -109,12 +121,12 @@ func dataSourceFirewallPolicy() *schema.Resource {
 										},
 										"override": {
 											Type:     schema.TypeList,
-											Optional: true,
+											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													names.AttrAction: {
 														Type:     schema.TypeString,
-														Optional: true,
+														Computed: true,
 													},
 												},
 											},

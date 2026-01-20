@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -34,6 +34,8 @@ func TestAccRoute53ResolverEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "protocols.#", resourceName, "protocols.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_type", resourceName, "resolver_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "rni_enhanced_metrics_enabled", resourceName, "rni_enhanced_metrics_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "target_name_server_metrics_enabled", resourceName, "target_name_server_metrics_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, "host_vpc_id"),
 				),
 			},
@@ -64,6 +66,8 @@ func TestAccRoute53ResolverEndpointDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "protocols.#", resourceName, "protocols.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resolver_endpoint_type", resourceName, "resolver_endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "rni_enhanced_metrics_enabled", resourceName, "rni_enhanced_metrics_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "target_name_server_metrics_enabled", resourceName, "target_name_server_metrics_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, "host_vpc_id"),
 				),
 			},

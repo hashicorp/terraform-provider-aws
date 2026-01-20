@@ -1,11 +1,10 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -25,20 +24,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3TablesTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,7 +49,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", regexache.MustCompile("bucket/"+bucketName+"/table/"+verify.UUIDRegexPattern+"$")),
@@ -61,7 +59,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_location"),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", resourceName, names.AttrCreatedAt),
 					resource.TestCheckNoResourceAttr(resourceName, "modified_by"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_namespace.test", names.AttrNamespace),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
@@ -91,6 +89,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.MaintenanceStatusEnabled),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
 			},
 			{
@@ -106,11 +105,11 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 
 func TestAccS3TablesTable_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -123,10 +122,10 @@ func TestAccS3TablesTable_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTable, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTable, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -141,12 +140,13 @@ func TestAccS3TablesTable_disappears(t *testing.T) {
 
 func TestAccS3TablesTable_rename(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rNameUpdated := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tableNameUpdated := strings.ReplaceAll(rNameUpdated, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	createdAtNoChange := statecheck.CompareValue(compare.ValuesSame())
@@ -166,10 +166,10 @@ func TestAccS3TablesTable_rename(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					createdAtNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrCreatedAt)),
@@ -181,17 +181,17 @@ func TestAccS3TablesTable_rename(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTableConfig_basic(rNameUpdated, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableNameUpdated, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "modified_by"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameUpdated)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(tableNameUpdated)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -222,12 +222,13 @@ func TestAccS3TablesTable_rename(t *testing.T) {
 
 func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	namespaceUpdated := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	nsNameUpdated := strings.ReplaceAll(rNameUpdated, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	createdAtNoChange := statecheck.CompareValue(compare.ValuesSame())
@@ -247,10 +248,10 @@ func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, nsName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					createdAtNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrCreatedAt)),
@@ -262,17 +263,17 @@ func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTableConfig_basic(rName, namespaceUpdated, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsNameUpdated, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespaceUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, nsNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "modified_by"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(namespaceUpdated)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(nsNameUpdated)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -303,13 +304,14 @@ func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 
 func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	namespaceUpdated := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rNameUpdated := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	nsNameUpdated := strings.ReplaceAll(rNameUpdated, "-", "_")
+	tableNameUpdated := strings.ReplaceAll(rNameUpdated, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	createdAtNoChange := statecheck.CompareValue(compare.ValuesSame())
@@ -329,11 +331,11 @@ func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_basic(rName, namespace, bucketName),
+				Config: testAccTableConfig_basic(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, nsName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					createdAtNoChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrCreatedAt)),
@@ -345,19 +347,19 @@ func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccTableConfig_basic(rNameUpdated, namespaceUpdated, bucketName),
+				Config: testAccTableConfig_basic(tableNameUpdated, nsNameUpdated, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespaceUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, nsNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "modified_by"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rNameUpdated)),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(namespaceUpdated)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(tableNameUpdated)),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrNamespace), knownvalue.StringExact(nsNameUpdated)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -388,11 +390,11 @@ func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 
 func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -405,7 +407,7 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_maintenanceConfiguration(rName, namespace, bucketName, 64, 24, 2),
+				Config: testAccTableConfig_maintenanceConfiguration(tableName, nsName, bucketName, 64, 24, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 				),
@@ -435,7 +437,7 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccTableConfig_maintenanceConfiguration(rName, namespace, bucketName, 128, 48, 1),
+				Config: testAccTableConfig_maintenanceConfiguration(tableName, nsName, bucketName, 128, 48, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 				),
@@ -470,11 +472,11 @@ func TestAccS3TablesTable_maintenanceConfiguration(t *testing.T) {
 
 func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -487,7 +489,7 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_encryptionConfiguration(rName, namespace, bucketName),
+				Config: testAccTableConfig_encryptionConfiguration(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", regexache.MustCompile("bucket/"+bucketName+"/table/"+verify.UUIDRegexPattern+"$")),
@@ -497,7 +499,7 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "metadata_location"),
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", resourceName, names.AttrCreatedAt),
 					resource.TestCheckNoResourceAttr(resourceName, "modified_by"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_namespace.test", names.AttrNamespace),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
@@ -544,11 +546,11 @@ func TestAccS3TablesTable_encryptionConfiguration(t *testing.T) {
 
 func TestAccS3TablesTable_metadata(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var table s3tables.GetTableOutput
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	namespace := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
-	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "_")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
 	resourceName := "aws_s3tables_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -561,7 +563,7 @@ func TestAccS3TablesTable_metadata(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableConfig_metadata(rName, namespace, bucketName),
+				Config: testAccTableConfig_metadata(tableName, nsName, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
@@ -597,48 +599,47 @@ func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3tables.FindTable(ctx, conn,
+			_, err := tfs3tables.FindTableByThreePartKey(ctx, conn,
 				rs.Primary.Attributes["table_bucket_arn"],
 				rs.Primary.Attributes[names.AttrNamespace],
 				rs.Primary.Attributes[names.AttrName],
 			)
-			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTable, rs.Primary.ID, err)
+
+			if retry.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.S3Tables, create.ErrActionCheckingDestroyed, tfs3tables.ResNameTable, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Tables Table %s still exists", rs.Primary.Attributes[names.AttrName])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTableExists(ctx context.Context, name string, table *s3tables.GetTableOutput) resource.TestCheckFunc {
+func testAccCheckTableExists(ctx context.Context, n string, v *s3tables.GetTableOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" || rs.Primary.Attributes[names.AttrName] == "" {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindTable(ctx, conn,
+		output, err := tfs3tables.FindTableByThreePartKey(ctx, conn,
 			rs.Primary.Attributes["table_bucket_arn"],
 			rs.Primary.Attributes[names.AttrNamespace],
 			rs.Primary.Attributes[names.AttrName],
 		)
+
 		if err != nil {
-			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, rs.Primary.ID, err)
+			return err
 		}
 
-		*table = *resp
+		*v = *output
 
 		return nil
 	}
@@ -661,17 +662,10 @@ func testAccTableImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccTableConfig_basic(rName, namespace, bucketName string) string {
+func testAccTableConfig_base(nsName, bucketName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3tables_table" "test" {
-  name             = %[1]q
-  namespace        = aws_s3tables_namespace.test.namespace
-  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
-  format           = "ICEBERG"
-}
-
 resource "aws_s3tables_namespace" "test" {
-  namespace        = %[2]q
+  namespace        = %[1]q
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 
   lifecycle {
@@ -680,13 +674,24 @@ resource "aws_s3tables_namespace" "test" {
 }
 
 resource "aws_s3tables_table_bucket" "test" {
-  name = %[3]q
+  name = %[2]q
 }
-`, rName, namespace, bucketName)
+`, nsName, bucketName)
 }
 
-func testAccTableConfig_maintenanceConfiguration(rName, namespace, bucketName string, targetSize, maxSnapshotAge, minSnapshots int32) string {
-	return fmt.Sprintf(`
+func testAccTableConfig_basic(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+}
+`, tableName))
+}
+
+func testAccTableConfig_maintenanceConfiguration(tableName, nsName, bucketName string, targetSize, maxSnapshotAge, minSnapshots int32) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
   namespace        = aws_s3tables_namespace.test.namespace
@@ -696,36 +701,23 @@ resource "aws_s3tables_table" "test" {
   maintenance_configuration = {
     iceberg_compaction = {
       settings = {
-        target_file_size_mb = %[4]d
+        target_file_size_mb = %[2]d
       }
       status = "enabled"
     }
     iceberg_snapshot_management = {
       settings = {
-        max_snapshot_age_hours = %[5]d
-        min_snapshots_to_keep  = %[6]d
+        max_snapshot_age_hours = %[3]d
+        min_snapshots_to_keep  = %[4]d
       }
       status = "enabled"
     }
   }
 }
-
-resource "aws_s3tables_namespace" "test" {
-  namespace        = %[2]q
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
+`, tableName, targetSize, maxSnapshotAge, minSnapshots))
 }
 
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[3]q
-}
-`, rName, namespace, bucketName, targetSize, maxSnapshotAge, minSnapshots)
-}
-
-func testAccTableConfig_encryptionConfiguration(rName, namespace, bucketName string) string {
+func testAccTableConfig_encryptionConfiguration(tableName, nsName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
@@ -797,13 +789,11 @@ data "aws_iam_policy_document" "key_policy" {
 resource "aws_kms_key" "test2" {
   deletion_window_in_days = 7
 }
-
-
-`, rName, namespace, bucketName)
+`, tableName, nsName, bucketName)
 }
 
-func testAccTableConfig_metadata(rName, namespace, bucketName string) string {
-	return fmt.Sprintf(`
+func testAccTableConfig_metadata(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
   namespace        = aws_s3tables_namespace.test.namespace
@@ -831,18 +821,5 @@ resource "aws_s3tables_table" "test" {
     }
   }
 }
-
-resource "aws_s3tables_namespace" "test" {
-  namespace        = %[2]q
-  table_bucket_arn = aws_s3tables_table_bucket.test.arn
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_s3tables_table_bucket" "test" {
-  name = %[3]q
-}
-`, rName, namespace, bucketName)
+`, tableName))
 }

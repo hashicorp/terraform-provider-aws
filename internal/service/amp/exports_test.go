@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package amp
@@ -10,9 +10,11 @@ var (
 	ResourceRuleGroupNamespace        = resourceRuleGroupNamespace
 	ResourceScraper                   = newScraperResource
 	ResourceWorkspace                 = resourceWorkspace
+	ResourceResourcePolicy            = newResourcePolicyResource
 
 	FindAlertManagerDefinitionByID    = findAlertManagerDefinitionByID
 	FindQueryLoggingConfigurationByID = findQueryLoggingConfigurationByID
+	FindResourcePolicyByWorkspaceID   = findResourcePolicyByWorkspaceID
 	FindRuleGroupNamespaceByARN       = findRuleGroupNamespaceByARN
 	FindScraperByID                   = findScraperByID
 	FindWorkspaceByID                 = findWorkspaceByID

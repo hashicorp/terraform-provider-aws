@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package framework
@@ -6,6 +6,7 @@ package framework
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	rschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -72,7 +73,13 @@ func (sr *sweepResource) Delete(ctx context.Context, optFns ...tfresource.Option
 		if d.HasError() {
 			return fwdiag.DiagnosticsError(d)
 		}
-		ctx = tflog.SetField(ctx, attr.path, attr.value)
+		switch v := attr.value.(type) {
+		case *string:
+			ctx = tflog.SetField(ctx, attr.path, aws.ToString(v))
+
+		default:
+			ctx = tflog.SetField(ctx, attr.path, v)
+		}
 	}
 
 	tflog.Info(ctx, "Sweeping resource")

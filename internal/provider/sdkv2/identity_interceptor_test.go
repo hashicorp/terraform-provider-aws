@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -189,25 +189,29 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 		attrName       string
 		identitySpec   inttypes.Identity
 		ExpectIdentity bool
+		Description    string
 	}{
-		"not mutable": {
+		"not mutable - fresh resource": {
 			attrName:       "name",
 			identitySpec:   regionalSingleParameterizedIdentitySpec("name"),
-			ExpectIdentity: false,
+			ExpectIdentity: true,
+			Description:    "Immutable identity with all null attributes should get populated (bug fix scenario)",
 		},
 		"v6.0 SDK fix": {
 			attrName: "name",
 			identitySpec: regionalSingleParameterizedIdentitySpec("name",
 				inttypes.WithV6_0SDKv2Fix(),
 			),
-			ExpectIdentity: false,
+			ExpectIdentity: true,
+			Description:    "Mutable identity (v6.0 SDK fix) should always get populated on Update",
 		},
 		"identity fix": {
 			attrName: "name",
 			identitySpec: regionalSingleParameterizedIdentitySpec("name",
 				inttypes.WithIdentityFix(),
 			),
-			ExpectIdentity: false,
+			ExpectIdentity: true,
+			Description:    "Mutable identity (identity fix) should always get populated on Update",
 		},
 		"mutable": {
 			attrName: "name",
@@ -215,6 +219,7 @@ func TestIdentityInterceptor_Update(t *testing.T) {
 				inttypes.WithMutableIdentity(),
 			),
 			ExpectIdentity: true,
+			Description:    "Explicitly mutable identity should always get populated on Update",
 		},
 	}
 
@@ -302,6 +307,10 @@ func (c mockClient) IgnoreTagsConfig(ctx context.Context) *tftags.IgnoreConfig {
 	panic("not implemented") //lintignore:R009
 }
 
+func (c mockClient) TagPolicyConfig(ctx context.Context) *tftags.TagPolicyConfig {
+	panic("not implemented") //lintignore:R009
+}
+
 func (c mockClient) Partition(context.Context) string {
 	panic("not implemented") //lintignore:R009
 }
@@ -316,4 +325,83 @@ func (c mockClient) ValidateInContextRegionInPartition(ctx context.Context) erro
 
 func (c mockClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	panic("not implemented") //lintignore:R009
+}
+
+func TestIdentityIsFullyNull(t *testing.T) {
+	t.Parallel()
+
+	identitySpec := &inttypes.Identity{
+		Attributes: []inttypes.IdentityAttribute{
+			inttypes.StringIdentityAttribute(names.AttrAccountID, false),
+			inttypes.StringIdentityAttribute(names.AttrRegion, false),
+			inttypes.StringIdentityAttribute(names.AttrBucket, true),
+		},
+	}
+
+	testCases := map[string]struct {
+		identityValues map[string]string
+		expectNull     bool
+		description    string
+	}{
+		"all_null": {
+			identityValues: map[string]string{},
+			expectNull:     true,
+			description:    "All attributes null should return true",
+		},
+		"some_null": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "123456789012",
+				// region and bucket remain null
+			},
+			expectNull:  false,
+			description: "Some attributes set should return false",
+		},
+		"all_set": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "123456789012",
+				names.AttrRegion:    "us-west-2", // lintignore:AWSAT003
+				names.AttrBucket:    "test-bucket",
+			},
+			expectNull:  false,
+			description: "All attributes set should return false",
+		},
+		"empty_string_values": {
+			identityValues: map[string]string{
+				names.AttrAccountID: "",
+				names.AttrRegion:    "",
+				names.AttrBucket:    "",
+			},
+			expectNull:  true,
+			description: "Empty string values should be treated as null",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			resourceSchema := map[string]*schema.Schema{
+				names.AttrBucket: {Type: schema.TypeString, Required: true},
+			}
+			identitySchema := identity.NewIdentitySchema(*identitySpec)
+			d := schema.TestResourceDataWithIdentityRaw(t, resourceSchema, identitySchema, nil)
+			d.SetId("test-id")
+
+			identity, err := d.Identity()
+			if err != nil {
+				t.Fatalf("unexpected error getting identity: %v", err)
+			}
+			for attrName, value := range tc.identityValues {
+				if err := identity.Set(attrName, value); err != nil {
+					t.Fatalf("unexpected error setting %s in identity: %v", attrName, err)
+				}
+			}
+
+			result := identityIsFullyNull(d, identitySpec)
+			if result != tc.expectNull {
+				t.Errorf("%s: expected identityIsFullyNull to return %v, got %v",
+					tc.description, tc.expectNull, result)
+			}
+		})
+	}
 }

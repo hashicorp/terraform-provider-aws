@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,7 +37,11 @@ func resourceSpotInstanceRequest() *schema.Resource {
 		DeleteWithoutTimeout: resourceSpotInstanceRequestDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				rd.Set(names.AttrForceDestroy, false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -80,6 +85,26 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			}
+			s["network_interface"].Elem.(*schema.Resource).Schema["network_card_index"] = &schema.Schema{
+				Type:     schema.TypeInt,
+				Computed: true,
+			}
+			s["primary_network_interface"] = &schema.Schema{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrDeleteOnTermination: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrNetworkInterfaceID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			}
 			s["spot_bid_status"] = &schema.Schema{
 				Type:     schema.TypeString,
@@ -191,7 +216,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.RequestSpotInstances(ctx, &input)
 		},
 		func(err error) (bool, error) {
@@ -233,7 +258,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Spot Instance Request (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -334,7 +359,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 			"host":         *instance.PrivateIpAddress,
 		})
 	}
-	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
+	if err := readBlockDevices(ctx, d, meta.(*conns.AWSClient), instance, false); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -346,6 +371,14 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta any) diag.Di
 				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
+
+				pni := map[string]any{
+					names.AttrNetworkInterfaceID:  aws.ToString(ni.NetworkInterfaceId),
+					names.AttrDeleteOnTermination: aws.ToBool(ni.Attachment.DeleteOnTermination),
+				}
+				if err := d.Set("primary_network_interface", []any{pni}); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting primary_network_interface for AWS Spot Instance (%s): %s", d.Id(), err)
+				}
 
 				for _, address := range ni.Ipv6Addresses {
 					ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)

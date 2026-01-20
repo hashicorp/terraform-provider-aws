@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2
@@ -31,6 +31,7 @@ var hostedZoneIDPerRegionALBMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
 	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.ApSoutheast5RegionID: "Z06010284QMVVW7WO5J",
+	endpoints.ApSoutheast6RegionID: "Z023301818UFJ50CIO0MV",
 	endpoints.ApSoutheast7RegionID: "Z0390008CMBRTHFGWBCB",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
 	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",
@@ -72,6 +73,7 @@ var hostedZoneIDPerRegionNLBMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z01971771FYVNCOVWJU1G",
 	endpoints.ApSoutheast4RegionID: "Z01156963G8MIIL7X90IV",
 	endpoints.ApSoutheast5RegionID: "Z026317210H9ACVTRO6FB",
+	endpoints.ApSoutheast6RegionID: "Z01392953RKV2Q3RBP0KU",
 	endpoints.ApSoutheast7RegionID: "Z054363131YWATEMWRG5L",
 	endpoints.CaCentral1RegionID:   "Z2EPGBW3API2WT",
 	endpoints.CaWest1RegionID:      "Z02754302KBB00W2LKWZ9",

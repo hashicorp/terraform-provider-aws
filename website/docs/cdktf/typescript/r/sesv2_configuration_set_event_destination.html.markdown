@@ -231,7 +231,7 @@ The `eventDestination` configuration block supports the following arguments:
 * `matchingEventTypes` - (Required) - An array that specifies which events the Amazon SES API v2 should send to the destinations. Valid values: `SEND`, `REJECT`, `BOUNCE`, `COMPLAINT`, `DELIVERY`, `OPEN`, `CLICK`, `RENDERING_FAILURE`, `DELIVERY_DELAY`, `SUBSCRIPTION`.
 * `cloudWatchDestination` - (Optional) An object that defines an Amazon CloudWatch destination for email events. See [`cloudWatchDestination` Block](#cloud_watch_destination-block) for details.
 * `enabled` - (Optional) When the event destination is enabled, the specified event types are sent to the destinations. Default: `false`.
-* `event_bridge_configuration` - (Optional) An object that defines an Amazon EventBridge destination for email events. You can use Amazon EventBridge to send notifications when certain email events occur. See [`event_bridge_configuration` Block](#event_bridge_configuration-block) for details.
+* `eventBridgeDestination` - (Optional) An object that defines an Amazon EventBridge destination for email events. You can use Amazon EventBridge to send notifications when certain email events occur. See [`eventBridgeDestination` Block](#event_bridge_destination-block) for details.
 * `kinesisFirehoseDestination` - (Optional) An object that defines an Amazon Kinesis Data Firehose destination for email events. See [`kinesisFirehoseDestination` Block](#kinesis_firehose_destination-block) for details.
 * `pinpointDestination` - (Optional) An object that defines an Amazon Pinpoint project destination for email events. See [`pinpointDestination` Block](#pinpoint_destination-block) for details.
 * `snsDestination` - (Optional) An object that defines an Amazon SNS destination for email events. See [`snsDestination` Block](#sns_destination-block) for details.
@@ -250,9 +250,9 @@ The `dimensionConfiguration` configuration block supports the following argument
 * `dimensionName` - (Required) The name of an Amazon CloudWatch dimension associated with an email sending metric.
 * `dimensionValueSource` - (Required) The location where the Amazon SES API v2 finds the value of a dimension to publish to Amazon CloudWatch. Valid values: `MESSAGE_TAG`, `EMAIL_HEADER`, `LINK_TAG`.
 
-### `event_bridge_configuration` Block
+### `eventBridgeDestination` Block
 
-The `event_bridge_configuration` configuration block supports the following arguments:
+The `eventBridgeDestination` configuration block supports the following arguments:
 
 * `eventBusArn` - (Required) The Amazon Resource Name (ARN) of the Amazon EventBridge bus to publish email events to. Only the default bus is supported.
 
@@ -313,4 +313,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set Event
 % terraform import aws_sesv2_configuration_set_event_destination.example example_configuration_set|example_event_destination
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-30b1741d9e913717d16e8d4bed72d1979102938a2443b1f48d31c40617d60f98 -->
+<!-- cache-key: cdktf-0.20.8 input-8a94964261b775159e1daf3c57e4fe03f2411aabf91fbe146c45119a6c9ad515 -->

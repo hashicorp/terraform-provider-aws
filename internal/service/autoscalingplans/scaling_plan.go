@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscalingplans
@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscalingplans/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -374,7 +374,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	scalingPlan, err := findScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -840,11 +840,11 @@ func findScalingPlanByNameAndVersion(ctx context.Context, conn *autoscalingplans
 	return tfresource.AssertSingleValueResult(output.ScalingPlans)
 }
 
-func statusScalingPlanCode(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusScalingPlanCode(conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		scalingPlan, err := findScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -866,7 +866,7 @@ func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeCreationInProgress),
 		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
-		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Refresh: statusScalingPlanCode(conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanCreatedTimeout,
 		Delay:   10 * time.Second,
 	}
@@ -875,7 +875,7 @@ func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.Client, 
 
 	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
 		if output.StatusCode == awstypes.ScalingPlanStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -888,7 +888,7 @@ func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeDeletionInProgress),
 		Target:  []string{},
-		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Refresh: statusScalingPlanCode(conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanDeletedTimeout,
 		Delay:   10 * time.Second,
 	}
@@ -897,7 +897,7 @@ func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.Client, 
 
 	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
 		if output.StatusCode == awstypes.ScalingPlanStatusCodeDeletionFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -910,7 +910,7 @@ func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeUpdateInProgress),
 		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
-		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
+		Refresh: statusScalingPlanCode(conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanUpdatedTimeout,
 		Delay:   10 * time.Second,
 	}
@@ -919,7 +919,7 @@ func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.Client, 
 
 	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
 		if output.StatusCode == awstypes.ScalingPlanStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

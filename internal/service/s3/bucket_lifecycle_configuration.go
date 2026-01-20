@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package s3
@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -44,6 +44,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -110,12 +111,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						tfobjectvalidator.WarnExactlyOneOfChildren(
-							path.MatchRelative().AtName(names.AttrFilter),
-							path.MatchRelative().AtName(names.AttrPrefix),
-						),
-					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrID: schema.StringAttribute{
 							Required: true,
@@ -298,11 +293,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -325,11 +315,6 @@ func (r *bucketLifecycleConfigurationResource) Schema(ctx context.Context, reque
 								Attributes: map[string]schema.Attribute{
 									"newer_noncurrent_versions": schema.Int32Attribute{
 										Optional: true,
-										Computed: true, // Because of schema change
-										PlanModifiers: []planmodifier.Int32{
-											tfint32planmodifier.NullValue(),
-											int32planmodifier.UseStateForUnknown(),
-										},
 										Validators: []validator.Int32{
 											int32validator.AtLeast(1),
 										},
@@ -469,25 +454,22 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
 	)
 	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
-	err := retry.RetryContext(ctx, lifecycleConfigurationRulesSteadyTimeout, func() *retry.RetryError {
+	err := tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
 		var err error
 
 		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 
 		if lastOutput == nil || !lifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
 			lastOutput = output
-			return retry.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
 		}
 
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		output, err = findBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-	}
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -588,7 +570,7 @@ func (r *bucketLifecycleConfigurationResource) Delete(ctx context.Context, reque
 	}
 
 	_, err := conn.DeleteBucketLifecycle(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeMethodNotAllowed) {
 		return
 	}
 	if err != nil {
@@ -640,7 +622,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	output, err := conn.GetBucketLifecycleConfiguration(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -677,11 +659,11 @@ func lifecycleConfigEqual(transitionMinSize1 awstypes.TransitionDefaultMinimumOb
 	return true
 }
 
-func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) retry.StateRefreshFunc {
+func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBucketLifecycleConfiguration(ctx, conn, bucket, owner)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -694,7 +676,7 @@ func statusLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, o
 }
 
 func waitLifecycleConfigEquals(ctx context.Context, conn *s3.Client, bucket, owner string, transitionMinSize awstypes.TransitionDefaultMinimumObjectSize, rules []awstypes.LifecycleRule, timeout time.Duration) (*s3.GetBucketLifecycleConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
 		Refresh: statusLifecycleConfigEquals(ctx, conn, bucket, owner, transitionMinSize, rules),
 		Timeout: timeout,

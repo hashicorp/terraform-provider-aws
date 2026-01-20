@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker
@@ -6,6 +6,7 @@ package sagemaker
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,7 +16,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -251,6 +253,12 @@ func resourceEndpointConfiguration() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
+			names.AttrExecutionRoleARN: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"production_variants": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -318,6 +326,19 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when model_name is empty (Inference Components)
+								// AWS returns nil but schema has default of 1 (there for backwards compatibility)
+								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+									parts := strings.Split(k, ".")
+									if len(parts) >= 2 {
+										prefix := strings.Join(parts[:len(parts)-1], ".")
+										modelName := d.Get(prefix + ".model_name").(string)
+										return modelName == ""
+									}
+								}
+								return false
+							},
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -333,7 +354,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {
@@ -490,6 +511,19 @@ func resourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when model_name is empty (Inference Components)
+								// AWS returns nil but schema has default of 1 (there for backwards compatibility)
+								if strings.Contains(k, "production_variants") || strings.Contains(k, "shadow_production_variants") {
+									parts := strings.Split(k, ".")
+									if len(parts) >= 2 {
+										prefix := strings.Join(parts[:len(parts)-1], ".")
+										modelName := d.Get(prefix + ".model_name").(string)
+										return modelName == ""
+									}
+								}
+								return false
+							},
 						},
 						names.AttrInstanceType: {
 							Type:             schema.TypeString,
@@ -505,7 +539,7 @@ func resourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {
@@ -679,6 +713,10 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		Tags:               getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+		createOpts.ExecutionRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
 	}
@@ -711,7 +749,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	endpointConfig, err := findEndpointConfigByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SageMaker AI Endpoint Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -724,6 +762,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
@@ -783,7 +822,7 @@ func findEndpointConfigByName(ctx context.Context, conn *sagemaker.Client, name 
 	output, err := conn.DescribeEndpointConfig(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Could not find endpoint configuration") {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -806,8 +845,25 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]any)
 
-		l := awstypes.ProductionVariant{
-			ModelName: aws.String(data["model_name"].(string)),
+		l := awstypes.ProductionVariant{}
+
+		// Traditional endpoint: set ModelName
+		// IC endpoint: omit ModelName
+		// Special traditional/IC handling
+		if v, ok := data["model_name"].(string); ok && v != "" {
+			l.ModelName = aws.String(v)
+
+			// Traditional endpoint: set InitialVariantWeight
+			// IC endpoint: must not be set but pre-existing default value of 1
+			if v, ok := data["initial_variant_weight"].(float64); ok {
+				l.InitialVariantWeight = aws.Float32(float32(v))
+			}
+
+			// Traditional endpoint: set EnableSSMAccess
+			// IC endpoints: must not be set
+			if v, ok := data["enable_ssm_access"].(bool); ok {
+				l.EnableSSMAccess = aws.Bool(v)
+			}
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -836,10 +892,6 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 			l.VariantName = aws.String(id.UniqueId())
 		}
 
-		if v, ok := data["initial_variant_weight"].(float64); ok {
-			l.InitialVariantWeight = aws.Float32(float32(v))
-		}
-
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
 			l.AcceleratorType = awstypes.ProductionVariantAcceleratorType(v)
 		}
@@ -854,10 +906,6 @@ func expandProductionVariants(configured []any) []awstypes.ProductionVariant {
 
 		if v, ok := data["core_dump_config"].([]any); ok && len(v) > 0 {
 			l.CoreDumpConfig = expandCoreDumpConfig(v)
-		}
-
-		if v, ok := data["enable_ssm_access"].(bool); ok {
-			l.EnableSSMAccess = aws.Bool(v)
 		}
 
 		if v, ok := data["managed_instance_scaling"].([]any); ok && len(v) > 0 {
@@ -879,12 +927,25 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 	for _, i := range list {
 		l := map[string]any{
-			"accelerator_type":       i.AcceleratorType,
-			names.AttrInstanceType:   i.InstanceType,
-			"inference_ami_version":  i.InferenceAmiVersion,
-			"initial_variant_weight": aws.ToFloat32(i.InitialVariantWeight),
-			"model_name":             aws.ToString(i.ModelName),
-			"variant_name":           aws.ToString(i.VariantName),
+			"accelerator_type":      i.AcceleratorType,
+			names.AttrInstanceType:  i.InstanceType,
+			"inference_ami_version": i.InferenceAmiVersion,
+			"variant_name":          aws.ToString(i.VariantName),
+		}
+
+		// Traditional endpoints have model_name set
+		// Inference Component endpoints do not have model_name set
+		// Special handling
+		if i.ModelName != nil && aws.ToString(i.ModelName) != "" {
+			l["model_name"] = aws.ToString(i.ModelName)
+
+			if i.InitialVariantWeight != nil {
+				l["initial_variant_weight"] = aws.ToFloat32(i.InitialVariantWeight)
+			}
+
+			if i.EnableSSMAccess != nil {
+				l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
+			}
 		}
 
 		if i.InitialInstanceCount != nil {
@@ -913,10 +974,6 @@ func flattenProductionVariants(list []awstypes.ProductionVariant) []map[string]a
 
 		if i.CoreDumpConfig != nil {
 			l["core_dump_config"] = flattenCoreDumpConfig(i.CoreDumpConfig)
-		}
-
-		if i.EnableSSMAccess != nil {
-			l["enable_ssm_access"] = aws.ToBool(i.EnableSSMAccess)
 		}
 
 		if i.ManagedInstanceScaling != nil {
@@ -1106,6 +1163,9 @@ func expandEndpointConfigOutputConfig(configured []any) *awstypes.AsyncInference
 func expandEndpointConfigNotificationConfig(configured []any) *awstypes.AsyncInferenceNotificationConfig {
 	if len(configured) == 0 {
 		return nil
+	}
+	if configured[0] == nil {
+		return &awstypes.AsyncInferenceNotificationConfig{}
 	}
 
 	m := configured[0].(map[string]any)

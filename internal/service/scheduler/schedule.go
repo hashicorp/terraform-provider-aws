@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package scheduler
@@ -19,13 +19,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,6 +46,12 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"action_after_completion": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ActionAfterCompletion](),
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -442,6 +449,10 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta an
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 	}
 
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
+	}
+
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
 		in.Description = aws.String(v)
 	}
@@ -522,7 +533,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -532,6 +543,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
 	}
 
+	d.Set("action_after_completion", out.ActionAfterCompletion)
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrDescription, out.Description)
 
@@ -577,6 +589,10 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]any)[0].(map[string]any)),
+	}
+
+	if v, ok := d.Get("action_after_completion").(string); ok && v != "" {
+		in.ActionAfterCompletion = types.ActionAfterCompletion(v)
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -656,7 +672,7 @@ func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, group
 	out, err := conn.GetSchedule(ctx, in)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

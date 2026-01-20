@@ -36,11 +36,11 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `group_name` - (Required) The name of the group in which the member will be added.
 * `member_name` - (Required) The name of the member to add to the group.
-* `aws_account_id` - (Optional) The ID for the AWS account that the group is in. Currently, you use the ID for the AWS account that contains your Amazon QuickSight account.
-* `namespace` - (Required) The namespace that you want the user to be a part of. Defaults to `default`.
+* `namespace` - (Optional) The namespace that you want the user to be a part of. Defaults to `default`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -71,4 +71,4 @@ Using `terraform import`, import QuickSight Group membership using the AWS accou
 % terraform import aws_quicksight_group_membership.example 123456789123/default/all-access-users/john_smith
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a650dc7bdc278adb5f9bc2243685571b0dcb59b014e77ccfa668410220af52d1 -->
+<!-- cache-key: cdktf-0.20.8 input-1a6dd554ca1c06e8e239001431352b7a1bf83de34cf3620a148ac31c64734b94 -->

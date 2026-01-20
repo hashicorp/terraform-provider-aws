@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis
@@ -43,6 +43,10 @@ func dataSourceStream() *schema.Resource {
 			},
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"max_record_size_in_kib": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			names.AttrName: {
@@ -125,6 +129,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set("creation_timestamp", aws.ToTime(stream.StreamCreationTimestamp).Unix())
 	d.Set("encryption_type", stream.EncryptionType)
 	d.Set(names.AttrKMSKeyID, stream.KeyId)
+	d.Set("max_record_size_in_kib", stream.MaxRecordSizeInKiB)
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set("open_shards", aws.ToStringSlice(openShards))
 	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)

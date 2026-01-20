@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -701,6 +701,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrAvailabilityZone: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"group_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

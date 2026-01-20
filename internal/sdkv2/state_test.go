@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -42,6 +42,19 @@ func TestToUpperSchemaStateFunc(t *testing.T) {
 	want := "IN-STATE"
 
 	got := ToUpperSchemaStateFunc(input)
+
+	if diff := cmp.Diff(got, want); diff != "" {
+		t.Errorf("unexpected diff (+want, -got): %s", diff)
+	}
+}
+
+func TestTrimSpaceSchemaStateFunc(t *testing.T) {
+	t.Parallel()
+
+	var input any = " in-state  "
+	want := "in-state"
+
+	got := TrimSpaceSchemaStateFunc(input)
 
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("unexpected diff (+want, -got): %s", diff)

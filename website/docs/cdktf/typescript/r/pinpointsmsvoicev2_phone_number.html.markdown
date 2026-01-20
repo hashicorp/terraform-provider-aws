@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `optOutListName` - (Optional) The name of the opt-out list to associate with the phone number.
 * `registrationId` - (Optional) Use this field to attach your phone number for an external registration process.
 * `selfManagedOptOutsEnabled` - (Optional) When set to `false` an end recipient sends a message that begins with HELP or STOP to one of your dedicated numbers, AWS End User Messaging SMS and Voice automatically replies with a customizable message and adds the end recipient to the opt-out list. When set to true you’re responsible for responding to HELP and STOP requests. You’re also responsible for tracking and honoring opt-out request.
-* `twoWayChannelArn` - (Optional) The Amazon Resource Name (ARN) of the two way channel.
+* `twoWayChannelArn` - (Optional) Configuration for two-way SMS. Specify an ARN to receive incoming SMS messages, or `connect.[region].amazonaws.com` (with `[region]` replaced by the AWS Region of the Amazon Connect instance) to set Amazon Connect as the inbound destination.
 * `twoWayChannelEnabled` - (Optional) By default this is set to `false`. When set to `true` you can receive incoming text messages from your end recipients.
 * `twoWayChannelRole` - (Optional) IAM Role ARN for a service to assume, to be able to post inbound SMS messages.
 
@@ -96,4 +96,4 @@ Using `terraform import`, import phone numbers using the `id`. For example:
 % terraform import aws_pinpointsmsvoicev2_phone_number.example phone-abcdef0123456789abcdef0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c1f5739b295b4c9076b6692e10520c63f316e7055411850dae65dde8e9b98542 -->
+<!-- cache-key: cdktf-0.20.8 input-27454cdf8f1b44c45aac4a2bba9d9280e264f97aaeae3369541af2b5bb41f60f -->

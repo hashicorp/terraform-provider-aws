@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -13,6 +13,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	gversion "github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,6 +110,22 @@ func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *sche
 	return engineVersionForceNewOnDowngrade(diff)
 }
 
+func customizeDiffEngineForceNewOnDowngrade() schema.CustomizeDiffFunc {
+	return customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+		if _, is_global := diff.GetOk("global_replication_group_id"); is_global {
+			return false
+		}
+
+		if !diff.HasChange(names.AttrEngine) {
+			return false
+		}
+		if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+			return false
+		}
+		return true
+	})
+}
+
 type getChangeDiffer interface {
 	Get(key string) any
 	GetChange(key string) (any, any)
@@ -151,12 +168,17 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 type forceNewDiffer interface {
 	Id() string
 	Get(key string) any
+	GetOk(key string) (any, bool)
 	GetChange(key string) (any, any)
 	HasChange(key string) bool
 	ForceNew(key string) error
 }
 
 func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
+	if _, is_global := diff.GetOk("global_replication_group_id"); is_global {
+		return nil
+	}
+
 	if diff.Id() == "" || !diff.HasChange(names.AttrEngineVersion) {
 		return nil
 	}

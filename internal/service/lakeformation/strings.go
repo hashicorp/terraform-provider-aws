@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lakeformation
@@ -8,7 +8,7 @@ import (
 	"slices"
 )
 
-func StringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
+func stringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
 	if len(s1) != len(s2) {
 		return false
 	}

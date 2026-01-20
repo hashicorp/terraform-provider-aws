@@ -1,10 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceAllowedImagesSettings                         = newAllowedImagesSettingsResource
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
@@ -106,6 +107,7 @@ var (
 	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
+	ResourceVPCEncryptionControl                          = newResourceVPCEncryptionControl
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
 	ResourceVPCEndpointPolicy                             = resourceVPCEndpointPolicy
 	ResourceVPCEndpointRouteTableAssociation              = resourceVPCEndpointRouteTableAssociation
@@ -120,6 +122,7 @@ var (
 	ResourceVPCRouteServerPeer                            = newVPCRouteServerPeerResource
 	ResourceVPCRouteServerPropagation                     = newVPCRouteServerPropagationResource
 	ResourceVPCRouteServerVPCAssociation                  = newVPCRouteServerVPCAssociationResource
+	ResourceVPNConcentrator                               = newVPNConcentratorResource
 	ResourceVPNConnection                                 = resourceVPNConnection
 	ResourceVPNConnectionRoute                            = resourceVPNConnectionRoute
 	ResourceVPNGateway                                    = resourceVPNGateway
@@ -136,9 +139,11 @@ var (
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                         = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                    = customerGatewayConfigurationToTunnelInfo
+	DefaultIPv6CIDRBlockAssociation                             = defaultIPv6CIDRBlockAssociation
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone         = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
+	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
@@ -162,7 +167,7 @@ var (
 	FindHostByID                                                = findHostByID
 	FindIPAMByID                                                = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                          = findIPAMPoolAllocationByTwoPartKey
-	FindIPAMPoolAllocationsForVPC                               = findIPAMPoolAllocationsForVPC
+	FindIPAMPoolAllocationForResource                           = findIPAMPoolAllocationForResource
 	FindIPAMPoolByID                                            = findIPAMPoolByID
 	FindIPAMPoolCIDRByTwoPartKey                                = findIPAMPoolCIDRByTwoPartKey
 	FindIPAMResourceDiscoveryAssociationByID                    = findIPAMResourceDiscoveryAssociationByID
@@ -209,6 +214,7 @@ var (
 	FindSecurityGroupEgressRuleByID                             = findSecurityGroupEgressRuleByID
 	FindSecurityGroupIngressRuleByID                            = findSecurityGroupIngressRuleByID
 	FindSecurityGroupVPCAssociationByTwoPartKey                 = findSecurityGroupVPCAssociationByTwoPartKey
+	FindSerialConsoleAccessStatus                               = findSerialConsoleAccessStatus
 	FindSnapshot                                                = findSnapshot
 	FindSnapshotByID                                            = findSnapshotByID
 	FindSpotDatafeedSubscription                                = findSpotDatafeedSubscription
@@ -241,6 +247,7 @@ var (
 	FindVPCBlockPublicAccessExclusionByID                       = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                             = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                               = findVPCDHCPOptionsAssociation
+	FindVPCEncryptionControlByID                                = findVPCEncryptionControlByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID        = findVPCEndpointConnectionByServiceIDAndVPCEndpointID
 	FindVPCEndpointConnectionNotificationByID                   = findVPCEndpointConnectionNotificationByID
 	FindVPCEndpointRouteTableAssociationExists                  = findVPCEndpointRouteTableAssociationExists
@@ -250,6 +257,7 @@ var (
 	FindVPCEndpointSubnetAssociationExists                      = findVPCEndpointSubnetAssociationExists
 	FindVPCIPv6CIDRBlockAssociationByID                         = findVPCIPv6CIDRBlockAssociationByID
 	FindVPCPeeringConnectionByID                                = findVPCPeeringConnectionByID
+	FindVPNConcentratorByID                                     = findVPNConcentratorByID
 	FindVPNConnectionByID                                       = findVPNConnectionByID
 	FindVPNConnectionRouteByTwoPartKey                          = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                          = findVPNGatewayByID
@@ -264,11 +272,13 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
 	InstanceMigrateState                                        = instanceMigrateState
 	InstanceStateUpgradeV1                                      = instanceStateUpgradeV1
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                         = keyPairMigrateState
+	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules

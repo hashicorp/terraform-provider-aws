@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,6 +46,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "NOT_STARTED"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
+					resource.TestCheckResourceAttr(resourceName, "verification_status", "PENDING"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
 			},
@@ -83,6 +84,7 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "PENDING"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "DOMAIN"),
+					resource.TestCheckResourceAttr(resourceName, "verification_status", "PENDING"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", acctest.CtFalse),
 				),
 			},
@@ -193,10 +195,10 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	key1 := itypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
+	key1 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key2 := itypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
+	key2 := inttypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -244,7 +246,7 @@ func testAccCheckEmailIdentityDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

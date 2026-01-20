@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -143,7 +143,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": data.aws_service_principal.ec2.name
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -179,7 +179,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": data.aws_service_principal.ec2.name
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""
@@ -220,7 +220,7 @@ resource "aws_iam_role" "test" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": data.aws_service_principal.ec2.name
+        "Service": "${data.aws_service_principal.ec2.name}"
       },
       "Effect": "Allow",
       "Sid": ""

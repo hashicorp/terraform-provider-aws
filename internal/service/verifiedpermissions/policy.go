@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions
@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
-	cedar "github.com/cedar-policy/cedar-go/x/exp/parser"
+	"github.com/cedar-policy/cedar-go"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	interflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -184,46 +185,31 @@ func statementReplaceIf(_ context.Context, req planmodifier.StringRequest, resp 
 		return
 	}
 
-	cedarPlan, err := cedar.Tokenize([]byte(req.PlanValue.ValueString()))
+	// Parse the plan policy
+	planPolicies, err := cedar.NewPolicyListFromBytes("plan.cedar", []byte(req.PlanValue.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
+		resp.Diagnostics.AddError("Failed to parse plan policy", err.Error())
 		return
 	}
 
-	cedarState, err := cedar.Tokenize([]byte(req.StateValue.ValueString()))
+	// Parse the state policy
+	statePolicies, err := cedar.NewPolicyListFromBytes("state.cedar", []byte(req.StateValue.ValueString()))
 	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
+		resp.Diagnostics.AddError("Failed to parse state policy", err.Error())
 		return
 	}
 
-	policyPlan, err := cedar.Parse(cedarPlan)
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
-		return
+	var policyPrincipal, policyResource, policyEffect bool
+	if len(planPolicies) > 0 && len(statePolicies) > 0 {
+		planPolicyAST := planPolicies[0].AST()
+		statePolicyAST := statePolicies[0].AST()
+
+		policyEffect = planPolicyAST.Effect != statePolicyAST.Effect
+		policyPrincipal = planPolicyAST.Principal != statePolicyAST.Principal
+		policyResource = planPolicyAST.Resource != statePolicyAST.Resource
 	}
 
-	policyState, err := cedar.Parse(cedarState)
-	if err != nil {
-		resp.Diagnostics.AddError(err.Error(), err.Error())
-		return
-	}
-
-	var policyPrincipal bool
-	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Principal.Entity.Path) > 0 && (len(policyState[0].Principal.Entity.Path)) > 0) {
-		policyPrincipal = (policyPlan[0].Principal.Entity.String() != policyState[0].Principal.Entity.String()) || (policyPlan[0].Principal.Type != policyState[0].Principal.Type)
-	}
-
-	var policyResource bool
-	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Resource.Entity.Path) > 0 && (len(policyState[0].Resource.Entity.Path)) > 0) {
-		policyResource = (policyPlan[0].Resource.Entity.String() != policyState[0].Resource.Entity.String()) || (policyPlan[0].Resource.Type != policyState[0].Resource.Type)
-	}
-
-	var policyEffect bool
-	if len(policyPlan) > 0 && len(policyState) > 0 {
-		policyEffect = policyPlan[0].Effect != policyState[0].Effect
-	}
-
-	resp.RequiresReplace = policyEffect || policyResource || policyPrincipal
+	resp.RequiresReplace = policyEffect || policyPrincipal || policyResource
 }
 
 const (
@@ -356,7 +342,7 @@ func (r *policyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	out, err := findPolicyByID(ctx, conn, rID[0], rID[1])
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -543,7 +529,7 @@ func findPolicyByID(ctx context.Context, conn *verifiedpermissions.Client, id, p
 
 	out, err := conn.GetPolicy(ctx, in)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

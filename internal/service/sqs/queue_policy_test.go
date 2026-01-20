@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs_test
@@ -144,6 +144,17 @@ func TestAccSQSQueuePolicy_update(t *testing.T) {
 		},
 	})
 }
+
+// Satisfy generated identity test function names by aliasing to queue checks
+//
+// This mimics the standard policy acceptance test behavior, but in the
+// future we may consider replacing this approach with custom checks
+// to validate the presence/content of the policy rather than just
+// the parent queue.
+var (
+	testAccCheckQueuePolicyExists  = testAccCheckQueueExists
+	testAccCheckQueuePolicyDestroy = testAccCheckQueueDestroy
+)
 
 func testAccQueuePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`

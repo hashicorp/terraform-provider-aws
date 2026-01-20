@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -88,6 +89,30 @@ func resourceWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"pull_request_build_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"approver_roles": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[types.PullRequestBuildApproverRole](),
+							},
+						},
+						"requires_comment_approval": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.PullRequestBuildCommentApproval](),
+						},
+					},
+				},
+			},
 			"scope_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -148,6 +173,10 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.ManualCreation = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("pull_request_build_policy"); ok && len(v.([]any)) > 0 {
+		input.PullRequestBuildPolicy = expandWebhookPullRequestBuildPolicy(v.([]any)[0].(map[string]any))
+	}
+
 	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]any)) > 0 {
 		input.ScopeConfiguration = expandScopeConfiguration(v.([]any))
 	}
@@ -171,7 +200,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	webhook, err := findWebhookByProjectName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Webhook (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -189,6 +218,9 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("manual_creation", d.Get("manual_creation")) // Create-only.
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
+	if err := d.Set("pull_request_build_policy", flattenWebhookPullRequestBuildPolicy(webhook.PullRequestBuildPolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting pull_request_build_policy: %s", err)
+	}
 	if err := d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scope_configuration: %s", err)
 	}
@@ -218,6 +250,10 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input.FilterGroups = filterGroups
 	} else {
 		input.BranchFilter = aws.String(d.Get("branch_filter").(string))
+	}
+
+	if v, ok := d.GetOk("pull_request_build_policy"); ok && len(v.([]any)) > 0 {
+		input.PullRequestBuildPolicy = expandWebhookPullRequestBuildPolicy(v.([]any)[0].(map[string]any))
 	}
 
 	_, err := conn.UpdateWebhook(ctx, &input)
@@ -283,6 +319,32 @@ func expandWebhookFilterGroups(tfList []any) [][]types.WebhookFilter {
 	}
 
 	return apiObjects
+}
+
+func expandWebhookPullRequestBuildPolicy(tfMap map[string]any) *types.PullRequestBuildPolicy {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PullRequestBuildPolicy{
+		RequiresCommentApproval: types.PullRequestBuildCommentApproval(tfMap["requires_comment_approval"].(string)),
+	}
+
+	if apiObject.RequiresCommentApproval != types.PullRequestBuildCommentApprovalDisabled {
+		if v, ok := tfMap["approver_roles"]; ok && v.(*schema.Set).Len() > 0 {
+			var roles []types.PullRequestBuildApproverRole
+			for _, role := range v.(*schema.Set).List() {
+				if role != nil {
+					roles = append(roles, types.PullRequestBuildApproverRole(role.(string)))
+				}
+			}
+			if len(roles) > 0 {
+				apiObject.ApproverRoles = roles
+			}
+		}
+	}
+
+	return apiObject
 }
 
 func expandWebhookFilters(tfList []any) []types.WebhookFilter {
@@ -366,6 +428,30 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []any {
 	}
 
 	return tfList
+}
+
+func flattenWebhookPullRequestBuildPolicy(apiObject *types.PullRequestBuildPolicy) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"requires_comment_approval": string(apiObject.RequiresCommentApproval),
+	}
+
+	if v := apiObject.ApproverRoles; len(v) > 0 {
+		var roles []string
+		for _, role := range v {
+			if role != "" {
+				roles = append(roles, string(role))
+			}
+		}
+		if len(roles) > 0 {
+			tfMap["approver_roles"] = roles
+		}
+	}
+
+	return []any{tfMap}
 }
 
 func flattenWebhookFilters(apiObjects []types.WebhookFilter) []any {

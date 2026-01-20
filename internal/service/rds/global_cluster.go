@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -17,12 +17,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -71,12 +72,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"source_db_cluster_identifier"},
-				ValidateFunc:  validation.StringInSlice(globalClusterEngine_Values(), false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
 			},
 			"engine_lifecycle_support": {
 				Type:         schema.TypeString,
@@ -124,12 +124,11 @@ func resourceGlobalCluster() *schema.Resource {
 				Computed: true,
 			},
 			"source_db_cluster_identifier": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrEngine},
-				RequiredWith:  []string{names.AttrForceDestroy},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				RequiredWith: []string{names.AttrForceDestroy},
 			},
 			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
@@ -175,6 +174,10 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
+		// Engine and engine version cannot be sent during create requests if a source
+		// DB cluster is specified.
+		input.Engine = nil
+		input.EngineVersion = nil
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
@@ -209,7 +212,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	globalCluster, err := findGlobalClusterByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] RDS Global Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -413,7 +416,7 @@ func findGlobalClusterByID(ctx context.Context, conn *rds.Client, id string) (*t
 
 	// Eventual consistency check.
 	if aws.ToString(output.GlobalClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastRequest: input,
 		}
 	}
@@ -439,7 +442,7 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.GlobalClusterNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
+			return nil, &sdkretry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}
@@ -459,11 +462,11 @@ func findGlobalClusters(ctx context.Context, conn *rds.Client, input *rds.Descri
 	return output, nil
 }
 
-func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findGlobalClusterByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -476,7 +479,7 @@ func statusGlobalCluster(ctx context.Context, conn *rds.Client, id string) retry
 }
 
 func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{globalClusterStatusCreating},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -493,7 +496,7 @@ func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
 		Target:  []string{globalClusterStatusAvailable},
 		Refresh: statusGlobalCluster(ctx, conn, id),
@@ -511,7 +514,7 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, 
 }
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
 		Target:         []string{},
 		Refresh:        statusGlobalCluster(ctx, conn, id),
@@ -544,10 +547,11 @@ func waitGlobalClusterMemberRemoved(ctx context.Context, conn *rds.Client, dbClu
 // either a MAJOR or MINOR version upgrade. Given only the old and new versions, determining whether to
 // perform a MAJOR or MINOR upgrade is challenging. Instead of attempting to parse numerous combinations
 // of engines and versions, we initially attempt a major upgrade. If AWS returns an error indicating that
-// a minor version upgrade is supported ("InvalidParameterValue"/"only supports Major Version Upgrades"),
-// we infer that a minor upgrade will suffice. Therefore, it's crucial to recognize that this error serves
-// as more than just an error; it guides our decision between major and minor upgrades.
-
+// a minor version upgrade isn't supported ("InvalidParameterValue"/"doesn't support minor version upgrades"),
+// we infer that a minor upgrade was intended, and should be therefore be performed on individual cluster
+// members instead. It's crucial to recognize that this error serves as more than just an error; it guides
+// our decision between major and minor upgrades.
+//
 // IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
 // logic, including the handling of errors that signify the need for a minor version upgrade.
 func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d *schema.ResourceData, timeout time.Duration) error {
@@ -555,7 +559,7 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d 
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -582,7 +586,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 	}
 
 	_, err := tfresource.RetryWhen(ctx, timeout,
-		func() (any, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.ModifyGlobalCluster(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -590,7 +594,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err
 			}
 
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "only supports Major Version Upgrades") {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 
@@ -679,7 +683,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, conn *rds.Clien
 
 		log.Printf("[INFO] Performing RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", globalClusterID, clusterID, engineVersion)
 		_, err = tfresource.RetryWhen(ctx, timeout,
-			func() (any, error) {
+			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input, optFn)
 			},
 			func(err error) (bool, error) {
@@ -759,7 +763,7 @@ func clusterIDAndRegionFromARN(clusterARN string) (string, string, error) {
 }
 
 func waitGlobalClusterMemberUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...func(*rds.Options)) (*types.DBCluster, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{
 			clusterStatusBackingUp,
 			clusterStatusConfiguringIAMDatabaseAuth,

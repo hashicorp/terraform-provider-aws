@@ -41,8 +41,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `aws_account_id` - AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - AWS account ID.
 
 ## Attribute Reference
 
@@ -132,4 +132,4 @@ This data source exports the following attributes in addition to the arguments a
 * `warning` - Color (hexadecimal) that applies to warning and informational messages.
 * `warning_foreground` - Color (hexadecimal) that applies to any text or other elements that appear over the warning color.
 
-<!-- cache-key: cdktf-0.20.8 input-0fd08d582dc79c8c510f13d07e44ec80d475400541bfa3aef7e94c3970552b86 -->
+<!-- cache-key: cdktf-0.20.8 input-df07c3dd030d2928b929aa17ebf3b2b7e74dc757d40a8efb9e0ffefc2a0b6a28 -->

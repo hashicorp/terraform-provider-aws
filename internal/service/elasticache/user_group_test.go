@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache_test
@@ -10,6 +10,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -52,6 +53,8 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 	var userGroup awstypes.UserGroup
 	rName := acctest.RandomWithPrefix(t, "tf-acc")
 	resourceName := "aws_elasticache_user_group.test"
+	user1ResourceName := "aws_elasticache_user.test1"
+	user2ResourceName := "aws_elasticache_user.test2"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -76,7 +79,105 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(user1ResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(user2ResourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
+			{
+				Config: testAccUserGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(user1ResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(user2ResourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUserGroup_rotate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userGroup awstypes.UserGroup
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user_group.test"
+	user1ResourceName := "aws_elasticache_user.test1"
+	user2ResourceName := "aws_elasticache_user.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				Config: testAccUserGroupConfig_rotate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(user1ResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(user2ResourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: testAccUserGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserGroupExists(ctx, t, resourceName, &userGroup),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(user1ResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(user2ResourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUserGroup_engineValkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var userGroup awstypes.UserGroup
+	rName := acctest.RandomWithPrefix(t, "tf-acc")
+	resourceName := "aws_elasticache_user_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -168,6 +269,11 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -246,6 +352,32 @@ resource "aws_elasticache_user_group" "test" {
 `, rName))
 }
 
+func testAccUserGroupConfig_rotate(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test1" {
+  user_id       = "%[1]s-1"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user" "test2" {
+  user_id       = "%[1]s-3"
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = %[1]q
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test1.user_id, aws_elasticache_user.test2.user_id]
+}
+`, rName))
+}
+
 func testAccUserGroupConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test1" {
@@ -277,6 +409,14 @@ func testAccUserGroupConfig_engineValkey(rName string) string {
 resource "aws_elasticache_user" "test1" {
   user_id       = "%[1]s-1"
   user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user" "test2" {
+  user_id       = "%[1]s-2"
+  user_name     = "username1"
   access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
   engine        = "REDIS"
   passwords     = ["password123456789"]

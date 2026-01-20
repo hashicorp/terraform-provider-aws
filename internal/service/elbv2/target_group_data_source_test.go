@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -52,6 +52,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "target_control_port", resourceName, "target_control_port"),
 
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(datasourceNameByName, names.AttrARN, resourceName, names.AttrARN),
@@ -76,6 +77,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -121,6 +123,7 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(dataSourceName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -163,6 +166,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByARN, "target_control_port", resourceName, "target_control_port"),
 
 					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(datasourceNameByName, names.AttrARN, resourceName, names.AttrARN),
@@ -184,6 +188,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "health_check.0.matcher", "200-299"),
+					resource.TestCheckResourceAttrPair(datasourceNameByName, "target_control_port", resourceName, "target_control_port"),
 				),
 			},
 		},
@@ -225,6 +230,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchFirstTag, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "tags.Name", resourceTg1, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "target_control_port", resourceTg1, "target_control_port"),
 
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, names.AttrName, resourceTg2, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, names.AttrARN, resourceTg2, names.AttrARN),
@@ -241,6 +247,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.matcher", resourceTg2, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchSecondTag, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "tags.Name", resourceTg2, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "target_control_port", resourceTg2, "target_control_port"),
 
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, names.AttrName, resourceTg1, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, names.AttrARN, resourceTg1, names.AttrARN),
@@ -257,6 +264,7 @@ func TestAccELBV2TargetGroupDataSource_matchTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
 					resource.TestCheckResourceAttr(dataSourceMatchFirstTagAndName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "tags.Name", resourceTg1, "tags.Name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "target_control_port", resourceTg1, "target_control_port"),
 				),
 			},
 		},

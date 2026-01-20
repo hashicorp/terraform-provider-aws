@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -137,7 +137,7 @@ func resourceVPCIPv4CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 
 	vpcCidrBlockAssociation, vpc, err := findVPCCIDRBlockAssociationByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC IPv4 CIDR Block Association %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -163,7 +163,7 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 	}
 	_, err := conn.DisassociateVpcCidrBlock(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCCIDRBlockAssociationIDNotFound, errCodeInvalidVPCIDNotFound) {
 		return diags
 	}
 

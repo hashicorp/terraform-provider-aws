@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
+func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(productID),
@@ -47,7 +47,7 @@ func statusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLangu
 	}
 }
 
-func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string) retry.StateRefreshFunc {
+func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(id),
@@ -71,7 +71,7 @@ func statusTagOption(ctx context.Context, conn *servicecatalog.Client, id string
 	}
 }
 
-func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Client, token string) retry.StateRefreshFunc {
+func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Client, token string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribePortfolioShareStatusInput{
 			PortfolioShareToken: aws.String(token),
@@ -90,15 +90,21 @@ func statusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Cli
 			return nil, statusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
 		}
 
-		return output, string(output.Status), err
+		status := output.Status
+		if (status == awstypes.ShareStatusCompletedWithErrors || status == awstypes.ShareStatusError) &&
+			output.ShareDetails != nil && output.ShareDetails.ShareErrors != nil && len(output.ShareDetails.ShareErrors) > 0 {
+			return output, string(status), fmt.Errorf("portfolio share status: %+v", output.ShareDetails.ShareErrors)
+		}
+
+		return output, string(status), err
 	}
 }
 
-func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) retry.StateRefreshFunc {
+func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findPortfolioShare(ctx, conn, portfolioID, shareType, principalID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -114,7 +120,7 @@ func statusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, port
 	}
 }
 
-func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client) retry.StateRefreshFunc {
+func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.GetAWSOrganizationsAccessStatusInput{}
 
@@ -136,7 +142,7 @@ func statusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client)
 	}
 }
 
-func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
+func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribeConstraintInput{
 			Id: aws.String(id),
@@ -149,7 +155,7 @@ func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 		output, err := conn.DescribeConstraint(ctx, input)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("constraint not found (accept language %s, ID: %s): %s", acceptLanguage, id, err),
 			}
 		}
@@ -159,7 +165,7 @@ func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 		}
 
 		if output == nil || output.ConstraintDetail == nil {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("describing constraint (accept language %s, ID: %s): empty response", acceptLanguage, id),
 			}
 		}
@@ -168,12 +174,12 @@ func statusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 	}
 }
 
-func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
+func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findProductPortfolioAssociation(ctx, conn, acceptLanguage, portfolioID, productID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("product portfolio association not found (%s): %s", productPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID), err),
 			}
 		}
@@ -183,7 +189,7 @@ func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 		}
 
 		if output == nil {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("finding product portfolio association (%s): empty response", productPortfolioAssociationCreateID(acceptLanguage, portfolioID, productID)),
 			}
 		}
@@ -192,7 +198,7 @@ func statusProductPortfolioAssociation(ctx context.Context, conn *servicecatalog
 	}
 }
 
-func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) retry.StateRefreshFunc {
+func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(id),
@@ -220,12 +226,12 @@ func statusServiceAction(ctx context.Context, conn *servicecatalog.Client, accep
 	}
 }
 
-func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) retry.StateRefreshFunc {
+func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.Client, budgetName, resourceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findBudgetResourceAssociation(ctx, conn, budgetName, resourceID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("tag option resource association not found (%s): %s", budgetResourceAssociationID(budgetName, resourceID), err),
 			}
 		}
@@ -235,7 +241,7 @@ func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.C
 		}
 
 		if output == nil {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", budgetResourceAssociationID(budgetName, resourceID)),
 			}
 		}
@@ -244,12 +250,12 @@ func statusBudgetResourceAssociation(ctx context.Context, conn *servicecatalog.C
 	}
 }
 
-func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) retry.StateRefreshFunc {
+func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.Client, tagOptionID, resourceID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findTagOptionResourceAssociation(ctx, conn, tagOptionID, resourceID)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("tag option resource association not found (%s): %s", tagOptionResourceAssociationID(tagOptionID, resourceID), err),
 			}
 		}
@@ -259,7 +265,7 @@ func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 		}
 
 		if output == nil {
-			return nil, statusNotFound, &retry.NotFoundError{
+			return nil, statusNotFound, &sdkretry.NotFoundError{
 				Message: fmt.Sprintf("finding tag option resource association (%s): empty response", tagOptionResourceAssociationID(tagOptionID, resourceID)),
 			}
 		}
@@ -268,7 +274,7 @@ func statusTagOptionResourceAssociation(ctx context.Context, conn *servicecatalo
 	}
 }
 
-func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client, id, productID string) retry.StateRefreshFunc {
+func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client, id, productID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProvisioningArtifactId: aws.String(id),
@@ -293,7 +299,7 @@ func statusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client
 	}
 }
 
-func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) retry.StateRefreshFunc {
+func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, productID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.ListLaunchPathsInput{
 			AcceptLanguage: aws.String(acceptLanguage),
@@ -321,40 +327,7 @@ func statusLaunchPaths(ctx context.Context, conn *servicecatalog.Client, acceptL
 	}
 }
 
-func statusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, id, name string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		input := &servicecatalog.DescribeProvisionedProductInput{}
-
-		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		// one or the other but not both
-		if id != "" {
-			input.Id = aws.String(id)
-		} else if name != "" {
-			input.Name = aws.String(name)
-		}
-
-		output, err := conn.DescribeProvisionedProduct(ctx, input)
-
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.ProvisionedProductDetail == nil {
-			return nil, "", nil
-		}
-
-		return output, string(output.ProvisionedProductDetail.Status), err
-	}
-}
-
-func statusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) retry.StateRefreshFunc {
+func statusPortfolioConstraints(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, portfolioID, productID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &servicecatalog.ListConstraintsForPortfolioInput{
 			PortfolioId: aws.String(portfolioID),

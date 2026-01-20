@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,15 +9,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,6 +48,17 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_interface"), knownvalue.SetExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface_id"), knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("primary_network_interface"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDeleteOnTermination: knownvalue.Bool(true),
+							names.AttrNetworkInterfaceID:  knownvalue.StringRegexp(regexache.MustCompile(`^eni-[0-9a-f]+$`)),
+						}),
+					})),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("primary_network_interface").AtSliceIndex(0).AtMapKey(names.AttrNetworkInterfaceID), resourceName, tfjsonpath.New("primary_network_interface_id"), compare.ValuesSame()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -351,6 +367,38 @@ func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 	})
 }
 
+func TestAccEC2SpotInstanceRequest_primaryNetworkInterface(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sir awstypes.SpotInstanceRequest
+	resourceName := "aws_spot_instance_request.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpotInstanceRequestConfig_primaryNetworkInterface(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
+						"device_index": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface", "user_data_replace_on_change", "wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
 func TestAccEC2SpotInstanceRequest_getPasswordData(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sir awstypes.SpotInstanceRequest
@@ -527,12 +575,12 @@ func testAccCheckSpotInstanceRequestDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfec2.FindSpotInstanceRequestByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				// Now check if the associated Spot Instance was also destroyed.
 				instanceID := rs.Primary.Attributes["spot_instance_id"]
 				_, err := tfec2.FindInstanceByID(ctx, conn, instanceID)
 
-				if tfresource.NotFound(err) {
+				if retry.NotFound(err) {
 					continue
 				}
 
@@ -857,34 +905,16 @@ resource "aws_ec2_tag" "test" {
 
 func testAccSpotInstanceRequestConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_spot_instance_request" "test" {
   ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   spot_price           = "0.05"
   wait_for_fulfillment = true
-  subnet_id            = aws_subnet.test.id
+  subnet_id            = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -942,6 +972,44 @@ resource "aws_subnet" "test" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
+}
+`, rName))
+}
+
+func testAccSpotInstanceRequestConfig_primaryNetworkInterface(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+
+  network_interface {
+    network_interface_id = aws_network_interface.test.id
+    device_index         = 0
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q

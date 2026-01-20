@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sqs
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -49,7 +50,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func() (any, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate)/2, func(ctx context.Context) (any, error) {
 		return conn.SetQueueAttributes(ctx, input)
 	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
@@ -74,7 +75,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return findQueueAttributeByTwoPartKey(ctx, conn, d.Id(), h.AttributeName)
 	})
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] SQS Queue (%s) attribute (%s) not found, removing from state", d.Id(), h.AttributeName)
 		d.SetId("")
 		return diags

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package opensearch_test
@@ -196,13 +196,13 @@ resource "aws_opensearch_outbound_connection" "test" {
 
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.region
+    region      = data.aws_region.current.name
     domain_name = aws_opensearch_domain.domain_1.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.region
+    region      = data.aws_region.current.name
     domain_name = aws_opensearch_domain.domain_2.domain_name
   }
 }
@@ -318,13 +318,13 @@ resource "aws_opensearch_outbound_connection" "test" {
 
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.region
+    region      = data.aws_region.current.name
     domain_name = aws_opensearch_domain.domain_1.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.region
+    region      = data.aws_region.current.name
     domain_name = aws_opensearch_domain.domain_2.domain_name
   }
 }

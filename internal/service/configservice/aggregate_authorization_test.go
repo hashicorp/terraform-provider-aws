@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -50,7 +50,7 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -76,7 +76,7 @@ func TestAccConfigServiceAggregateAuthorization_deprecatedRegion(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
+func testAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
@@ -95,52 +95,6 @@ func TestAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceAggregateAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var aa types.AggregationAuthorization
-	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
-	resourceName := "aws_config_aggregate_authorization.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAggregateAuthorizationConfig_tags1(accountID, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAggregateAuthorizationConfig_tags2(accountID, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccAggregateAuthorizationConfig_tags1(accountID, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -186,7 +140,7 @@ func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.Tes
 			}
 			_, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], authorizedRegion)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -217,31 +171,4 @@ resource "aws_config_aggregate_authorization" "test" {
   region     = %[2]q
 }
 `, accountID, acctest.Region())
-}
-
-func testAccAggregateAuthorizationConfig_tags1(accountID, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_config_aggregate_authorization" "test" {
-  account_id            = %[1]q
-  authorized_aws_region = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, accountID, acctest.Region(), tagKey1, tagValue1)
-}
-
-func testAccAggregateAuthorizationConfig_tags2(accountID, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_config_aggregate_authorization" "test" {
-  account_id            = %[1]q
-  authorized_aws_region = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, accountID, acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2)
 }

@@ -1,10 +1,9 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package verify
 
 import (
-	"regexp"
 	"strings"
 	"testing"
 
@@ -93,59 +92,6 @@ func TestValid4ByteASNString(t *testing.T) {
 	}
 }
 
-func TestValidTypeStringNullableFloat(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		val         any
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "",
-		},
-		{
-			val: "0",
-		},
-		{
-			val: "1",
-		},
-		{
-			val: "42.0",
-		},
-		{
-			val:         "threeve",
-			expectedErr: regexache.MustCompile(`cannot parse`),
-		},
-	}
-
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for i, tc := range testCases {
-		_, errs := ValidTypeStringNullableFloat(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
-		}
-	}
-}
-
 func TestValidAccountID(t *testing.T) {
 	t.Parallel()
 
@@ -230,6 +176,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws-us-gov:s3:::bucket/object",                                                                                       // lintignore:AWSAT005          // GovCloud S3 ARN
 		"arn:aws:cloudwatch::cw0000000000:alarm:my-alarm",                                                                         // lintignore:AWSAT005          // CloudWatch Alarm
 		"arn:aws:imagebuilder:eu-central-1:aws-marketplace:component/crowdstrike-falcon-install-linux-prod-nhzsem4gwwfja/1.2.2/1", // lintignore:AWSAT003,AWSAT005 // EC2 image builder marketplace subscription ARN
+		"arn:aws-eusc:acm-pca:eusc-de-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012",             // lintignore:AWSAT003,AWSAT005 // ESC ACMPCA ARN
 	}
 	for _, v := range validNames {
 		_, errors := ValidARN(v, "arn")

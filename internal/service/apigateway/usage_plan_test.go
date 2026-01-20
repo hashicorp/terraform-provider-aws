@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -541,7 +541,7 @@ func testAccCheckUsagePlanDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfapigateway.FindUsagePlanByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -603,12 +603,17 @@ resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "test"
   description = "This is a test"
 
   variables = {
     "a" = "2"
   }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "test"
+  deployment_id = aws_api_gateway_deployment.test.id
 }
 
 resource "aws_api_gateway_deployment" "foo" {
@@ -618,8 +623,13 @@ resource "aws_api_gateway_deployment" "foo" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "foo"
   description = "This is a prod stage"
+}
+
+resource "aws_api_gateway_stage" "foo" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "foo"
+  deployment_id = aws_api_gateway_deployment.foo.id
 }
 `, rName)
 }
@@ -711,7 +721,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 `, rName))
@@ -729,7 +739,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -753,7 +763,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -764,7 +774,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
 
     throttle {
       path        = "${aws_api_gateway_resource.test.path}/${aws_api_gateway_method.test.http_method}"
@@ -783,7 +793,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
   }
 }
 `, rName))
@@ -796,12 +806,12 @@ resource "aws_api_gateway_usage_plan" "test" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.foo.stage_name
+    stage  = aws_api_gateway_stage.foo.stage_name
   }
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
-    stage  = aws_api_gateway_deployment.test.stage_name
+    stage  = aws_api_gateway_stage.test.stage_name
   }
 }
 `, rName))

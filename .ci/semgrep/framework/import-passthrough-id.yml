@@ -1,10 +1,13 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: import-state-passthrough-id
     languages: [go]
     message: Prefer `resource.ImportStatePassthroughID` to directly setting attribute
     paths:
       include:
-        - internal/service/
+        - "/internal/service"
     pattern: $RESP.Diagnostics.Append($RESP.State.SetAttribute(ctx, path.Root($X), $REQ.ID)...)
     severity: WARNING
     fix: resource.ImportStatePassthroughID(ctx, path.Root($X), $REQ, $RESP)

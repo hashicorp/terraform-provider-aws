@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_memory
+```
+
+```release-note:new-resource
+aws_bedrockagentcore_memory_strategy
+```

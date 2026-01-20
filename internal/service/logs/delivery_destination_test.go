@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package logs_test
@@ -85,6 +85,47 @@ func TestAccLogsDeliveryDestination_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDeliveryDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLogsDeliveryDestination_XRAY(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DeliveryDestination
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_delivery_destination.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryDestinationConfig_xray(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("delivery_destination_type"), knownvalue.StringExact("XRAY")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
 	})
@@ -452,6 +493,15 @@ resource "aws_cloudwatch_log_delivery_destination" "test" {
   delivery_destination_configuration {
     destination_resource_arn = aws_cloudwatch_log_group.test.arn
   }
+}
+`, rName)
+}
+
+func testAccDeliveryDestinationConfig_xray(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_delivery_destination" "test" {
+  name                      = %[1]q
+  delivery_destination_type = "XRAY"
 }
 `, rName)
 }

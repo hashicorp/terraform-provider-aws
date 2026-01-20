@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # namevaluesfilters
 
 The `namevaluesfilters` package is designed to provide a consistent interface for handling AWS resource filtering with AWS SDK for Go v2.

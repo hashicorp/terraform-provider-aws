@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iam
@@ -16,13 +16,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,14 +58,14 @@ func resourceServerCertificate() *schema.Resource {
 				Required:         true,
 				ForceNew:         true,
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        StateTrimSpace,
+				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 			},
 			names.AttrCertificateChain: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        StateTrimSpace,
+				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 			},
 			"expiration": {
 				Type:     schema.TypeString,
@@ -94,7 +96,7 @@ func resourceServerCertificate() *schema.Resource {
 				ForceNew:         true,
 				Sensitive:        true,
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
-				StateFunc:        StateTrimSpace,
+				StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -111,7 +113,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	input := &iam.UploadServerCertificateInput{
+	input := iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
 		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
 		ServerCertificateName: aws.String(sslCertName),
@@ -126,14 +128,14 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		input.Path = aws.String(v.(string))
 	}
 
-	output, err := conn.UploadServerCertificate(ctx, input)
+	output, err := conn.UploadServerCertificate(ctx, &input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.UploadServerCertificate(ctx, input)
+		output, err = conn.UploadServerCertificate(ctx, &input)
 	}
 
 	if err != nil {
@@ -166,7 +168,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 
 	cert, err := findServerCertificateByName(ctx, conn, d.Get(names.AttrName).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -206,7 +208,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChanges(names.AttrName, names.AttrNamePrefix, names.AttrPath) {
-		input := &iam.UpdateServerCertificateInput{}
+		var input iam.UpdateServerCertificateInput
 
 		if d.HasChange(names.AttrName) {
 			oldName, newName := d.GetChange(names.AttrName)
@@ -235,7 +237,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 			input.NewPath = aws.String(d.Get(names.AttrPath).(string))
 		}
 
-		_, err := conn.UpdateServerCertificate(ctx, input)
+		_, err := conn.UpdateServerCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Server Certificate (%s): %s", d.Id(), err)
@@ -255,10 +257,11 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
+	input := iam.DeleteServerCertificateInput{
+		ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
+	}
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.DeleteConflictException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
-		return conn.DeleteServerCertificate(ctx, &iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
-		})
+		return conn.DeleteServerCertificate(ctx, &input)
 	}, "currently in use by arn")
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -279,14 +282,18 @@ func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData
 }
 
 func findServerCertificateByName(ctx context.Context, conn *iam.Client, name string) (*awstypes.ServerCertificate, error) {
-	input := &iam.GetServerCertificateInput{
+	input := iam.GetServerCertificateInput{
 		ServerCertificateName: aws.String(name),
 	}
 
+	return findServerCertificate(ctx, conn, &input)
+}
+
+func findServerCertificate(ctx context.Context, conn *iam.Client, input *iam.GetServerCertificateInput) (*awstypes.ServerCertificate, error) {
 	output, err := conn.GetServerCertificate(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

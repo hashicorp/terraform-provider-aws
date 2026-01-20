@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package budgets
@@ -67,6 +67,10 @@ func DataSourceBudget() *schema.Resource {
 						},
 					},
 				},
+			},
+			"billing_view_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"budget_type": {
 				Type:     schema.TypeString,
@@ -298,6 +302,8 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		Resource:  "budget/" + budgetName,
 	}
 	d.Set(names.AttrARN, arn.String())
+
+	d.Set("billing_view_arn", budget.BillingViewArn)
 
 	d.Set("budget_type", budget.BudgetType)
 

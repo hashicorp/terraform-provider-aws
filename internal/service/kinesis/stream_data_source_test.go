@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesis_test
@@ -80,6 +80,38 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stream_mode_details.0.stream_mode", resourceName, "stream_mode_details.0.stream_mode"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKinesisStreamDataSource_maxRecordSizeInKiB(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+	resourceName := "aws_kinesis_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName, 10240),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					// resource.TestCheckResourceAttrPair(dataSourceName, "creation_timestamp", resourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "encryption_type", resourceName, "encryption_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "max_record_size_in_kib", resourceName, "max_record_size_in_kib"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "open_shards.#", resourceName, "shard_count"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
@@ -194,4 +226,17 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 `, rName, shardCount)
+}
+func testAccStreamDataSourceConfig_maxRecordSizeInKiB(rName string, maxRecordSizeInKiB int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name                   = %[1]q
+  max_record_size_in_kib = %[2]d
+  shard_count            = 1
+}
+
+data "aws_kinesis_stream" "test" {
+  name = aws_kinesis_stream.test.name
+}
+`, rName, maxRecordSizeInKiB)
 }

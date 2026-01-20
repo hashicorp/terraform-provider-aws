@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -85,7 +85,7 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			"client_cidr_block": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
@@ -186,6 +186,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"endpoint_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointIpAddressType](),
+			},
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				MinItems: 1,
@@ -222,6 +229,13 @@ func resourceClientVPNEndpoint() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"traffic_ip_address_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.TrafficIpAddressType](),
+			},
 			"transport_protocol": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -252,7 +266,6 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
-		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
@@ -263,6 +276,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("authentication_options"); ok && v.(*schema.Set).Len() > 0 {
 		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("client_cidr_block"); ok {
+		input.ClientCidrBlock = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -293,6 +310,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.DnsServers = flex.ExpandStringValueList(v.([]any))
 	}
 
+	if v, ok := d.GetOk("endpoint_ip_address_type"); ok {
+		input.EndpointIpAddressType = awstypes.EndpointIpAddressType(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -303,6 +324,10 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk("session_timeout_hours"); ok {
 		input.SessionTimeoutHours = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("traffic_ip_address_type"); ok {
+		input.TrafficIpAddressType = awstypes.TrafficIpAddressType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCID); ok {
@@ -327,7 +352,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 
 	ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -373,8 +398,9 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrDescription, ep.Description)
 	d.Set("disconnect_on_session_timeout", ep.DisconnectOnSessionTimeout)
 	d.Set(names.AttrDNSName, ep.DnsName)
-	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("dns_servers", ep.DnsServers)
+	d.Set("endpoint_ip_address_type", ep.EndpointIpAddressType)
+	d.Set(names.AttrSecurityGroupIDs, ep.SecurityGroupIds)
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {
 		d.Set("self_service_portal", awstypes.SelfServicePortalEnabled)
 	} else {
@@ -384,6 +410,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
+	d.Set("traffic_ip_address_type", ep.TrafficIpAddressType)
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)

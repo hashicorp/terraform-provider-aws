@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -9,23 +9,29 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SerialConsoleAccess_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
-		"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+	testCases := map[string]map[string]func(t *testing.T){
+		"Resource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccess_basic,
+			"Identity":      testAccEC2SerialConsoleAccess_IdentitySerial,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccEC2SerialConsoleAccessDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccEC2SerialConsoleAccess_basic(t *testing.T) {
@@ -65,14 +71,18 @@ func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		input := ec2.GetSerialConsoleAccessStatusInput{}
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
+		output, err := tfec2.FindSerialConsoleAccessStatus(ctx, conn)
+
+		if retry.NotFound(err) {
+			return nil
+		}
+
 		if err != nil {
 			return err
 		}
 
-		if aws.ToBool(response.SerialConsoleAccessEnabled) != false {
-			return fmt.Errorf("Serial console access not disabled on resource removal")
+		if aws.ToBool(output.SerialConsoleAccessEnabled) != false {
+			return fmt.Errorf("EC2 Serial Console Access not disabled on resource removal")
 		}
 
 		return nil
@@ -81,25 +91,21 @@ func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCh
 
 func testAccCheckSerialConsoleAccess(ctx context.Context, n string, enabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		input := ec2.GetSerialConsoleAccessStatusInput{}
-		response, err := conn.GetSerialConsoleAccessStatus(ctx, &input)
+		output, err := tfec2.FindSerialConsoleAccessStatus(ctx, conn)
+
 		if err != nil {
 			return err
 		}
 
-		if aws.ToBool(response.SerialConsoleAccessEnabled) != enabled {
-			return fmt.Errorf("Serial console access is not in expected state (%t)", enabled)
+		if aws.ToBool(output.SerialConsoleAccessEnabled) != enabled {
+			return fmt.Errorf("EC2 Serial Console Access is not in expected state (%t)", enabled)
 		}
 
 		return nil

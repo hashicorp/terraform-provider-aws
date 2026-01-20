@@ -1,7 +1,13 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: valid-nullable-bool
     languages: [go]
     message: Uses of `nullable.TypeNullableBool` must be paired with `nullable.ValidateTypeStringNullableBool` unless they are strictly `Computed`.
+    paths:
+      exclude:
+        - "*_migrate.go"
     patterns:
       - pattern: |
           {

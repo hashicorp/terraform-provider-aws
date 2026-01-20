@@ -1,4 +1,7 @@
-# Roadmap:  July 2025 - September 2025
+<!-- Copyright IBM Corp. 2014, 2025 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+# Roadmap:  October 2025 - December 2025
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
@@ -8,61 +11,76 @@ Each weekly release will include necessary tasks that lead to the completion of 
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning May to June 2025 the AWS Provider added support for the following (among many others):
+In the period spanning July to September 2025 the AWS Provider added support for the following (among many others):
 
-- Major Release v6.0 - Multi Region Support
-- AWS Workspaces Web
-- AWS Notifications
+- Oracle Database on AWS
+- DynamoDB Warm Throughput
+- Amazon Workspaces Web
 
-From July - September 2025, we will be prioritizing the following areas of work:
+From October - December 2025, we will be prioritizing the following areas of work (and more):
 
 ## New Services / Features
 
-### DynamoDB Warm Throughput
+### Amazon Bedrock AgentCore
 
-Issue: [#40141](https://github.com/hashicorp/terraform-provider-aws/issues/40141)
+Issue: [#43424](https://github.com/hashicorp/terraform-provider-aws/issues/43424)
 
-[DynamoDB Warm Throughput](https://aws.amazon.com/blogs/database/pre-warming-amazon-dynamodb-tables-with-warm-throughput/) Amazon DynamoDB now supports a new warm throughput value and the ability to easily pre-warm DynamoDB tables and indexes. The warm throughput value provides visibility into the number of read and write operations your DynamoDB tables can readily handle, while pre-warming lets you proactively increase the value to meet future traffic demands.
+[Amazon Bedrock AgentCore](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-bedrock-agentcore-available/) Amazon Bedrock AgentCore is an agentic platform to build, deploy and operate highly capable agents securely at scale using any framework, model, or protocol. AgentCore lets you build agents faster, enable agents to take actions across tools and data, run agents securely with low-latency and extended runtimes, and monitor agents in production - all without any infrastructure management.
 
-Support for DynamoDB Warm Throughput may include:
+Support for Amazon Bedrock AgentCore includes the following new resources:
 
-Affected Resource(s):
+New Resource(s):
 
-- `aws_dynamodb_table`
+- `aws_bedrockagentcore_agent_runtime`
+- `aws_bedrockagentcore_runtime_endpoint`
+- `aws_bedrockagentcore_gateway`
+- `aws_bedrockagentcore_browser`
+- `aws_bedrockagentcore_code_interpreter`
+- `aws_bedrockagentcore_gateway_target`
+- `aws_bedrockagentcore_memory`
+- `aws_bedrockagentcore_oauth2_credential_provider`
+- `aws_bedrockagentcore_workload_provider`
+- `aws_bedrockagentcore_apikey_credential_provider`
 
-### Amazon Connect phone number and contact flow association support
+### AWS Transfer Family Web Apps
 
-Issue: [#26015](https://github.com/hashicorp/terraform-provider-aws/issues/26015)
+Issue: [#40996](https://github.com/hashicorp/terraform-provider-aws/issues/40996)
 
-[Amazon Connect phone number and contact flow association support](https://aws.amazon.com/about-aws/whats-new/2022/04/amazon-connect-api-claim-phone-numbers/) Amazon Connect launches API to claim new phone numbers and configure them programmatically. Using this API, you can programmatically search for and claim available phone numbers, associate phone numbers to your contact flows, or release phone numbers that are no longer needed.
+[AWS Transfer Family Web Apps](https://aws.amazon.com/aws-transfer-family/web-apps/) Transfer Family web apps offer a no-code, fully managed browser-based experience that enables secure file transfers to and from Amazon S3. Transfer Family web apps enable your authenticated users to perform essential file operations—including listing, uploading, downloading, and deleting—while maintaining security, reliability, and compliance.
 
-Support for Amazon Connect resources may include:
+Support for AWS Transfer Family Web Apps includes:
 
-Affected Resource(s):
+New Resource(s):
 
-- `aws_connect_phone_number`
-- `aws_connect_phone_number_contact_flow_association`
+- `aws_transfer_web_app`
+- `aws_transfer_web_app_customization`
 
-### AWS Control Tower APIs to register Organizational Units
+### Amazon SaaS Manager for Amazon CloudFront
 
-Issue: [#35849](https://github.com/hashicorp/terraform-provider-aws/issues/35849)
+Issue: [#42409](https://github.com/hashicorp/terraform-provider-aws/issues/42409)
 
-[AWS Control Tower APIs to register Organizational Units](https://aws.amazon.com/about-aws/whats-new/2024/02/aws-control-tower-apis-register-organizational-units/) AWS Control Tower customers can now programmatically extend governance to organizational units (OUs) via APIs. These new APIs enable the AWS Control Tower baseline which contains best practice configurations, controls, and resources required for AWS Control Tower governance. For example, when you enable a baseline on an OU, member accounts within the OU will receive resources including AWS IAM roles, AWS CloudTrail, AWS Config, AWS Identity Center, and come under AWS Control Tower governance.
+[Amazon SaaS Manager for Amazon CloudFront](https://aws.amazon.com/about-aws/whats-new/2025/04/saas-manager-amazon-cloudfront/) Amazon SaaS Manager for Amazon CloudFront is a new Amazon CloudFront feature designed to efficiently manage content delivery across multiple websites for Software-as-a-Service (SaaS) providers, web development platforms, and companies with multiple brands/websites. CloudFront SaaS Manager provides a unified experience, alleviating the operational burden of managing multiple websites at scale, including TLS certificate management, DDoS protection, and observability.
 
-### WAFv2 update rules shared with Firewall Manager
+New Resource(s):
 
-Issue: [#36941](https://github.com/hashicorp/terraform-provider-aws/issues/36941)
+- `aws_cloudfront_distribution_tenant`
+- `aws_cloudfront_connection_group`
 
-[WAFv2 update rules shared with Firewall Manager](https://docs.aws.amazon.com/waf/latest/developerguide/waf-policies.html#waf-policies-rule-groups) The Terraform AWS provider does use the UpdateWebACL API, but only for updating WAF ACLs that it manages and not quite in the way we need for dynamically managing shared Web ACLs within organizations using AWS Firewall Manager (FMS). This functionality is key as it allows different accounts to add their own rules to a shared Web ACL, promoting a flexible approach to security management.
+Affected Resource:
+
+- `aws_cloudfront_distribution`
 
 ## Enhancements to Existing Services
 
 This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
 
-- [Fixes in-place UpdateService stabilization](https://github.com/hashicorp/terraform-provider-aws/pull/43502)
-- [Support for Cognito managed login branding](https://github.com/hashicorp/terraform-provider-aws/issues/42580)
-- [Updating capacity provider configuration for ECS services](https://github.com/hashicorp/terraform-provider-aws/issues/43004)
-- [aws_s3_bucket_lifecycle_configuration empty filter block produces a warning](https://github.com/hashicorp/terraform-provider-aws/issues/42714)
+- [Allow to set preferred_cache_cluster_azs for ElastiCache Redis Сluster](https://github.com/hashicorp/terraform-provider-aws/issues/37497)
+- [AWS_Route53_zone: support attribute-only search](https://github.com/hashicorp/terraform-provider-aws/pull/39671)
+- [Add support for concurrency cross channel behaviour to aws_connect_routing_profile](https://github.com/hashicorp/terraform-provider-aws/issues/35018)
+- [Parameter to enable Certificate-based-authentication in the directory configuration of Appstream](https://github.com/hashicorp/terraform-provider-aws/issues/31766)
+- [Resources for Custom Billing View](https://github.com/hashicorp/terraform-provider-aws/issues/40677)
+- [Support CHALLENGE WAF actions and overrides on individual WAF Rule Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/27862)
+- [Add required suffix when specifying log group ARN](https://github.com/hashicorp/terraform-provider-aws/pull/35941)
 
 ## Disclosures
 

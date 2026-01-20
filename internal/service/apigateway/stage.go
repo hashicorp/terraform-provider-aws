@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -15,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -244,7 +245,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	stageName := d.Get("stage_name").(string)
 	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -438,7 +439,7 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	output, err := conn.GetStage(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -455,11 +456,11 @@ func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, 
 	return output, nil
 }
 
-func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
+func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -474,7 +475,7 @@ func waitStageCacheAvailable(ctx context.Context, conn *apigateway.Client, apiID
 	const (
 		timeout = 90 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusDeleteInProgress, types.CacheClusterStatusFlushInProgress),
 		Target:  enum.Slice(types.CacheClusterStatusAvailable),
 		Refresh: stageCacheStatus(ctx, conn, apiID, name),
@@ -494,7 +495,7 @@ func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, 
 	const (
 		timeout = 30 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusFlushInProgress),
 		Target: enum.Slice(
 			types.CacheClusterStatusAvailable,

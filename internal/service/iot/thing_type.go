@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package iot
@@ -11,12 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -135,7 +136,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta any
 
 	output, err := findThingTypeByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -194,8 +195,8 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
-	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
-		func() (any, error) {
+	_, err = tfresource.RetryWhenIsA[any, *awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
+		func(ctx context.Context) (any, error) {
 			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
 				ThingTypeName: aws.String(d.Id()),
 			})
@@ -220,7 +221,7 @@ func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*i
 	output, err := conn.DescribeThingType(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

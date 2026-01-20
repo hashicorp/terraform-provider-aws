@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -53,7 +53,7 @@ func (t cidrBlockType) ValueFromString(_ context.Context, in types.String) (base
 	}
 
 	valueString := in.ValueString()
-	if err := itypes.ValidateCIDRBlock(valueString); err != nil {
+	if err := inttypes.ValidateCIDRBlock(valueString); err != nil {
 		return CIDRBlockUnknown(), diags // Must not return validation errors
 	}
 
@@ -126,7 +126,7 @@ func (v CIDRBlock) ValidateAttribute(ctx context.Context, req xattr.ValidateAttr
 		return
 	}
 
-	if err := itypes.ValidateCIDRBlock(v.ValueString()); err != nil {
+	if err := inttypes.ValidateCIDRBlock(v.ValueString()); err != nil {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid CIDR Block Value",

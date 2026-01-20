@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package kms
@@ -26,7 +26,7 @@ const (
 
 // waitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 func waitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.MalformedPolicyDocumentException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.MalformedPolicyDocumentException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return f()
 	})
 

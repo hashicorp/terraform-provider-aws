@@ -1,12 +1,15 @@
+# Copyright IBM Corp. 2014, 2025
+# "SPDX-License-Identifier: MPL-2.0"
+
 rules:
   - id: helper-schema-ResourceData-SetId-empty-without-IsNewResource-check
     languages: [go]
     message: Calling `d.SetId("")` should ensure `!d.IsNewResource()` is also checked. See https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/error-handling.md#disnewresource-checks
     paths:
       include:
-        - internal/service
+        - "/internal/service"
       exclude:
-        - internal/service/**/*_data_source.go
+        - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-either:
           - pattern: |

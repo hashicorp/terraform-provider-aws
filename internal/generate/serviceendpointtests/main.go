@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -35,16 +34,17 @@ func main() {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
-		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
-			"codecatalyst",        // Bearer auth token needs special handling
-			"location",            // Resolver modifies URL
-			"mwaa",                // Resolver modifies URL
-			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
-			"paymentcryptography", // Resolver modifies URL
-			"route53profiles",     // Resolver modifies URL
-			"s3control",           // Resolver modifies URL
-			"simpledb",            // AWS SDK for Go v1
-			"timestreamwrite":     // Uses endpoint discovery
+		case "arcregionswitch", // Resolver modifies URL
+			"cloudfrontkeyvaluestore", // Endpoint includes account ID
+			"codecatalyst",            // Bearer auth token needs special handling
+			"location",                // Resolver modifies URL
+			"mwaa",                    // Resolver modifies URL
+			"neptunegraph",            // EndpointParameters has an additional parameter, ApiType
+			"paymentcryptography",     // Resolver modifies URL
+			"route53profiles",         // Resolver modifies URL
+			"s3control",               // Resolver modifies URL
+			"simpledb",                // AWS SDK for Go v1
+			"timestreamwrite":         // Uses endpoint discovery
 			continue
 		}
 

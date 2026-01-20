@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package lexmodels_test
@@ -410,7 +410,7 @@ func testAccCheckBotAliasDestroy(ctx context.Context, botName, botAliasName stri
 				return nil
 			}
 
-			return fmt.Errorf("error getting bot alias '%s': %s", botAliasName, err)
+			return fmt.Errorf("error getting bot alias '%s': %w", botAliasName, err)
 		}
 
 		return fmt.Errorf("error bot alias still exists after delete, %s", botAliasName)

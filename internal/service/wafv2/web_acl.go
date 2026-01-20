@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package wafv2
@@ -16,7 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -305,7 +306,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	const (
 		timeout = 5 * time.Minute
 	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.CreateWebACL(ctx, input)
 	})
 
@@ -327,7 +328,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -384,7 +385,21 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// https://github.com/hashicorp/terraform-provider-aws/pull/42740.
+	// if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChanges(
+		"association_config",
+		"captcha_config",
+		"challenge_config",
+		"custom_response_body",
+		"data_protection_config",
+		names.AttrDefaultAction,
+		names.AttrDescription,
+		"rule_json",
+		names.AttrRule,
+		"token_domains",
+		"visibility_config",
+	) {
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)
@@ -449,7 +464,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		const (
 			timeout = 5 * time.Minute
 		)
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (any, error) {
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 			return conn.UpdateWebACL(ctx, input)
 		})
 
@@ -536,17 +551,11 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta any)
 	return diags
 }
 
-func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
-	input := &wafv2.GetWebACLInput{
-		Id:    aws.String(id),
-		Name:  aws.String(name),
-		Scope: awstypes.Scope(scope),
-	}
-
+func findWebACL(ctx context.Context, conn *wafv2.Client, input *wafv2.GetWebACLInput) (*wafv2.GetWebACLOutput, error) {
 	output, err := conn.GetWebACL(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -561,6 +570,16 @@ func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name,
 	}
 
 	return output, nil
+}
+
+func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {
+	input := wafv2.GetWebACLInput{
+		Id:    aws.String(id),
+		Name:  aws.String(name),
+		Scope: awstypes.Scope(scope),
+	}
+
+	return findWebACL(ctx, conn, &input)
 }
 
 // filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rule here

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package storagegateway_test
@@ -153,7 +153,7 @@ func testAccCheckCacheExists(ctx context.Context, n string) resource.TestCheckFu
 }
 
 func testAccCacheConfig_fileGateway(rName string) string {
-	return acctest.ConfigCompose(testAccGatewayConfig_typeFileS3(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGatewayConfig_typeFileS3(rName, rName), fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = aws_instance.test.availability_zone
   size              = "10"

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package json_test
@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest/jsoncmp"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 func TestEncodeToString(t *testing.T) {
@@ -54,7 +54,7 @@ func TestEncodeToString(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := json.EncodeToString(testCase.input)
+			output, err := tfjson.EncodeToString(testCase.input)
 			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
 				t.Errorf("EncodeToString(%v) err %t, want %t", testCase.input, got, want)
 			}
@@ -110,7 +110,7 @@ func TestEncodeToStringIndent(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			output, err := json.EncodeToStringIndent(testCase.input, "", "  ")
+			output, err := tfjson.EncodeToStringIndent(testCase.input, "", "  ")
 			if got, want := err != nil, testCase.wantErr; !cmp.Equal(got, want) {
 				t.Errorf("EncodeToStringIndent(%v) err %t, want %t", testCase.input, got, want)
 			}

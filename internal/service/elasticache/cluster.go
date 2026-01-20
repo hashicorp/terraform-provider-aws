@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticache
@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -505,7 +504,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	c, err := findCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -770,28 +769,24 @@ func deleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 	}
 
-	// TODO: Migrate to retry.Operation
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", cacheClusterID)
-	err := sdkretry.RetryContext(ctx, 5*time.Minute, func() *sdkretry.RetryError {
+	err := tfresource.Retry(ctx, 5*time.Minute, func(ctx context.Context) *tfresource.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "serving as primary") {
-				return sdkretry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "only member of a replication group") {
-				return sdkretry.NonRetryableError(err)
+				return tfresource.NonRetryableError(err)
 			}
 			// The cluster may be just snapshotting, so we retry until it's ready for deletion
 			if errs.IsA[*awstypes.InvalidCacheClusterStateFault](err) {
-				return sdkretry.RetryableError(err)
+				return tfresource.RetryableError(err)
 			}
-			return sdkretry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheCluster(ctx, input)
-	}
 
 	return err
 }

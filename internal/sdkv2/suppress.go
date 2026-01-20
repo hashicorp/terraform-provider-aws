@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package sdkv2
@@ -24,6 +24,18 @@ func SuppressEquivalentJSONDocuments(k, old, new string, _ *schema.ResourceData)
 	return json.EqualStrings(old, new)
 }
 
+// SuppressEquivalentJSONDocumentsWithEmpty provides custom difference suppression
+// for JSON documents in the given strings that are equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONDocumentsWithEmpty(k, old, new string, _ *schema.ResourceData) bool {
+	if equalEmptyJSONStrings(old, new) {
+		return true
+	}
+
+	return json.EqualStrings(old, new)
+}
+
 // SuppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
 // for strings that represent equal CloudWatch Logs log group ARNs.
 func SuppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {
@@ -42,6 +54,22 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 
 		return false
 	}
+}
+
+// SuppressEquivalentTime returns a difference suppression function that suppresses differences
+// for time values that represent the same instant in different timezones.
+func SuppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
+	oldTime, err := time.Parse(time.RFC3339, old)
+	if err != nil {
+		return false
+	}
+
+	newTime, err := time.Parse(time.RFC3339, new)
+	if err != nil {
+		return false
+	}
+
+	return oldTime.Equal(newTime)
 }
 
 // SuppressEquivalentIAMPolicyDocuments provides custom difference suppression

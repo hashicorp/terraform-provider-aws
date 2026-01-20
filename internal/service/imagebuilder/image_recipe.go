@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder
@@ -14,12 +14,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,6 +41,12 @@ func resourceImageRecipe() *schema.Resource {
 		DeleteWithoutTimeout: resourceImageRecipeDelete,
 
 		Schema: map[string]*schema.Schema{
+			"ami_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -80,7 +88,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(100, 10000),
+										ValidateFunc: validation.IntBetween(100, 100000),
 									},
 									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
@@ -98,7 +106,7 @@ func resourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.IntBetween(125, 1000),
+										ValidateFunc: validation.IntBetween(125, 2000),
 									},
 									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,
@@ -251,6 +259,10 @@ func resourceImageRecipeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:        getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("ami_tags"); ok {
+		input.AmiTags = flex.ExpandStringValueMap(v.(map[string]any))
+	}
+
 	if v, ok := d.GetOk("block_device_mapping"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.(*schema.Set).List())
 	}
@@ -308,7 +320,7 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	imageRecipe, err := findImageRecipeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Image Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -325,6 +337,11 @@ func resourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta a
 	if err := d.Set("component", flattenComponentConfigurations(imageRecipe.Components)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting component: %s", err)
 	}
+
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
+	}
+
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
@@ -381,7 +398,7 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	output, err := conn.GetImageRecipe(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

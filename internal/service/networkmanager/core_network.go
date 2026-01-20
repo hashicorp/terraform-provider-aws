@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -16,7 +16,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -170,7 +170,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	input := &networkmanager.CreateCoreNetworkInput{
+	input := networkmanager.CreateCoreNetworkInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		GlobalNetworkId: aws.String(globalNetworkID),
 		Tags:            getTagsIn(ctx),
@@ -203,7 +203,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	output, err := conn.CreateCoreNetwork(ctx, input)
+	output, err := conn.CreateCoreNetwork(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Core Network: %s", err)
@@ -225,7 +225,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta a
 
 	coreNetwork, err := findCoreNetworkByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -262,10 +262,11 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	if d.HasChange(names.AttrDescription) {
-		_, err := conn.UpdateCoreNetwork(ctx, &networkmanager.UpdateCoreNetworkInput{
+		input := networkmanager.UpdateCoreNetworkInput{
 			CoreNetworkId: aws.String(d.Id()),
 			Description:   aws.String(d.Get(names.AttrDescription).(string)),
-		})
+		}
+		_, err := conn.UpdateCoreNetwork(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Network Manager Core Network (%s): %s", d.Id(), err)
@@ -311,9 +312,10 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
-	_, err := conn.DeleteCoreNetwork(ctx, &networkmanager.DeleteCoreNetworkInput{
+	input := networkmanager.DeleteCoreNetworkInput{
 		CoreNetworkId: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteCoreNetwork(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -331,16 +333,19 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func findCoreNetworkByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.CoreNetwork, error) {
-	input := &networkmanager.GetCoreNetworkInput{
+	input := networkmanager.GetCoreNetworkInput{
 		CoreNetworkId: aws.String(id),
 	}
 
+	return findCoreNetwork(ctx, conn, &input)
+}
+
+func findCoreNetwork(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetCoreNetworkInput) (*awstypes.CoreNetwork, error) {
 	output, err := conn.GetCoreNetwork(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -355,20 +360,23 @@ func findCoreNetworkByID(ctx context.Context, conn *networkmanager.Client, id st
 	return output.CoreNetwork, nil
 }
 
-func findCoreNetworkPolicyByTwoPartKey(ctx context.Context, conn *networkmanager.Client, coreNetworkID string, policyVersionID *int32) (*awstypes.CoreNetworkPolicy, error) {
-	input := &networkmanager.GetCoreNetworkPolicyInput{
+func findCoreNetworkPolicyByTwoPartKey(ctx context.Context, conn *networkmanager.Client, coreNetworkID string, policyVersionID int32) (*awstypes.CoreNetworkPolicy, error) {
+	input := networkmanager.GetCoreNetworkPolicyInput{
 		CoreNetworkId: aws.String(coreNetworkID),
 	}
-	if aws.ToInt32(policyVersionID) >= minimumValidPolicyVersionID {
-		input.PolicyVersionId = policyVersionID
+	if policyVersionID >= minimumValidPolicyVersionID {
+		input.PolicyVersionId = aws.Int32(policyVersionID)
 	}
 
+	return findCoreNetworkPolicy(ctx, conn, &input)
+}
+
+func findCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetCoreNetworkPolicyInput) (*awstypes.CoreNetworkPolicy, error) {
 	output, err := conn.GetCoreNetworkPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+			LastError: err,
 		}
 	}
 
@@ -383,11 +391,11 @@ func findCoreNetworkPolicyByTwoPartKey(ctx context.Context, conn *networkmanager
 	return output.CoreNetworkPolicy, nil
 }
 
-func statusCoreNetworkState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCoreNetworkState(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findCoreNetworkByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -404,7 +412,7 @@ func waitCoreNetworkCreated(ctx context.Context, conn *networkmanager.Client, id
 		Pending: enum.Slice(awstypes.CoreNetworkStateCreating, coreNetworkStatePending),
 		Target:  enum.Slice(awstypes.CoreNetworkStateAvailable),
 		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Refresh: statusCoreNetworkState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -421,7 +429,7 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id
 		Pending: enum.Slice(awstypes.CoreNetworkStateUpdating),
 		Target:  enum.Slice(awstypes.CoreNetworkStateAvailable),
 		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Refresh: statusCoreNetworkState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -440,7 +448,7 @@ func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id
 		Timeout:    timeout,
 		Delay:      4 * time.Minute,
 		MinTimeout: 10 * time.Second,
-		Refresh:    statusCoreNetworkState(ctx, conn, id),
+		Refresh:    statusCoreNetworkState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -516,45 +524,47 @@ func flattenCoreNetworkSegments(apiObjects []awstypes.CoreNetworkSegment) []any 
 	return tfList
 }
 
-func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, coreNetworkId, policyDocument string) error {
+func putAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Client, coreNetworkID, policyDocument string) error {
 	document, err := structure.NormalizeJsonString(policyDocument)
 
 	if err != nil {
-		return fmt.Errorf("decoding Network Manager Core Network (%s) policy document: %s", coreNetworkId, err)
+		return fmt.Errorf("decoding Network Manager Core Network (%s) policy document: %w", coreNetworkID, err)
 	}
 
-	output, err := conn.PutCoreNetworkPolicy(ctx, &networkmanager.PutCoreNetworkPolicyInput{
+	inputPCNP := networkmanager.PutCoreNetworkPolicyInput{
 		ClientToken:    aws.String(id.UniqueId()),
-		CoreNetworkId:  aws.String(coreNetworkId),
+		CoreNetworkId:  aws.String(coreNetworkID),
 		PolicyDocument: aws.String(document),
-	})
+	}
+	output, err := conn.PutCoreNetworkPolicy(ctx, &inputPCNP)
 
 	if err != nil {
-		return fmt.Errorf("putting Network Manager Core Network (%s) policy: %s", coreNetworkId, err)
+		return fmt.Errorf("putting Network Manager Core Network (%s) policy: %w", coreNetworkID, err)
 	}
 
-	policyVersionID := output.CoreNetworkPolicy.PolicyVersionId
-
-	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkId, policyVersionID, waitCoreNetworkPolicyCreatedTimeInMinutes*time.Minute); err != nil {
-		return fmt.Errorf("waiting for Network Manager Core Network Policy from Core Network (%s) create: %s", coreNetworkId, err)
+	policyVersionID := aws.ToInt32(output.CoreNetworkPolicy.PolicyVersionId)
+	if _, err := waitCoreNetworkPolicyCreated(ctx, conn, coreNetworkID, policyVersionID, waitCoreNetworkPolicyCreatedTimeInMinutes*time.Minute); err != nil {
+		return fmt.Errorf("waiting for Network Manager Core Network Policy from Core Network (%s) create: %w", coreNetworkID, err)
 	}
 
-	_, err = conn.ExecuteCoreNetworkChangeSet(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
-		CoreNetworkId:   aws.String(coreNetworkId),
-		PolicyVersionId: policyVersionID,
-	})
+	inputECNCS := networkmanager.ExecuteCoreNetworkChangeSetInput{
+		CoreNetworkId:   aws.String(coreNetworkID),
+		PolicyVersionId: aws.Int32(policyVersionID),
+	}
+	_, err = conn.ExecuteCoreNetworkChangeSet(ctx, &inputECNCS)
+
 	if err != nil {
-		return fmt.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", coreNetworkId, policyVersionID, err)
+		return fmt.Errorf("executing Network Manager Core Network (%s) change set (%d): %w", coreNetworkID, policyVersionID, err)
 	}
 
 	return nil
 }
 
-func statusCoreNetworkPolicyState(ctx context.Context, conn *networkmanager.Client, coreNetworkId string, policyVersionId *int32) retry.StateRefreshFunc {
-	return func() (any, string, error) {
-		output, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, coreNetworkId, policyVersionId)
+func statusCoreNetworkPolicyState(conn *networkmanager.Client, coreNetworkID string, policyVersionID int32) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findCoreNetworkPolicyByTwoPartKey(ctx, conn, coreNetworkID, policyVersionID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -566,19 +576,15 @@ func statusCoreNetworkPolicyState(ctx context.Context, conn *networkmanager.Clie
 	}
 }
 
-func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Client, coreNetworkId string, policyVersionId *int32, timeout time.Duration) (*awstypes.CoreNetworkPolicy, error) {
+func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Client, coreNetworkID string, policyVersionID int32, timeout time.Duration) (*awstypes.CoreNetworkPolicy, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ChangeSetStatePendingGeneration),
 		Target:  enum.Slice(awstypes.ChangeSetStateReadyToExecute),
 		Timeout: timeout,
-		Refresh: statusCoreNetworkPolicyState(ctx, conn, coreNetworkId, policyVersionId),
+		Refresh: statusCoreNetworkPolicyState(conn, coreNetworkID, policyVersionID),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.CoreNetworkPolicy); ok {
-		return output, err
-	}
 
 	if output, ok := outputRaw.(*awstypes.CoreNetworkPolicy); ok {
 		if state, v := output.ChangeSetState, output.PolicyErrors; state == awstypes.ChangeSetStateFailedGeneration && len(v) > 0 {
@@ -621,7 +627,7 @@ func buildCoreNetworkBasePolicyDocument(regions []any) (string, error) {
 	b, err := json.MarshalIndent(basePolicy, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return "", fmt.Errorf("building base policy document: %s", err)
+		return "", fmt.Errorf("building base policy document: %w", err)
 	}
 
 	return string(b), nil

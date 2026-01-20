@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2025
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -250,5 +250,5 @@ func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.
 }
 
 func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
+	return fwdiag.Must(NewObjectValueOf(ctx, t))
 }
