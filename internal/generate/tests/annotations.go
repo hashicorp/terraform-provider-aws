@@ -6,8 +6,10 @@ package tests
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
@@ -61,12 +63,18 @@ type CommonArgs struct {
 	GoImports         []common.GoImport
 	InitCodeBlocks    []CodeBlock
 	AdditionalTfVars_ map[string]TFVar
+
+	// Resource Identity Versions
+	HasNoPreExistingResource bool
+	PreIdentityVersion       *version.Version
+	IdentityVersions         map[int64]*version.Version
 }
 
 func InitCommonArgs() CommonArgs {
 	return CommonArgs{
-		AdditionalTfVars_: make(map[string]TFVar),
+		AdditionalTfVars_: make(map[string]TFVar, 0),
 		HasExistsFunc:     true,
+		IdentityVersions:  make(map[int64]*version.Version, 0),
 	}
 }
 
@@ -487,6 +495,41 @@ if err != nil {
 				Type:      TFVarTypeString,
 			}
 		}
+	}
+
+	// Resource Identity Versions
+	if attr, ok := args.Keyword["preIdentityVersion"]; ok {
+		version, err := version.NewVersion(attr)
+		if err != nil {
+			return fmt.Errorf("invalid preIdentityVersion value: %q. Should be version value.", attr)
+		}
+		stuff.PreIdentityVersion = version
+	}
+
+	if attr, ok := args.Keyword["hasNoPreExistingResource"]; ok {
+		if b, err := common.ParseBoolAttr("hasNoPreExistingResource", attr); err != nil {
+			return err
+		} else {
+			stuff.HasNoPreExistingResource = b
+		}
+	}
+
+	if attr, ok := args.Keyword["identityVersion"]; ok {
+		parts := strings.Split(attr, ";")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid identityVersion value: %q. Should be in format <identity version>;<provider version>.", attr)
+		}
+		var identityVersion int64
+		if i, err := strconv.ParseInt(parts[0], 10, 64); err != nil {
+			return fmt.Errorf("invalid identity version value: %q. Should be integer value.", parts[0])
+		} else {
+			identityVersion = i
+		}
+		providerVersion, err := version.NewVersion(parts[1])
+		if err != nil {
+			return fmt.Errorf("invalid provider version value: %q. Should be version value.", parts[1])
+		}
+		stuff.IdentityVersions[identityVersion] = providerVersion
 	}
 
 	return nil
