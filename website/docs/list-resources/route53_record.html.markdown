@@ -25,4 +25,4 @@ list "aws_route53_record" "example" {
 
 This list resource supports the following arguments:
 
-* `zone_id` - (Required) The ID of the hosted zone to list records from.
+* `zone_id` - (Required) ID of the hosted zone to list records from.

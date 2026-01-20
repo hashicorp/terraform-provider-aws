@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -43,7 +44,7 @@ func (l *listResourceRecord) ListResourceConfigSchema(ctx context.Context, reque
 		Attributes: map[string]listschema.Attribute{
 			"zone_id": listschema.StringAttribute{
 				Required:    true,
-				Description: "The ID of the hosted zone to list records from",
+				Description: "ID of the hosted zone to list records from",
 			},
 		},
 	}
@@ -91,9 +92,11 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 			tflog.Info(ctx, "Reading Route 53 Record")
 			diags := resourceRecordRead(ctx, rd, l.Meta())
 			if diags.HasError() {
-				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
-				yield(result)
-				return
+				tflog.Error(ctx, "Reading Route 53 Record", map[string]any{
+					names.AttrID: recordID,
+					"diags":      sdkdiag.DiagnosticsString(diags),
+				})
+				continue
 			}
 			if rd.Id() == "" {
 				// Resource is logically deleted
@@ -104,8 +107,11 @@ func (l *listResourceRecord) List(ctx context.Context, request list.ListRequest,
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
 			if result.Diagnostics.HasError() {
-				yield(result)
-				return
+				tflog.Error(ctx, "Setting Route 53 Record result", map[string]any{
+					names.AttrID: recordID,
+					"diags":      result.Diagnostics,
+				})
+				continue
 			}
 
 			if !yield(result) {
