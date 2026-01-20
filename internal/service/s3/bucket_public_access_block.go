@@ -25,6 +25,7 @@ import (
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3/types;types.PublicAccessBlockConfiguration")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,

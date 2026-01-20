@@ -41,6 +41,7 @@ import (
 // @Testing(generator=false)
 // @Testing(importIgnore="deletion_window_in_days")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 

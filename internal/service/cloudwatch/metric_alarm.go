@@ -36,6 +36,7 @@ import (
 // @IdentityAttribute("alarm_name")
 // @Testing(idAttrDuplicates="alarm_name")
 // @Testing(preIdentityVersion="v6.7.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricAlarm() *schema.Resource {
 	// lintignore:R011
 	return &schema.Resource{

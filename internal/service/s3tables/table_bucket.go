@@ -45,6 +45,7 @@ import (
 // @Testing(importStateIdFunc="testAccTableBucketImportStateIdFunc")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketResource{}, nil
 }

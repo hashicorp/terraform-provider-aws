@@ -40,6 +40,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 		{
+			Factory:  newManagedNotificationAccountContactAssociationResource,
+			TypeName: "aws_notifications_managed_notification_account_contact_association",
+			Name:     "Managed Notification Account Contact Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newManagedNotificationAdditionalChannelAssociationResource,
+			TypeName: "aws_notifications_managed_notification_additional_channel_association",
+			Name:     "Managed Notification Additional Channel Association",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
 			Factory:  newNotificationConfigurationResource,
 			TypeName: "aws_notifications_notification_configuration",
 			Name:     "Notification Configuration",
@@ -52,6 +64,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newNotificationHubResource,
 			TypeName: "aws_notifications_notification_hub",
 			Name:     "Notification Hub",
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
+		},
+		{
+			Factory:  newOrganizationsAccessResource,
+			TypeName: "aws_notifications_organizations_access",
+			Name:     "Organizations Access",
 			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}

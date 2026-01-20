@@ -40,8 +40,6 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,

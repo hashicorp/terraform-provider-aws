@@ -38,6 +38,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.BrowserSettings")
 // @Testing(importStateIdAttribute="browser_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBrowserSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &browserSettingsResource{}, nil
 }
