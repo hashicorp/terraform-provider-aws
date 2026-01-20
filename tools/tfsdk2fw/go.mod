@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.40.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.49.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.60.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.155.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.156.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.34.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.28.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.34.9 // indirect
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.40.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.30.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.57.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.50.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.51.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.29.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/detective v1.38.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.38.4 // indirect
@@ -141,7 +141,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.44.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.65.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.48.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glacier v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.35.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glue v1.136.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.32.10 // indirect
@@ -175,10 +175,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.87.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.13.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.34.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.59.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/licensemanager v1.37.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.50.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/location v1.50.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.26.10 // indirect
@@ -231,13 +231,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.34.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.51.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.35.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.22.11 // indirect
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.23.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.33.20 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.31.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.22.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.34.15 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.9.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.32.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.26.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.42.1 // indirect
@@ -247,7 +247,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.13.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3vectors v1.6.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.230.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.230.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.17.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.34.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.1 // indirect
