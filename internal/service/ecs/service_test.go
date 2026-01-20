@@ -2630,7 +2630,7 @@ func TestAccECSService_Tags_UpgradeFromV5_100_0ThroughV6_08_0(t *testing.T) {
 
 func TestAccECSService_Tags_propagate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second, third awstypes.Service
+	var first, second, third, fourth awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -2659,6 +2659,13 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				Config: testAccServiceConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsNone)),
+				),
+			},
+			{
+				Config: testAccServiceConfig_propagateTagsNil(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &fourth),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsNone)),
 				),
 			},
@@ -7395,6 +7402,46 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName, propagate)
+}
+
+func testAccServiceConfig_propagateTagsNil() string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+
+  tags = {
+    tag-key = "task-def"
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  cluster                 = aws_ecs_cluster.test.id
+  desired_count           = 0
+  name                    = %[1]q
+  task_definition         = aws_ecs_task_definition.test.arn
+  enable_ecs_managed_tags = true
+
+  tags = {
+    tag-key = "service"
+  }
+}
+`)
 }
 
 func testAccServiceConfig_replicaSchedulingStrategy(rName string) string {

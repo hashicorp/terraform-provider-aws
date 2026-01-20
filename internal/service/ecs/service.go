@@ -938,7 +938,9 @@ func resourceService() *schema.Resource {
 					}
 					return false
 				},
+				DefaultFunc:      func() (any, error) { return awstypes.PropagateTagsNone, nil },
 				ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+				Computed:         true,
 			},
 			"scheduling_strategy": {
 				Type:             schema.TypeString,
