@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -32,31 +30,31 @@ import (
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var keys []string
 	var values []string
 
 	// Test with a large number of key value pairs to ensure batching is working correctly
 	for i := 1; i < 170; i++ {
-		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+		keys = append(keys, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
+		values = append(values, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
 	}
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 	kvsResourceName := "aws_cloudfront_key_value_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs(keys, values, resourceName),
@@ -75,25 +73,25 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_basic(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	value := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 	kvsResourceName := "aws_cloudfront_key_value_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, kvsResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -111,40 +109,40 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_disappears_KeyValueStore(t *tes
 // A key value pair added out of band should be removed
 func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	value := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
 	// add an additional random key out of band
 	putKeys := []types.PutKeyRequestListItem{
 		{
-			Key:   aws.String(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
-			Value: aws.String(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+			Key:   aws.String(acctest.RandomWithPrefix(t, acctest.ResourcePrefix)),
+			Value: aws.String(acctest.RandomWithPrefix(t, acctest.ResourcePrefix)),
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, []types.DeleteKeyRequestListItem{}, putKeys),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
+					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, t, resourceName, []types.DeleteKeyRequestListItem{}, putKeys),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_key_value_pair.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -160,9 +158,9 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandAddition(t *testing.T)
 // A key value pair removed out of band should be re-created
 func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	key := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	value := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
 	// remove the key created in our test
@@ -172,27 +170,27 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) 
 		},
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
-					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, resourceName, deleteKeys, []types.PutKeyRequestListItem{}),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
+					testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx, t, resourceName, deleteKeys, []types.PutKeyRequestListItem{}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{key}, []string{value}, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_key_value_pair.#", "1"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -207,36 +205,36 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_outOfBandRemoval(t *testing.T) 
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	var keys []string
 	var values []string
 	for i := 1; i < 6; i++ {
-		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+		keys = append(keys, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
+		values = append(values, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
 	}
 
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{keys[0], keys[1]}, []string{values[0], values[0]}, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					testCheckMultipleKeyValuePairs([]string{keys[0], keys[1]}, []string{values[0], values[0]}, resourceName),
 				),
 			},
 			{
 				Config: testAccKeysExclusiveConfig_basic([]string{keys[0], keys[2]}, []string{values[0], values[2]}, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					testCheckMultipleKeyValuePairs([]string{keys[0], keys[2]}, []string{values[0], values[2]}, resourceName),
 				),
 			},
@@ -246,24 +244,24 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_value(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 	keyResourceName := "aws_cloudfrontkeyvaluestore_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName)),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName)),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						resourceName,
@@ -291,31 +289,31 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_empty(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	maxBatchSize := sdkacctest.RandIntRange(35, 49)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	maxBatchSize := acctest.RandIntRange(t, 35, 49)
 	var keys []string
 	var values []string
 	// Test with a large number of key value pairs to ensure batching is working correctly
 	for i := 1; i < 170; i++ {
-		keys = append(keys, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
-		values = append(values, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
+		keys = append(keys, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
+		values = append(values, acctest.RandomWithPrefix(t, acctest.ResourcePrefix))
 	}
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 	kvsResourceName := "aws_cloudfront_key_value_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_maxBatchSize(keys, values, rName, maxBatchSize),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_arn", kvsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
 					testCheckMultipleKeyValuePairs(keys, values, resourceName),
@@ -335,32 +333,32 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_maxBatchSize(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	keys := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
-	values := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
-	valuesUpdated := []string{sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)}
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	keys := []string{acctest.RandomWithPrefix(t, acctest.ResourcePrefix)}
+	values := []string{acctest.RandomWithPrefix(t, acctest.ResourcePrefix)}
+	valuesUpdated := []string{acctest.RandomWithPrefix(t, acctest.ResourcePrefix)}
 	resourceName := "aws_cloudfrontkeyvaluestore_keys_exclusive.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx),
+		CheckDestroy:             testAccCheckKeysExclusiveDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKeysExclusiveConfig_basic(keys, values, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					testCheckMultipleKeyValuePairs(keys, values, resourceName),
 				),
 			},
 			{
 				Config: testAccKeysExclusiveConfig_basic(keys, valuesUpdated, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeysExclusiveExists(ctx, resourceName),
+					testAccCheckKeysExclusiveExists(ctx, t, resourceName),
 					testCheckMultipleKeyValuePairs(keys, valuesUpdated, resourceName),
 				),
 			},
@@ -368,9 +366,9 @@ func TestAccCloudFrontKeyValueStoreKeysExclusive_valueUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKeysExclusiveDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfrontkeyvaluestore_keys_exclusive" {
@@ -394,14 +392,14 @@ func testAccCheckKeysExclusiveDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckKeysExclusiveExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
 
 		_, out, err := tfcloudfrontkeyvaluestore.FindResourceKeyValuePairsForKeyValueStore(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
 		if err != nil {
@@ -417,14 +415,14 @@ func testAccCheckKeysExclusiveExists(ctx context.Context, n string) resource.Tes
 	}
 }
 
-func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, n string, deletes []types.DeleteKeyRequestListItem, puts []types.PutKeyRequestListItem) resource.TestCheckFunc {
+func testAccCheckKeyValueStoreKeysExclusiveUpdate(ctx context.Context, t *testing.T, n string, deletes []types.DeleteKeyRequestListItem, puts []types.PutKeyRequestListItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CloudFrontKeyValueStoreClient(ctx)
 
 		resp, err := tfcloudfrontkeyvaluestore.FindKeyValueStoreByARN(ctx, conn, rs.Primary.Attributes["key_value_store_arn"])
 		if err != nil {

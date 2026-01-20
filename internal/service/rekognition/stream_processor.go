@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -721,10 +720,10 @@ func (r *streamProcessorResource) ImportState(ctx context.Context, req resource.
 }
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -739,10 +738,10 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, n
 }
 
 func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StreamProcessorStatusUpdating),
 		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
-		Refresh:                   statusStreamProcessor(ctx, conn, name),
+		Refresh:                   statusStreamProcessor(conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -757,7 +756,7 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, n
 }
 
 func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, name string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
 			awstypes.StreamProcessorStatusStopped,
 			awstypes.StreamProcessorStatusStarting,
@@ -767,7 +766,7 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 			awstypes.StreamProcessorStatusUpdating,
 		),
 		Target:  []string{},
-		Refresh: statusStreamProcessor(ctx, conn, name),
+		Refresh: statusStreamProcessor(conn, name),
 		Timeout: timeout,
 	}
 
@@ -779,8 +778,8 @@ func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, n
 	return nil, err
 }
 
-func statusStreamProcessor(ctx context.Context, conn *rekognition.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamProcessor(conn *rekognition.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findStreamProcessorByName(ctx, conn, name)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -802,9 +801,8 @@ func findStreamProcessorByName(ctx context.Context, conn *rekognition.Client, na
 	out, err := conn.DescribeStreamProcessor(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

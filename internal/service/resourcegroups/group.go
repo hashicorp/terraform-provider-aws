@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -302,9 +301,8 @@ func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name stri
 	output, err := conn.GetGroup(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -327,9 +325,8 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	output, err := conn.GetGroupConfiguration(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -344,8 +341,8 @@ func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups
 	return output.GroupConfiguration, nil
 }
 
-func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.Client, groupName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusGroupConfiguration(conn *resourcegroups.Client, groupName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findGroupConfigurationByGroupName(ctx, conn, groupName)
 
 		if retry.NotFound(err) {
@@ -361,10 +358,10 @@ func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.Client, 
 }
 
 func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.Client, groupName string, timeout time.Duration) (*types.GroupConfiguration, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.GroupConfigurationStatusUpdating),
 		Target:  enum.Slice(types.GroupConfigurationStatusUpdateComplete),
-		Refresh: statusGroupConfiguration(ctx, conn, groupName),
+		Refresh: statusGroupConfiguration(conn, groupName),
 		Timeout: timeout,
 	}
 
