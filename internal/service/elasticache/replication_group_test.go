@@ -611,6 +611,44 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_enableTLSAndUserGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	userGroup := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_tlsUserGroup_step1(rName, userGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_tlsUserGroup_step2(rName, userGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
+					testAccCheckReplicationGroupUserGroup(ctx, resourceName, userGroup),
+					resource.TestCheckTypeSetElemAttr(resourceName, "user_group_ids.*", userGroup),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3976,6 +4014,78 @@ resource "aws_elasticache_replication_group" "test" {
   user_group_ids             = [aws_elasticache_user_group.test[%[3]d].id]
 }
 `, rName, userGroup, flag)
+}
+
+func testAccReplicationGroupConfig_tlsUserGroup_step1(rName, userGroup string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = "%[2]s"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = "%[2]s"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis7"
+  engine_version             = "7.0"
+  transit_encryption_enabled = false
+  apply_immediately          = true
+}
+`, rName, userGroup),
+	)
+}
+
+func testAccReplicationGroupConfig_tlsUserGroup_step2(rName, userGroup string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationGroupConfig_transitEncryptionBase(rName),
+		fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = "%[2]s"
+  user_name     = "default"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+  passwords     = ["password123456789"]
+}
+
+resource "aws_elasticache_user_group" "test" {
+  user_group_id = "%[2]s"
+  engine        = "REDIS"
+  user_ids      = [aws_elasticache_user.test.user_id]
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.micro"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  subnet_group_name          = aws_elasticache_subnet_group.test.name
+  security_group_ids         = [aws_security_group.test.id]
+  parameter_group_name       = "default.redis7"
+  engine_version             = "7.0"
+  transit_encryption_enabled = true
+  transit_encryption_mode    = "preferred"
+  user_group_ids             = [aws_elasticache_user_group.test.id]
+  apply_immediately          = true
+}
+`, rName, userGroup),
+	)
 }
 
 func testAccReplicationGroupConfig_inVPC(rName string) string {

@@ -1059,8 +1059,20 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
+		var (
+			transitEncryptionOld, transitEncryptionNew bool
+			transitEncryptionChanged                   bool
+			userGroupChanged                           bool
+			userGroupAdd, userGroupRemove              []string
+		)
+
 		if d.HasChange("transit_encryption_enabled") {
-			input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+			transitEncryptionChanged = true
+			o, n := d.GetChange("transit_encryption_enabled")
+			transitEncryptionOld = o.(bool)
+			transitEncryptionNew = n.(bool)
+
+			input.TransitEncryptionEnabled = aws.Bool(transitEncryptionNew)
 			requestUpdate = true
 		}
 
@@ -1070,19 +1082,83 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if d.HasChange("user_group_ids") {
+			userGroupChanged = true
 			o, n := d.GetChange("user_group_ids")
 			ns, os := n.(*schema.Set), o.(*schema.Set)
 			add, del := ns.Difference(os), os.Difference(ns)
 
 			if add.Len() > 0 {
-				input.UserGroupIdsToAdd = flex.ExpandStringValueSet(add)
-				requestUpdate = true
+				userGroupAdd = flex.ExpandStringValueSet(add)
 			}
 
 			if del.Len() > 0 {
-				input.UserGroupIdsToRemove = flex.ExpandStringValueSet(del)
+				userGroupRemove = flex.ExpandStringValueSet(del)
+			}
+
+			if len(userGroupAdd) > 0 || len(userGroupRemove) > 0 {
 				requestUpdate = true
 			}
+		}
+
+		if transitEncryptionChanged && userGroupChanged {
+			switch {
+			case !transitEncryptionOld && transitEncryptionNew && len(userGroupAdd) > 0:
+				encInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:         input.ApplyImmediately,
+					ReplicationGroupId:       input.ReplicationGroupId,
+					TransitEncryptionEnabled: input.TransitEncryptionEnabled,
+				}
+				if d.HasChange("transit_encryption_mode") {
+					encInput.TransitEncryptionMode = input.TransitEncryptionMode
+					input.TransitEncryptionMode = ""
+				}
+
+				updateFuncs = append(updateFuncs, func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, &encInput)
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+					}
+					return nil
+				})
+
+				input.TransitEncryptionEnabled = nil
+
+			case transitEncryptionOld && !transitEncryptionNew && len(userGroupRemove) > 0:
+				ugInput := elasticache.ModifyReplicationGroupInput{
+					ApplyImmediately:   input.ApplyImmediately,
+					ReplicationGroupId: aws.String(d.Id()),
+				}
+				if len(userGroupAdd) > 0 {
+					ugInput.UserGroupIdsToAdd = userGroupAdd
+				}
+				if len(userGroupRemove) > 0 {
+					ugInput.UserGroupIdsToRemove = userGroupRemove
+				}
+
+				updateFuncs = append(updateFuncs, func() error {
+					_, err := conn.ModifyReplicationGroup(ctx, &ugInput)
+					if errs.IsAErrorMessageContains[*awstypes.InvalidParameterCombinationException](err, "No modifications were requested") {
+						return nil
+					}
+					if err != nil {
+						return fmt.Errorf("modifying ElastiCache Replication Group (%s): %s", d.Id(), err)
+					}
+					return nil
+				})
+
+				userGroupAdd = nil
+				userGroupRemove = nil
+			}
+		}
+
+		if len(userGroupAdd) > 0 {
+			input.UserGroupIdsToAdd = userGroupAdd
+		}
+		if len(userGroupRemove) > 0 {
+			input.UserGroupIdsToRemove = userGroupRemove
 		}
 
 		if requestUpdate {
