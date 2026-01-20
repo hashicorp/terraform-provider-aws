@@ -25,16 +25,15 @@ import (
 )
 
 // @SDKResource("aws_lambda_alias", name="Alias")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetAliasOutput")
+// @Testing(preIdentityVersion="v6.3.0")
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceAliasImport,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -110,7 +109,23 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
+	var functionName, aliasName string
+	var err error
+
+	// If we have function_name and name in state, use them
+	if fn := d.Get("function_name").(string); fn != "" {
+		functionName = fn
+		aliasName = d.Get(names.AttrName).(string)
+	} else {
+		// Otherwise, extract from ARN (for ARN identity imports)
+		arn := d.Id()
+		functionName, aliasName, err = parseAliasARN(arn)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "parsing Lambda Alias ARN (%s): %s", arn, err)
+		}
+	}
+
+	output, err := findAliasByTwoPartKey(ctx, conn, functionName, aliasName)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Lambda Alias %s not found, removing from state", d.Id())
@@ -126,9 +141,25 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.SetId(aliasARN) // For import.
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrDescription, output.Description)
+
+	// For imports, construct the function ARN from the alias ARN
+	// This preserves the ARN format that most tests expect
+	if d.Get("function_name").(string) == "" {
+		// This is an import, construct the function ARN from the alias ARN
+		var functionARN string
+		if strings.Contains(aliasARN, "/") {
+			// AWS API format uses slash
+			functionARN = aliasARN[:strings.LastIndex(aliasARN, "/")]
+		} else {
+			// Standard format uses colon
+			functionARN = aliasARN[:strings.LastIndex(aliasARN, ":")]
+		}
+		d.Set("function_name", functionARN)
+	}
+
 	d.Set("function_version", output.FunctionVersion)
 	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), aliasARN))
-	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrName, aliasName) // Set name from ARN if needed
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
 	}
@@ -176,20 +207,6 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
-}
-
-func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), "/")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/ALIAS", d.Id())
-	}
-
-	functionName := idParts[0]
-	alias := idParts[1]
-
-	d.Set("function_name", functionName)
-	d.Set(names.AttrName, alias)
-	return []*schema.ResourceData{d}, nil
 }
 
 func findAliasByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, aliasName string) (*lambda.GetAliasOutput, error) {
@@ -256,4 +273,39 @@ func suppressEquivalentFunctionNameOrARN(k, old, new string, d *schema.ResourceD
 	oldFunctionName, oldFunctionNameErr := getFunctionNameFromARN(old)
 	newFunctionName, newFunctionNameErr := getFunctionNameFromARN(new)
 	return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
+}
+
+// parseAliasARN parses a Lambda alias ARN and returns the function name and alias name
+// Lambda alias ARNs can have different formats:
+// - arn:aws:lambda:region:account:function:function-name:alias-name (standard format)
+// - arn:aws:lambda:region:account:function:function-name/alias-name (actual AWS API format)
+func parseAliasARN(arn string) (functionName, aliasName string, err error) {
+	// First try to extract function name using the existing function
+	functionName, err = getFunctionNameFromARN(arn)
+	if err != nil {
+		return "", "", err
+	}
+
+	// For alias ARNs, we need to extract the alias name
+	// Check if it uses colon format first
+	if strings.Contains(arn, ":"+functionName+":") {
+		// Standard format: arn:aws:lambda:region:account:function:function-name:alias-name
+		parts := strings.Split(arn, ":")
+		if len(parts) >= 8 {
+			aliasName = parts[7]
+			return functionName, aliasName, nil
+		}
+	}
+
+	// Check if it uses slash format (actual AWS API format)
+	if strings.Contains(arn, ":"+functionName+"/") {
+		// AWS API format: arn:aws:lambda:region:account:function:function-name/alias-name
+		parts := strings.Split(arn, "/")
+		if len(parts) >= 2 {
+			aliasName = parts[len(parts)-1]
+			return functionName, aliasName, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("unable to parse alias name from ARN: %s", arn)
 }
