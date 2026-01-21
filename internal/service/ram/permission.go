@@ -102,7 +102,7 @@ func (r *permissionResource) Schema(ctx context.Context, req resource.SchemaRequ
 
 func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan permissionResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -111,7 +111,7 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
 	var input ram.CreatePermissionInput
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -127,17 +127,17 @@ func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Set unknowns.
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.Permission, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.Permission, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state permissionResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -157,20 +157,20 @@ func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	setTagsOut(ctx, out.Tags)
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state permissionResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -178,7 +178,7 @@ func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequ
 	conn := r.Meta().RAMClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state)
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, d)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -201,18 +201,18 @@ func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 
-		smerr.EnrichAppend(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.Permission, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out.Permission, &plan))
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
 func (r *permissionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state permissionResourceModel
-	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
