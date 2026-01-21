@@ -51,9 +51,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Permission.
-* `creation_time` - The date and time when the permission was created.
 * `default_version` - Specifies whether the version of the managed permission used by this resource share is the default version for this managed permission.
-* `last_updated_time` - The date and time when the permission was last updated.
 * `status` - The current status of the permission.
 * `version` - The version of the permission associated with this resource share.
 

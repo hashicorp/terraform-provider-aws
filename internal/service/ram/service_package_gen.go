@@ -34,7 +34,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				IdentifierAttribute: names.AttrARN,
 			}),
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
-			Identity: inttypes.RegionalARNIdentity(inttypes.WithIdentityDuplicateAttrs(names.AttrID)),
+			Identity: inttypes.RegionalARNIdentity(),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
