@@ -330,7 +330,7 @@ func findSavingsPlan(ctx context.Context, conn *savingsplans.Client, input *savi
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSavingsPlans(ctx context.Context, conn *savingsplans.Client, input *savingsplans.DescribeSavingsPlansInput) ([]awstypes.SavingsPlan, error) {
+func findSavingsPlans(ctx context.Context, conn *savingsplans.Client, input *savingsplans.DescribeSavingsPlansInput) ([]awstypes.SavingsPlan, error) { // nosemgrep:ci.savingsplans-in-func-name
 	var output []awstypes.SavingsPlan
 
 	err := describeSavingsPlansPages(ctx, conn, input, func(page *savingsplans.DescribeSavingsPlansOutput, lastPage bool) bool {
