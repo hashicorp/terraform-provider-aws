@@ -181,13 +181,8 @@ func testAccCheckConfigurationRecorderDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccConfigurationRecorderConfig_basic(rName string) string {
+func testAccConfigurationRecorderConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_config_configuration_recorder" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -244,8 +239,21 @@ resource "aws_config_delivery_channel" "test" {
 `, rName)
 }
 
+func testAccConfigurationRecorderConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfigurationRecorderConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_config_configuration_recorder" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+}
+`, rName))
+}
+
 func testAccConfigurationRecorderConfig_allParams(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfigurationRecorderConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -265,65 +273,13 @@ resource "aws_config_configuration_recorder" "test" {
     }
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.test.arn}",
-        "${aws_s3_bucket.test.arn}/*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_config_delivery_channel" "test" {
-  name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.bucket
-  depends_on     = [aws_config_configuration_recorder.test]
-}
-`, rName)
+`, rName))
 }
 
 func testAccConfigurationRecorderConfig_recordStrategy(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfigurationRecorderConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
@@ -342,54 +298,6 @@ resource "aws_config_configuration_recorder" "test" {
   }
 }
 
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "config.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.test.arn}",
-        "${aws_s3_bucket.test.arn}/*"
-      ]
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
 resource "aws_s3_bucket_ownership_controls" "test" {
   bucket = aws_s3_bucket.test.id
 
@@ -397,11 +305,5 @@ resource "aws_s3_bucket_ownership_controls" "test" {
     object_ownership = "BucketOwnerEnforced"
   }
 }
-
-resource "aws_config_delivery_channel" "test" {
-  name           = %[1]q
-  s3_bucket_name = aws_s3_bucket.test.bucket
-  depends_on     = [aws_config_configuration_recorder.test]
-}
-`, rName)
+`, rName))
 }
