@@ -1,24 +1,26 @@
 ---
 subcategory: "Savings Plans"
 layout: "aws"
-page_title: "AWS: aws_savingsplans_plan"
+page_title: "AWS: aws_savingsplans_savings_plan"
 description: |-
   Provides an AWS Savings Plan resource.
 ---
 
-# Resource: aws_savingsplans_plan
+# Resource: aws_savingsplans_savings_plan
 
 Provides an AWS Savings Plan resource.
 
 ~> **WARNING:** Savings Plans represent a financial commitment. Once a Savings Plan becomes active, it **cannot be cancelled or deleted**. Only Savings Plans in the `queued` state (scheduled for future purchase) can be deleted. Use this resource with caution.
+
+~> **Note:** Importing an active Savings Plan will add it to your Terraform state, but destroying it will only remove it from state - the actual Savings Plan will continue until its term ends.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_savingsplans_plan" "example" {
-  savings_plan_offering_id = "example-offering-id"
+resource "aws_savingsplans_savings_plan" "example" {
+  savings_plan_offering_id = "00000000-0000-0000-0000-000000000000"
   commitment               = "1.0"
 
   tags = {
@@ -30,10 +32,10 @@ resource "aws_savingsplans_plan" "example" {
 ### Scheduled Purchase
 
 ```terraform
-resource "aws_savingsplans_plan" "scheduled" {
-  savings_plan_offering_id = "example-offering-id"
+resource "aws_savingsplans_savings_plan" "scheduled" {
+  savings_plan_offering_id = "00000000-0000-0000-0000-000000000000"
   commitment               = "5.0"
-  purchase_time            = "2024-12-01T00:00:00Z"
+  purchase_time            = "2026-12-01T00:00:00Z"
 
   tags = {
     Environment = "production"
@@ -51,15 +53,14 @@ The following arguments are required:
 The following arguments are optional:
 
 * `purchase_time` - (Optional) The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ). If not specified, the plan is purchased immediately. Plans with a future purchase time are placed in `queued` state and can be deleted before they become active.
-* `client_token` - (Optional) A unique, case-sensitive identifier to ensure the idempotency of the request.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Savings Plan.
-* `id` - The ID of the Savings Plan.
+* `savings_plan_arn` - The ARN of the Savings Plan.
+* `savings_plan_id` - The ID of the Savings Plan.
 * `state` - The current state of the Savings Plan (e.g., `active`, `queued`, `retired`).
 * `start` - The start time of the Savings Plan in RFC3339 format.
 * `end` - The end time of the Savings Plan in RFC3339 format.
@@ -97,5 +98,3 @@ Using `terraform state mv`, import Savings Plans using the `id`. For example:
 ```console
 % terraform import aws_savingsplans_plan.example sp-12345678901234567
 ```
-
-~> **Note:** Importing an active Savings Plan will add it to your Terraform state, but destroying it will only remove it from state - the actual Savings Plan will continue until its term ends.

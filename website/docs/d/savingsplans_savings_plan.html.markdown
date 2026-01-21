@@ -1,24 +1,24 @@
 ---
 subcategory: "Savings Plans"
 layout: "aws"
-page_title: "AWS: aws_savingsplans_plan"
+page_title: "AWS: aws_savingsplans_savings_plan"
 description: |-
   Get information on an AWS Savings Plan.
 ---
 
-# Data Source: aws_savingsplans_plan
+# Data Source: aws_savingsplans_savings_plan
 
 Use this data source to get information on an existing AWS Savings Plan.
 
 ## Example Usage
 
 ```terraform
-data "aws_savingsplans_plan" "example" {
-  id = "sp-12345678901234567"
+data "aws_savingsplans_savings_plan" "example" {
+  savings_plan_id = "sp-12345678901234567"
 }
 
 output "savings_plan_state" {
-  value = data.aws_savingsplans_plan.example.state
+  value = data.aws_savingsplans_savings_plan.example.state
 }
 ```
 
@@ -26,13 +26,13 @@ output "savings_plan_state" {
 
 The following arguments are required:
 
-* `id` - (Required) The ID of the Savings Plan.
+* `savings_plan_id` - (Required) The ID of the Savings Plan.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - The ARN of the Savings Plan.
+* `savings_plan_arn` - The ARN of the Savings Plan.
 * `state` - The current state of the Savings Plan.
 * `start` - The start time of the Savings Plan.
 * `end` - The end time of the Savings Plan.
