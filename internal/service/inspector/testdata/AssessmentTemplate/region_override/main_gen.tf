@@ -1,6 +1,16 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+resource "aws_inspector_assessment_template" "test" {
+  region = var.region
+
+  name       = var.rName
+  target_arn = aws_inspector_assessment_target.test.arn
+  duration   = 3600
+
+  rules_package_arns = data.aws_inspector_rules_packages.available.arns
+}
+
 data "aws_inspector_rules_packages" "available" {
   region = var.region
 
@@ -19,16 +29,6 @@ resource "aws_inspector_assessment_target" "test" {
 
   name               = var.rName
   resource_group_arn = aws_inspector_resource_group.test.arn
-}
-
-resource "aws_inspector_assessment_template" "test" {
-  region = var.region
-
-  name       = var.rName
-  target_arn = aws_inspector_assessment_target.test.arn
-  duration   = 3600
-
-  rules_package_arns = data.aws_inspector_rules_packages.available.arns
 }
 
 variable "rName" {
