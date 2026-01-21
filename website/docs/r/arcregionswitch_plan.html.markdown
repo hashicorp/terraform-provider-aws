@@ -190,49 +190,49 @@ resource "aws_arcregionswitch_plan" "complex" {
 
 The following arguments are required:
 
-* `execution_role` - ARN of the IAM role that ARC Region Switch will assume to execute the plan.
-* `name` - Name of the plan. Must be unique within the account.
-* `recovery_approach` - Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
-* `regions` - List of AWS regions involved in the plan.
-* `workflow` - List of workflows that define the steps to execute. See [Workflow](#workflow) below.
+* `execution_role` - (Required) ARN of the IAM role that ARC Region Switch will assume to execute the plan.
+* `name` - (Required) Name of the plan. Must be unique within the account.
+* `recovery_approach` - (Required) Recovery approach for the plan. Valid values: `activeActive`, `activePassive`.
+* `regions` - (Required) List of AWS regions involved in the plan.
+* `workflow` - (Required) List of workflows that define the steps to execute. See [Workflow](#workflow) below.
 
 The following arguments are optional:
 
-* `associated_alarms` - Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
-* `description` - Description of the plan.
-* `primary_region` - Primary region for the plan.
-* `recovery_time_objective_minutes` - Recovery time objective in minutes.
-* `region` - (Optional) AWS region where the plan will be created. If not specified, the provider region is used.
-* `tags` - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `triggers` - Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
+* `associated_alarms` - (Optional) Set of CloudWatch alarms associated with the plan. See [Associated Alarms](#associated-alarms) below.
+* `description` - (Optional) Description of the plan.
+* `primary_region` - (Optional) Primary region for the plan.
+* `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `triggers` - (Optional) Set of triggers that can initiate the plan execution. See [Trigger](#trigger) below.
 
 ### Workflow
 
+* `step` - (Optional) List of steps in the workflow. See [Step](#step) below.
+* `workflow_description` - (Optional) Description of the workflow.
 * `workflow_target_action` - (Required) Action to perform. Valid values: `activate`, `deactivate`.
 * `workflow_target_region` - (Optional) Target region for the workflow.
-* `workflow_description` - (Optional) Description of the workflow.
-* `step` - (Optional) List of steps in the workflow. See [Step](#step) below.
 
 ### Step
 
-* `name` - (Required) Name of the step.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `CustomActionLambda`, `ManualApproval`, `AuroraGlobalDatabase`, `EC2AutoScaling`, `ARCRoutingControl`, `Parallel`, `ECSServiceScaling`, `EKSResourceScaling`, `Route53HealthCheck`.
 * `description` - (Optional) Description of the step.
 * `execution_block_configuration` - (Required) Configuration block for the execution block. Contains one of the following nested configuration blocks based on the `execution_block_type`:
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `Route53HealthCheck`.
+* `name` - (Required) Name of the step.
 
 #### Execution Block Configuration
 
 The `execution_block_configuration` block contains one of the following configuration blocks based on the `execution_block_type`:
 
-* `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
-* `custom_action_lambda_config` - Configuration for Lambda function execution. See [Custom Action Lambda Config](#custom-action-lambda-config) below.
 * `arc_routing_control_config` - Configuration for ARC routing control. See [ARC Routing Control Config](#arc-routing-control-config) below.
+* `custom_action_lambda_config` - Configuration for Lambda function execution. See [Custom Action Lambda Config](#custom-action-lambda-config) below.
 * `ec2_asg_capacity_increase_config` - Configuration for EC2 Auto Scaling group capacity increase. See [EC2 ASG Capacity Increase Config](#ec2-asg-capacity-increase-config) below.
-* `global_aurora_config` - Configuration for Aurora Global Database operations. See [Global Aurora Config](#global-aurora-config) below.
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
-* `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
+* `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
+* `global_aurora_config` - Configuration for Aurora Global Database operations. See [Global Aurora Config](#global-aurora-config) below.
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
+* `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
 
 ### Execution Approval Config
 
@@ -259,11 +259,11 @@ The `execution_block_configuration` block contains one of the following configur
 
 ### Associated Alarms
 
-* `name` - (Required) Name of the alarm.
 * `alarm_type` - (Required) Type of alarm. Valid values: `applicationHealth`, `trigger`.
-* `resource_identifier` - (Required) Resource identifier (ARN) of the CloudWatch alarm.
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
 * `external_id` - (Optional) External ID for cross-account role assumption.
+* `map_block_key` - (Required) Name of the alarm.
+* `resource_identifier` - (Required) Resource identifier (ARN) of the CloudWatch alarm.
 
 ### Trigger
 
@@ -293,8 +293,8 @@ The `execution_block_configuration` block contains one of the following configur
 ### EC2 ASG Capacity Increase Config
 
 * `asgs` - (Required) List of Auto Scaling groups. See [ASGs](#asgs) below.
-* `capacity_monitoring_approach` - (Optional) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
-* `target_percent` - (Optional) Target capacity percentage.
+* `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
+* `target_percent` - (Required) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
 
@@ -325,8 +325,8 @@ The `execution_block_configuration` block contains one of the following configur
 ### ECS Capacity Increase Config
 
 * `services` - (Required) List of ECS services. See [ECS Services](#ecs-services) below.
-* `capacity_monitoring_approach` - (Optional) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `containerInsightsMaxInLast24Hours`.
-* `target_percent` - (Optional) Target capacity percentage.
+* `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `containerInsightsMaxInLast24Hours`.
+* `target_percent` - (Required) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
 
@@ -339,11 +339,11 @@ The `execution_block_configuration` block contains one of the following configur
 
 ### EKS Resource Scaling Config
 
-* `kubernetes_resource_type` - (Required) Kubernetes resource type. See [Kubernetes Resource Type](#kubernetes-resource-type) below.
+* `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
 * `eks_clusters` - (Optional) List of EKS clusters. See [EKS Clusters](#eks-clusters) below.
+* `kubernetes_resource_type` - (Required) Kubernetes resource type. See [Kubernetes Resource Type](#kubernetes-resource-type) below.
 * `scaling_resources` - (Optional) List of scaling resources. See [Scaling Resources](#scaling-resources) below.
-* `capacity_monitoring_approach` - (Optional) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
-* `target_percent` - (Optional) Target capacity percentage.
+* `target_percent` - (Required) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
 
@@ -374,15 +374,15 @@ The `execution_block_configuration` block contains one of the following configur
 
 * `hosted_zone_id` - (Required) Route53 hosted zone ID.
 * `record_name` - (Required) DNS record name.
-* `record_sets` - (Optional) List of record sets. See [Record Sets](#record-sets) below.
+* `record_set` - (Optional) Configuration block for record sets. See [Record Set](#record-set) below.
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 
-### Record Sets
+### Record Set
 
-* `record_set_identifier` - (Optional) Record set identifier.
-* `region` - (Optional) AWS region.
+* `record_set_identifier` - (Required) Record set identifier.
+* `region` - (Required) AWS region.
 
 ### Region Switch Plan Config
 

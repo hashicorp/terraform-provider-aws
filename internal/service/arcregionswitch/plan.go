@@ -56,16 +56,16 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			names.AttrName: fwschema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"execution_role": fwschema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					fwvalidators.ARN(),
+				},
+			},
+			names.AttrName: fwschema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"recovery_approach": fwschema.StringAttribute{
@@ -124,10 +124,55 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
+			names.AttrTriggers: fwschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[triggerModel](ctx),
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						names.AttrAction: fwschema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
+							Required:   true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("activate", "deactivate"),
+							},
+						},
+						names.AttrDescription: fwschema.StringAttribute{
+							Optional: true,
+						},
+						"min_delay_minutes_between_executions": fwschema.Int64Attribute{
+							Required: true,
+						},
+						"target_region": fwschema.StringAttribute{
+							Required: true,
+						},
+					},
+					Blocks: map[string]fwschema.Block{
+						"conditions": fwschema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[conditionModel](ctx),
+							NestedObject: fwschema.NestedBlockObject{
+								Attributes: map[string]fwschema.Attribute{
+									"associated_alarm_name": fwschema.StringAttribute{
+										Required: true,
+									},
+									names.AttrCondition: fwschema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
+										Required:   true,
+										Validators: []validator.String{
+											stringvalidator.OneOf("red", "green"),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"workflow": fwschema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[workflowModel](ctx),
 				NestedObject: fwschema.NestedBlockObject{
 					Attributes: map[string]fwschema.Attribute{
+						"workflow_description": fwschema.StringAttribute{
+							Optional: true,
+						},
 						"workflow_target_action": fwschema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
 							Required:   true,
@@ -138,24 +183,21 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 						"workflow_target_region": fwschema.StringAttribute{
 							Optional: true,
 						},
-						"workflow_description": fwschema.StringAttribute{
-							Optional: true,
-						},
 					},
 					Blocks: map[string]fwschema.Block{
 						"step": fwschema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[stepModel](ctx),
 							NestedObject: fwschema.NestedBlockObject{
 								Attributes: map[string]fwschema.Attribute{
-									names.AttrName: fwschema.StringAttribute{
-										Required: true,
+									names.AttrDescription: fwschema.StringAttribute{
+										Optional: true,
 									},
 									"execution_block_type": fwschema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.ExecutionBlockType](),
 										Required:   true,
 									},
-									names.AttrDescription: fwschema.StringAttribute{
-										Optional: true,
+									names.AttrName: fwschema.StringAttribute{
+										Required: true,
 									},
 								},
 								Blocks: map[string]fwschema.Block{
@@ -163,29 +205,10 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.NewListNestedObjectTypeOf[executionBlockConfigurationModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
 											Blocks: map[string]fwschema.Block{
-												"execution_approval_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
+												"arc_routing_control_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
-															"approval_role": fwschema.StringAttribute{
-																Required: true,
-															},
-															"timeout_minutes": fwschema.Int64Attribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"route53_health_check_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrHostedZoneID: fwschema.StringAttribute{
-																Required: true,
-															},
-															"record_name": fwschema.StringAttribute{
-																Required: true,
-															},
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
@@ -197,15 +220,16 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"record_sets": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[recordSetModel](ctx),
+															"region_and_routing_controls": fwschema.SetNestedBlock{
+																CustomType: fwtypes.NewSetNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		"record_set_identifier": fwschema.StringAttribute{
-																			Required: true,
-																		},
 																		names.AttrRegion: fwschema.StringAttribute{
 																			Required: true,
+																		},
+																		"routing_control_arns": fwschema.ListAttribute{
+																			CustomType: fwtypes.ListOfARNType,
+																			Required:   true,
 																		},
 																	},
 																},
@@ -250,46 +274,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																	Attributes: map[string]fwschema.Attribute{
 																		"behavior": fwschema.StringAttribute{
 																			CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
-																			Required:   true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"global_aurora_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraConfigModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"behavior": fwschema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraDefaultBehavior](),
-																Required:   true,
-															},
-															"global_cluster_identifier": fwschema.StringAttribute{
-																Required: true,
-															},
-															"database_cluster_arns": fwschema.ListAttribute{
-																CustomType: fwtypes.ListOfARNType,
-																Required:   true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-															"timeout_minutes": fwschema.Int64Attribute{
-																Optional: true,
-															},
-														},
-														Blocks: map[string]fwschema.Block{
-															"ungraceful": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		"ungraceful": fwschema.StringAttribute{
-																			CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
 																			Required:   true,
 																		},
 																	},
@@ -480,10 +464,34 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 													},
 												},
-												"arc_routing_control_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
+												"execution_approval_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
+															"approval_role": fwschema.StringAttribute{
+																Required: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+													},
+												},
+												"global_aurora_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"behavior": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraDefaultBehavior](),
+																Required:   true,
+															},
+															"global_cluster_identifier": fwschema.StringAttribute{
+																Required: true,
+															},
+															"database_cluster_arns": fwschema.ListAttribute{
+																CustomType: fwtypes.ListOfARNType,
+																Required:   true,
+															},
 															"cross_account_role": fwschema.StringAttribute{
 																Optional: true,
 															},
@@ -495,15 +503,12 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"region_and_routing_controls": fwschema.SetNestedBlock{
-																CustomType: fwtypes.NewSetNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
-																		names.AttrRegion: fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		"routing_control_arns": fwschema.ListAttribute{
-																			CustomType: fwtypes.ListOfARNType,
+																		"ungraceful": fwschema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
 																			Required:   true,
 																		},
 																	},
@@ -596,49 +601,44 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 													},
 												},
+												"route53_health_check_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															names.AttrHostedZoneID: fwschema.StringAttribute{
+																Required: true,
+															},
+															"record_name": fwschema.StringAttribute{
+																Required: true,
+															},
+															"cross_account_role": fwschema.StringAttribute{
+																Optional: true,
+															},
+															names.AttrExternalID: fwschema.StringAttribute{
+																Optional: true,
+															},
+															"timeout_minutes": fwschema.Int64Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"record_set": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[recordSetModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"record_set_identifier": fwschema.StringAttribute{
+																			Required: true,
+																		},
+																		names.AttrRegion: fwschema.StringAttribute{
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			names.AttrTriggers: fwschema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[triggerModel](ctx),
-				NestedObject: fwschema.NestedBlockObject{
-					Attributes: map[string]fwschema.Attribute{
-						names.AttrAction: fwschema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.WorkflowTargetAction](),
-							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("activate", "deactivate"),
-							},
-						},
-						names.AttrDescription: fwschema.StringAttribute{
-							Optional: true,
-						},
-						"min_delay_minutes_between_executions": fwschema.Int64Attribute{
-							Required: true,
-						},
-						"target_region": fwschema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]fwschema.Block{
-						"conditions": fwschema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[conditionModel](ctx),
-							NestedObject: fwschema.NestedBlockObject{
-								Attributes: map[string]fwschema.Attribute{
-									"associated_alarm_name": fwschema.StringAttribute{
-										Required: true,
-									},
-									names.AttrCondition: fwschema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.AlarmCondition](),
-										Required:   true,
-										Validators: []validator.String{
-											stringvalidator.OneOf("red", "green"),
 										},
 									},
 								},
@@ -1460,7 +1460,7 @@ type route53HealthCheckConfigModel struct {
 	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
 	ExternalID       types.String                                    `tfsdk:"external_id"`
 	TimeoutMinutes   types.Int64                                     `tfsdk:"timeout_minutes"`
-	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_sets"`
+	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_set"`
 }
 
 type recordSetModel struct {

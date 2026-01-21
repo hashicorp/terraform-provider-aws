@@ -35,7 +35,6 @@ This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the ARC Region Switch Plan.
 * `region` - (Optional) AWS region where the plan is located.
-* `wait_for_health_checks` - (Optional) Wait for Route53 health check IDs to be populated (takes ~4 minutes). Default is `false`.
 
 ## Attribute Reference
 
