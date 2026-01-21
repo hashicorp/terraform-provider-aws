@@ -246,7 +246,7 @@ func findCertificateByID(ctx context.Context, conn *iot.Client, id string) (*iot
 	}
 
 	if output == nil || output.CertificateDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

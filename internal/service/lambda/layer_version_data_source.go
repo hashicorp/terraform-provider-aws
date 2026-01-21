@@ -129,7 +129,7 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 		output, err := conn.ListLayerVersions(ctx, input)
 
 		if err == nil && len(output.LayerVersions) == 0 {
-			err = tfresource.NewEmptyResultError(input)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		if err != nil {

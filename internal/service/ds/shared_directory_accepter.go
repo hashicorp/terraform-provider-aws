@@ -148,7 +148,7 @@ func findSharedDirectoryAccepterByID(ctx context.Context, conn *directoryservice
 	}
 
 	if output.OwnerDirectoryDescription == nil {
-		return nil, tfresource.NewEmptyResultError(id)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

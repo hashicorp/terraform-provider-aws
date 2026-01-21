@@ -248,7 +248,7 @@ func findCustomDataIdentifier(ctx context.Context, conn *macie2.Client, input *m
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -266,7 +266,7 @@ func findPolicyTemplateByID(ctx context.Context, conn *verifiedpermissions.Clien
 	}
 
 	if out == nil || out.PolicyStoreId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

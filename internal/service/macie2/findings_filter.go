@@ -307,7 +307,7 @@ func findFindingsFilter(ctx context.Context, conn *macie2.Client, input *macie2.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

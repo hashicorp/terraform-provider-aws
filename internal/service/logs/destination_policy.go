@@ -120,7 +120,7 @@ func findDestinationPolicyByName(ctx context.Context, conn *cloudwatchlogs.Clien
 	}
 
 	if output.AccessPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

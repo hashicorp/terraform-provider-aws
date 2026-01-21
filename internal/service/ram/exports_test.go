@@ -5,14 +5,18 @@ package ram
 
 // Exports for use in tests only.
 var (
-	ResourcePrincipalAssociation    = resourcePrincipalAssociation
-	ResourceResourceAssociation     = resourceResourceAssociation
-	ResourceResourceShare           = resourceResourceShare
-	ResourceResourceShareAccepter   = resourceResourceShareAccepter
-	ResourceSharingWithOrganization = resourceSharingWithOrganization
+	ResourcePrincipalAssociation               = resourcePrincipalAssociation
+	ResourceResourceAssociation                = resourceResourceAssociation
+	ResourceResourceShare                      = resourceResourceShare
+	ResourceResourceShareAccepter              = resourceResourceShareAccepter
+	ResourceResourceShareAssociationsExclusive = newResourceShareAssociationsExclusiveResource
+	ResourceSharingWithOrganization            = resourceSharingWithOrganization
 
+	FindAssociationsForResourceShare         = findAssociationsForResourceShare
 	FindPrincipalAssociationByTwoPartKey     = findPrincipalAssociationByTwoPartKey
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
+
+	WaitResourceAssociationCreated = waitResourceAssociationCreated
 )

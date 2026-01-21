@@ -294,7 +294,7 @@ func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Client
 	}
 
 	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &entry, nil

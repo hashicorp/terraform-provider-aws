@@ -133,7 +133,7 @@ func findMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.In
 	}
 
 	if output == nil || output.Master == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Master, nil

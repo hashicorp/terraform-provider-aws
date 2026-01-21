@@ -177,7 +177,7 @@ func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Cli
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err

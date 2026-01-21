@@ -260,7 +260,7 @@ func findTemplateAlias(ctx context.Context, conn *quicksight.Client, input *quic
 	}
 
 	if output == nil || output.TemplateAlias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TemplateAlias, nil

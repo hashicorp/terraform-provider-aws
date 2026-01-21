@@ -26,6 +26,8 @@ import (
 // @ArnIdentity("resource_arn")
 // @V60SDKv2Fix
 // @Testing(generator=false)
+// @Testing(existsTakesT=true)
+// @Testing(destroyTakesT=true)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
@@ -136,7 +138,7 @@ func findPolicyByARN(ctx context.Context, conn *acmpca.Client, arn string) (*str
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil

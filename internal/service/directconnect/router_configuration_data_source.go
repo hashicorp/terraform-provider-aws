@@ -114,7 +114,7 @@ func findRouterConfigurationByTwoPartKey(ctx context.Context, conn *directconnec
 	}
 
 	if output == nil || output.Router == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -216,7 +216,7 @@ func findDeliveryChannels(ctx context.Context, conn *configservice.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliveryChannels, nil

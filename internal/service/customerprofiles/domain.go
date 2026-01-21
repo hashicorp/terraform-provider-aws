@@ -407,7 +407,7 @@ func findDomain(ctx context.Context, conn *customerprofiles.Client, input *custo
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

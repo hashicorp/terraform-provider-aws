@@ -37,6 +37,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxWindowsImportStateID")
 // @Testing(domainTfVar="domain")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
@@ -238,7 +239,7 @@ func findLocationFSxWindowsByARN(ctx context.Context, conn *datasync.Client, arn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

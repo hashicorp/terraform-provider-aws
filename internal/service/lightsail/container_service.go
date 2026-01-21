@@ -502,7 +502,7 @@ func findContainerServices(ctx context.Context, conn *lightsail.Client, input *l
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContainerServices, nil

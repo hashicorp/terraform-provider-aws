@@ -310,7 +310,7 @@ func findAssociationByID(ctx context.Context, conn *route53profiles.Client, id s
 	}
 
 	if out == nil || out.ProfileAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.ProfileAssociation, nil

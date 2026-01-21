@@ -153,19 +153,8 @@ func main() {
 			g.Fatalf("accessing config template %q: %w", basicConfigTmplPath, err)
 		}
 
-		tagsConfigTmplFile := fmt.Sprintf("%s_tags.gtpl", sourceName)
-		tagsConfigTmplPath := path.Join("testdata", "tmpl", tagsConfigTmplFile)
 		if configTmplPath == "" {
-			if _, err := os.Stat(tagsConfigTmplPath); err == nil {
-				configTmplFile = tagsConfigTmplFile
-				configTmplPath = tagsConfigTmplPath
-			} else if !errors.Is(err, os.ErrNotExist) {
-				g.Fatalf("accessing config template %q: %w", tagsConfigTmplPath, err)
-			}
-		}
-
-		if configTmplPath == "" {
-			g.Errorf("no config template found for %q at %q or %q", sourceName, basicConfigTmplPath, tagsConfigTmplPath)
+			g.Errorf("no config template found for %q at %q", sourceName, basicConfigTmplPath)
 			continue
 		}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloud9/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -246,7 +245,7 @@ func findEnvironment(ctx context.Context, conn *cloud9.Client, input *cloud9.Des
 	}
 
 	if environment.Lifecycle == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return environment, nil
@@ -256,9 +255,8 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	output, err := conn.DescribeEnvironments(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -267,7 +265,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Environments, nil
@@ -286,16 +284,14 @@ func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.Id) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
 }
 
-func statusEnvironmentStatus(ctx context.Context, conn *cloud9.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironmentStatus(conn *cloud9.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -314,10 +310,10 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusCreating),
 		Target:  enum.Slice(types.EnvironmentLifecycleStatusCreated),
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -325,7 +321,7 @@ func waitEnvironmentReady(ctx context.Context, conn *cloud9.Client, id string) (
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusCreateFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err
@@ -338,10 +334,10 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 	const (
 		timeout = 20 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EnvironmentLifecycleStatusDeleting),
 		Target:  []string{},
-		Refresh: statusEnvironmentStatus(ctx, conn, id),
+		Refresh: statusEnvironmentStatus(conn, id),
 		Timeout: timeout,
 	}
 
@@ -349,7 +345,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *cloud9.Client, id string)
 
 	if output, ok := outputRaw.(*types.Environment); ok {
 		if lifecycle := output.Lifecycle; lifecycle.Status == types.EnvironmentLifecycleStatusDeleteFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
+			retry.SetLastError(err, errors.New(aws.ToString(lifecycle.Reason)))
 		}
 
 		return output, err

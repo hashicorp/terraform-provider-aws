@@ -1378,7 +1378,7 @@ func findDomainByName(ctx context.Context, conn *opensearch.Client, name string)
 	}
 
 	if output == nil || output.DomainStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DomainStatus, nil

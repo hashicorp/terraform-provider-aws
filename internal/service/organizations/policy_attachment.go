@@ -31,6 +31,7 @@ import (
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="6.4.0")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
@@ -121,7 +122,7 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy Attachment: %s", d.Id())
-		return nil
+		return diags
 	}
 
 	targetID := d.Get("target_id").(string)
@@ -153,11 +154,11 @@ func policyAttachmentCreateResourceID(targetID, policyID string) string {
 }
 
 func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
-	input := &organizations.ListTargetsForPolicyInput{
+	input := organizations.ListTargetsForPolicyInput{
 		PolicyId: aws.String(policyID),
 	}
 
-	return findPolicyTarget(ctx, conn, input, func(v *awstypes.PolicyTargetSummary) bool {
+	return findPolicyTarget(ctx, conn, &input, func(v *awstypes.PolicyTargetSummary) bool {
 		return aws.ToString(v.TargetId) == targetID
 	})
 }

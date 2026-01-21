@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
@@ -79,7 +79,7 @@ func waitLaunchCreated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -100,7 +100,7 @@ func waitLaunchUpdated(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err
@@ -121,7 +121,7 @@ func waitLaunchDeleted(ctx context.Context, conn *evidently.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Launch); ok {
 		if v := aws.ToString(output.StatusReason); v != "" {
-			tfresource.SetLastError(err, errors.New(v))
+			retry.SetLastError(err, errors.New(v))
 		}
 
 		return output, err

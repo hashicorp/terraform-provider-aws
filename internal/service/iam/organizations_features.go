@@ -193,7 +193,7 @@ func findOrganizationsFeatures(ctx context.Context, conn *iam.Client) (*iam.List
 	}
 
 	if output == nil || len(output.EnabledFeatures) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

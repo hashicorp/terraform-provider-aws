@@ -41,6 +41,7 @@ const (
 
 // @SDKResource("aws_codepipeline", name="Pipeline")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePipelineCreate,
@@ -781,7 +782,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	}
 
 	if output == nil || output.Metadata == nil || output.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

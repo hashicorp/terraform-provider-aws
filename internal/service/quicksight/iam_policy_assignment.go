@@ -312,7 +312,7 @@ func findIAMPolicyAssignment(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil || output.IAMPolicyAssignment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IAMPolicyAssignment, nil

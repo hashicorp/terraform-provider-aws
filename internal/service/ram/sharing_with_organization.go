@@ -46,7 +46,8 @@ func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	output, err := conn.EnableSharingWithAwsOrganization(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
+	var input ram.EnableSharingWithAwsOrganizationInput
+	output, err := conn.EnableSharingWithAwsOrganization(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling RAM Sharing With Organization: %s", err)

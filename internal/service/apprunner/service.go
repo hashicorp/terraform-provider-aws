@@ -32,6 +32,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceCreate,
@@ -640,7 +641,7 @@ func findServiceByARN(ctx context.Context, conn *apprunner.Client, arn string) (
 	}
 
 	if output == nil || output.Service == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Service.Status; status == types.ServiceStatusDeleted {

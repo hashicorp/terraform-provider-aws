@@ -400,7 +400,7 @@ func findServiceByID(ctx context.Context, conn *servicediscovery.Client, id stri
 	}
 
 	if output == nil || output.Service == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Service, nil

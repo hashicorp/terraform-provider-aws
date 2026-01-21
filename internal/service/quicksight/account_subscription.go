@@ -390,7 +390,7 @@ func findAccountSubscription(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil || output.AccountInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AccountInfo, nil

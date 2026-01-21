@@ -39,6 +39,7 @@ import (
 // @Testing(preIdentityVersion="v6.7.0")
 // @Testing(plannableImportAction="NoOp")
 // @CustomImport
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -456,7 +457,7 @@ func findParameterByName(ctx context.Context, conn *ssm.Client, name string, wit
 	}
 
 	if output == nil || output.Parameter == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Parameter, nil

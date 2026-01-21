@@ -209,7 +209,7 @@ func findContactInformation(ctx context.Context, conn *account.Client, accountID
 	}
 
 	if output == nil || output.ContactInformation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContactInformation, nil

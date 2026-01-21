@@ -113,7 +113,7 @@ func findIdentityDKIMAttributes(ctx context.Context, conn *ses.Client, input *se
 	}
 
 	if output == nil || output.DkimAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DkimAttributes, nil

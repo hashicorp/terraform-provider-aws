@@ -32,6 +32,7 @@ import (
 // @Testing(tagsTest=false)
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
@@ -213,7 +214,7 @@ func findSAMLProviderByARN(ctx context.Context, conn *iam.Client, arn string) (*
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

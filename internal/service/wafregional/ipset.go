@@ -190,7 +190,7 @@ func findIPSetByID(ctx context.Context, conn *wafregional.Client, id string) (*a
 	}
 
 	if output == nil || output.IPSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IPSet, nil

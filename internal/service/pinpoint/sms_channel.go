@@ -159,7 +159,7 @@ func findSMSChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, a
 	}
 
 	if output == nil || output.SMSChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SMSChannelResponse, nil

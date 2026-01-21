@@ -300,7 +300,7 @@ func findFormTypeByID(ctx context.Context, conn *datazone.Client, domainId strin
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

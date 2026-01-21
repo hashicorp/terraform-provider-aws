@@ -441,7 +441,7 @@ func FindOrganizationConfigurationByID(ctx context.Context, conn *guardduty.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

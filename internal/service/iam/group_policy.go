@@ -200,7 +200,7 @@ func findGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.GetGroupP
 	}
 
 	if output == nil || output.PolicyDocument == nil {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.PolicyDocument), nil

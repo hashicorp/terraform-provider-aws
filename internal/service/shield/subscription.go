@@ -185,7 +185,7 @@ func findSubscriptionByID(ctx context.Context, conn *shield.Client) (*awstypes.S
 	}
 
 	if out == nil || out.Subscription == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Subscription, nil

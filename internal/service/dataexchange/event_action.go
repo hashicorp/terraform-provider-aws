@@ -311,7 +311,7 @@ func findEventActionByID(ctx context.Context, conn *dataexchange.Client, id stri
 	}
 
 	if out == nil || out.Id == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

@@ -179,7 +179,7 @@ func FindRepositoryPolicyByName(ctx context.Context, conn *ecrpublic.Client, nam
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

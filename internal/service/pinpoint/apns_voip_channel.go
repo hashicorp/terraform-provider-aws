@@ -189,7 +189,7 @@ func findAPNSVoIPChannelByApplicationId(ctx context.Context, conn *pinpoint.Clie
 	}
 
 	if output == nil || output.APNSVoipChannelResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.APNSVoipChannelResponse, nil

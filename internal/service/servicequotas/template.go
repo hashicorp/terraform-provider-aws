@@ -311,7 +311,7 @@ func findTemplate(ctx context.Context, conn *servicequotas.Client, input *servic
 	}
 
 	if output == nil || output.ServiceQuotaIncreaseRequestInTemplate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceQuotaIncreaseRequestInTemplate, nil

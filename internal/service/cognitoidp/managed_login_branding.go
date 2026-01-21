@@ -429,7 +429,7 @@ func findManagedLoginBranding(ctx context.Context, conn *cognitoidentityprovider
 	}
 
 	if output == nil || output.ManagedLoginBranding == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ManagedLoginBranding, nil
@@ -450,7 +450,7 @@ func findManagedLoginBrandingByClient(ctx context.Context, conn *cognitoidentity
 	}
 
 	if output == nil || output.ManagedLoginBranding == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ManagedLoginBranding, nil

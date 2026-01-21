@@ -89,7 +89,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceOwner := d.Get(names.AttrResourceOwner).(string)
-	inputG := &ram.GetResourceSharesInput{
+	inputG := ram.GetResourceSharesInput{
 		ResourceOwner: awstypes.ResourceOwner(resourceOwner),
 	}
 
@@ -105,7 +105,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		inputG.ResourceShareStatus = awstypes.ResourceShareStatus(v.(string))
 	}
 
-	share, err := findResourceShare(ctx, conn, inputG)
+	share, err := findResourceShare(ctx, conn, &inputG)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RAM Resource Share", err))
@@ -120,11 +120,11 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 
 	setTagsOut(ctx, share.Tags)
 
-	inputL := &ram.ListResourcesInput{
+	inputL := ram.ListResourcesInput{
 		ResourceOwner:     awstypes.ResourceOwner(resourceOwner),
 		ResourceShareArns: []string{arn},
 	}
-	resources, err := findResources(ctx, conn, inputL)
+	resources, err := findResources(ctx, conn, &inputL)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", arn, err)

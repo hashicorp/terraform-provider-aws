@@ -258,7 +258,7 @@ func findAccessGrantsLocation(ctx context.Context, conn *s3control.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

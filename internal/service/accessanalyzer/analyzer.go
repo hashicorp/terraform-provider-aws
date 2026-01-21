@@ -40,8 +40,6 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true")
 // @Testing(preCheck="testAccPreCheck")
-// @Testing(existsTakesT=true)
-// @Testing(destroyTakesT=true)
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -317,7 +315,7 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	}
 
 	if output == nil || output.Analyzer == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analyzer, nil

@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_connect_queue", name="Queue")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
@@ -422,7 +423,7 @@ func findQueue(ctx context.Context, conn *connect.Client, input *connect.Describ
 	}
 
 	if output == nil || output.Queue == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Queue, nil

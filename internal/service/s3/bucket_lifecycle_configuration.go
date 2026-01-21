@@ -633,7 +633,7 @@ func findBucketLifecycleConfiguration(ctx context.Context, conn *s3.Client, buck
 	}
 
 	if output == nil || len(output.Rules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

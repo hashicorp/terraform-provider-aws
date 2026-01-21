@@ -352,7 +352,7 @@ func findRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, na
 	}
 
 	if output == nil || output.RuleGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

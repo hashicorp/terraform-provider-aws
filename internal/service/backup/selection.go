@@ -356,7 +356,7 @@ func findSelection(ctx context.Context, conn *backup.Client, input *backup.GetBa
 	}
 
 	if output == nil || output.BackupSelection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BackupSelection, nil

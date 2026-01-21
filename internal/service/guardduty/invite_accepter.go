@@ -184,7 +184,7 @@ func findMasterAccount(ctx context.Context, conn *guardduty.Client, input *guard
 	}
 
 	if output == nil || output.Master == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Master, nil

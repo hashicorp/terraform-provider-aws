@@ -265,7 +265,7 @@ func findEmailTemplateByName(ctx context.Context, conn *pinpoint.Client, name st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

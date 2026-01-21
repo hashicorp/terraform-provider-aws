@@ -31,6 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,
@@ -492,7 +493,7 @@ func findFleets(ctx context.Context, conn *codebuild.Client, input *codebuild.Ba
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Fleets, nil
@@ -527,7 +528,7 @@ func waitFleetCreated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -548,7 +549,7 @@ func waitFleetUpdated(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}
@@ -569,7 +570,7 @@ func waitFleetDeleted(ctx context.Context, conn *codebuild.Client, arn string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Fleet); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
 
 		return output, err
 	}

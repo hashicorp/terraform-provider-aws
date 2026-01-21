@@ -810,7 +810,7 @@ func findClassificationJob(ctx context.Context, conn *macie2.Client, input *maci
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

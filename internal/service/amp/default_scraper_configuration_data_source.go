@@ -66,7 +66,7 @@ func findDefaultScraperConfiguration(ctx context.Context, conn *amp.Client) ([]b
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, err

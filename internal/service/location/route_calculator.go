@@ -203,7 +203,7 @@ func findRouteCalculatorByName(ctx context.Context, conn *location.Client, name 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

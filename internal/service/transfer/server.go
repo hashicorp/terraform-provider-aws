@@ -915,7 +915,7 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	}
 
 	if output == nil || output.Server == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Server, nil

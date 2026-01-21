@@ -643,7 +643,7 @@ func findWorkGroupByName(ctx context.Context, conn *athena.Client, name string) 
 	}
 
 	if output == nil || output.WorkGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WorkGroup, nil

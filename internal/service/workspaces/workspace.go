@@ -353,7 +353,7 @@ func findWorkspaceByID(ctx context.Context, conn *workspaces.Client, id string) 
 	}
 
 	if inttypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -1504,7 +1504,7 @@ func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticac
 	}
 
 	if len(clusters) == 0 {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return clusters, nil

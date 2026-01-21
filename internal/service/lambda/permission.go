@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?(` + inttypes.CanonicalRegionPatternNoAnchors + `:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 // @SDKResource("aws_lambda_permission", name="Permission")
 // @IdentityAttribute("function_name")
@@ -39,6 +39,7 @@ var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\
 // @Testing(preIdentityVersion="6.9.0")
 // @Testing(existsType="github.com/hashicorp/terraform-provider-aws/internal/service/lambda;tflambda;tflambda.PolicyStatement")
 // @Testing(importStateIdFunc="testAccPermissionImportStateIDFunc")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
@@ -312,7 +313,7 @@ func findPolicy(ctx context.Context, conn *lambda.Client, input *lambda.GetPolic
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -282,7 +282,7 @@ func findAppByID(ctx context.Context, conn *pinpoint.Client, id string) (*awstyp
 	}
 
 	if output == nil || output.ApplicationResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationResponse, nil
@@ -307,7 +307,7 @@ func findAppSettingsByID(ctx context.Context, conn *pinpoint.Client, id string) 
 	}
 
 	if output == nil || output.ApplicationSettingsResource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationSettingsResource, nil

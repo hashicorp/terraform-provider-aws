@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageRecipeCreate,
@@ -409,7 +410,7 @@ func findImageRecipeByARN(ctx context.Context, conn *imagebuilder.Client, arn st
 	}
 
 	if output == nil || output.ImageRecipe == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ImageRecipe, nil

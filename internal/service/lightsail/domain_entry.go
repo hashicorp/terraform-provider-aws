@@ -333,7 +333,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string)
 		var index int
 
 		if idLength <= 3 {
-			return nil, tfresource.NewEmptyResultError(in)
+			return nil, tfresource.NewEmptyResultError()
 		}
 
 		if idLength == 5 {
@@ -389,7 +389,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Client, id string)
 	}
 
 	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &entry, nil

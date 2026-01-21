@@ -112,7 +112,7 @@ func findEventConfigurations(ctx context.Context, conn *iot.Client) (map[string]
 	}
 
 	if output == nil || len(output.EventConfigurations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventConfigurations, nil

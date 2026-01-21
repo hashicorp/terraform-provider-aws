@@ -198,7 +198,7 @@ func findInstanceByTwoPartKey(ctx context.Context, conn *servicediscovery.Client
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil

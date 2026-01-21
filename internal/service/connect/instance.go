@@ -50,6 +50,7 @@ var (
 // @Testing(preIdentityVersion="6.14.1")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/connect/types;types.Instance")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
@@ -345,7 +346,7 @@ func findInstance(ctx context.Context, conn *connect.Client, input *connect.Desc
 	}
 
 	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Instance, nil
@@ -375,7 +376,7 @@ func findInstanceAttribute(ctx context.Context, conn *connect.Client, input *con
 	}
 
 	if output == nil || output.Attribute == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attribute, nil
@@ -409,7 +410,7 @@ func waitInstanceCreated(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err
@@ -430,7 +431,7 @@ func waitInstanceDeleted(ctx context.Context, conn *connect.Client, id string, t
 
 	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if statusReason := output.StatusReason; statusReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(statusReason.Message)))
 		}
 
 		return output, err

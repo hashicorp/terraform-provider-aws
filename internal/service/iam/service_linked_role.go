@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
 // @ArnIdentity(arnAttribute="id")
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
@@ -260,7 +261,7 @@ func waitServiceLinkedRoleDeleted(ctx context.Context, conn *iam.Client, id stri
 				errs = append(errs, fmt.Errorf("%s: %s", aws.ToString(v.Region), strings.Join(v.Resources, ", ")))
 			}
 
-			tfresource.SetLastError(err, fmt.Errorf("%s: %w", aws.ToString(reason.Reason), errors.Join(errs...)))
+			retry.SetLastError(err, fmt.Errorf("%s: %w", aws.ToString(reason.Reason), errors.Join(errs...)))
 		}
 
 		return err
@@ -304,7 +305,7 @@ func findServiceLinkedRoleDeletionStatusByID(ctx context.Context, conn *iam.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

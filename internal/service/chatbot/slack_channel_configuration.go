@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -321,9 +320,8 @@ func findSlackChannelConfigurations(ctx context.Context, conn *chatbot.Client, i
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
@@ -349,8 +347,8 @@ const (
 	slackChannelConfigurationAvailable = "AVAILABLE"
 )
 
-func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, arn string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSlackChannelConfiguration(conn *chatbot.Client, arn string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSlackChannelConfigurationByARN(ctx, conn, arn)
 
 		if retry.NotFound(err) {
@@ -365,10 +363,10 @@ func statusSlackChannelConfiguration(ctx context.Context, conn *chatbot.Client, 
 }
 
 func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
 		Target:     []string{slackChannelConfigurationAvailable},
-		Refresh:    statusSlackChannelConfiguration(ctx, conn, arn),
+		Refresh:    statusSlackChannelConfiguration(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
@@ -384,10 +382,10 @@ func waitSlackChannelConfigurationAvailable(ctx context.Context, conn *chatbot.C
 }
 
 func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Client, arn string, timeout time.Duration) (*awstypes.SlackChannelConfiguration, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{slackChannelConfigurationAvailable},
 		Target:     []string{},
-		Refresh:    statusSlackChannelConfiguration(ctx, conn, arn),
+		Refresh:    statusSlackChannelConfiguration(conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

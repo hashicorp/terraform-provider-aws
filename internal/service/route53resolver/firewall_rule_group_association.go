@@ -206,7 +206,7 @@ func findFirewallRuleGroupAssociationByID(ctx context.Context, conn *route53reso
 	}
 
 	if output == nil || output.FirewallRuleGroupAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.FirewallRuleGroupAssociation, nil
@@ -245,7 +245,7 @@ func waitFirewallRuleGroupAssociationCreated(ctx context.Context, conn *route53r
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -264,7 +264,7 @@ func waitFirewallRuleGroupAssociationUpdated(ctx context.Context, conn *route53r
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -283,7 +283,7 @@ func waitFirewallRuleGroupAssociationDeleted(ctx context.Context, conn *route53r
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.FirewallRuleGroupAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

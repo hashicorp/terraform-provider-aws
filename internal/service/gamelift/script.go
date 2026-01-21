@@ -259,7 +259,7 @@ func findScriptByID(ctx context.Context, conn *gamelift.Client, id string) (*aws
 	}
 
 	if output == nil || output.Script == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Script, nil

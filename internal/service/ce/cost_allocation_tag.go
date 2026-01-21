@@ -127,7 +127,7 @@ func findCostAllocationTagByTagKey(ctx context.Context, conn *costexplorer.Clien
 	}
 
 	if output == nil || len(output.CostAllocationTags) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output.CostAllocationTags[0], nil

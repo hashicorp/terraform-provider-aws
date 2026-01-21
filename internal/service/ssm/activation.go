@@ -29,6 +29,7 @@ import (
 // @Testing(importIgnore="activation_code")
 // @Testing(tagsUpdateForceNew=true)
 // @Testing(tagsIdentifierAttribute="id", tagsResourceType="Activation")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,

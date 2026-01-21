@@ -285,7 +285,7 @@ func FindCertificateById(ctx context.Context, conn *lightsail.Client, name strin
 	}
 
 	if out == nil || len(out.Certificates) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Certificates[0].CertificateDetail, nil

@@ -788,7 +788,7 @@ func findGateway(ctx context.Context, conn *storagegateway.Client, input *storag
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -856,7 +856,7 @@ func findSMBSettings(ctx context.Context, conn *storagegateway.Client, input *st
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -885,7 +885,7 @@ func findBandwidthRateLimit(ctx context.Context, conn *storagegateway.Client, in
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -914,7 +914,7 @@ func findMaintenanceStartTime(ctx context.Context, conn *storagegateway.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

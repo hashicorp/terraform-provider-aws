@@ -73,6 +73,7 @@ import (
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
@@ -110,7 +111,6 @@ const (
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
-const regionRegexp = `[a-z]{2}(-[a-z]+)+-\d{1,2}`
 const accountIDRegexp = `(aws|aws-managed|\d{12})`
 
 // Skip implements a wrapper for (*testing.T).Skip() to prevent unused linting reports
@@ -661,7 +661,7 @@ func CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, attributeN
 		arnRegexp := arn.ARN{
 			AccountID: accountIDRegexp,
 			Partition: Partition(),
-			Region:    regionRegexp,
+			Region:    inttypes.CanonicalRegionPatternNoAnchors,
 			Resource:  arnResource,
 			Service:   arnService,
 		}.String()
@@ -2114,7 +2114,7 @@ func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAu
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, t *testing.T, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2125,7 +2125,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 

@@ -270,7 +270,7 @@ func findRepositoryByName(ctx context.Context, conn *codecommit.Client, name str
 	}
 
 	if output == nil || output.RepositoryMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryMetadata, nil

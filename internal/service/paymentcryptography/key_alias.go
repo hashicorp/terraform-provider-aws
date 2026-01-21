@@ -55,7 +55,7 @@ func (r *keyAliasResource) Schema(ctx context.Context, request resource.SchemaRe
 			"key_arn": schema.StringAttribute{
 				Optional: true,
 				// Validators: []validator.String{
-				// 	stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:[a-z]{2}-[a-z]{1,16}-[0-9]+:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
+				// 	stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws:payment-cryptography:`+inttypes.CanonicalRegionPatternNoAnchors+`:[0-9]{12}:key/[0-9a-zA-Z]{16,64}$`), "valid arn is required. Minimum length of 70. Maximum length of 150"),
 				// },
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -225,7 +225,7 @@ func findkeyAliasByName(ctx context.Context, conn *paymentcryptography.Client, n
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

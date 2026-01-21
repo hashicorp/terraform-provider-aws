@@ -31,6 +31,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3control/types;awstypes;awstypes.PublicAccessBlockConfiguration")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPublicAccessBlockCreate,
@@ -208,7 +209,7 @@ func findPublicAccessBlockByAccountID(ctx context.Context, conn *s3control.Clien
 	}
 
 	if output == nil || output.PublicAccessBlockConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PublicAccessBlockConfiguration, nil

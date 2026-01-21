@@ -284,7 +284,7 @@ func findConfigurationSettingses(ctx context.Context, conn *elasticbeanstalk.Cli
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConfigurationSettings, nil

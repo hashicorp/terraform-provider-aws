@@ -256,7 +256,7 @@ func findBucketABAC(ctx context.Context, conn *s3.Client, bucket, expectedBucket
 	}
 
 	if out == nil || out.AbacStatus == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.AbacStatus, nil

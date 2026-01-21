@@ -239,7 +239,7 @@ func findPreferences(ctx context.Context, conn *costoptimizationhub.Client) (*co
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -42,6 +42,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,
@@ -364,7 +365,7 @@ func findDataSource(ctx context.Context, conn *quicksight.Client, input *quicksi
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
@@ -394,7 +395,7 @@ func findDataSourcePermissions(ctx context.Context, conn *quicksight.Client, inp
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -431,7 +432,7 @@ func waitDataSourceCreated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err
@@ -455,7 +456,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *quicksight.Client, awsAcco
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
 		if status, errorInfo := output.Status, output.ErrorInfo; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dataSourceError(errorInfo))
+			retry.SetLastError(err, dataSourceError(errorInfo))
 		}
 
 		return output, err

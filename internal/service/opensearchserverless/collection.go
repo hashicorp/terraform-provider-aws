@@ -30,12 +30,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
+// @Testing(preIdentityVersion="v6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 
@@ -67,7 +70,7 @@ const (
 
 type collectionResource struct {
 	framework.ResourceWithModel[collectionResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 
@@ -330,7 +333,7 @@ func waitCollectionCreated(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err
@@ -353,7 +356,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 
 	if output, ok := outputRaw.(*awstypes.CollectionDetail); ok {
 		if output.Status == awstypes.CollectionStatusFailed {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 
 		return output, err

@@ -243,7 +243,7 @@ func findGatewayAssociationProposalByID(ctx context.Context, conn *directconnect
 	}
 
 	if output.AssociatedGateway == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

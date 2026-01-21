@@ -41,6 +41,7 @@ import (
 // @Testing(generator=false)
 // @Testing(importIgnore="deletion_window_in_days")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newKeyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyResource{}
 
@@ -499,7 +500,7 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	}
 
 	if out == nil || out.Key == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.

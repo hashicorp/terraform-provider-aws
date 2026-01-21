@@ -183,7 +183,7 @@ func findProfileByID(ctx context.Context, conn *transfer.Client, id string) (*aw
 	}
 
 	if output == nil || output.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Profile, nil

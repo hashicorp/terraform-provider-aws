@@ -174,7 +174,7 @@ func findOriginAccessIdentityByID(ctx context.Context, conn *cloudfront.Client, 
 	}
 
 	if output == nil || output.CloudFrontOriginAccessIdentity == nil || output.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -194,7 +194,7 @@ func findApplicationAssignmentByID(ctx context.Context, conn *ssoadmin.Client, i
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

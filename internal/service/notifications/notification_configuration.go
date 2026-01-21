@@ -239,7 +239,7 @@ func findNotificationConfigurationByARN(ctx context.Context, conn *notifications
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

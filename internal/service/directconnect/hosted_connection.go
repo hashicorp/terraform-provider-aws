@@ -247,7 +247,7 @@ func findHostedConnections(ctx context.Context, conn *directconnect.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return tfslices.Filter(output.Connections, tfslices.PredicateValue(filter)), nil

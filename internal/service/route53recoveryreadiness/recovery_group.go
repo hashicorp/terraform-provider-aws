@@ -184,7 +184,7 @@ func findRecoveryGroupByName(ctx context.Context, conn *route53recoveryreadiness
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

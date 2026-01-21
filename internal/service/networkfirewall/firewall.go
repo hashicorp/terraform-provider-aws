@@ -607,7 +607,7 @@ func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *netw
 	}
 
 	if output == nil || output.Firewall == nil || output.FirewallStatus == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

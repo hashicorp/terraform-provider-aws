@@ -332,7 +332,7 @@ func findApplicationByID(ctx context.Context, conn *qbusiness.Client, id string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

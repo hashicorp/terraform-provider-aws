@@ -186,7 +186,7 @@ func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn stri
 	}
 
 	if output == nil || output.ResourceInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceInfo, nil

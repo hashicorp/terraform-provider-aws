@@ -232,7 +232,7 @@ func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.C
 	}
 
 	if output.VaultType != awstypes.VaultTypeLogicallyAirGappedBackupVault {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

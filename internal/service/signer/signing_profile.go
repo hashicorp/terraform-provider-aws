@@ -356,7 +356,7 @@ func findSigningProfileByName(ctx context.Context, conn *signer.Client, name str
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == types.SigningProfileStatusCanceled {

@@ -400,7 +400,7 @@ func findProjectByID(ctx context.Context, conn *datazone.Client, domain string, 
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

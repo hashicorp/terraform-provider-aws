@@ -29,6 +29,7 @@ import (
 // @ArnIdentity
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codestarconnections/types;awstypes;awstypes.Connection")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectionCreate,
@@ -175,7 +176,7 @@ func findConnectionByARN(ctx context.Context, conn *codestarconnections.Client, 
 	}
 
 	if output == nil || output.Connection == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Connection, nil

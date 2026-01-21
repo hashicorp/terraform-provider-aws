@@ -217,7 +217,7 @@ func findCertificateByID(ctx context.Context, conn *transfer.Client, id string) 
 	}
 
 	if output == nil || output.Certificate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Certificate, nil

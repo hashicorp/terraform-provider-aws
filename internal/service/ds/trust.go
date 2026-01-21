@@ -504,7 +504,7 @@ func waitTrustCreated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -538,7 +538,7 @@ func waitTrustVerified(ctx context.Context, conn *directoryservice.Client, direc
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -571,7 +571,7 @@ func waitTrustUpdated(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}
@@ -601,7 +601,7 @@ func waitTrustDeleted(ctx context.Context, conn *directoryservice.Client, direct
 	}()
 
 	if output, ok := outputRaw.(*awstypes.Trust); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.TrustStateReason)))
 
 		return output, err
 	}

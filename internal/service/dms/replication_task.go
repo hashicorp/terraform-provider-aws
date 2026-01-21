@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="replication_task_arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationTask")
 // @Testing(importIgnore="start_replication_task")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationTaskCreate,
@@ -423,7 +424,7 @@ func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTas
 		errs = append(errs, errors.New(v))
 	}
 
-	tfresource.SetLastError(err, errors.Join(errs...))
+	retry.SetLastError(err, errors.Join(errs...))
 }
 
 func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {

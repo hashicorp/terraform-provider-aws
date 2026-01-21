@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_networkmonitor_probe", name="Probe")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newProbeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &probeResource{}, nil
 }
@@ -327,7 +328,7 @@ func findProbeByTwoPartKey(ctx context.Context, conn *networkmonitor.Client, mon
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

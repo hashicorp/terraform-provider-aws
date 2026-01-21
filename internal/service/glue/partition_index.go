@@ -208,7 +208,7 @@ func findPartitionIndexByName(ctx context.Context, conn *glue.Client, id string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	for _, partInd := range output.PartitionIndexDescriptorList {

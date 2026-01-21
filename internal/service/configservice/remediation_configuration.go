@@ -301,7 +301,7 @@ func findRemediationConfigurations(ctx context.Context, conn *configservice.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RemediationConfigurations, nil

@@ -207,7 +207,7 @@ func findNotebookInstanceLifecycleConfigByName(ctx context.Context, conn *sagema
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -28,6 +28,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObservabilityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObservabilityConfigurationCreate,
@@ -185,7 +186,7 @@ func findObservabilityConfigurationByARN(ctx context.Context, conn *apprunner.Cl
 	}
 
 	if output == nil || output.ObservabilityConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ObservabilityConfiguration.Status; status == types.ObservabilityConfigurationStatusInactive {

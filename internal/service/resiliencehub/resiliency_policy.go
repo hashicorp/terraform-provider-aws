@@ -41,6 +41,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resiliencehub;resiliencehub.DescribeResiliencyPolicyOutput")
 // @Testing(importStateIdAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResiliencyPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resiliencyPolicyResource{}
 
@@ -518,7 +519,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	}
 
 	if out == nil || out.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Policy, nil

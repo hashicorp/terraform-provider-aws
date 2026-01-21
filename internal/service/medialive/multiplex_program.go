@@ -383,7 +383,7 @@ func findMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

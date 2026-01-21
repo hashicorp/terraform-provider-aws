@@ -44,6 +44,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/docdbelastic/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="admin_user_password")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -483,7 +484,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	}
 
 	if out == nil || out.Cluster == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Cluster, nil

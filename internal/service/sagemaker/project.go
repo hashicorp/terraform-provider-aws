@@ -241,7 +241,7 @@ func findProjectByName(ctx context.Context, conn *sagemaker.Client, name string)
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ProjectStatus; status == awstypes.ProjectStatusDeleteCompleted {

@@ -29,6 +29,7 @@ import (
 // @ArnFormat(global=true)
 // @Testing(preCheckWithRegion="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckSSOAdminInstancesWithRegion")
 // @Testing(v60RefreshError=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationAssignmentConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &applicationAssignmentConfigurationResource{}, nil
 }

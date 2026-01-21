@@ -215,7 +215,7 @@ func findDRTRoleARNAssociation(ctx context.Context, conn *shield.Client, arn str
 	}
 
 	if aws.ToString(output.RoleArn) != arn {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RoleArn, nil

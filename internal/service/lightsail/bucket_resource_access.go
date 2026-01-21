@@ -177,7 +177,7 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, i
 	}
 
 	if out == nil || len(out.Buckets) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	bucket := out.Buckets[0]
@@ -193,7 +193,7 @@ func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, i
 	}
 
 	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &entry, nil

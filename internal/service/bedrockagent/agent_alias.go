@@ -323,7 +323,7 @@ func findAgentAliasByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	}
 
 	if output == nil || output.AgentAlias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentAlias, nil

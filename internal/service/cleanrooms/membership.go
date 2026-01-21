@@ -41,6 +41,7 @@ const (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetMembershipOutput")
 // @Testing(checkDestroyNoop=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newMembershipResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &membershipResource{}
 
@@ -461,7 +462,7 @@ func findMembershipByID(ctx context.Context, conn *cleanrooms.Client, id string)
 	}
 
 	if out == nil || out.Membership == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

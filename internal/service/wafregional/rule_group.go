@@ -247,7 +247,7 @@ func findRuleGroupByID(ctx context.Context, conn *wafregional.Client, id string)
 	}
 
 	if output == nil || output.RuleGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RuleGroup, nil

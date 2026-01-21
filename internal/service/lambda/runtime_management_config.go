@@ -232,7 +232,7 @@ func findRuntimeManagementConfigByTwoPartKey(ctx context.Context, conn *lambda.C
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

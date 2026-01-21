@@ -603,7 +603,7 @@ func findOpenZFSVolumeByID(ctx context.Context, conn *fsx.Client, id string) (*a
 	}
 
 	if output.OpenZFSConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

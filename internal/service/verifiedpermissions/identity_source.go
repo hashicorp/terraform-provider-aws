@@ -623,7 +623,7 @@ func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedp
 	}
 
 	if out == nil || out.IdentitySourceId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

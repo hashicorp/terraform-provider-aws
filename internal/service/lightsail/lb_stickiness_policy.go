@@ -219,7 +219,7 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.C
 	}
 
 	if out == nil || out.LoadBalancer.ConfigurationOptions == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.LoadBalancer.ConfigurationOptions, nil

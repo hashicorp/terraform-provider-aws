@@ -41,6 +41,7 @@ import (
 // @Testing(importStateIdFunc=testAccChannelNamespaceImportStateID)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appsync/types;awstypes;awstypes.ChannelNamespace")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newChannelNamespaceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelNamespaceResource{}
 
@@ -340,7 +341,7 @@ func findChannelNamespace(ctx context.Context, conn *appsync.Client, input *apps
 	}
 
 	if output == nil || output.ChannelNamespace == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.ChannelNamespace, nil

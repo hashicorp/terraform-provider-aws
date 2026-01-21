@@ -42,6 +42,7 @@ const (
 // @Tags(identifierAttribute="id", resourceType="Document")
 // @IdentityAttribute("name")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,
@@ -560,7 +561,7 @@ func findDocumentByName(ctx context.Context, conn *ssm.Client, name string) (*aw
 	}
 
 	if output == nil || output.Document == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Document, nil
@@ -596,7 +597,7 @@ func waitDocumentActive(ctx context.Context, conn *ssm.Client, name string) (*aw
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}
@@ -618,7 +619,7 @@ func waitDocumentDeleted(ctx context.Context, conn *ssm.Client, name string) (*a
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DocumentDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusInformation)))
 
 		return output, err
 	}

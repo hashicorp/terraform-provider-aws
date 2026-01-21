@@ -202,7 +202,7 @@ func findAccountRegistration(ctx context.Context, conn *auditmanager.Client) (*a
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.Status; status == awstypes.AccountStatusInactive {

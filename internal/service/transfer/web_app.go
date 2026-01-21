@@ -402,7 +402,7 @@ func findWebApp(ctx context.Context, conn *transfer.Client, input *transfer.Desc
 	}
 
 	if out == nil || out.WebApp == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.WebApp, nil

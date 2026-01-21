@@ -284,7 +284,7 @@ func findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, c
 	}
 
 	if output == nil || output.Configuration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Configuration, nil
@@ -310,7 +310,7 @@ func findObjectLambdaAccessPointAliasByTwoPartKey(ctx context.Context, conn *s3c
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

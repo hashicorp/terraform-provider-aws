@@ -93,7 +93,7 @@ func findGlobalSettings(ctx context.Context, conn *backup.Client) (map[string]st
 	}
 
 	if output == nil || output.GlobalSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GlobalSettings, nil

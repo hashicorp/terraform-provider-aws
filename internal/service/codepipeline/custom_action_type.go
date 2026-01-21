@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_codepipeline_custom_action_type", name="Custom Action Type")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,

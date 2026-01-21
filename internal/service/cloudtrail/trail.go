@@ -34,6 +34,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudtrail/types;awstypes;awstypes.Trail")
 // @Testing(serialize=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTrail() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrailCreate,
@@ -593,7 +594,7 @@ func findTrails(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TrailList, nil

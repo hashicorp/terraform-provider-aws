@@ -342,7 +342,7 @@ func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfro
 	}
 
 	if output == nil || output.VpcOrigin == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

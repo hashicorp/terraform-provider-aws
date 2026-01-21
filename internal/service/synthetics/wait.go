@@ -13,7 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 const (
@@ -35,7 +35,7 @@ func waitCanaryReady(ctx context.Context, conn *synthetics.Client, name string) 
 
 	if output, ok := outputRaw.(*awstypes.Canary); ok {
 		if status := output.Status; status.State == awstypes.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -61,7 +61,7 @@ func waitCanaryStopped(ctx context.Context, conn *synthetics.Client, name string
 
 	if output, ok := outputRaw.(*awstypes.Canary); ok {
 		if status := output.Status; status.State == awstypes.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -85,7 +85,7 @@ func waitCanaryRunning(ctx context.Context, conn *synthetics.Client, name string
 
 	if output, ok := outputRaw.(*awstypes.Canary); ok {
 		if status := output.Status; status.State == awstypes.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err
@@ -106,7 +106,7 @@ func waitCanaryDeleted(ctx context.Context, conn *synthetics.Client, name string
 
 	if output, ok := outputRaw.(*awstypes.Canary); ok {
 		if status := output.Status; status.State == awstypes.CanaryStateError {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", status.StateReasonCode, aws.ToString(status.StateReason)))
 		}
 
 		return output, err

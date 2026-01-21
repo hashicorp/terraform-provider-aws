@@ -187,7 +187,7 @@ func findPermissionSetInlinePolicyByTwoPartKey(ctx context.Context, conn *ssoadm
 	}
 
 	if output == nil || aws.ToString(output.InlinePolicy) == "" {
-		return "", tfresource.NewEmptyResultError(input)
+		return "", tfresource.NewEmptyResultError()
 	}
 
 	return aws.ToString(output.InlinePolicy), nil

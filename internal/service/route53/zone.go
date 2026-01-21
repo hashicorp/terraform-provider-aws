@@ -313,6 +313,9 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// Disable accelerated recovery before deletion if enabled
 	output, err := findHostedZoneByID(ctx, conn, d.Id())
+	if retry.NotFound(err) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s) before deletion: %s", d.Id(), err)
 	}
@@ -372,7 +375,7 @@ func findHostedZoneByID(ctx context.Context, conn *route53.Client, id string) (*
 	}
 
 	if output == nil || output.HostedZone == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

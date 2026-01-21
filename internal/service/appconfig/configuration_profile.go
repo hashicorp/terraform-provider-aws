@@ -44,6 +44,7 @@ func (configurationProfileType) Values() []configurationProfileType {
 
 // @SDKResource("aws_appconfig_configuration_profile", name="Configuration Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationProfileCreate,
@@ -331,7 +332,7 @@ func findConfigurationProfile(ctx context.Context, conn *appconfig.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

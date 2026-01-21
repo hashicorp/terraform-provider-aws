@@ -50,7 +50,11 @@ func resourceDefaultSubnet() *schema.Resource {
 		//   - availability_zone_id is Computed-only
 		//   - cidr_block is Computed-only
 		//   - enable_lni_at_device_index is Computed-only
+		//   - ipv4_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv4_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - ipv6_cidr_block is Optional/Computed as it's automatically assigned if ipv6_native = true
+		//   - ipv6_ipam_pool_id is omitted as it's not set in resourceSubnetRead
+		//   - ipv6_netmask_length is omitted as it's not set in resourceSubnetRead
 		//   - map_public_ip_on_launch has a Default of true
 		//   - outpost_arn is Computed-only
 		//   - vpc_id is Computed-only

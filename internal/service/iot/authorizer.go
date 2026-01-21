@@ -263,7 +263,7 @@ func findAuthorizerByName(ctx context.Context, conn *iot.Client, name string) (*
 	}
 
 	if output == nil || output.AuthorizerDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AuthorizerDescription, nil

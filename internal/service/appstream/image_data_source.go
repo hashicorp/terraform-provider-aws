@@ -148,7 +148,7 @@ func (d *imageDataSource) Read(ctx context.Context, request datasource.ReadReque
 
 	switch l := len(images); l {
 	case 0:
-		err = tfresource.NewEmptyResultError(input)
+		err = tfresource.NewEmptyResultError()
 	case 1:
 		// OK
 	default:

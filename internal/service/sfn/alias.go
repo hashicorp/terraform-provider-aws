@@ -27,6 +27,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineAliasOutput")
 // @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
@@ -203,7 +204,7 @@ func findAliasByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.Des
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

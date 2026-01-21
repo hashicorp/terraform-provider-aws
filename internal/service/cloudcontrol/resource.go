@@ -348,7 +348,7 @@ func findResource(ctx context.Context, conn *cloudcontrol.Client, input *cloudco
 	}
 
 	if output == nil || output.ResourceDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResourceDescription, nil
@@ -376,7 +376,7 @@ func findProgressEvent(ctx context.Context, conn *cloudcontrol.Client, input *cl
 	}
 
 	if output == nil || output.ProgressEvent == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ProgressEvent, nil

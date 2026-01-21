@@ -283,7 +283,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *wafv2.Client, arn 
 	}
 
 	if output == nil || output.LoggingConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingConfiguration, nil

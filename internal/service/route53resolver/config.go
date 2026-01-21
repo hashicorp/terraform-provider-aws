@@ -157,7 +157,7 @@ func findResolverConfigByID(ctx context.Context, conn *route53resolver.Client, i
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func statusAutodefinedReverse(ctx context.Context, conn *route53resolver.Client, id string) sdkretry.StateRefreshFunc {

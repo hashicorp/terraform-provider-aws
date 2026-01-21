@@ -299,7 +299,7 @@ func findStudioByID(ctx context.Context, conn *emr.Client, id string) (*awstypes
 	}
 
 	if output == nil || output.Studio == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Studio, nil

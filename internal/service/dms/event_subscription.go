@@ -31,6 +31,7 @@ import (
 // @SDKResource("aws_dms_event_subscription", name="Event Subscription")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.EventSubscription")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventSubscriptionCreate,

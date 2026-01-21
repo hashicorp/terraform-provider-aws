@@ -84,7 +84,6 @@ func newMultiTenantDistributionResource(_ context.Context) (resource.ResourceWit
 
 type multiTenantDistributionResource struct {
 	framework.ResourceWithModel[multiTenantDistributionResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -525,7 +524,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 				CustomType: fwtypes.NewListNestedObjectTypeOf[originGroupModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"origin_id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -656,6 +655,7 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 						},
 						"cloudfront_default_certificate": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 						},
 						"minimum_protocol_version": schema.StringAttribute{
 							Optional:   true,
@@ -695,6 +695,10 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
+	// This is needed for S3 origins using Origin Access Control (OAC)
+	fixOriginConfigs(input.DistributionConfigWithTags.DistributionConfig.Origins)
+
 	// Set required computed fields that AutoFlex can't handle
 	input.DistributionConfigWithTags.DistributionConfig.CallerReference = aws.String(id.UniqueId())
 
@@ -726,12 +730,11 @@ func (r *multiTenantDistributionResource) Create(ctx context.Context, request re
 
 	// Read the distribution to get consistent state
 	data.ETag = fwflex.StringToFramework(ctx, distro.ETag)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, distro.Distribution.DistributionConfig, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -748,11 +751,12 @@ func (r *multiTenantDistributionResource) Read(ctx context.Context, request reso
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findDistributionByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	output, err := findDistributionByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		response.Diagnostics.AddWarning(
 			"CloudFront Multi-tenant Distribution not found",
-			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", data.ID.ValueString()),
+			fmt.Sprintf("CloudFront Multi-tenant Distribution (%s) not found, removing from state", id),
 		)
 		response.State.RemoveResource(ctx)
 		return
@@ -818,6 +822,10 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
+		// This is needed for S3 origins using Origin Access Control (OAC)
+		fixOriginConfigs(input.DistributionConfig.Origins)
 
 		// Ensure ConnectionMode remains tenant-only
 		input.DistributionConfig.ConnectionMode = awstypes.ConnectionModeTenantOnly
@@ -887,7 +895,7 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
-	id := data.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
 	// 1. Start by waiting for deployment (returns immediate if already deployed)
 	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil && !retry.NotFound(err) && !errs.IsA[*awstypes.NoSuchDistribution](err) {
@@ -906,9 +914,10 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 	// 4. If not disabled error, disable, wait for deploy, delete
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		disableErr := disableMultiTenantDistribution(ctx, conn, id)
-		if disableErr == nil || retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
+		if retry.NotFound(disableErr) || errs.IsA[*awstypes.NoSuchDistribution](disableErr) {
 			return
 		}
+
 		if disableErr != nil {
 			response.Diagnostics.AddError("disabling CloudFront Multi-tenant Distribution", disableErr.Error())
 			return
@@ -932,6 +941,23 @@ func (r *multiTenantDistributionResource) Delete(ctx context.Context, request re
 
 	// 7. If err != nil, add error
 	response.Diagnostics.AddError("deleting CloudFront Multi-tenant Distribution", err.Error())
+}
+
+func (r *multiTenantDistributionResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	output, err := findDistributionByID(ctx, conn, request.ID)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Multi-tenant Distribution (%s)", request.ID), err.Error())
+		return
+	}
+
+	if connectionMode := output.Distribution.DistributionConfig.ConnectionMode; connectionMode != awstypes.ConnectionModeTenantOnly {
+		response.Diagnostics.AddError(fmt.Sprintf("distribution (%s) has incorrect connection mode: %s. Use the aws_cloudfront_distribution resource instead", request.ID, connectionMode), "")
+		return
+	}
+
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func deleteMultiTenantDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
@@ -1070,7 +1096,7 @@ type vpcOriginConfigModel struct {
 type originGroupModel struct {
 	FailoverCriteria fwtypes.ListNestedObjectValueOf[failoverCriteriaModel] `tfsdk:"failover_criteria"`
 	Member           fwtypes.ListNestedObjectValueOf[memberModel]           `tfsdk:"member" autoflex:",xmlwrapper=Items"`
-	OriginID         types.String                                           `tfsdk:"origin_id"`
+	ID               types.String                                           `tfsdk:"id"`
 }
 
 type failoverCriteriaModel struct {
@@ -1185,4 +1211,23 @@ type activeTrustedKeyGroupsModel struct {
 type kgKeyPairIDsModel struct {
 	KeyGroupID types.String                      `tfsdk:"key_group_id"`
 	KeyPairIDs fwtypes.ListValueOf[types.String] `tfsdk:"key_pair_ids" autoflex:",xmlwrapper=Items"`
+}
+
+// fixOriginConfigs ensures that each origin has the required S3OriginConfig when no custom or VPC origin config is specified.
+// CloudFront requires S3OriginConfig to be set (even if empty) for S3 origins using Origin Access Control (OAC).
+func fixOriginConfigs(origins *awstypes.Origins) {
+	if origins == nil || origins.Items == nil {
+		return
+	}
+
+	for i := range origins.Items {
+		origin := &origins.Items[i]
+		// If custom, S3, and VPC origin configs are all missing, add an empty S3 origin config
+		// One or the other must be specified, but the S3 origin can be "empty"
+		if origin.CustomOriginConfig == nil && origin.S3OriginConfig == nil && origin.VpcOriginConfig == nil {
+			origin.S3OriginConfig = &awstypes.S3OriginConfig{
+				OriginAccessIdentity: aws.String(""),
+			}
+		}
+	}
 }

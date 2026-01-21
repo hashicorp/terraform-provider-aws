@@ -52,6 +52,7 @@ import (
 // @Testing(importIgnore="force_destroy")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(preIdentityVersion="6.0.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -666,7 +667,7 @@ func findObject(ctx context.Context, conn *s3.Client, input *s3.HeadObjectInput,
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

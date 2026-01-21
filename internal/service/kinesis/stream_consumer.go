@@ -169,7 +169,7 @@ func findStreamConsumerByARN(ctx context.Context, conn *kinesis.Client, arn stri
 	}
 
 	if output == nil || output.ConsumerDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ConsumerDescription, nil

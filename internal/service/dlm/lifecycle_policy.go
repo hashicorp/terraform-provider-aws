@@ -812,7 +812,7 @@ func findLifecyclePolicy(ctx context.Context, conn *dlm.Client, input *dlm.GetLi
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

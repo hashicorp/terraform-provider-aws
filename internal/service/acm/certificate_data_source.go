@@ -130,7 +130,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			case err != nil:
 				return nil, err
 			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError(input)
+				return nil, tfresource.NewEmptyResultError()
 			default:
 				return output, nil
 			}

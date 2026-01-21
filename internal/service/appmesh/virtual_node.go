@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualNodeData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualNodeImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -1148,7 +1149,7 @@ func findVirtualNode(ctx context.Context, conn *appmesh.Client, input *appmesh.D
 	}
 
 	if output == nil || output.VirtualNode == nil || output.VirtualNode.Metadata == nil || output.VirtualNode.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualNode, nil

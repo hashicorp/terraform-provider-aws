@@ -364,7 +364,7 @@ func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicatio
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -397,7 +397,7 @@ func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -416,7 +416,7 @@ func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

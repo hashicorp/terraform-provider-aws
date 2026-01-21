@@ -28,6 +28,7 @@ import (
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationinsights/types;types.ApplicationInfo")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -231,7 +232,7 @@ func findApplicationByName(ctx context.Context, conn *applicationinsights.Client
 	}
 
 	if output == nil || output.ApplicationInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ApplicationInfo, nil

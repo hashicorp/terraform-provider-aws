@@ -177,7 +177,7 @@ func findExtensionAssociation(ctx context.Context, conn *appconfig.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

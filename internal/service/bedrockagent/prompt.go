@@ -631,7 +631,7 @@ func findPromptByID(ctx context.Context, conn *bedrockagent.Client, id string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

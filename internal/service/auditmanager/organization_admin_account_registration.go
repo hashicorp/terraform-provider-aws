@@ -161,7 +161,7 @@ func findOrganizationAdminAccount(ctx context.Context, conn *auditmanager.Client
 	}
 
 	if output == nil || output.AdminAccountId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -515,7 +515,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	output, err := findRuleGroupByARN(ctx, conn, d.Id())
 
 	if err == nil && output.RuleGroup == nil {
-		err = tfresource.NewEmptyResultError(d.Id())
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {
@@ -644,7 +644,7 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 	}
 
 	if output == nil || output.RuleGroupResponse == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

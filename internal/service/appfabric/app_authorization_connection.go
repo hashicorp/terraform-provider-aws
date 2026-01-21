@@ -220,7 +220,7 @@ func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfa
 	}
 
 	if output == nil || output.AppAuthorization == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AppAuthorization, nil

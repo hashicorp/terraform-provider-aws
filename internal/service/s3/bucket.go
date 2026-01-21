@@ -55,6 +55,7 @@ const (
 // @CustomImport
 // @V60SDKv2Fix
 // @Testing(idAttrDuplicates="bucket")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -1643,7 +1644,7 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

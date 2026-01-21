@@ -42,6 +42,7 @@ const (
 // @Testing(importStateIdFunc="testAccSecretVersionImportStateIdFunc")
 // @Testing(importIgnore="has_secret_string_wo")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretVersionCreate,
@@ -427,7 +428,7 @@ func findSecretVersionEntryByTwoPartKey(ctx context.Context, conn *secretsmanage
 	}
 
 	return nil, nil, &retry.NotFoundError{
-		LastError: tfresource.NewEmptyResultError(input),
+		LastError: tfresource.NewEmptyResultError(),
 	}
 }
 
@@ -448,7 +449,7 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

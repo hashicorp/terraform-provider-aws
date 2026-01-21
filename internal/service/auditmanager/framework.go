@@ -279,7 +279,7 @@ func findFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string
 	}
 
 	if output == nil || output.Framework == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Framework, nil

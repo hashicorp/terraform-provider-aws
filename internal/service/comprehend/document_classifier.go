@@ -50,6 +50,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.DocumentClassifierProperties")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDocumentClassifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentClassifierCreate,
@@ -615,7 +616,7 @@ func findDocumentClassifier(ctx context.Context, conn *comprehend.Client, in *co
 	}
 
 	if out == nil || out.DocumentClassifierProperties == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.DocumentClassifierProperties, nil

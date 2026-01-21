@@ -47,6 +47,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/comprehend/types;awstypes;awstypes.EntityRecognizerProperties")
 // @Testing(preCheck="testAccPreCheck")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEntityRecognizer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEntityRecognizerCreate,
@@ -642,7 +643,7 @@ func findEntityRecognizer(ctx context.Context, conn *comprehend.Client, in *comp
 	}
 
 	if out == nil || out.EntityRecognizerProperties == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.EntityRecognizerProperties, nil
@@ -688,7 +689,7 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if output, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
 		if output.Status == types.ModelStatusInError {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
 		return output, err
 	}

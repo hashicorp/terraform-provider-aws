@@ -228,7 +228,7 @@ func findLifecycleHooks(ctx context.Context, conn *autoscaling.Client, input *au
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LifecycleHooks, nil

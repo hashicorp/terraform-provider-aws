@@ -37,6 +37,7 @@ import (
 // @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,
@@ -626,7 +627,7 @@ func findBudget(ctx context.Context, conn *budgets.Client, input *budgets.Descri
 	}
 
 	if output == nil || output.Budget == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Budget, nil
@@ -682,7 +683,7 @@ func findNotificationsByTwoPartKey(ctx context.Context, conn *budgets.Client, ac
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -730,7 +731,7 @@ func findSubscribersByThreePartKey(ctx context.Context, conn *budgets.Client, ac
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

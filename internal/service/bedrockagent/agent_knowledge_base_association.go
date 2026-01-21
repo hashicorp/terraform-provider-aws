@@ -278,7 +278,7 @@ func findAgentKnowledgeBaseAssociationByThreePartKey(ctx context.Context, conn *
 	}
 
 	if output == nil || output.AgentKnowledgeBase == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AgentKnowledgeBase, nil

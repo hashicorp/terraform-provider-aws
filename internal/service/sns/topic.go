@@ -219,6 +219,7 @@ var (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -519,7 +520,7 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	if output == nil || len(output.Attributes) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

@@ -661,7 +661,7 @@ func findCrawlerByName(ctx context.Context, conn *glue.Client, name string) (*aw
 	}
 
 	if output == nil || output.Crawler == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Crawler, nil

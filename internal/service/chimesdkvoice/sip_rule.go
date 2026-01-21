@@ -225,7 +225,7 @@ func findSIPRuleByID(ctx context.Context, conn *chimesdkvoice.Client, id string)
 	}
 
 	if resp == nil || resp.SipRule == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

@@ -33,6 +33,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.GatewayRouteData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccGatewayRouteImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayRouteCreate,
@@ -689,7 +690,7 @@ func findGatewayRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.
 	}
 
 	if output == nil || output.GatewayRoute == nil || output.GatewayRoute.Metadata == nil || output.GatewayRoute.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.GatewayRoute, nil

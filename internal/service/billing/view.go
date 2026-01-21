@@ -200,7 +200,9 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var input billing.CreateBillingViewInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+	// Using WithNoIgnoredFieldNames() because DataFilterExpression.Tags is a filter field,
+	// not resource tags. The SDK uses "ResourceTags" for resource tags, not "Tags".
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithNoIgnoredFieldNames()))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -225,7 +227,7 @@ func (r *resourceView) Create(ctx context.Context, req resource.CreateRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan, flex.WithNoIgnoredFieldNames()))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -254,7 +256,7 @@ func (r *resourceView) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, out, &state, flex.WithNoIgnoredFieldNames()))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -287,7 +289,7 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	if diff.HasChanges() {
 		var input billing.UpdateBillingViewInput
-		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Expand(ctx, plan, &input, flex.WithNoIgnoredFieldNames()))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -311,7 +313,8 @@ func (r *resourceView) Update(ctx context.Context, req resource.UpdateRequest, r
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.Name.String())
 		return
 	}
-	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, flex.Flatten(ctx, view, &plan, flex.WithNoIgnoredFieldNames()))
+
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
@@ -367,7 +370,7 @@ func findViewByARN(ctx context.Context, conn *billing.Client, arn string) (*awst
 	}
 
 	if out == nil || out.BillingView.Arn == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.BillingView, nil

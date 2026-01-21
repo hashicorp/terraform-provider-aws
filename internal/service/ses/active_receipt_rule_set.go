@@ -160,7 +160,7 @@ func findActiveReceiptRuleSet(ctx context.Context, conn *ses.Client) (*awstypes.
 	}
 
 	if output == nil || output.Metadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Metadata, nil

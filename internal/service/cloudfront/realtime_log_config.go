@@ -30,6 +30,7 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("realtime-log-config/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.RealtimeLogConfig")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
@@ -232,7 +233,7 @@ func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *
 	}
 
 	if output == nil || output.RealtimeLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RealtimeLogConfig, nil

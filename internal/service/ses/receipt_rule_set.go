@@ -139,7 +139,7 @@ func findReceiptRuleSet(ctx context.Context, conn *ses.Client, input *ses.Descri
 	}
 
 	if output == nil || output.Metadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

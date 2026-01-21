@@ -256,7 +256,7 @@ func findAlternateContactByTwoPartKey(ctx context.Context, conn *account.Client,
 	}
 
 	if output == nil || output.AlternateContact == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AlternateContact, nil

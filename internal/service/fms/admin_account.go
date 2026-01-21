@@ -142,7 +142,7 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {

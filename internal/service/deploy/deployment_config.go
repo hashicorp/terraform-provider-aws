@@ -281,7 +281,7 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 	}
 
 	if output == nil || output.DeploymentConfigInfo == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeploymentConfigInfo, nil

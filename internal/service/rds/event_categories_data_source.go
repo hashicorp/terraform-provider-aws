@@ -72,7 +72,7 @@ func findEventCategoriesMaps(ctx context.Context, conn *rds.Client, input *rds.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EventCategoriesMapList, nil

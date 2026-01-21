@@ -403,7 +403,7 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 	}
 
 	if out == nil || out.DataCellsFilter == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.DataCellsFilter, nil

@@ -100,7 +100,7 @@ func (oracleDBNetworkDataSourceTest) findNetwork(ctx context.Context, conn *odb.
 	}
 
 	if out == nil || out.OdbNetwork == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.OdbNetwork, nil

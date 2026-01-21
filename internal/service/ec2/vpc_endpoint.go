@@ -44,6 +44,7 @@ const (
 // @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.VpcEndpoint")
 // @Testing(preIdentityVersion="v6.12.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
@@ -124,6 +125,7 @@ func resourceVPCEndpoint() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
 			"network_interface_ids": {
@@ -261,7 +263,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 		// that support both gateway and interface endpoints, i.e. S3.
-		if isAmazonS3VPCEndpoint(serviceName) {
+		if isAmazonS3VPCEndpoint(serviceName) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]any)[0].(map[string]any))
 		} else {
 			input.DnsOptions = expandDNSOptionsSpecification(v.([]any)[0].(map[string]any))
@@ -473,7 +475,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				tfMap := v.([]any)[0].(map[string]any)
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 				// that support both gateway and interface endpoints, i.e. S3.
-				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 				} else {
 					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
@@ -495,7 +497,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 					tfMap := v.([]any)[0].(map[string]any)
 					// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 					// that support both gateway and interface endpoints, i.e. S3.
-					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
+					if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) && d.Get("vpc_endpoint_type").(string) == string(awstypes.VpcEndpointTypeInterface) {
 						input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 					} else {
 						input.DnsOptions = expandDNSOptionsSpecification(tfMap)

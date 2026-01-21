@@ -1645,7 +1645,7 @@ func findDomainByName(ctx context.Context, conn *sagemaker.Client, domainID stri
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

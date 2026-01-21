@@ -166,7 +166,7 @@ func findMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

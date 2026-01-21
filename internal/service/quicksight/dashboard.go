@@ -35,6 +35,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Dashboard")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceDashboard() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDashboardCreate,
@@ -394,7 +395,7 @@ func findDashboard(ctx context.Context, conn *quicksight.Client, input *quicksig
 	}
 
 	if output == nil || output.Dashboard == nil || output.Dashboard.Version == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Dashboard, nil
@@ -425,7 +426,7 @@ func findDashboardDefinition(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil || output.Definition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -455,7 +456,7 @@ func findDashboardPermissions(ctx context.Context, conn *quicksight.Client, inpu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -489,7 +490,7 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.Client, awsAccou
 
 	if output, ok := outputRaw.(*awstypes.Dashboard); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, dashboardError(apiErrors))
+			retry.SetLastError(err, dashboardError(apiErrors))
 		}
 
 		return output, err
@@ -510,7 +511,7 @@ func waitDashboardUpdated(ctx context.Context, conn *quicksight.Client, awsAccou
 
 	if output, ok := outputRaw.(*awstypes.Dashboard); ok {
 		if status, apiErrors := output.Version.Status, output.Version.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, dashboardError(apiErrors))
+			retry.SetLastError(err, dashboardError(apiErrors))
 		}
 
 		return output, err

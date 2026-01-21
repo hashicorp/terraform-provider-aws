@@ -74,7 +74,7 @@ func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta 
 	notifications, err := findNotificationsByTwoPartKey(ctx, conn, flex.ExpandStringValueSet(d.Get("group_names").(*schema.Set)), d.Id())
 
 	if err == nil && len(notifications) == 0 {
-		err = tfresource.NewEmptyResultError(nil)
+		err = tfresource.NewEmptyResultError()
 	}
 
 	if !d.IsNewResource() && retry.NotFound(err) {

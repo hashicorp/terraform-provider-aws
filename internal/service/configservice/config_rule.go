@@ -32,6 +32,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/configservice/types;awstypes;awstypes.ConfigRule")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfigRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigRulePut,

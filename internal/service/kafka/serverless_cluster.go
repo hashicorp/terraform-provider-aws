@@ -222,7 +222,7 @@ func findServerlessClusterByARN(ctx context.Context, conn *kafka.Client, arn str
 	}
 
 	if output.Serverless == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

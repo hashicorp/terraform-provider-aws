@@ -867,7 +867,7 @@ func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 
 	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
 		if output.Status == types.DataSourceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -889,7 +889,7 @@ func waitDataSourceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 
 	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
 		if output.Status == types.DataSourceStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+			retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 		}
 		return output, err
 	}
@@ -908,7 +908,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *kendra.Client, id, indexId
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kendra.DescribeDataSourceOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.ErrorMessage)))
 
 		return output, err
 	}

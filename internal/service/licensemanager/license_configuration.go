@@ -223,7 +223,7 @@ func findLicenseConfiguration(ctx context.Context, conn *licensemanager.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -49,6 +49,7 @@ func (applicationLayerAutomaticResponseAction) Values() []applicationLayerAutoma
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckWAFV2CloudFrontScope")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationLayerAutomaticResponseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationLayerAutomaticResponseResource{}
 
@@ -254,7 +255,7 @@ func findApplicationLayerAutomaticResponseByResourceARN(ctx context.Context, con
 	}
 
 	if output.ApplicationLayerAutomaticResponseConfiguration == nil || output.ApplicationLayerAutomaticResponseConfiguration.Action == nil {
-		return nil, tfresource.NewEmptyResultError(arn)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := output.ApplicationLayerAutomaticResponseConfiguration.Status; status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {

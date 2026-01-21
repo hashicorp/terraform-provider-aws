@@ -369,7 +369,7 @@ func findBaselineByID(ctx context.Context, conn *controltower.Client, id string)
 	}
 
 	if out == nil || out.EnabledBaselineDetails == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.EnabledBaselineDetails, nil

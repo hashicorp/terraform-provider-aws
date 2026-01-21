@@ -36,6 +36,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types;awstypes;awstypes.ReplicationConfig")
 // @Testing(importIgnore="start_replication", plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigCreate,
@@ -469,7 +470,7 @@ func setLastReplicationError(err error, replication *awstypes.Replication) {
 		errs = append(errs, errors.New(v))
 	}
 
-	tfresource.SetLastError(err, errors.Join(errs...))
+	retry.SetLastError(err, errors.Join(errs...))
 }
 
 func waitReplicationRunning(ctx context.Context, conn *dms.Client, arn string, timeout time.Duration) (*awstypes.Replication, error) {

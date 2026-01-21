@@ -469,7 +469,7 @@ func FindDatabaseById(ctx context.Context, conn *lightsail.Client, id string) (*
 	}
 
 	if out == nil || out.RelationalDatabase == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.RelationalDatabase, nil

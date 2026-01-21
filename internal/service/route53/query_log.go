@@ -135,7 +135,7 @@ func findQueryLoggingConfigByID(ctx context.Context, conn *route53.Client, id st
 	}
 
 	if output == nil || output.QueryLoggingConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QueryLoggingConfig, nil

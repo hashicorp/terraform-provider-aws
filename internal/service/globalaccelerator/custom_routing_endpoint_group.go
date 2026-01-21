@@ -31,6 +31,7 @@ import (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingEndpointGroup")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomRoutingEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingEndpointGroupCreate,
@@ -239,7 +240,7 @@ func findCustomRoutingEndpointGroupByARN(ctx context.Context, conn *globalaccele
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil

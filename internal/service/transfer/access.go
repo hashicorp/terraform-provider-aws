@@ -337,7 +337,7 @@ func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID
 	}
 
 	if output == nil || output.Access == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Access, nil

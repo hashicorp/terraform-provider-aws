@@ -116,7 +116,7 @@ func findInferenceProfile(ctx context.Context, conn *bedrock.Client, input *bedr
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

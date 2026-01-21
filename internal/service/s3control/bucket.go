@@ -36,6 +36,7 @@ const (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(preCheck="acctest.PreCheckOutpostsOutposts")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -221,7 +222,7 @@ func findBucketByTwoPartKey(ctx context.Context, conn *s3control.Client, account
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

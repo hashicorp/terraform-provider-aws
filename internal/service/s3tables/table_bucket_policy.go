@@ -30,6 +30,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(preIdentityVersion="6.19.0")
 // @Testing(importIgnore="resource_policy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newTableBucketPolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &tableBucketPolicyResource{}, nil
 }
@@ -189,7 +190,7 @@ func findTableBucketPolicy(ctx context.Context, conn *s3tables.Client, input *s3
 	}
 
 	if output == nil || aws.ToString(output.ResourcePolicy) == "" {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

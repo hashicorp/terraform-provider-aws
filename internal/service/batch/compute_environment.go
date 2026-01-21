@@ -36,6 +36,7 @@ import (
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.ComputeEnvironmentDetail")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -790,7 +791,7 @@ func waitComputeEnvironmentCreated(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -809,7 +810,7 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -828,7 +829,7 @@ func waitComputeEnvironmentDeleted(ctx context.Context, conn *batch.Client, name
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ComputeEnvironmentDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

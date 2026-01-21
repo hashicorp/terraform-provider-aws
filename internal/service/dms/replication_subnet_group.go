@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
 // @Tags(identifierAttribute="replication_subnet_group_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,

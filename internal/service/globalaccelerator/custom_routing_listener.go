@@ -28,6 +28,7 @@ import (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.CustomRoutingListener")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCustomRoutingListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingListenerCreate,
@@ -201,7 +202,7 @@ func findCustomRoutingListenerByARN(ctx context.Context, conn *globalaccelerator
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Listener, nil

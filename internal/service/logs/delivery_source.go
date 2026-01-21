@@ -206,7 +206,7 @@ func findDeliverySource(ctx context.Context, conn *cloudwatchlogs.Client, input 
 	}
 
 	if output == nil || output.DeliverySource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DeliverySource, nil

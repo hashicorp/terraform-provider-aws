@@ -368,7 +368,7 @@ func findConnectionFunction(ctx context.Context, conn *cloudfront.Client, input 
 	}
 
 	if output == nil || output.ConnectionFunctionSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

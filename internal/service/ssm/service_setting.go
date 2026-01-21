@@ -166,7 +166,7 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	}
 
 	if output == nil || output.ServiceSetting == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceSetting, nil

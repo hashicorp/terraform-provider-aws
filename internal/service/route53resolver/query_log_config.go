@@ -170,7 +170,7 @@ func findResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.C
 	}
 
 	if output == nil || output.ResolverQueryLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverQueryLogConfig, nil

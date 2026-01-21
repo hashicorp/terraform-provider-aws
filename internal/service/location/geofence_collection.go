@@ -212,7 +212,7 @@ func findGeofenceCollectionByName(ctx context.Context, conn *location.Client, na
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

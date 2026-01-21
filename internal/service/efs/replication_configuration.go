@@ -268,7 +268,7 @@ func findReplicationConfigurationByID(ctx context.Context, conn *efs.Client, id 
 	}
 
 	if len(output.Destinations) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
@@ -351,7 +352,7 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Accelerator, nil
@@ -376,7 +377,7 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.AcceleratorAttributes, nil

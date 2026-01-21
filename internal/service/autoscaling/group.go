@@ -2332,7 +2332,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscal
 	}
 
 	if output == nil || output.WarmPoolConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -2602,7 +2602,7 @@ func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, e
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(struct{ err error }); ok {
-		tfresource.SetLastError(err, output.err)
+		retry.SetLastError(err, output.err)
 	}
 
 	return err
@@ -2749,7 +2749,7 @@ func waitInstanceRefreshCancelled(ctx context.Context, conn *autoscaling.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.InstanceRefresh); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

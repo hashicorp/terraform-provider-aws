@@ -223,7 +223,7 @@ func findBuildByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 	}
 
 	if output == nil || output.Build == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Build, nil

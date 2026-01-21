@@ -189,7 +189,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *inspector2.Client)
 	}
 
 	if output == nil || output.AutoEnable == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

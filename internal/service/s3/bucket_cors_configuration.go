@@ -31,6 +31,7 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(importIgnore="cors_rule.0.max_age_seconds")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
@@ -266,7 +267,7 @@ func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	if output == nil || len(output.CORSRules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CORSRules, nil

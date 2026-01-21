@@ -138,7 +138,7 @@ func findDataProtectionPolicyByLogGroupName(ctx context.Context, conn *cloudwatc
 	}
 
 	if output.PolicyDocument == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, err
@@ -158,7 +158,7 @@ func findDataProtectionPolicy(ctx context.Context, conn *cloudwatchlogs.Client, 
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

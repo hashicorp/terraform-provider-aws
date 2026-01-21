@@ -280,7 +280,7 @@ func findPolicyStoreByID(ctx context.Context, conn *verifiedpermissions.Client, 
 	}
 
 	if out == nil || out.Arn == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

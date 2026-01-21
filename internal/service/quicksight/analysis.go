@@ -34,6 +34,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Analysis")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalysisCreate,
@@ -375,7 +376,7 @@ func findAnalysis(ctx context.Context, conn *quicksight.Client, input *quicksigh
 	}
 
 	if output == nil || output.Analysis == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Analysis, nil
@@ -405,7 +406,7 @@ func findAnalysisDefinition(ctx context.Context, conn *quicksight.Client, input 
 	}
 
 	if output == nil || output.Definition == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Definition, nil
@@ -435,7 +436,7 @@ func findAnalysisPermissions(ctx context.Context, conn *quicksight.Client, input
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Permissions, nil
@@ -469,7 +470,7 @@ func waitAnalysisCreated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusCreationFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err
@@ -490,7 +491,7 @@ func waitAnalysisUpdated(ctx context.Context, conn *quicksight.Client, awsAccoun
 
 	if output, ok := outputRaw.(*awstypes.Analysis); ok {
 		if status, apiErrors := output.Status, output.Errors; status == awstypes.ResourceStatusUpdateFailed {
-			tfresource.SetLastError(err, analysisError(apiErrors))
+			retry.SetLastError(err, analysisError(apiErrors))
 		}
 
 		return output, err

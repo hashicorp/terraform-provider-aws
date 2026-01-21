@@ -210,7 +210,7 @@ func FindStatementByID(ctx context.Context, conn *redshiftdata.Client, id string
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

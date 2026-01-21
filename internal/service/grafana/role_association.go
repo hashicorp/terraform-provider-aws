@@ -189,7 +189,7 @@ func findRoleAssociationsByTwoPartKey(ctx context.Context, conn *grafana.Client,
 	}
 
 	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

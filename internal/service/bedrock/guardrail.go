@@ -46,6 +46,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
 // @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
 // @Testing(importStateIdAttribute="guardrail_id")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newGuardrailResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &guardrailResource{
 		flexOpt: fwflex.WithFieldNameSuffix("Config"),
@@ -795,7 +796,7 @@ func findGuardrailByTwoPartKey(ctx context.Context, conn *bedrock.Client, id, ve
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -194,7 +194,7 @@ func findVoiceConnectorTerminationCredentialsByID(ctx context.Context, conn *chi
 	}
 
 	if resp == nil || resp.Usernames == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {

@@ -36,6 +36,7 @@ import (
 // @IdentityAttribute("alarm_name")
 // @Testing(idAttrDuplicates="alarm_name")
 // @Testing(preIdentityVersion="v6.7.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -468,7 +469,7 @@ func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name st
 	}
 
 	if output == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return smarterr.Assert(tfresource.AssertSingleValueResult(output.MetricAlarms))

@@ -217,7 +217,7 @@ func findRadiusSettingsByID(ctx context.Context, conn *directoryservice.Client, 
 	}
 
 	if output.RadiusSettings == nil {
-		return nil, tfresource.NewEmptyResultError(directoryID)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RadiusSettings, nil

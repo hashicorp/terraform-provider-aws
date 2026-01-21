@@ -484,7 +484,7 @@ func findReplicationConfiguration(ctx context.Context, conn *s3.Client, bucket s
 	}
 
 	if output == nil || output.ReplicationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReplicationConfiguration, nil

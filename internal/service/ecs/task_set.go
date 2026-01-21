@@ -546,7 +546,7 @@ func findTaskSets(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTask
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.TaskSets, nil

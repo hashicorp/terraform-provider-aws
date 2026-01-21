@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_dx_hosted_private_virtual_interface_accepter", name="Hosted Private Virtual Interface Accepter")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostedPrivateVirtualInterfaceAccepterCreate,

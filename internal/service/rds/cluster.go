@@ -785,6 +785,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.EngineVersion = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}

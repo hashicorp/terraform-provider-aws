@@ -361,7 +361,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	// "UnauthorizedException: Unauthorized"
 	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") ||
 		tfawserr.ErrMessageContains(err, errCodeUnauthorizedException, "Unauthorized") {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if err != nil {
@@ -369,7 +369,7 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Subscriber, nil

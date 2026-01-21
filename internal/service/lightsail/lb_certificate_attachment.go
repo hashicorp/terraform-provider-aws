@@ -151,7 +151,7 @@ func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lights
 	}
 
 	if !entryExists {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return entry, nil

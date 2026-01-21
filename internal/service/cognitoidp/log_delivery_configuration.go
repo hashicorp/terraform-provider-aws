@@ -36,6 +36,7 @@ import (
 // @Testing(importStateIdFunc="testAccLogDeliveryConfigurationImportStateIdFunc")
 // @Testing(importStateIdAttribute="user_pool_id")
 // @Testing(hasNoPreExistingResource=true)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newLogDeliveryConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &logDeliveryConfigurationResource{}
 	return r, nil
@@ -271,7 +272,7 @@ func findLogDeliveryConfigurationByUserPoolID(ctx context.Context, conn *cognito
 	}
 
 	if out == nil || out.LogDeliveryConfiguration == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.LogDeliveryConfiguration, nil

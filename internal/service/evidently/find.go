@@ -34,7 +34,7 @@ func FindFeatureWithProjectNameorARN(ctx context.Context, conn *evidently.Client
 	}
 
 	if output == nil || output.Feature == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Feature, nil
@@ -60,7 +60,7 @@ func FindLaunchWithProjectNameorARN(ctx context.Context, conn *evidently.Client,
 	}
 
 	if output == nil || output.Launch == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Launch, nil
@@ -85,7 +85,7 @@ func FindProjectByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	}
 
 	if output == nil || output.Project == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Project, nil
@@ -110,7 +110,7 @@ func FindSegmentByNameOrARN(ctx context.Context, conn *evidently.Client, nameOrA
 	}
 
 	if output == nil || output.Segment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Segment, nil

@@ -591,7 +591,7 @@ func findWorkgroupByName(ctx context.Context, conn *redshiftserverless.Client, n
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Workgroup, nil

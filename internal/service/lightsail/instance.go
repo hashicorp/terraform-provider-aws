@@ -457,7 +457,7 @@ func FindInstanceById(ctx context.Context, conn *lightsail.Client, id string) (*
 	}
 
 	if out == nil || out.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Instance, nil

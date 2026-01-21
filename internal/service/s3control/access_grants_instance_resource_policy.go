@@ -214,7 +214,7 @@ func findAccessGrantsInstanceResourcePolicy(ctx context.Context, conn *s3control
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

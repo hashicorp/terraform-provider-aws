@@ -38,6 +38,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
 // @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
 // @Testing(preIdentityVersion="v6.10.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyCreate,
@@ -432,7 +433,7 @@ func findKey(ctx context.Context, conn *kms.Client, input *kms.DescribeKeyInput,
 	}
 
 	if output == nil || output.KeyMetadata == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.KeyMetadata, nil
@@ -471,7 +472,7 @@ func findKeyPolicyByTwoPartKey(ctx context.Context, conn *kms.Client, keyID, pol
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -496,7 +497,7 @@ func findKeyRotationEnabledByKeyID(ctx context.Context, conn *kms.Client, keyID 
 	}
 
 	if output == nil {
-		return nil, nil, tfresource.NewEmptyResultError(input)
+		return nil, nil, tfresource.NewEmptyResultError()
 	}
 
 	return aws.Bool(output.KeyRotationEnabled), output.RotationPeriodInDays, nil

@@ -35,6 +35,7 @@ import (
 // @V60SDKv2Fix
 // @ArnFormat("capacity-provider/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ecs/types;awstypes;awstypes.CapacityProvider")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceCapacityProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityProviderCreate,
@@ -791,7 +792,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.CapacityProvider); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.UpdateStatusReason)))
 
 		return output, err
 	}

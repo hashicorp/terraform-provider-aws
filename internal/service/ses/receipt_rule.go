@@ -596,7 +596,7 @@ func findReceiptRule(ctx context.Context, conn *ses.Client, input *ses.DescribeR
 	}
 
 	if output == nil || output.Rule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Rule, nil

@@ -32,6 +32,7 @@ import (
 // @ArnFormat("report-group/{name}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codebuild/types;awstypes;awstypes.ReportGroup")
 // @Testing(importIgnore="delete_reports", plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
@@ -242,7 +243,7 @@ func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebu
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReportGroups, nil

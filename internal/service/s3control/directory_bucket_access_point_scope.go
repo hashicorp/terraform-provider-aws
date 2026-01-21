@@ -260,7 +260,7 @@ func findDirectoryAccessPointScopeByTwoPartKey(ctx context.Context, conn *s3cont
 	}
 
 	if output == nil || output.Scope == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

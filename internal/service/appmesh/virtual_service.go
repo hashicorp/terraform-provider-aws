@@ -32,6 +32,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.VirtualServiceData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccVirtualServiceImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,
@@ -317,7 +318,7 @@ func findVirtualService(ctx context.Context, conn *appmesh.Client, input *appmes
 	}
 
 	if output == nil || output.VirtualService == nil || output.VirtualService.Metadata == nil || output.VirtualService.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.VirtualService, nil

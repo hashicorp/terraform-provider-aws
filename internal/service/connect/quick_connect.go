@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_connect_quick_connect", name="Quick Connect")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQuickConnectCreate,
@@ -327,7 +328,7 @@ func findQuickConnect(ctx context.Context, conn *connect.Client, input *connect.
 	}
 
 	if output == nil || output.QuickConnect == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.QuickConnect, nil

@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
+	"maps"
 	"regexp"
 	"testing"
 	"time"
@@ -16,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
@@ -48,15 +50,15 @@ const (
 	streamLabelRegex = `\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}`
 )
 
-func TestUpdateDiffGSI(t *testing.T) {
+func TestUpdateDiffGSI_Provisioned(t *testing.T) {
 	t.Parallel()
 
-	testCases := []struct {
+	testCases := map[string]struct {
 		Old             []any
 		New             []any
 		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
 	}{
-		{ // No-op => no changes
+		"no changes": { // No-op => no changes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -77,7 +79,8 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			ExpectedUpdates: nil,
 		},
-		{ // No-op => ignore ordering of non_key_attributes
+
+		"non-key attribute order": { // No-op => ignore ordering of non_key_attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:       "att1-index",
@@ -101,7 +104,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			ExpectedUpdates: nil,
 		},
 
-		{ // Creation
+		"add GSI": { // Creation
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -149,7 +152,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Creation with warm throughput
+		"add GSI with warm throughput": { // Creation with warm throughput
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -217,7 +220,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Deletion
+		"remove GSI": { // Deletion
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -252,7 +255,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update
+		"update RW capacity": { // Update RW capacity
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -284,7 +287,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 1: update in place
+		"update warm throughput in place": { // Update warm throughput 1: update in place
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -328,7 +331,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 2: update via recreate
+		"decrease warm throughput": { // Update warm throughput 2: update via recreate
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att2-index",
@@ -390,7 +393,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update warm throughput 3: update in place at the same moment as capacity
+		"update capacity and warm throughput": { // Update warm throughput 3: update in place at the same moment as capacity
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -443,7 +446,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update of non-capacity attributes
+		"change key schema and non-key attributes": { // Update of non-capacity attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -496,7 +499,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 		},
 
-		{ // Update of all attributes
+		"update everything": { // Update of all attributes
 			Old: []any{
 				map[string]any{
 					names.AttrName:    "att1-index",
@@ -564,22 +567,1169 @@ func TestUpdateDiffGSI(t *testing.T) {
 				},
 			},
 		},
+
+		"update hash_key only": {
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att-new",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"add with multiple hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"change hash_key to multiple hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"remove key from hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"change multiple hash keys to hash_key": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName:    "att1-index",
+					"hash_key":        "att1",
+					"write_capacity":  10,
+					"read_capacity":   10,
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						ProvisionedThroughput: &awstypes.ProvisionedThroughput{
+							WriteCapacityUnits: aws.Int64(10),
+							ReadCapacityUnits:  aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
 	}
 
-	for i, tc := range testCases {
-		ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
-		if err != nil {
-			t.Fatal(err)
-		}
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-		if got, want := ops, tc.ExpectedUpdates; !reflect.DeepEqual(got, want) {
-			t.Errorf(
-				"%d: Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-				i,
-				got,
-				want)
-		}
+			for i, v := range tc.Old {
+				tc.Old[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
+			for i, v := range tc.New {
+				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
+
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModeProvisioned)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(ops, tc.ExpectedUpdates, cmpopts.IgnoreUnexported(
+				awstypes.GlobalSecondaryIndexUpdate{},
+				awstypes.CreateGlobalSecondaryIndexAction{},
+				awstypes.UpdateGlobalSecondaryIndexAction{},
+				awstypes.DeleteGlobalSecondaryIndexAction{},
+				awstypes.KeySchemaElement{},
+				awstypes.Projection{},
+				awstypes.ProvisionedThroughput{},
+				awstypes.WarmThroughput{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
 	}
+}
+
+func TestUpdateDiffGSI_OnDemand(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		Old             []any
+		New             []any
+		ExpectedUpdates []awstypes.GlobalSecondaryIndexUpdate
+	}{
+		"no changes": { // No-op => no changes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+
+		"non-key attribute order": { // No-op => ignore ordering of non_key_attributes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr3", "attr1", "attr2"}),
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "INCLUDE",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"attr1", "attr2", "attr3"}),
+				},
+			},
+			ExpectedUpdates: nil,
+		},
+
+		"add GSI": { // Creation
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"add GSI with warm throughput": { // Creation with warm throughput
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 5,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  5,
+							"write_units_per_second": 5,
+						}},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 5,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  5,
+							"write_units_per_second": 5,
+						}},
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(10),
+							WriteUnitsPerSecond: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"remove GSI": { // Deletion
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+			},
+		},
+
+		"update warm throughput in place": { // Update warm throughput 1: update in place
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 12,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(12),
+						},
+					},
+				},
+			},
+		},
+
+		"decrease warm throughput": { // Update warm throughput 2: update via recreate
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  15000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att2-index",
+					"hash_key":     "att2",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  14000,
+							"write_units_per_second": 5000,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(14000),
+							WriteUnitsPerSecond: aws.Int64(5000),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"update capacity and warm throughput": { // Update warm throughput 3: update in place at the same moment as capacity
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  10,
+							"write_units_per_second": 10,
+						},
+					},
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  10,
+						"max_write_request_units": 15,
+					}},
+					"projection_type": "ALL",
+					"warm_throughput": []any{
+						map[string]any{
+							"read_units_per_second":  11,
+							"write_units_per_second": 16,
+						},
+					},
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(10),
+							MaxWriteRequestUnits: aws.Int64(15),
+						},
+					},
+				},
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						WarmThroughput: &awstypes.WarmThroughput{
+							ReadUnitsPerSecond:  aws.Int64(11),
+							WriteUnitsPerSecond: aws.Int64(16),
+						},
+					},
+				},
+			},
+		},
+
+		"change key schema and non-key attributes": { // Update of non-capacity attributes
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att-new",
+					"range_key":    "new-range-key",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type":    "KEYS_ONLY",
+					"non_key_attributes": schema.NewSet(schema.HashString, []any{"RandomAttribute"}),
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("new-range-key"),
+								KeyType:       awstypes.KeyTypeRange,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType:   awstypes.ProjectionTypeKeysOnly,
+							NonKeyAttributes: []string{"RandomAttribute"},
+						},
+					},
+				},
+			},
+		},
+
+		"update hash_key only": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att-new",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att-new"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"update on_demand_throughput only": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  10,
+						"max_write_request_units": 15,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(10),
+							MaxWriteRequestUnits: aws.Int64(15),
+						},
+					},
+				},
+			},
+		},
+
+		"add with multiple hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+				map[string]any{
+					names.AttrName: "att2-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att2-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"change hash_key to multiple hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+							{
+								AttributeName: aws.String("att2"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"remove key from hash keys": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+					},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+
+		"change multiple hash keys to hash_key": {
+			Old: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"key_schema": []any{
+						map[string]any{
+							"attribute_name": "att1",
+							"key_type":       "HASH",
+						},
+						map[string]any{
+							"attribute_name": "att2",
+							"key_type":       "HASH",
+						},
+					},
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			New: []any{
+				map[string]any{
+					names.AttrName: "att1-index",
+					"hash_key":     "att1",
+					"on_demand_throughput": []any{map[string]any{
+						"max_read_request_units":  5,
+						"max_write_request_units": 10,
+					}},
+					"projection_type": "ALL",
+				},
+			},
+			ExpectedUpdates: []awstypes.GlobalSecondaryIndexUpdate{
+				{
+					Delete: &awstypes.DeleteGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+					},
+				},
+				{
+					Create: &awstypes.CreateGlobalSecondaryIndexAction{
+						IndexName: aws.String("att1-index"),
+						KeySchema: []awstypes.KeySchemaElement{
+							{
+								AttributeName: aws.String("att1"),
+								KeyType:       awstypes.KeyTypeHash,
+							},
+						},
+						OnDemandThroughput: &awstypes.OnDemandThroughput{
+							MaxReadRequestUnits:  aws.Int64(5),
+							MaxWriteRequestUnits: aws.Int64(10),
+						},
+						Projection: &awstypes.Projection{
+							ProjectionType: awstypes.ProjectionTypeAll,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			for i, v := range tc.Old {
+				tc.Old[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
+			for i, v := range tc.New {
+				tc.New[i] = normalizeGSIMapValue(v.(map[string]any))
+			}
+
+			ops, err := tfdynamodb.UpdateDiffGSI(tc.Old, tc.New, awstypes.BillingModePayPerRequest)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if diff := cmp.Diff(ops, tc.ExpectedUpdates, cmpopts.IgnoreUnexported(
+				awstypes.GlobalSecondaryIndexUpdate{},
+				awstypes.CreateGlobalSecondaryIndexAction{},
+				awstypes.UpdateGlobalSecondaryIndexAction{},
+				awstypes.DeleteGlobalSecondaryIndexAction{},
+				awstypes.KeySchemaElement{},
+				awstypes.OnDemandThroughput{},
+				awstypes.Projection{},
+				awstypes.WarmThroughput{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func normalizeGSIMapValue(v map[string]any) map[string]any {
+	result := map[string]any{
+		"hash_key":             "",
+		"key_schema":           nil,
+		names.AttrName:         "",
+		"non_key_attributes":   nil,
+		"on_demand_throughput": nil,
+		"projection_type":      "",
+		"range_key":            "",
+		"read_capacity":        0,
+		"warm_throughput":      nil,
+		"write_capacity":       0,
+	}
+
+	maps.Copy(result, v)
+
+	return result
 }
 
 func TestAccDynamoDBTable_basic(t *testing.T) {
@@ -818,6 +1968,1037 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 						"projection_type": "ALL",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleHashKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_singleHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_noChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_transitionHashKeyToKeySchema_addHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_addHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_transitionKeySchemaToHashKey_removeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_removeHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleHashKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact(""),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_keySchema_singleHashKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_maxSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_keySchema_maxKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						names.AttrName:    "ReplacementTestTableGSI",
+						"key_schema.#":    "8",
+						"write_capacity":  "1",
+						"read_capacity":   "1",
+						"projection_type": "ALL",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_OnCreate_multipleRangeKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_keySchema_multipleRangeKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("ReplacementGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("N"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("ReplacementGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("N"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("ReplacementGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("ReplacementGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("ReplacementTestTableGSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeAll),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_addRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_multipleRangeKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_keySchema_removeRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_GSI_multipleRangeKeys(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey2"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey2"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact(""),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_GSI_singleRangeKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("attribute"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestTableHashKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrName: knownvalue.StringExact("TestGSIRangeKey"),
+							names.AttrType: knownvalue.StringExact("S"),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("global_secondary_index"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"hash_key": knownvalue.StringExact("TestTableHashKey"),
+							"key_schema": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestTableHashKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeHash),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"attribute_name": knownvalue.StringExact("TestGSIRangeKey"),
+									"key_type":       tfknownvalue.StringExact(awstypes.KeyTypeRange),
+								}),
+							}),
+							names.AttrName:    knownvalue.StringExact("GSI"),
+							"projection_type": tfknownvalue.StringExact(awstypes.ProjectionTypeKeysOnly),
+							"range_key":       knownvalue.StringExact("TestGSIRangeKey"),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_validate_rangeKeyConflictsWithKeySchema(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_GSI_setKeySchemaAndRangeKey(rName),
+				ExpectError: regexache.MustCompile(`Attribute "global_secondary_index\[.+\]\.range_key"\s+cannot be specified when "global_secondary_index`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_validate_exactlyOneOfKeySchemaHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_GSI_setKeySchemaAndHashKey(rName),
+				ExpectError: regexache.MustCompile(`2 attributes specified when one \(and only one\) of \[key_schema, hash_key\]`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSI_validate_keySchema_tooManyHashKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_GSI_keySchema_tooManyHashKeys(rName),
+				ExpectError: regexache.MustCompile(`at least 1 and at most 4 elements with "key_type" "HASH"`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_GSIvalidate_keySchema_tooManyRangeKeys(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_addSecondaryGSI_multipleRangeKeys_tooMany(rName),
+				ExpectError: regexache.MustCompile(`at most 4 elements with "key_type" "RANGE"`),
 			},
 		},
 	})
@@ -1147,6 +3328,11 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -1301,6 +3487,16 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 						"on_demand_throughput.0.max_write_request_units": "10",
 					}),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1343,6 +3539,12 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
+			},
 		},
 	})
 }
@@ -1370,6 +3572,11 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccTableConfig_streamSpecification(rName, true, "NEW_IMAGE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
@@ -1378,6 +3585,11 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "NEW_IMAGE"),
@@ -1390,6 +3602,12 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
+			},
+			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
@@ -1398,6 +3616,12 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, false, "null"),
@@ -1410,14 +3634,10 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
-					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"stream_view_type"}, // Should be unset when stream is disabled
 			},
 			{
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
@@ -1428,6 +3648,26 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
 					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(`table/`+rName+`/stream/`+streamLabelRegex)),
+					resource.TestMatchResourceAttr(resourceName, "stream_label", regexache.MustCompile(`^`+streamLabelRegex+`$`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1443,7 +3683,11 @@ func TestAccDynamoDBTable_streamSpecificationValidation(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableConfig_streamSpecification("anything", true, ""),
-				ExpectError: regexache.MustCompile(`stream_view_type is required when stream_enabled = true`),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
+			},
+			{
+				Config:      testAccTableConfig_streamSpecification("anything", true, "null"),
+				ExpectError: regexache.MustCompile(`Attribute "stream_view_type" must be specified when "stream_enabled" is\s+"true"`),
 			},
 		},
 	})
@@ -6005,6 +8249,87 @@ func TestAccDynamoDBTable_gsiWarmThroughput_switchBilling(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_nameKnownAfterApply(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_nameKnownAfterApply_attribute_notIndexed_onUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source: "hashicorp/null",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_nameKnownAfterApply(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				Config:      testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName),
+				ExpectError: regexache.MustCompile(`all attributes must be indexed`),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -6532,6 +8857,547 @@ resource "aws_dynamodb_table" "test" {
     read_capacity      = 5
     projection_type    = "INCLUDE"
     non_key_attributes = ["TestNonKeyAttribute"]
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_singleHashKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "GSI"
+    hash_key        = "TestTableHashKey"
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_singleHashKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_multipleHashKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableHashKey2"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey2"
+      key_type       = "HASH"
+    }
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "KEYS_ONLY"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_keySchema_maxKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableHashKey2"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableHashKey3"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableHashKey4"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name = "ReplacementTestTableGSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey2"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey3"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableHashKey4"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 1
+    read_capacity   = 1
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_multipleRangeKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    projection_type = "ALL"
+    write_capacity  = 1
+    read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_singleRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "GSI"
+    hash_key        = "TestTableHashKey"
+    range_key       = "TestGSIRangeKey"
+    projection_type = "KEYS_ONLY"
+    write_capacity  = 1
+    read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_multipleRangeKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestGSIRangeKey2"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name = "GSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "TestGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    projection_type = "KEYS_ONLY"
+    write_capacity  = 1
+    read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_setKeySchemaAndRangeKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    range_key = "ReplacementGSIRangeKey"
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_setKeySchemaAndHashKey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name     = "ReplacementTestTableGSI"
+    hash_key = "TestTableHashKey"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    projection_type = "ALL"
+    write_capacity  = 1
+    read_capacity   = 1
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_addSecondaryGSI_multipleRangeKeys_tooMany(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey3"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name = "ReplacementTestTableGSI"
+
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "RANGE"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey3"
+      key_type       = "RANGE"
+    }
+
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_GSI_keySchema_tooManyHashKeys(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 2
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+  range_key      = "TestTableRangeKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestTableRangeKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "TestLSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey2"
+    type = "N"
+  }
+
+  attribute {
+    name = "ReplacementGSIRangeKey3"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name = "ReplacementTestTableGSI"
+    key_schema {
+      attribute_name = "TestTableHashKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey2"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestLSIRangeKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "TestTableRangeKey"
+      key_type       = "HASH"
+    }
+    key_schema {
+      attribute_name = "ReplacementGSIRangeKey3"
+      key_type       = "HASH"
+    }
+    range_key       = "ReplacementGSIRangeKey"
+    write_capacity  = 5
+    read_capacity   = 5
+    projection_type = "ALL"
   }
 }
 `, rName)
@@ -9609,4 +12475,47 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, maxRead, maxWrite, warmRead, warmWrite)
+}
+
+// testAccTableConfig_nameKnownAfterApply_validation simulates name = (known after apply) because the name of the "test"
+// resource depends on the id of "base" which is also known after apply
+func testAccTableConfig_nameKnownAfterApply(rName string) string {
+	return fmt.Sprintf(`
+resource "null_resource" "test" {}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-${null_resource.test.id}"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_nameKnownAfterApply_attribute_notIndexed(rName string) string {
+	return fmt.Sprintf(`
+resource "null_resource" "test" {}
+
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s-${null_resource.test.id}"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+
+  attribute {
+    name = "unindexed"
+    type = "N"
+  }
+}
+`, rName)
 }

@@ -224,7 +224,7 @@ func findEndpointByARN(ctx context.Context, conn *s3outposts.Client, arn string)
 		}
 	}
 
-	return nil, tfresource.NewEmptyResultError(input)
+	return nil, tfresource.NewEmptyResultError()
 }
 
 func findEndpoints(ctx context.Context, conn *s3outposts.Client, input *s3outposts.ListEndpointsInput) ([]awstypes.Endpoint, error) {

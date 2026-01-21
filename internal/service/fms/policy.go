@@ -33,6 +33,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 // @Testing(importIgnore="delete_all_policy_resources;policy_update_token")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -465,7 +466,7 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 	}
 
 	if output == nil || output.Policy == nil || output.Policy.SecurityServicePolicyData == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

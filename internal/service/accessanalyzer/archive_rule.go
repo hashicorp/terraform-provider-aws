@@ -227,7 +227,7 @@ func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Clien
 	}
 
 	if output == nil || output.ArchiveRule == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ArchiveRule, nil

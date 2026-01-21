@@ -322,7 +322,11 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	// Only set administration_role_arn if auto_deployment is not configured.
+	// AWS returns this field for SERVICE_MANAGED StackSets, but it conflicts with auto_deployment.
+	if _, ok := d.GetOk("auto_deployment"); !ok {
+		d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
+	}
 	d.Set(names.AttrARN, stackSet.StackSetARN)
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
@@ -498,7 +502,7 @@ func findStackSetByName(ctx context.Context, conn *cloudformation.Client, name, 
 	}
 
 	if output == nil || output.StackSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSet, nil
@@ -561,7 +565,7 @@ func findStackSetOperationByThreePartKey(ctx context.Context, conn *cloudformati
 	}
 
 	if output == nil || output.StackSetOperation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.StackSetOperation, nil
@@ -629,7 +633,7 @@ func waitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 	if output, ok := outputRaw.(*awstypes.StackSetOperation); ok {
 		if output.Status == awstypes.StackSetOperationStatusFailed {
 			if results, findErr := findStackSetOperationResultsByThreePartKey(ctx, conn, stackSetName, operationID, callAs); findErr == nil {
-				tfresource.SetLastError(err, stackSetOperationError(results))
+				retry.SetLastError(err, stackSetOperationError(results))
 			}
 		}
 

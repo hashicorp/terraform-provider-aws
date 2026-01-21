@@ -499,7 +499,7 @@ func findSMBFileShares(ctx context.Context, conn *storagegateway.Client, input *
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SMBFileShareInfoList, nil

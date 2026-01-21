@@ -184,7 +184,7 @@ func findGroupByName(ctx context.Context, conn *iam.Client, name string) (*awsty
 	}
 
 	if output == nil || output.Group == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Group, nil

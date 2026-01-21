@@ -336,7 +336,7 @@ func findAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 	}
 
 	if output == nil || output.Assessment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Assessment, nil

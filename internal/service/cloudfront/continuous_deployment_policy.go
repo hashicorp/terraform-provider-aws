@@ -374,7 +374,7 @@ func findContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.Cl
 	}
 
 	if output == nil || output.ContinuousDeploymentPolicy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -29,6 +29,7 @@ import (
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
 // @Testing(importIgnore="rotate_immediately")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretRotationCreate,

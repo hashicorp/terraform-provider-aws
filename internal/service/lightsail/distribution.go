@@ -598,7 +598,7 @@ func FindDistributionByID(ctx context.Context, conn *lightsail.Client, id string
 	}
 
 	if out == nil || len(out.Distributions) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &out.Distributions[0], nil

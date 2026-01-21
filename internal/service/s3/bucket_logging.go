@@ -29,6 +29,7 @@ import (
 // @IdentityAttribute("expected_bucket_owner", optional="true")
 // @ImportIDHandler("resourceImportID")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLoggingCreate,
@@ -338,7 +339,7 @@ func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expect
 	}
 
 	if output == nil || output.LoggingEnabled == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LoggingEnabled, nil

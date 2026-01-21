@@ -450,7 +450,7 @@ func findListenerRuleByThreePartKey(ctx context.Context, conn *vpclattice.Client
 	}
 
 	if output.Id == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -471,7 +471,7 @@ func findListenerRule(ctx context.Context, conn *vpclattice.Client, input *vpcla
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

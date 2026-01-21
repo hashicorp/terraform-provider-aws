@@ -36,6 +36,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/datasync;datasync.DescribeLocationFsxOpenZfsOutput")
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(importStateIdFunc="testAccLocationFSxOpenZFSImportStateID")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemCreate,
@@ -251,7 +252,7 @@ func findLocationFSxOpenZFSByARN(ctx context.Context, conn *datasync.Client, arn
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

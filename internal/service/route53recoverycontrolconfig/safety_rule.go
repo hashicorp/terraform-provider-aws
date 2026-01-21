@@ -403,7 +403,7 @@ func findSafetyRuleByARN(ctx context.Context, conn *r53rcc.Client, arn string) (
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

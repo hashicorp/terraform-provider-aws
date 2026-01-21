@@ -158,7 +158,7 @@ func findVaultNotifications(ctx context.Context, conn *backup.Client, input *bac
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

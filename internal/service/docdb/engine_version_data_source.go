@@ -115,7 +115,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 			}
 
 			if engineVersion == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {

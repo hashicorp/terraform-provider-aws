@@ -324,7 +324,7 @@ func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Clie
 	output, ok := stage.MethodSettings[methodPath]
 
 	if !ok {
-		return nil, tfresource.NewEmptyResultError(methodPath)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return &output, nil

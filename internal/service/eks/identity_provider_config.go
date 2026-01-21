@@ -258,7 +258,7 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 	}
 
 	if output == nil || output.IdentityProviderConfig == nil || output.IdentityProviderConfig.Oidc == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.IdentityProviderConfig.Oidc, nil

@@ -167,7 +167,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if orderableDBInstance == nil {
-				err = tfresource.NewEmptyResultError(input)
+				err = tfresource.NewEmptyResultError()
 			}
 		}
 	} else {

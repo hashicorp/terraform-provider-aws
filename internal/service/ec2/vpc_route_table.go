@@ -54,6 +54,7 @@ var routeTableValidTargets = []string{
 // @Testing(generator=false)
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.9.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,

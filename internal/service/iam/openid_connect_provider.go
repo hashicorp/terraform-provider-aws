@@ -29,6 +29,7 @@ import (
 // @Testing(name="OpenIDConnectProvider")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
@@ -247,7 +248,7 @@ func findOpenIDConnectProvider(ctx context.Context, conn *iam.Client, input *iam
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

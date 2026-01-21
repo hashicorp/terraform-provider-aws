@@ -40,6 +40,7 @@ import (
 // @Testing(tagsTest=true)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.SessionLogger")
 // @Testing(importStateIdAttribute="session_logger_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSessionLoggerResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &sessionLoggerResource{}, nil
 }
@@ -322,7 +323,7 @@ func findSessionLoggerByARN(ctx context.Context, conn *workspacesweb.Client, arn
 	}
 
 	if output == nil || output.SessionLogger == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.SessionLogger, nil

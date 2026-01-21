@@ -40,6 +40,7 @@ const (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -412,7 +413,7 @@ func findPolicy(ctx context.Context, conn *iam.Client, input *iam.GetPolicyInput
 	}
 
 	if output == nil || output.Policy == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Policy, nil
@@ -483,7 +484,7 @@ func findPolicyVersion(ctx context.Context, conn *iam.Client, input *iam.GetPoli
 	}
 
 	if output == nil || output.PolicyVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.PolicyVersion, nil

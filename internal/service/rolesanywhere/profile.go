@@ -263,7 +263,7 @@ func findProfile(ctx context.Context, conn *rolesanywhere.Client, input *rolesan
 	}
 
 	if output == nil || output.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Profile, nil

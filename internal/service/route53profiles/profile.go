@@ -286,7 +286,7 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	}
 
 	if out == nil || out.Profile == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out.Profile, nil

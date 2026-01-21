@@ -360,7 +360,7 @@ func findMonitorByName(ctx context.Context, conn *internetmonitor.Client, name s
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

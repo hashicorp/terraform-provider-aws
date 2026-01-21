@@ -193,7 +193,7 @@ func findAliasByID(ctx context.Context, conn *gamelift.Client, id string) (*awst
 	}
 
 	if output == nil || output.Alias == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Alias, nil

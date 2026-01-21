@@ -479,7 +479,7 @@ func findInventoryConfiguration(ctx context.Context, conn *s3.Client, bucket, id
 	}
 
 	if output == nil || output.InventoryConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InventoryConfiguration, nil

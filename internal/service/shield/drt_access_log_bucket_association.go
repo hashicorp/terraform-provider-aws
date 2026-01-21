@@ -214,7 +214,7 @@ func findDRTAccess(ctx context.Context, conn *shield.Client) (*shield.DescribeDR
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

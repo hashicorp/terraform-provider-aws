@@ -257,7 +257,7 @@ func findAgreementByTwoPartKey(ctx context.Context, conn *transfer.Client, serve
 	}
 
 	if output == nil || output.Agreement == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Agreement, nil
