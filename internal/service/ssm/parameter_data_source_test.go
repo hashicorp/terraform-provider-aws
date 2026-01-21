@@ -97,6 +97,29 @@ func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameterDataSource_loadValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_loadValue(rName, "String"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, dataSourceName, &param),
+					resource.TestCheckNoResourceAttr(dataSourceName, "insecure_value"),
+				),
+			},
+		},
+	})
+}
+
 func testAccParameterDataSourceConfig_basic(name string, withDecryption bool) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
@@ -122,6 +145,21 @@ resource "aws_ssm_parameter" "test" {
 
 data "aws_ssm_parameter" "test" {
   name = aws_ssm_parameter.test.name
+}
+`, rName, pType)
+}
+
+func testAccParameterConfig_loadValue(rName, pType string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name           = %[1]q
+  type           = %[2]q
+  insecure_value = "notsecret"
+}
+
+data "aws_ssm_parameter" "test" {
+  name       = aws_ssm_parameter.test.name
+  load_value = false
 }
 `, rName, pType)
 }
