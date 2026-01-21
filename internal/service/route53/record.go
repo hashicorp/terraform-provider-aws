@@ -58,6 +58,7 @@ func resourceRecord() *schema.Resource {
 
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
+		CustomizeDiff: validateRoute53RecordTTLRequirement,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAlias: {
@@ -288,7 +289,7 @@ func resourceRecord() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrAlias},
-				RequiredWith:  []string{"records", "ttl"},
+				Description:   "The TTL of the record. Required when records are provided and alias is not used.",
 			},
 			names.AttrType: {
 				Type:             schema.TypeString,
@@ -332,6 +333,29 @@ func resourceRecord() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
+}
+
+// validateRoute53RecordTTLRequirement validates that TTL is provided when records are used
+// and ensures the Route 53 API requirement is met at plan time rather than apply time.
+func validateRoute53RecordTTLRequirement(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// Check if records are provided
+	records, hasRecords := diff.GetOk("records")
+	alias, hasAlias := diff.GetOk(names.AttrAlias)
+	ttl, hasTTL := diff.GetOk("ttl")
+
+	// If records are provided
+	if hasRecords && records.(*schema.Set).Len() > 0 {
+		// And no alias is provided
+		if !hasAlias || len(alias.([]interface{})) == 0 {
+			// Then TTL must be provided and greater than 0
+			if !hasTTL || ttl.(int) <= 0 {
+				return fmt.Errorf("TTL is required when records are provided and alias is not used. " +
+					"Route 53 requires exactly one of: alias target, [TTL and resource records], or traffic policy instance ID")
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
