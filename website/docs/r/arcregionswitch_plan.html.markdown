@@ -234,10 +234,22 @@ The `execution_block_configuration` block contains one of the following configur
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
 * `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
 
-### Execution Approval Config
+### ARC Routing Control Config
 
-* `approval_role` - (Required) ARN of the IAM role for approval.
-* `timeout_minutes` - (Optional) Timeout in minutes for the approval.
+* `region_and_routing_controls` - (Required) List of regions and their routing controls. See [Region and Routing Controls](#region-and-routing-controls) below.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+
+### Region and Routing Controls
+
+* `region` - (Required) AWS region.
+* `routing_control` - (Required) List of routing controls. See [Routing Control](#routing-control) below.
+
+### Routing Control
+
+* `routing_control_arn` - (Required) ARN of the routing control.
+* `state` - (Required) State of the routing control. Valid values: `On`, `Off`.
 
 ### Custom Action Lambda Config
 
@@ -256,6 +268,29 @@ The `execution_block_configuration` block contains one of the following configur
 ### Ungraceful
 
 * `behavior` - (Required) Behavior when ungraceful. Valid values: `skip`.
+
+### EC2 ASG Capacity Increase Config
+
+* `asgs` - (Required) List of Auto Scaling groups. See [ASGs](#asgs) below.
+* `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
+* `target_percent` - (Required) Target capacity percentage.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
+
+### ASGs
+
+* `arn` - (Required) ARN of the Auto Scaling group.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+
+### Ungraceful Capacity
+
+* `minimum_success_percentage` - (Required) Minimum success percentage required.
+
+### Execution Approval Config
+
+* `approval_role` - (Required) ARN of the IAM role for approval.
+* `timeout_minutes` - (Optional) Timeout in minutes for the approval.
 
 ### Associated Alarms
 
@@ -277,41 +312,6 @@ The `execution_block_configuration` block contains one of the following configur
 
 * `associated_alarm_name` - (Required) Name of the associated alarm.
 * `condition` - (Required) Condition to check. Valid values: `red`, `green`.
-
-### ARC Routing Control Config
-
-* `region_and_routing_controls` - (Required) List of regions and their routing controls. See [Region and Routing Controls](#region-and-routing-controls) below.
-* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `external_id` - (Optional) External ID for cross-account role assumption.
-* `timeout_minutes` - (Optional) Timeout in minutes.
-
-### Region and Routing Controls
-
-* `region` - (Required) AWS region.
-* `routing_control` - (Required) List of routing controls. See [Routing Control](#routing-control) below.
-
-### Routing Control
-
-* `routing_control_arn` - (Required) ARN of the routing control.
-* `state` - (Required) State of the routing control. Valid values: `On`, `Off`.
-
-### EC2 ASG Capacity Increase Config
-
-* `asgs` - (Required) List of Auto Scaling groups. See [ASGs](#asgs) below.
-* `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
-* `target_percent` - (Required) Target capacity percentage.
-* `timeout_minutes` - (Optional) Timeout in minutes.
-* `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
-
-### ASGs
-
-* `arn` - (Required) ARN of the Auto Scaling group.
-* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
-* `external_id` - (Optional) External ID for cross-account role assumption.
-
-### Ungraceful Capacity
-
-* `minimum_success_percentage` - (Required) Minimum success percentage required.
 
 ### Global Aurora Config
 

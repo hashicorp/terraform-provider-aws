@@ -215,7 +215,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -255,12 +255,13 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
 															"region_to_run": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.RegionToRunIn](),
+																Required:   true,
+															},
+															"retry_interval_minutes": fwschema.Float32Attribute{
 																Required: true,
 															},
-															"retry_interval_minutes": fwschema.Float64Attribute{
-																Required: true,
-															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -306,7 +307,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"target_percent": fwschema.Int64Attribute{
 																Required: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -351,7 +352,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"target_percent": fwschema.Int64Attribute{
 																Required: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -399,7 +400,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"target_percent": fwschema.Int64Attribute{
 																Required: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -484,7 +485,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"approval_role": fwschema.StringAttribute{
 																Required: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -511,7 +512,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -557,7 +558,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																					"approval_role": fwschema.StringAttribute{
 																						Required: true,
 																					},
-																					"timeout_minutes": fwschema.Int64Attribute{
+																					"timeout_minutes": fwschema.Int32Attribute{
 																						Optional: true,
 																					},
 																				},
@@ -570,10 +571,10 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																					"region_to_run": fwschema.StringAttribute{
 																						Required: true,
 																					},
-																					"retry_interval_minutes": fwschema.Float64Attribute{
+																					"retry_interval_minutes": fwschema.Float32Attribute{
 																						Required: true,
 																					},
-																					"timeout_minutes": fwschema.Int64Attribute{
+																					"timeout_minutes": fwschema.Int32Attribute{
 																						Optional: true,
 																					},
 																				},
@@ -630,7 +631,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															names.AttrExternalID: fwschema.StringAttribute{
 																Optional: true,
 															},
-															"timeout_minutes": fwschema.Int64Attribute{
+															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
@@ -1475,7 +1476,7 @@ type route53HealthCheckConfigModel struct {
 	RecordName       types.String                                    `tfsdk:"record_name"`
 	CrossAccountRole types.String                                    `tfsdk:"cross_account_role"`
 	ExternalID       types.String                                    `tfsdk:"external_id"`
-	TimeoutMinutes   types.Int64                                     `tfsdk:"timeout_minutes"`
+	TimeoutMinutes   types.Int32                                     `tfsdk:"timeout_minutes"`
 	RecordSets       fwtypes.ListNestedObjectValueOf[recordSetModel] `tfsdk:"record_set"`
 }
 
@@ -1505,14 +1506,14 @@ type executionBlockConfigurationModel struct {
 
 type executionApprovalConfigModel struct {
 	ApprovalRole   types.String `tfsdk:"approval_role"`
-	TimeoutMinutes types.Int64  `tfsdk:"timeout_minutes"`
+	TimeoutMinutes types.Int32  `tfsdk:"timeout_minutes"`
 }
 
 type customActionLambdaConfigModel struct {
-	RegionToRun          types.String                                     `tfsdk:"region_to_run"`
-	RetryIntervalMinutes types.Float64                                    `tfsdk:"retry_interval_minutes"`
-	TimeoutMinutes       types.Int64                                      `tfsdk:"timeout_minutes"`
-	Lambda               fwtypes.ListNestedObjectValueOf[lambdaModel]     `tfsdk:"lambda"`
+	RegionToRun          fwtypes.StringEnum[awstypes.RegionToRunIn]       `tfsdk:"region_to_run"`
+	RetryIntervalMinutes types.Float32                                    `tfsdk:"retry_interval_minutes"`
+	TimeoutMinutes       types.Int32                                      `tfsdk:"timeout_minutes"`
+	Lambdas              fwtypes.ListNestedObjectValueOf[lambdaModel]     `tfsdk:"lambda"`
 	Ungraceful           fwtypes.ListNestedObjectValueOf[ungracefulModel] `tfsdk:"ungraceful"`
 }
 
@@ -1533,7 +1534,7 @@ type globalAuroraConfigModel struct {
 	DatabaseClusterARNs     fwtypes.ListOfARN                                            `tfsdk:"database_cluster_arns"`
 	CrossAccountRole        types.String                                                 `tfsdk:"cross_account_role"`
 	ExternalID              types.String                                                 `tfsdk:"external_id"`
-	TimeoutMinutes          types.Int64                                                  `tfsdk:"timeout_minutes"`
+	TimeoutMinutes          types.Int32                                                  `tfsdk:"timeout_minutes"`
 	Ungraceful              fwtypes.ListNestedObjectValueOf[globalAuroraUngracefulModel] `tfsdk:"ungraceful"`
 }
 
@@ -1545,7 +1546,7 @@ type globalAuroraUngracefulModel struct {
 type ec2AsgCapacityIncreaseConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.Ec2AsgCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
 	TargetPercent              types.Int64                                                   `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64                                                   `tfsdk:"timeout_minutes"`
+	TimeoutMinutes             types.Int32                                                   `tfsdk:"timeout_minutes"`
 	Asgs                       fwtypes.ListNestedObjectValueOf[asgModel]                     `tfsdk:"asgs"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ec2UngracefulModel]           `tfsdk:"ungraceful"`
 }
@@ -1564,7 +1565,7 @@ type ec2UngracefulModel struct {
 type ecsCapacityIncreaseConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EcsCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
 	TargetPercent              types.Int64                                                `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64                                                `tfsdk:"timeout_minutes"`
+	TimeoutMinutes             types.Int32                                                `tfsdk:"timeout_minutes"`
 	Services                   fwtypes.ListNestedObjectValueOf[serviceModel]              `tfsdk:"services"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ecsUngracefulModel]        `tfsdk:"ungraceful"`
 }
@@ -1584,7 +1585,7 @@ type ecsUngracefulModel struct {
 type eksResourceScalingConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EksCapacityMonitoringApproach]   `tfsdk:"capacity_monitoring_approach"`
 	TargetPercent              types.Int64                                                  `tfsdk:"target_percent"`
-	TimeoutMinutes             types.Int64                                                  `tfsdk:"timeout_minutes"`
+	TimeoutMinutes             types.Int32                                                  `tfsdk:"timeout_minutes"`
 	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
 	EksClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
 	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
@@ -1622,7 +1623,7 @@ type eksUngracefulModel struct {
 type arcRoutingControlConfigModel struct {
 	CrossAccountRole         types.String                                                  `tfsdk:"cross_account_role"`
 	ExternalID               types.String                                                  `tfsdk:"external_id"`
-	TimeoutMinutes           types.Int64                                                   `tfsdk:"timeout_minutes"`
+	TimeoutMinutes           types.Int32                                                   `tfsdk:"timeout_minutes"`
 	RegionAndRoutingControls fwtypes.SetNestedObjectValueOf[regionAndRoutingControlsModel] `tfsdk:"region_and_routing_controls"`
 }
 
