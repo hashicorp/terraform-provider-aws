@@ -705,6 +705,20 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
+						},
+					},
+				},
+			},
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -1139,6 +1153,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"license_specification",
 		"metadata_options",
 		"monitoring",
+		"network_performance_options",
 		"network_interfaces",
 		"placement",
 		"private_dns_name_options",
@@ -1332,6 +1347,10 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		apiObject.Monitoring = &awstypes.LaunchTemplatesMonitoringRequest{
 			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		}
+	}
+
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]any)) > 0 {
@@ -2049,6 +2068,20 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(tfList []
 	return apiObjects
 }
 
+func expandLaunchTemplateNetworkPerformanceOptionsRequest(tfMap map[string]any) *awstypes.LaunchTemplateNetworkPerformanceOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.LaunchTemplateNetworkPerformanceOptionsRequest{}
+
+	if v, ok := tfMap["bandwidth_weighting"].(string); ok && v != "" {
+		apiObject.BandwidthWeighting = awstypes.InstanceBandwidthWeighting(v)
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplatePlacementRequest(tfMap map[string]any) *awstypes.LaunchTemplatePlacementRequest {
 	if tfMap == nil {
 		return nil
@@ -2262,6 +2295,13 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 		}
 	} else {
 		d.Set("monitoring", nil)
+	}
+	if apiObject.NetworkPerformanceOptions != nil {
+		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
+			return fmt.Errorf("setting network_performance_options: %w", err)
+		}
+	} else {
+		d.Set("network_performance_options", nil)
 	}
 	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("setting network_interfaces: %w", err)
@@ -2955,6 +2995,20 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObjects []aw
 	}
 
 	return tfList
+}
+
+func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTemplateNetworkPerformanceOptions) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.BandwidthWeighting; v != "" {
+		tfMap["bandwidth_weighting"] = string(v)
+	}
+
+	return tfMap
 }
 
 func flattenLaunchTemplatePlacement(apiObject *awstypes.LaunchTemplatePlacement) map[string]any {
