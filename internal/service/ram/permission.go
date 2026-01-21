@@ -37,7 +37,7 @@ import (
 
 // @FrameworkResource("aws_ram_permission", name="Permission")
 // @ArnIdentity
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="arn", resourceType="Permission")
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="policy_template")
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
