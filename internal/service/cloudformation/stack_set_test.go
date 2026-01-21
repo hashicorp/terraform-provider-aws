@@ -6,6 +6,7 @@ package cloudformation_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -867,6 +868,46 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 	})
 }
 
+func TestAccCloudFormationStackSet_regionOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackSet awstypes.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetConfig_regionOrder(rName, []string{acctest.Region(), acctest.AlternateRegion()}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_order.0", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_order.1", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+					"operation_preferences",
+				},
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/32536.
 // Prerequisites:
 // * Organizations management account
@@ -1521,6 +1562,30 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
+}
+
+func testAccStackSetConfig_regionOrder(rName string, regionOrder []string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+
+  auto_deployment {
+    enabled = false
+  }
+
+  operation_preferences {
+    failure_tolerance_count = 1
+    max_concurrent_count    = 10
+    region_concurrency_type = "SEQUENTIAL"
+    region_order            = ["%[3]s"]
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName), strings.Join(regionOrder, "\", \""))
 }
 
 // Initialize all the providers used by delegated administrator acceptance tests.
