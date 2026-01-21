@@ -13,7 +13,10 @@ linters:
     - nosprintfhostport
     - paralleltest
     - perfsprint
+    # Standard SDK flattener patterns causes noise.
+    # - prealloc
     - predeclared
+    - reassign
     - revive
     - staticcheck
   settings:
