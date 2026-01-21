@@ -646,7 +646,7 @@ The following arguments are optional:
 ### logging_config Configuration Block
 
 * `application_log_level` - (Optional) Detail level of application logs. Valid values: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`, `FATAL`.
-* `log_format` - (Required) Log format. Valid values: `Text`, `JSON`.
+* `log_format` - (Optional) Log format. Valid values: `Text`, `JSON`.
 * `log_group` - (Optional) CloudWatch log group where logs are sent.
 * `system_log_level` - (Optional) Detail level of Lambda platform logs. Valid values: `DEBUG`, `INFO`, `WARN`.
 
