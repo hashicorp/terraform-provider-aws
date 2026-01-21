@@ -88,7 +88,7 @@ Using `terraform import`, import Savings Plans using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_savingsplans_plan.example
+  to = aws_savingsplans_savings_plan.example
   id = "sp-12345678901234567"
 }
 ```
@@ -96,5 +96,5 @@ import {
 Using `terraform state mv`, import Savings Plans using the `id`. For example:
 
 ```console
-% terraform import aws_savingsplans_plan.example sp-12345678901234567
+% terraform import aws_savingsplans_savings_plan.example sp-12345678901234567
 ```
