@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.7 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.7 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.19 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.4 // indirect
@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.63.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.12 // indirect
@@ -167,7 +167,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20 // indirect
@@ -205,7 +205,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/odb v1.7.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/odb v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.1 // indirect
@@ -284,7 +284,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.68.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.30.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.16 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.17 // indirect

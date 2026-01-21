@@ -33,8 +33,8 @@ github.com/aws/aws-sdk-go-v2/credentials v1.19.7 h1:tHK47VqqtJxOymRrNtUXN5SP/zUT
 github.com/aws/aws-sdk-go-v2/credentials v1.19.7/go.mod h1:qOZk8sPDrxhf+4Wf4oT2urYJrYt3RejHSzgAquYeppw=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17 h1:I0GyV8wiYrP8XpA70g1HBcQO1JlQxCMTW9npl5UbDHY=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17/go.mod h1:tyw7BOl5bBe/oqvoIeECFJjMdzXoa/dfVz3QQ5lgHGA=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.19 h1:Gxj3kAlmM+a/VVO4YNsmgHGVUZhSxs0tuVwLIxZBCtM=
-github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.19/go.mod h1:XGq5kImVqQT4HUNbbG+0Y8O74URsPNH7CGPg1s1HW5E=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0 h1:pQZGI0qQXeCHZHMeWzhwPu+4jkWrdrIb2dgpG4OKmco=
+github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0/go.mod h1:XGq5kImVqQT4HUNbbG+0Y8O74URsPNH7CGPg1s1HW5E=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.17 h1:xOLELNKGp2vsiteLsvLPwxC+mYmO6OZ8PYgiuPJzF8U=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.17/go.mod h1:5M5CI3D12dNOtH3/mk6minaRwI2/37ifCURZISxA/IQ=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.17 h1:WWLqlh79iO48yLkj1v3ISRNiv+3KdQoZ6JWyfcsyQik=
@@ -89,8 +89,8 @@ github.com/aws/aws-sdk-go-v2/service/athena v1.56.6 h1:jtsbyd7mHipxxqqIlz0vIieVC
 github.com/aws/aws-sdk-go-v2/service/athena v1.56.6/go.mod h1:4Hg2qtNOcRb/+xXK5wR+RbhIUV2/kKVLwtQg+Zih+X4=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8 h1:1ult8qkMOiThfgX6dgbe4jw+zX4OxgHAmqaU53gFybM=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8/go.mod h1:104sWpG3xXs+vP/+LVjn5eDxtb7DpjEzimCpRDs/mzc=
-github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.5 h1:3maqUQlVW7C6zAdSknv6V/LInH/RJaDW0kTFcy7dkOw=
-github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.5/go.mod h1:8O5Pj92iNpfw/Fa7WdHbn6YiEjDoVdutz+9PGRNoP3Y=
+github.com/aws/aws-sdk-go-v2/service/autoscaling v1.63.0 h1:ffFts1+wfxmRrJ6tQJnhh6+p1TeQDplJ1iLrZopUM9w=
+github.com/aws/aws-sdk-go-v2/service/autoscaling v1.63.0/go.mod h1:8O5Pj92iNpfw/Fa7WdHbn6YiEjDoVdutz+9PGRNoP3Y=
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10 h1:XGDQgxCjjsxFsGFJPd6Z3t58Ss6WkzDaqvJoweeYqnQ=
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10/go.mod h1:Vi0CLDDKQ2mzmmBnIzEqKSRHdrz8UinxOkTavAgkHoA=
 github.com/aws/aws-sdk-go-v2/service/backup v1.54.6 h1:glHh9kH3nitEM8rtZUCw4oc0lOfcbe3SgfgOXUgCE+o=
@@ -321,8 +321,8 @@ github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2 h1:Esa5fUqBBCxHBN86eVU
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2/go.mod h1:1wTR2S82nvPBUL8GlXagTRwOpkwTWNQ8BI6cPrm20Tg=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17 h1:yhFCD8BhRdfkR0u+L+qUeCEd9SwaGuw0O9t245modGM=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17/go.mod h1:S3x6sL7xFScpJWpQ0c3KQDK4idqw/+ACHgV9L2LmfEs=
-github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.10 h1:sJmMyk1se14XtgWGEnFxCtmpvzk/NWJN3CcJV4zhy38=
-github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.10/go.mod h1:UWRbDRog8jboaraZnLAPkS97ttyzB3FHccuNMoe9Onc=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0 h1:uMiVSOl/IZH5CaeBfOXQtFJJ3zTWjNGGKO6Dab4U6tM=
+github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0/go.mod h1:UWRbDRog8jboaraZnLAPkS97ttyzB3FHccuNMoe9Onc=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10 h1:9jBVTw8qxfekGSNtiFreb1e5m2vCz89XcC5C4pmDN9Y=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10/go.mod h1:Fpex7CunMujL2O9qaKTDYG0xnl1ZP3pBZ68XyQCmhtA=
 github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19 h1:OHU61erjv3ruzxFIbDmMh5dQpiP6L6LzFIJd4s7RBW0=
@@ -397,8 +397,8 @@ github.com/aws/aws-sdk-go-v2/service/oam v1.23.11 h1:tGBgzz6uJTBdQ6aTg8VNibn6vCq
 github.com/aws/aws-sdk-go-v2/service/oam v1.23.11/go.mod h1:6QtLWHhXxj3jblHDwWp4d6R16dAxJXzcD5g7ODv7bOo=
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.2 h1:j1pMvab+g48I7piBSnYLSX7If8G2d1WT7roNegLwudI=
 github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.2/go.mod h1:5Xu7mFpqqPvL7BJADHMZlnC8hXIKcUTCeRz3VD4G2Os=
-github.com/aws/aws-sdk-go-v2/service/odb v1.7.1 h1:oJRg+RcW+jfvWxRoiTmq34nLqqgen/y2D7eS0eLcSsc=
-github.com/aws/aws-sdk-go-v2/service/odb v1.7.1/go.mod h1:vyVod5e8o4Q0zQphIt4e92RpNVLLzRyGGUX4IjCCe78=
+github.com/aws/aws-sdk-go-v2/service/odb v1.8.0 h1:UPr/6GtTpy/kgb9FV/0aLKMqlCN3LgoBe5Jjb3L+vUM=
+github.com/aws/aws-sdk-go-v2/service/odb v1.8.0/go.mod h1:vyVod5e8o4Q0zQphIt4e92RpNVLLzRyGGUX4IjCCe78=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1 h1:OrmXg1h8sBVrjg5wk0HYVMTR7d58WQv+5VSE1ZmrpC4=
 github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1/go.mod h1:10SvxQZwSf5bsNaG2AiBEbibx2bmNfT8r4q4pF7hXr4=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.0 h1:CH8cHZjADBAYcU7r/F05mhAiM8p6ts4riMb/WgW1h3Y=
@@ -555,8 +555,8 @@ github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.0 h1:PiN/zZcPtNWrR9rajVTIl
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.0/go.mod h1:rQiNu98nalxvV8rXJqXQpJVjpi9VU2BpQqbymz6vrjY=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.68.6 h1:M8s3i9Sq3lnQHR3xq7jl27H8c8ZPfQCff/CchAnGSI4=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.68.6/go.mod h1:mOcEcjsBajDxYOrPd2ta1l67mokEcuPQmyBC3JDhthM=
-github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.30.7 h1:S8BmLMzvN5n/WuWkEL9GaJ3uJJP9Cf11CE5cGuQYBD0=
-github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.30.7/go.mod h1:WW58yPSaNH1GgBFZDNDLeZF+X0MH57vNc+zZfNDl/YY=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.0 h1:jNMSowaEkD7hs4+WLkC2ql39+UgedjgyJIYsSd2PxoA=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.0/go.mod h1:WW58yPSaNH1GgBFZDNDLeZF+X0MH57vNc+zZfNDl/YY=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.7 h1:FWM20UMvmvEyOocQ0Q08O0AOFssFlg4kL2LdTPHANL4=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.7/go.mod h1:Nr0I4OlJkRpHVEVZQIEi8W7vQ5JvIudq3ZZAsQm+7Dk=
 github.com/aws/aws-sdk-go-v2/service/waf v1.30.16 h1:NGWAULLWxvu/SjR2VL41TMWaEayWzuim+n4ZrpmjPlc=
