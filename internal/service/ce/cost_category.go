@@ -156,7 +156,7 @@ func resourceCostCategory() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(0, 1024),
 							},
 							"targets": {
-								Type:     schema.TypeSet,
+								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
 								MaxItems: 500,
@@ -636,7 +636,7 @@ func expandCostCategorySplitChargeRule(tfMap map[string]any) *awstypes.CostCateg
 	apiObject := &awstypes.CostCategorySplitChargeRule{
 		Method:  awstypes.CostCategorySplitChargeMethod(tfMap["method"].(string)),
 		Source:  aws.String(tfMap[names.AttrSource].(string)),
-		Targets: flex.ExpandStringValueSet(tfMap["targets"].(*schema.Set)),
+		Targets: flex.ExpandStringValueList(tfMap["targets"].([]any)),
 	}
 	if v, ok := tfMap[names.AttrParameter]; ok {
 		apiObject.Parameters = expandCostCategorySplitChargeRuleParameters(v.(*schema.Set).List())
