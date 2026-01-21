@@ -3,7 +3,7 @@ resource "aws_connect_phone_number" "test" {
   target_arn   = aws_connect_instance.test.arn
   country_code = "US"
   type         = "DID"
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_connect_instance" "test" {
