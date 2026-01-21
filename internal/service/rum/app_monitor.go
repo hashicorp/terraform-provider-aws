@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/rum"
@@ -132,6 +133,38 @@ func resourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deobfuscation_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"javascript_source_maps": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrStatus: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.DeobfuscationStatus](),
+									},
+									"s3_uri": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 1024),
+											validation.StringMatch(regexache.MustCompile(`^s3://[a-z0-9][-.a-z0-9]{1,61}(?:/[-!_*'().a-z0-9A-Z]+(?:/[-!_*'().a-z0-9A-Z]+)*)?/?`), "must be a valid S3 URI"),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -177,6 +210,10 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("custom_events"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.CustomEvents = expandCustomEvents(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("deobfuscation_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.DeobfuscationConfiguration = expandDeobfuscationConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDomain); ok {
@@ -234,6 +271,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set(names.AttrARN, arn)
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
+	d.Set("deobfuscation_configuration", flattenDeobfuscationConfiguration(appMon.DeobfuscationConfiguration))
 	d.Set(names.AttrDomain, appMon.Domain)
 	d.Set("domain_list", appMon.DomainList)
 	d.Set(names.AttrName, name)
@@ -262,6 +300,12 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if d.HasChange("cw_log_enabled") {
 			input.CwLogEnabled = aws.Bool(d.Get("cw_log_enabled").(bool))
+		}
+
+		if d.HasChange("deobfuscation_configuration") {
+			if v, ok := d.GetOk("deobfuscation_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.DeobfuscationConfiguration = expandDeobfuscationConfiguration(d.Get("deobfuscation_configuration").([]any)[0].(map[string]any))
+			}
 		}
 
 		if d.HasChange(names.AttrDomain) {
@@ -444,4 +488,50 @@ func flattenCustomEvents(apiObject *awstypes.CustomEvents) map[string]any {
 	}
 
 	return tfMap
+}
+
+func expandDeobfuscationConfiguration(tfMap map[string]any) *awstypes.DeobfuscationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	config := &awstypes.DeobfuscationConfiguration{}
+
+	if v, ok := tfMap["javascript_source_maps"].([]any); ok && len(v) > 0 && v[0] != nil {
+		sourceMap := v[0].(map[string]any)
+		config.JavaScriptSourceMaps = &awstypes.JavaScriptSourceMaps{
+			Status: awstypes.DeobfuscationStatus(sourceMap[names.AttrStatus].(string)),
+		}
+
+		if s3URI, ok := sourceMap["s3_uri"].(string); ok && s3URI != "" {
+			config.JavaScriptSourceMaps.S3Uri = aws.String(s3URI)
+		}
+	}
+
+	return config
+}
+
+func flattenDeobfuscationConfiguration(apiObject *awstypes.DeobfuscationConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfList := []any{}
+	tfMap := map[string]any{}
+
+	if apiObject.JavaScriptSourceMaps != nil {
+		jsSourceMaps := map[string]any{
+			names.AttrStatus: apiObject.JavaScriptSourceMaps.Status,
+		}
+
+		if s3URI := apiObject.JavaScriptSourceMaps.S3Uri; s3URI != nil {
+			jsSourceMaps["s3_uri"] = aws.ToString(s3URI)
+		}
+
+		tfMap["javascript_source_maps"] = []any{jsSourceMaps}
+	}
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
 }
