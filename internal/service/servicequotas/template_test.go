@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -92,7 +92,7 @@ func testAccTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaConcurrentExecQuotaCode, lambdaServiceCode, lambdaConcurrentExecValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicequotas.ResourceTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

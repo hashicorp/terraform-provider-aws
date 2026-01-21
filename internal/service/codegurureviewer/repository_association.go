@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package codegurureviewer
 
@@ -34,6 +36,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
 // @Testing(importIgnore="repository", plannableImportAction="Replace")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
@@ -382,7 +385,7 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	}
 
 	if output == nil || output.RepositoryAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RepositoryAssociation, nil
@@ -417,7 +420,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}
@@ -436,7 +439,7 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.RepositoryAssociation); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
 
 		return output, err
 	}

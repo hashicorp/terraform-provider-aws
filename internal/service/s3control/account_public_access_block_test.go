@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3control_test
@@ -88,7 +88,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccountPublicAccessBlock(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3control.ResourceAccountPublicAccessBlock(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

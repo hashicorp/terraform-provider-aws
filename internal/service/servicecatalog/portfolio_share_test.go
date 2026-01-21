@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -176,7 +176,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourcePortfolioShare(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourcePortfolioShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

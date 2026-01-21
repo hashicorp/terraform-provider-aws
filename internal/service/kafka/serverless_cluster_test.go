@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafka_test
@@ -75,7 +75,7 @@ func TestAccKafkaServerlessCluster_disappears(t *testing.T) {
 				Config: testAccServerlessClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceServerlessCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafka.ResourceServerlessCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

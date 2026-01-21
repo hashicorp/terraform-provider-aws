@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -59,7 +59,7 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceGroupTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

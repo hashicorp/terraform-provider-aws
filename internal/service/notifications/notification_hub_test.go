@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package notifications_test
@@ -75,7 +75,7 @@ func TestAccNotificationsNotificationHub_disappears(t *testing.T) {
 				Config: testAccNotificationHubConfig_basic(rRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationHubExists(ctx, resourceName, &notificationhub),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnotifications.ResourceNotificationHub, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnotifications.ResourceNotificationHub, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

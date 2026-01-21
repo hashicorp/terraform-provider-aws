@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -64,7 +64,7 @@ func testAccConfigurationRecorderStatus_disappears(t *testing.T) {
 				Config: testAccConfigurationRecorderStatusConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderStatusExists(ctx, resourceName, &crs),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), "aws_config_configuration_recorder.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigurationRecorder(), "aws_config_configuration_recorder.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

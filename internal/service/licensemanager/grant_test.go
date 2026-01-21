@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -113,7 +113,7 @@ func testAccGrant_disappears(t *testing.T) {
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceGrant(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflicensemanager.ResourceGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

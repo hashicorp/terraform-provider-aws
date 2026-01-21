@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -153,7 +153,7 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 				Config: testAccTargetGroupAttachmentConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceTargetGroupAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

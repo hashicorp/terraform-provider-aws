@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -74,7 +74,7 @@ func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceKeyValueStore, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

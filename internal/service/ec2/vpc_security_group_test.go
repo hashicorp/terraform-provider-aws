@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -929,7 +929,7 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

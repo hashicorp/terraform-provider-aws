@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -59,7 +59,7 @@ func TestAccSESDomainIdentity_disappears(t *testing.T) {
 				Config: testAccDomainIdentityConfig_basic(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainIdentityExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceDomainIdentity(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

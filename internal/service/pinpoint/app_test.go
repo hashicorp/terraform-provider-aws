@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -96,7 +96,7 @@ func TestAccPinpointApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceApp(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

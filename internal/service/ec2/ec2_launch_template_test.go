@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -70,6 +70,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
@@ -161,7 +162,7 @@ func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &launchTemplate),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLaunchTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3235,6 +3236,61 @@ func TestAccEC2LaunchTemplate_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_networkPerformanceOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var template awstypes.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "vpc-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "vpc-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "ebs-1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "ebs-1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLaunchTemplateConfig_networkPerformanceOptions(rName, "default"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.0.bandwidth_weighting", "default"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -4685,6 +4741,19 @@ resource "aws_launch_template" "test" {
 }
 `, rName)
 }
+
+func testAccLaunchTemplateConfig_networkPerformanceOptions(rName, bandwidthWeighting string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_performance_options {
+    bandwidth_weighting = %[2]q
+  }
+}
+`, rName, bandwidthWeighting)
+}
+
 func testAccLaunchTemplateConfig_metadataOptionsNoHTTPEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {

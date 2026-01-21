@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -465,7 +467,7 @@ func findCapability(ctx context.Context, conn *eks.Client, input *eks.DescribeCa
 	}
 
 	if output == nil || output.Capability == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Capability, nil
@@ -525,7 +527,7 @@ func waitCapabilityCreated(ctx context.Context, conn *eks.Client, clusterName, c
 
 	if output, ok := outputRaw.(*awstypes.Capability); ok {
 		if status, health := output.Status, output.Health; status == awstypes.CapabilityStatusCreateFailed && health != nil {
-			tfresource.SetLastError(err, capabilityIssuesError(health.Issues))
+			retry.SetLastError(err, capabilityIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -546,7 +548,7 @@ func waitCapabilityDeleted(ctx context.Context, conn *eks.Client, clusterName, c
 
 	if output, ok := outputRaw.(*awstypes.Capability); ok {
 		if status, health := output.Status, output.Health; status == awstypes.CapabilityStatusDeleteFailed && health != nil {
-			tfresource.SetLastError(err, capabilityIssuesError(health.Issues))
+			retry.SetLastError(err, capabilityIssuesError(health.Issues))
 		}
 
 		return output, err
@@ -567,7 +569,7 @@ func waitCapabilityUpdateSuccessful(ctx context.Context, conn *eks.Client, clust
 
 	if output, ok := outputRaw.(*awstypes.Update); ok {
 		if status := output.Status; status == awstypes.UpdateStatusCancelled || status == awstypes.UpdateStatusFailed {
-			tfresource.SetLastError(err, errorDetailsError(output.Errors))
+			retry.SetLastError(err, errorDetailsError(output.Errors))
 		}
 
 		return output, err

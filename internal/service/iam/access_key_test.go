@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -74,7 +74,7 @@ func TestAccIAMAccessKey_disappears(t *testing.T) {
 				Config: testAccAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccessKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceAccessKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

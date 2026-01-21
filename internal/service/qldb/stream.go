@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package qldb
 
@@ -266,7 +268,7 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.Client, input *qld
 	}
 
 	if output == nil || output.Stream == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Stream, nil
@@ -304,7 +306,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.JournalKinesisStreamDescription); ok {
-		tfresource.SetLastError(err, errors.New(string(output.ErrorCause)))
+		retry.SetLastError(err, errors.New(string(output.ErrorCause)))
 
 		return output, err
 	}
@@ -340,7 +342,7 @@ func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.JournalKinesisStreamDescription); ok {
-		tfresource.SetLastError(err, errors.New(string(output.ErrorCause)))
+		retry.SetLastError(err, errors.New(string(output.ErrorCause)))
 
 		return output, err
 	}

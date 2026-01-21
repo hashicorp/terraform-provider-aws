@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -40,6 +42,7 @@ import (
 // @ArnIdentity(identityDuplicateAttributes="id")
 // @ArnFormat("lifecycle-policy/{name}")
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newLifecyclePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &lifecyclePolicyResource{}, nil
 }
@@ -472,7 +475,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.LifecyclePolicy, nil

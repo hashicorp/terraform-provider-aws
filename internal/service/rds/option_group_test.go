@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds_test
@@ -75,7 +75,7 @@ func TestAccRDSOptionGroup_disappears(t *testing.T) {
 				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceOptionGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfrds.ResourceOptionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

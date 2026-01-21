@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schemas_test
@@ -65,7 +65,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfschemas.ResourceDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

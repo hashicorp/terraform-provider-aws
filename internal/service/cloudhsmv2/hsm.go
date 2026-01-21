@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cloudhsmv2
 
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -237,7 +238,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Hsm); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}
@@ -258,7 +259,7 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.Hsm); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
 
 		return output, err
 	}

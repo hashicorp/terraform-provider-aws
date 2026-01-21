@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package evidently_test
@@ -198,7 +198,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 				Config: testAccSegmentConfig_basic(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceSegment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatchevidently.ResourceSegment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -70,7 +70,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

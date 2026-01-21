@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
@@ -31,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,6 +48,7 @@ import (
 // @Testing(importIgnore="default_action.0.forward")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -427,12 +431,10 @@ func resourceListener() *schema.Resource {
 				ValidateFunc: validation.IsPortNumber,
 			},
 			names.AttrProtocol: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				StateFunc: func(v any) string {
-					return strings.ToUpper(v.(string))
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
 			"routing_http_request_x_amzn_mtls_clientcert_header_name": {
@@ -878,7 +880,7 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Attributes, nil

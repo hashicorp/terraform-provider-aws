@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -115,7 +115,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 				Config: testAccPolicyTemplateConfig_basic(`permit (principal in ?principal, action in PhotoFlash::Action::"FullPhotoAccess", resource == ?resource) unless { resource.IsPrivate };`, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicyTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicyTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

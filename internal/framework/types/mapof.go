@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -46,8 +47,7 @@ func (t mapTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t mapTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("MapTypeOf[%T]", zero)
+	return fmt.Sprintf("MapTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {

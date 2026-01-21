@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appstream_test
@@ -89,7 +89,7 @@ func TestAccAppStreamImageBuilder_disappears(t *testing.T) {
 				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceImageBuilder(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappstream.ResourceImageBuilder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

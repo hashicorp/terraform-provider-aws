@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package cognitoidp
 
@@ -36,6 +38,7 @@ import (
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
@@ -1325,7 +1328,7 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client,
 	}
 
 	if output == nil || output.UserPool == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.UserPool, nil
@@ -1350,7 +1353,7 @@ func findUserPoolMFAConfigByID(ctx context.Context, conn *cognitoidentityprovide
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

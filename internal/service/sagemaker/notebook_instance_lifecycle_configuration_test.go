@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -153,7 +153,7 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_disappears(t *testin
 				Config: testAccNotebookInstanceLifecycleConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceNotebookInstanceLifeCycleConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

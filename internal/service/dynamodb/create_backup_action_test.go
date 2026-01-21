@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +20,7 @@ func TestAccDynamoDBCreateBackupAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,7 +28,7 @@ func TestAccDynamoDBCreateBackupAction_basic(t *testing.T) {
 			{
 				Config: testAccCreateBackupActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupExists(ctx, rName),
+					testAccCheckBackupExists(ctx, t, rName),
 				),
 			},
 		},
@@ -41,7 +40,7 @@ func TestAccDynamoDBCreateBackupAction_customName(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	backupName := acctest.RandomWithPrefix(t, "tf-test-backup")
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,8 +48,8 @@ func TestAccDynamoDBCreateBackupAction_customName(t *testing.T) {
 			{
 				Config: testAccCreateBackupActionConfig_customName(rName, backupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackupExists(ctx, rName),
-					testAccCheckBackupName(ctx, rName, backupName),
+					testAccCheckBackupExists(ctx, t, rName),
+					testAccCheckBackupName(ctx, t, rName, backupName),
 				),
 			},
 		},
@@ -61,7 +60,7 @@ func TestAccDynamoDBCreateBackupAction_nonExistentTable(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,9 +73,9 @@ func TestAccDynamoDBCreateBackupAction_nonExistentTable(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupExists(ctx context.Context, tableName string) resource.TestCheckFunc {
+func testAccCheckBackupExists(ctx context.Context, t *testing.T, tableName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
 		input := &dynamodb.ListBackupsInput{
 			TableName: &tableName,
@@ -95,9 +94,9 @@ func testAccCheckBackupExists(ctx context.Context, tableName string) resource.Te
 	}
 }
 
-func testAccCheckBackupName(ctx context.Context, tableName, expectedBackupName string) resource.TestCheckFunc {
+func testAccCheckBackupName(ctx context.Context, t *testing.T, tableName, expectedBackupName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
 		input := &dynamodb.ListBackupsInput{
 			TableName: &tableName,

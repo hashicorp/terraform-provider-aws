@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package workspacesweb_test
@@ -119,7 +119,7 @@ func TestAccWorkSpacesWebUserAccessLoggingSettings_disappears(t *testing.T) {
 				Config: testAccUserAccessLoggingSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserAccessLoggingSettingsExists(ctx, resourceName, &userAccessLoggingSettings),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourceUserAccessLoggingSettings, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

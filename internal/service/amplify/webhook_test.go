@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package amplify_test
@@ -10,11 +10,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,19 +21,19 @@ import (
 func testAccWebhook_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webhook types.Webhook
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, t, resourceName, &webhook),
 					resource.TestCheckResourceAttrSet(resourceName, "app_id"),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/webhooks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
@@ -55,20 +53,20 @@ func testAccWebhook_basic(t *testing.T) {
 func testAccWebhook_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webhook types.Webhook
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
+					testAccCheckWebhookExists(ctx, t, resourceName, &webhook),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,19 +77,19 @@ func testAccWebhook_disappears(t *testing.T) {
 func testAccWebhook_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webhook types.Webhook
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_description(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, t, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-1", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription1"),
 				),
@@ -104,7 +102,7 @@ func testAccWebhook_update(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_descriptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, t, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription2"),
 				),
@@ -113,7 +111,7 @@ func testAccWebhook_update(t *testing.T) {
 	})
 }
 
-func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *types.Webhook) resource.TestCheckFunc {
+func testAccCheckWebhookExists(ctx context.Context, t *testing.T, resourceName string, v *types.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -124,7 +122,7 @@ func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *type
 			return fmt.Errorf("No Amplify Webhook ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AmplifyClient(ctx)
 
 		webhook, err := tfamplify.FindWebhookByID(ctx, conn, rs.Primary.ID)
 
@@ -138,9 +136,9 @@ func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *type
 	}
 }
 
-func testAccCheckWebhookDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckWebhookDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_webhook" {

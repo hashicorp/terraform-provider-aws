@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmonitor_test
@@ -77,7 +77,7 @@ func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmonitor.ResourceMonitor, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkmonitor.ResourceMonitor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

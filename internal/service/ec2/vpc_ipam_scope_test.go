@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -73,7 +73,7 @@ func TestAccIPAMScope_disappears(t *testing.T) { // nosemgrep:ci.vpc-in-test-nam
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMScope(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

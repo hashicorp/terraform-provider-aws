@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // StringFromFramework converts a Framework String value to a string pointer.
@@ -48,8 +50,8 @@ func StringToFramework(ctx context.Context, v *string) types.String {
 
 // StringValueToFramework converts a string value to a Framework String value.
 // An empty string is converted to a null String.
-func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
-	if v == "" {
+func StringValueToFramework[T tfslices.Stringable](ctx context.Context, v T) types.String {
+	if inttypes.IsZero(v) {
 		return types.StringNull()
 	}
 	return types.StringValue(string(v))
@@ -57,7 +59,7 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 
 // StringValueToFrameworkLegacy converts a string value to a Framework String value.
 // An empty string is left as an empty String.
-func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.String {
+func StringValueToFrameworkLegacy[T tfslices.Stringable](_ context.Context, v T) types.String {
 	return types.StringValue(string(v))
 }
 

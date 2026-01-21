@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53profiles_test
@@ -186,9 +186,41 @@ func TestAccRoute53ProfilesResourceAssociation_disappears(t *testing.T) {
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfroute53profiles.Route53ProfileResourceAssocation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfroute53profiles.Route53ProfileResourceAssocation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesResourceAssociation_queryLogConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	// See https://github.com/hashicorp/terraform-provider-aws/issues/45268
+	var resourceAssociation awstypes.ProfileResourceAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_resource_association.test"
+	profileName := "aws_route53profiles_profile.test"
+	queryLogConfigName := "aws_route53_resolver_query_log_config.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAssociationConfig_queryLogConflict(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceAssociation),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_id", profileName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, queryLogConfigName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+				),
 			},
 		},
 	})
@@ -348,4 +380,28 @@ resource "aws_route53profiles_resource_association" "test" {
   resource_arn = aws_vpc_endpoint.test.arn
 }
 `, rName))
+}
+
+func testAccResourceAssociationConfig_queryLogConflict(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_route53_resolver_query_log_config" "test" {
+  name            = %[1]q
+  destination_arn = aws_s3_bucket.test.arn
+}
+
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53profiles_resource_association" "test" {
+  name         = %[1]q
+  profile_id   = aws_route53profiles_profile.test.id
+  resource_arn = aws_route53_resolver_query_log_config.test.arn
+}
+`, rName)
 }

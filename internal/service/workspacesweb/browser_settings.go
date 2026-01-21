@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspacesweb
 
@@ -38,6 +40,7 @@ import (
 // @Testing(generator=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/workspacesweb/types;types.BrowserSettings")
 // @Testing(importStateIdAttribute="browser_settings_arn")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newBrowserSettingsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &browserSettingsResource{}, nil
 }
@@ -240,7 +243,7 @@ func findBrowserSettingsByARN(ctx context.Context, conn *workspacesweb.Client, a
 	}
 
 	if output == nil || output.BrowserSettings == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.BrowserSettings, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package oam_test
@@ -15,9 +15,6 @@ import (
 )
 
 func testAccObservabilityAccessManagerSinkDataSource_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	ctx := acctest.Context(t)
 	var sink oam.GetSinkOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

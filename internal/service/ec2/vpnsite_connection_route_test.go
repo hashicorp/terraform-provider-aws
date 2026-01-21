@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -56,7 +56,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 				Config: testAccVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnectionRoute(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPNConnectionRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

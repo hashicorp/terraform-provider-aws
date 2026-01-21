@@ -50,7 +50,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `options` - (Optional) Options for the VPC attachment. [See below](#options).
-* `routing_policy_label` - (Optional) The routing policy label to apply to the VPC attachment for traffic routing decisions. Maximum length of 256 characters. Changing this value will force recreation of the resource.
+* `routing_policy_label` - (Optional) The routing policy label to apply to the VPC attachment for traffic routing decisions. Maximum length of 256 characters.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options

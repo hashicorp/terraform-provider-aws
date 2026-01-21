@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
@@ -104,7 +104,7 @@ func TestAccVPCLatticeServiceNetworkServiceAssociation_disappears(t *testing.T) 
 				Config: testAccServiceNetworkServiceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkServiceAssociationExists(ctx, resourceName, &servicenetworkasc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceServiceNetworkServiceAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceServiceNetworkServiceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

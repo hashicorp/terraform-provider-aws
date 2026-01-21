@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53recoveryreadiness_test
@@ -80,7 +80,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 				Config: testAccResourceSetConfig_basic(rName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceResourceSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53recoveryreadiness.ResourceResourceSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

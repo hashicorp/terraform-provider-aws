@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kafkaconnect_test
@@ -106,7 +106,7 @@ func TestAccKafkaConnectConnector_disappears(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkafkaconnect.ResourceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

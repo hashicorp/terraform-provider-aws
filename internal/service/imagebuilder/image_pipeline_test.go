@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -82,7 +82,7 @@ func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImagePipeline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -717,6 +717,44 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderImagePipeline_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_loggingConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.image_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image-logs/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.pipeline_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-pipeline-logs/%s", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_loggingConfigurationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.image_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image-logs/%s-v2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.pipeline_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-pipeline-logs/%s-v2", rName)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
@@ -1263,6 +1301,52 @@ resource "aws_imagebuilder_image_pipeline" "test" {
       name  = "waitForActionAtEnd"
       value = "true"
     }
+  }
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_loggingConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "image" {
+  name = "/aws/imagebuilder/test-image-logs/%[1]s"
+}
+
+resource "aws_cloudwatch_log_group" "pipeline" {
+  name = "/aws/imagebuilder/test-pipeline-logs/%[1]s"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  logging_configuration {
+    image_log_group_name    = aws_cloudwatch_log_group.image.name
+    pipeline_log_group_name = aws_cloudwatch_log_group.pipeline.name
+  }
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_loggingConfigurationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "image" {
+  name = "/aws/imagebuilder/test-image-logs/%[1]s-v2"
+}
+
+resource "aws_cloudwatch_log_group" "pipeline" {
+  name = "/aws/imagebuilder/test-pipeline-logs/%[1]s-v2"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  logging_configuration {
+    image_log_group_name    = aws_cloudwatch_log_group.image.name
+    pipeline_log_group_name = aws_cloudwatch_log_group.pipeline.name
   }
 }
 `, rName))

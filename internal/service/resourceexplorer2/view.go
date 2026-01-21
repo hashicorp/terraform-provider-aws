@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package resourceexplorer2
 
@@ -43,6 +45,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/resourceexplorer2;resourceexplorer2.GetViewOutput")
 // @Testing(serialize=true)
 // @Testing(preIdentityVersion="v5.100.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newViewResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &viewResource{}, nil
 }
@@ -396,7 +399,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 	}
 
 	if output == nil || output.View == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -133,7 +133,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 				Config: testAccCustomDataIdentifierConfig_basic(rName, regex),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceCustomDataIdentifier(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceCustomDataIdentifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

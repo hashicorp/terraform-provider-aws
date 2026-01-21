@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -94,7 +94,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 				Config: testAccReplicationConfigConfig_basic(rName, "cdc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

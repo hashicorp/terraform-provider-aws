@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssmincidents
 
@@ -287,7 +289,7 @@ func findReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn 
 	}
 
 	if output == nil || output.ReplicationSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ReplicationSet, nil

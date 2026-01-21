@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -379,7 +379,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 				Config: testAccResponseHeadersPolicyConfig_cors(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

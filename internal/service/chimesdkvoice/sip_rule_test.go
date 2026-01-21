@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -75,7 +75,7 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

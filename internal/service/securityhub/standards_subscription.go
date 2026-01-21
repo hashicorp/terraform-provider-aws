@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -219,7 +221,7 @@ func waitStandardsSubscriptionCreated(ctx context.Context, conn *securityhub.Cli
 
 	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		if reason := output.StandardsStatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
+			retry.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
 		}
 
 		return output, err
@@ -240,7 +242,7 @@ func waitStandardsSubscriptionDeleted(ctx context.Context, conn *securityhub.Cli
 
 	if output, ok := outputRaw.(*types.StandardsSubscription); ok {
 		if reason := output.StandardsStatusReason; reason != nil {
-			tfresource.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
+			retry.SetLastError(err, errors.New(string(reason.StatusReasonCode)))
 		}
 
 		return output, err

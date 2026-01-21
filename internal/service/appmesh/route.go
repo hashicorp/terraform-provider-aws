@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package appmesh
 
@@ -34,6 +36,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appmesh/types;types.RouteData")
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccRouteImportStateIdFunc)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -929,7 +932,7 @@ func findRoute(ctx context.Context, conn *appmesh.Client, input *appmesh.Describ
 	}
 
 	if output == nil || output.Route == nil || output.Route.Metadata == nil || output.Route.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Route, nil

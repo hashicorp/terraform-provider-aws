@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package observabilityadmin
 
@@ -385,7 +387,7 @@ func findCentralizationRuleForOrganization(ctx context.Context, conn *observabil
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -418,7 +420,7 @@ func waitCentralizationRuleForOrganizationHealthy(ctx context.Context, conn *obs
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if out, ok := outputRaw.(*observabilityadmin.GetCentralizationRuleForOrganizationOutput); ok {
-		tfresource.SetLastError(err, errors.New(string(out.FailureReason)))
+		retry.SetLastError(err, errors.New(string(out.FailureReason)))
 		return out, smarterr.NewError(err)
 	}
 

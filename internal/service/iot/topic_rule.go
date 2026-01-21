@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iot
 
@@ -1442,7 +1444,7 @@ pageLoop:
 	}
 
 	if rule == nil {
-		return nil, tfresource.NewEmptyResultError(nil)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	inputG := &iot.GetTopicRuleInput{
@@ -1463,7 +1465,7 @@ pageLoop:
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(inputG)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

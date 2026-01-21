@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -50,8 +51,7 @@ func (t listNestedObjectTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t listNestedObjectTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("ListNestedObjectTypeOf[%T]", zero)
+	return fmt.Sprintf("ListNestedObjectTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t listNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {

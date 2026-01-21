@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -88,7 +88,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T
 				Config: testAccUserPoolUICustomizationConfig_allClientsCSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -288,7 +288,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { 
 				Config: testAccUserPoolUICustomizationConfig_clientCSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

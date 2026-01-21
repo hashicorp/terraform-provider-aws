@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package flex
@@ -142,8 +142,8 @@ func (fff *fuzzyFieldFinder) findField(ctx context.Context, fieldNameFrom string
 		if fff.suffixRecursionDepth == 0 {
 			// so it will only recurse once
 			fff.suffixRecursionDepth++
-			if strings.HasSuffix(fieldNameFrom, v) {
-				fieldTo, ok := fff.findField(ctx, strings.TrimSuffix(fieldNameFrom, v), typeFrom, typeTo, flexer)
+			if before, ok := strings.CutSuffix(fieldNameFrom, v); ok {
+				fieldTo, ok := fff.findField(ctx, before, typeFrom, typeTo, flexer)
 				fff.suffixRecursionDepth--
 				return fieldTo, ok
 			}

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53_test
@@ -79,7 +79,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53.ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -82,7 +82,7 @@ func TestAccS3TablesTablePolicy_disappears(t *testing.T) {
 				Config: testAccTablePolicyConfig_basic(rName, namespace, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTablePolicyExists(ctx, resourceName, &tablepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTablePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTablePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

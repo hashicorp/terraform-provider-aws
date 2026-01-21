@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisanalytics_test
@@ -78,7 +78,7 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisanalytics.ResourceApplication(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkinesisanalytics.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

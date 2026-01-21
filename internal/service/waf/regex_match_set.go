@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package waf
 
@@ -203,7 +205,7 @@ func findRegexMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*a
 	}
 
 	if output == nil || output.RegexMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.RegexMatchSet, nil

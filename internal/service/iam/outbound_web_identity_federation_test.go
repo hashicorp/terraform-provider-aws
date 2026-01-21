@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -82,7 +82,7 @@ func testAccOutboundWebIdentityFederation_disappears(t *testing.T) {
 				Config: testAccOutboundWebIdentityFederationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOutboundWebIdentityFederationExists(ctx, t, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOutboundWebIdentityFederation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfiam.ResourceOutboundWebIdentityFederation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -67,7 +67,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductPortfolioAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

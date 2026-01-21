@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package m2
 
@@ -41,6 +43,7 @@ import (
 // @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetApplicationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
 
@@ -393,7 +396,7 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	}
 
 	if output == nil || output.ApplicationId == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -419,7 +422,7 @@ func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id
 	}
 
 	if output == nil || output.ApplicationVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -468,7 +471,7 @@ func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -487,7 +490,7 @@ func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, ver
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationVersionOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -506,7 +509,7 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -525,7 +528,7 @@ func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -545,7 +548,7 @@ func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -565,7 +568,7 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}

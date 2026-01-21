@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -85,7 +85,7 @@ func testAccIPRestriction_disappears(t *testing.T) {
 				Config: testAccIPRestrictionConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPRestrictionExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceIPRestriction, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfquicksight.ResourceIPRestriction, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

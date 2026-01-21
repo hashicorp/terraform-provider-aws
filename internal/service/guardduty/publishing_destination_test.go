@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -72,7 +72,7 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublishingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourcePublishingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

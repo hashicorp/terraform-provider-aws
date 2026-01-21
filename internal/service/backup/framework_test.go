@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -386,7 +386,7 @@ func testAccFramework_disappears(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceFramework(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceFramework(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
