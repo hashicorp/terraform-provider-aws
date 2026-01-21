@@ -70,7 +70,7 @@ func resourceSecurityGroup() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 255),
+				ValidateFunc: validSecurityGroupRuleDescription,
 			},
 			"egress":  securityGroupRuleSetNestedBlock,
 			"ingress": securityGroupRuleSetNestedBlock,
