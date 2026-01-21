@@ -1,4 +1,7 @@
-```markdown
-## New Resource
-* aws_savingsplans_plan
+```release-note:new-resource
+aws_savingsplans_plan
+```
+
+```release-note:new-data-source
+aws_savingsplans_plan
 ```
