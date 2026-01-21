@@ -1541,7 +1541,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectoryWithSecret(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "self_managed_active_directory.0.auth_secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "self_managed_active_directory.0.domain_join_service_account_secret", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -1636,9 +1636,9 @@ resource "aws_fsx_windows_file_system" "test" {
   throughput_capacity = 8
 
   self_managed_active_directory {
-    dns_ips         = aws_directory_service_directory.test.dns_ip_addresses
-    domain_name     = aws_directory_service_directory.test.name
-    auth_secret_arn = aws_secretsmanager_secret.test.arn
+    dns_ips                            = aws_directory_service_directory.test.dns_ip_addresses
+    domain_name                        = aws_directory_service_directory.test.name
+    domain_join_service_account_secret = aws_secretsmanager_secret.test.arn
   }
 
   tags = {

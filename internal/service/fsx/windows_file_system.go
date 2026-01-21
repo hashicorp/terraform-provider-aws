@@ -214,7 +214,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				ConflictsWith: []string{"active_directory_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth_secret_arn": {
+						"domain_join_service_account_secret": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -254,7 +254,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 							ConflictsWith: []string{
-								"self_managed_active_directory.0.auth_secret_arn",
+								"self_managed_active_directory.0.domain_join_service_account_secret",
 							},
 						},
 						names.AttrUsername: {
@@ -263,7 +263,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 							ConflictsWith: []string{
-								"self_managed_active_directory.0.auth_secret_arn",
+								"self_managed_active_directory.0.domain_join_service_account_secret",
 							},
 						},
 					},
@@ -674,7 +674,7 @@ func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any
 		DnsIps:     flex.ExpandStringValueSet(tfMap["dns_ips"].(*schema.Set)),
 	}
 
-	if v, ok := tfMap["auth_secret_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["domain_join_service_account_secret"].(string); ok && v != "" {
 		apiObject.DomainJoinServiceAccountSecret = aws.String(v)
 	}
 
@@ -705,7 +705,7 @@ func expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(tfLis
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
 
-	if v, ok := tfMap["auth_secret_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["domain_join_service_account_secret"].(string); ok && v != "" {
 		apiObject.DomainJoinServiceAccountSecret = aws.String(v)
 	}
 
@@ -736,7 +736,7 @@ func flattenWindowsFileSystemSelfManagedActiveDirectoryAttributes(d *schema.Reso
 	// See also: flattenEmrKerberosAttributes
 
 	tfMap := map[string]any{
-		"auth_secret_arn":                        aws.ToString(apiObject.DomainJoinServiceAccountSecret),
+		"domain_join_service_account_secret":     aws.ToString(apiObject.DomainJoinServiceAccountSecret),
 		"dns_ips":                                apiObject.DnsIps,
 		names.AttrDomainName:                     aws.ToString(apiObject.DomainName),
 		"file_system_administrators_group":       aws.ToString(apiObject.FileSystemAdministratorsGroup),
