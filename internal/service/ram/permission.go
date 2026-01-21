@@ -41,20 +41,20 @@ import (
 // @Testing(importStateIdAttribute="arn")
 // @Testing(importIgnore="policy_template")
 func newPermissionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePermission{}
+	r := &permissionResource{}
 
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
 
-type resourcePermission struct {
-	framework.ResourceWithModel[resourcePermissionModel]
+type permissionResource struct {
+	framework.ResourceWithModel[permissionResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
 
-func (r *resourcePermission) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *permissionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -100,8 +100,8 @@ func (r *resourcePermission) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourcePermission) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourcePermissionModel
+func (r *permissionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan permissionResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -135,8 +135,8 @@ func (r *resourcePermission) Create(ctx context.Context, req resource.CreateRequ
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
-func (r *resourcePermission) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourcePermissionModel
+func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state permissionResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,8 +167,8 @@ func (r *resourcePermission) Read(ctx context.Context, req resource.ReadRequest,
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
-func (r *resourcePermission) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourcePermissionModel
+func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state permissionResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
@@ -210,8 +210,8 @@ func (r *resourcePermission) Update(ctx context.Context, req resource.UpdateRequ
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
 
-func (r *resourcePermission) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourcePermissionModel
+func (r *permissionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state permissionResourceModel
 	smerr.EnrichAppend(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -391,7 +391,7 @@ func findPermission(ctx context.Context, conn *ram.Client, input *ram.GetPermiss
 	return output.Permission, nil
 }
 
-type resourcePermissionModel struct {
+type permissionResourceModel struct {
 	framework.WithRegionModel
 	ARN            types.String   `tfsdk:"arn"`
 	DefaultVersion types.Bool     `tfsdk:"default_version"`

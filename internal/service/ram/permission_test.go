@@ -13,18 +13,21 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRAMPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var permission awstypes.ResourceSharePermissionDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
@@ -43,14 +46,20 @@ func TestAccRAMPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "default_version"),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNExact("ram", fmt.Sprintf("permission/%s", rName))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("default_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrStatus), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVersion), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -62,9 +71,44 @@ func TestAccRAMPermission_basic(t *testing.T) {
 	})
 }
 
+func TestAccRAMPermission_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var permission awstypes.ResourceSharePermissionDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ram_permission.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RAM)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfram.ResourcePermission, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccRAMPermission_version(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var permission awstypes.ResourceSharePermissionDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
@@ -89,9 +133,12 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:3], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				ResourceName:            resourceName,
@@ -103,76 +150,63 @@ func TestAccRAMPermission_version(t *testing.T) {
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[1:2], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy_template"},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[3:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy_template"},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy_template"},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions[2:4], `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy_template"},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccPermissionConfig_version(rName, `"`+strings.Join(policyTemplateActions, `", "`)+`"`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ram", "permission/{name}"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func TestAccRAMPermission_disappears(t *testing.T) {
+func TestAccRAMPermission_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var permission awstypes.ResourceSharePermissionDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_permission.test"
@@ -188,16 +222,58 @@ func TestAccRAMPermission_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_basic(rName),
+				Config: testAccPermissionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfram.ResourcePermission, resourceName),
 				),
-				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"policy_template"},
+			},
+			{
+				Config: testAccPermissionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+			},
+			{
+				Config: testAccPermissionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionExists(ctx, resourceName, &permission),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
 				},
 			},
 		},
@@ -213,15 +289,14 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			output, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-			if tfresource.NotFound(err) {
-				return nil
+			_, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
+			if retry.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
 				return err
-			}
-			if output != nil && output.Status == awstypes.PermissionStatusDeleted {
-				return nil
 			}
 
 			return fmt.Errorf("RAM Permission %s still exists", rs.Primary.Attributes[names.AttrARN])
@@ -231,21 +306,22 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPermissionExists(ctx context.Context, name string, permission *awstypes.ResourceSharePermissionDetail) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string, v *awstypes.ResourceSharePermissionDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
 
-		resp, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfram.FindPermissionByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+
 		if err != nil {
 			return err
 		}
 
-		*permission = *resp
+		*v = *output
 
 		return nil
 	}
@@ -282,10 +358,6 @@ resource "aws_ram_permission" "test" {
 }
 EOF
   resource_type   = "backup:BackupVault"
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName)
 }
@@ -309,4 +381,53 @@ EOF
   }
 }
 `, rName, rPolicyTemplate)
+}
+
+func testAccPermissionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_permission" "test" {
+  name            = %[1]q
+  policy_template = <<EOF
+{
+    "Effect": "Allow",
+    "Action": [
+	"backup:ListProtectedResourcesByBackupVault",
+	"backup:ListRecoveryPointsByBackupVault",
+	"backup:DescribeRecoveryPoint",
+	"backup:DescribeBackupVault"
+    ]
+}
+EOF
+  resource_type   = "backup:BackupVault"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccPermissionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_permission" "test" {
+  name            = %[1]q
+  policy_template = <<EOF
+{
+    "Effect": "Allow",
+    "Action": [
+	"backup:ListProtectedResourcesByBackupVault",
+	"backup:ListRecoveryPointsByBackupVault",
+	"backup:DescribeRecoveryPoint",
+	"backup:DescribeBackupVault"
+    ]
+}
+EOF
+  resource_type   = "backup:BackupVault"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
