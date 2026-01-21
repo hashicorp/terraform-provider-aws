@@ -105,7 +105,7 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 
 	switch resourceType {
 	case "ResourceShare":
-		return resourceShareUpdateTags(ctx, conn, identifier, oldTags, newTags)
+		return resourceShareUpdateTags(ctx, conn, identifier, oldTags, newTags) // nosemgrep:ci.semgrep.pluginsdk.append-Update-to-diags
 
 	default:
 		return resourceUpdateTags(ctx, conn, identifier, oldTags, newTags)
