@@ -61,6 +61,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  dataSourceRule,
+			TypeName: "aws_cloudwatch_event_rule",
+			Name:     "Rule",
+		},
+		{
 			Factory:  dataSourceSource,
 			TypeName: "aws_cloudwatch_event_source",
 			Name:     "Source",
