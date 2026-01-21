@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceSavingsPlan,
+			Factory:  newSavingsPlanResource,
 			TypeName: "aws_savingsplans_plan",
 			Name:     "Savings Plan",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{

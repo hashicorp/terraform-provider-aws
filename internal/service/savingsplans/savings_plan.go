@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,11 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_savingsplans_plan", name="Savings Plan")
 // @Tags(identifierAttribute="arn")
-func newResourceSavingsPlan(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSavingsPlan{}
+func newSavingsPlanResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &savingsPlanResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -45,13 +44,13 @@ const (
 	ResNameSavingsPlan = "Savings Plan"
 )
 
-type resourceSavingsPlan struct {
-	framework.ResourceWithModel[resourceSavingsPlanModel]
+type savingsPlanResource struct {
+	framework.ResourceWithModel[savingsPlanResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceSavingsPlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -144,10 +143,10 @@ func (r *resourceSavingsPlan) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceSavingsPlan) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().SavingsPlansClient(ctx)
 
-	var plan resourceSavingsPlanModel
+	var plan savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -200,10 +199,10 @@ func (r *resourceSavingsPlan) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(diags...)
 }
 
-func (r *resourceSavingsPlan) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().SavingsPlansClient(ctx)
 
-	var state resourceSavingsPlanModel
+	var state savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,10 +227,10 @@ func (r *resourceSavingsPlan) Read(ctx context.Context, req resource.ReadRequest
 	}
 }
 
-func (r *resourceSavingsPlan) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *savingsPlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// Savings Plans cannot be updated - all attributes require replacement
 	// Tags are handled separately by the framework
-	var plan resourceSavingsPlanModel
+	var plan savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
@@ -245,10 +244,10 @@ func (r *resourceSavingsPlan) Update(ctx context.Context, req resource.UpdateReq
 	}
 }
 
-func (r *resourceSavingsPlan) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *savingsPlanResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().SavingsPlansClient(ctx)
 
-	var state resourceSavingsPlanModel
+	var state savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
@@ -370,20 +369,20 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 }
 
 // nosemgrep: ci.semgrep.framework.manual-flattener-functions
-func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *resourceSavingsPlanModel) {
-	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
-	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)
+func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *savingsPlanResourceModel) {
+	model.ARN = fwflex.StringToFramework(ctx, sp.SavingsPlanArn)
+	model.ID = fwflex.StringToFramework(ctx, sp.SavingsPlanId)
 	model.State = types.StringValue(string(sp.State))
 	model.SavingsPlanType = types.StringValue(string(sp.SavingsPlanType))
 	model.PaymentOption = types.StringValue(string(sp.PaymentOption))
 	model.Currency = types.StringValue(string(sp.Currency))
-	model.UpfrontPaymentAmount = flex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
-	model.RecurringPaymentAmount = flex.StringToFramework(ctx, sp.RecurringPaymentAmount)
+	model.UpfrontPaymentAmount = fwflex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
+	model.RecurringPaymentAmount = fwflex.StringToFramework(ctx, sp.RecurringPaymentAmount)
 	model.TermDurationInSeconds = types.Int64Value(sp.TermDurationInSeconds)
-	model.EC2InstanceFamily = flex.StringToFramework(ctx, sp.Ec2InstanceFamily)
-	model.Region = flex.StringToFramework(ctx, sp.Region)
-	model.OfferingID = flex.StringToFramework(ctx, sp.OfferingId)
-	model.Commitment = flex.StringToFramework(ctx, sp.Commitment)
+	model.EC2InstanceFamily = fwflex.StringToFramework(ctx, sp.Ec2InstanceFamily)
+	model.Region = fwflex.StringToFramework(ctx, sp.Region)
+	model.OfferingID = fwflex.StringToFramework(ctx, sp.OfferingId)
+	model.Commitment = fwflex.StringToFramework(ctx, sp.Commitment)
 
 	if sp.Start != nil {
 		model.Start = types.StringValue(*sp.Start)
@@ -393,7 +392,7 @@ func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *re
 	}
 }
 
-type resourceSavingsPlanModel struct {
+type savingsPlanResourceModel struct {
 	ARN                    types.String   `tfsdk:"arn"`
 	ClientToken            types.String   `tfsdk:"client_token"`
 	Commitment             types.String   `tfsdk:"commitment"`
