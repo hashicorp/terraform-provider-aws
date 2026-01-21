@@ -20,6 +20,18 @@ To disable resource tagging tests for a specific resource or data source type, a
 @Testing(tagsTest=false)
 ```
 
+To enable Resource Identity tests, add the following line:
+
+```go
+//go:generate go run ../../generate/identitytests/main.go
+```
+
+To disable Resource Identity tests for a specific resource type, add the following annotation to its source file:
+
+```
+@Testing(identityTest=false)
+```
+
 ## Configuring Generated Tests
 
 Generated acceptance tests require configuration via resource type annotations.
@@ -163,6 +175,108 @@ The Terraform variable name will be `rIPv4Address`.
 No additional parameters can be defined currently.
 If additional parameters are required, and cannot be derived from `rName`, the resource type must use manually created acceptance tests as described in the [Resource Tagging documentation](resource-tagging.md#manually-created-acceptance-tests).
 
+### Resource Identity Test Configuration
+
+The following annotations can be used to configure the generated Resource Identity tests.
+
+#### Region Override Tests
+
+By default, unless a resource type is global, Resource Identity will also be tested in the acceptance testing alternate region,
+configured using the environment variable `AWS_ALTERNATE_REGION` and defaulting to `us-east-1`.
+In some rare cases, for example if a service is only available in a specific region,
+the test for the alternate region can be omitted by using the annotation `@Testing(identityRegionOverrideTest=false)`.
+
+#### Duplicated `id` and Resource Identity Attributes
+
+If the resource type is implemented using Plugin Framework;
+has an ARN Identity, Singleton Identity, or Custom Inherent Region Identity;
+and has one or more attributes that duplicates the ARN attribute,
+add the `identityDuplicateAttributes="<attr>[;<attr>]"` parameter to the identity annotation.
+For example, the resource type `aws_ssoadmin_application` has an ARN Identity and the `arn` attribute is duplicated by both `id` and `application_arn`, so the annotation is `@ArnIdentity(identityDuplicateAttributes="id;application_arn")`.
+
+Otherwise, if the resource type has an `id` attribute that is set to the same value as an identity attribute,
+add an `@Testing(idAttrDuplicates="<attribute_name>")` annotation.
+
+#### Composed Attribute Values
+
+Some resource attributes related to Resource Identity are composed from other attribute values.
+This is typically the case for `arn` and in many cases `id`.
+
+If the `arn` resource attribute can be exactly composed from known attribute values,
+add the annotation `@ArnFormat(<format>)`, where `<format>` is the exact string to match, with the attribute values replaced by the attribute name surrounded by braces (`{` and `}`).
+The Partition, Region, and Account ID are automatically added as needed.
+For example, the ARN format for `aws_batch_job_definition` is `job-definition/{name}:{revision}`.
+
+In the case that the resource type has an ARN value attribute, but does not have an ARN Identity,
+add the parameter `attribute="<arn-attribute-name>"`.
+For example, the resource type `aws_appflow_flow` uses the `name` attribute for the Resource Identity,
+so the `@ArnFormat` annotation has the parameter `attribute="arn"`.
+
+In the rare case that a resource type is not global, but the ARN value does not include the region,
+add the parameter `global=true`.
+For example, the resource type `aws_ssoadmin_application` has an ARN with out the region,
+so the `@ArnFormat` annotation has the parameter `global=true`.
+
+If the `id` resource attribute can be exactly composed from known attribute values,
+add the annotation `@IdAttrFormat(<format>)`, where `<format>` is the exact string to match, with the attribute values replaced by the attribute name surrounded by braces (`{` and `}`).
+For example, the ID format for `aws_iam_role_policy_attachment` is `{role}/{policy_arn}`.
+
+#### Adding Resource Identity to an Existing Resource Type
+
+When adding Resource Identity to an existing resource type, we require additional acceptance tests to ensure that the Resource Identity is added to the resource correctly.
+This is specified by the annotation `@Testing(preIdentityVersion="<version>")`, where version is the last version of the provider **before** Resource Identity is added to the resource type.
+For example, Resource Identity was added to `aws_batch_job_definition` in version 6.5.0, so the annotation is `preIdentityVersion="v6.4.0"`.
+
+#### Enabling Resource Identity on a New Resource Type
+
+When enabling Resource Identity on a new resource type,
+add the annotation `@Testing(hasNoPreExistingResource=true)`.
+
+#### Adding a New Resource Identity Schema Version
+
+In some circumstances, a resource type requires an updated Resource Identity schema version.
+This requires additional testing to ensure that the Resource Identity can be correctly updated to the new schema.
+THis is specified by adding one `@Testing(identityVersion="<identity-schema-version>;<provider-version>")` annotation per Resource Identity schema version.
+Schema versions are zero-indexed.
+Note that, unlike the `@Testing(preIdentityVersion)` annotation, `identityVersion` uses the **actual** provider version.
+For example, Resource Identity was added to the resource type `aws_sqs_queue` in provider version 6.10.0 and the schema was updated in provider version 6.19.0. The annotations are:
+
+```go
+// @Testing(preIdentityVersion="v6.9.0")
+// @Testing(identityVersion="0;v6.10.0")
+// @Testing(identityVersion="1;v6.19.0")
+```
+
+#### Plannable Import Behavior
+
+Using an `import` block in a Terraform configuration allows the Import action to be part of the Terraform plan.
+In most cases, importing a resource should result in no change in the resource after the import.
+However, there are some cases where the resulting plan will have a change to the resource.
+
+If there are attributes that need to be ignored during import using the `@Testing(importIgnore)` annotation,
+by default the plan is assumed to update the resource.
+In some cases, for example if the attribute has a default value,
+the planned import will not update the resource.
+Add the annotation `@Testing(plannableImportAction="NoOp")`.
+
+In some rare cases, the imported resource will result in a plan that replaces the resource.
+This is often the case when the resource type contains secrets, such as a certificate or credential.
+This situation should be avoided.
+
+If you are adding Resource Identity to an existing resource type,
+add the annotation `@Testing(plannableImportAction="Replace")`.
+Consider opening an issue in the provider's GitHub repository reporting that the resource type causes recreation when importing.
+
+If you are creating a new resource type, consider how the resource type can be support importing without recreating the resource.
+If it is not possible, disable import support using the annotion `@NoImport`.
+
+#### Error Cases
+
+When Resource Identity was first introduced to the provider, there were some errors in the implementation.
+The following annotations are documented for completeness and **should not be used in new implementations**.
+
+The annotation `@V60SDKv2Fix`, `@Testing(v60NullValuesError)`, and `@Testing(v60RefreshError)` indicate that special handling and testing was needed to fix errors in the initial implementation.
+
 ### Resource Tagging Test Configuration
 
 In some cases, the AWS tagging APIs for a service or specific resource have non-standard behavior.
@@ -205,11 +319,25 @@ To generate a configuration for a data source test, the generator reuses the con
 Add an additional file `testdata/tmpl/<name>_data_source.gtpl` which contains only the data source block populated with the parameters needed to associate it with the resource.
 For example, the ELB v2 Load Balancer's data source template is `testdata/tmpl/load_balancer_data_source.gtpl`.
 
+For all resources and data sources declared in the configuration, unless the type is global, add the Go template directive `{{- template "region" }}` at the top of the resource declaration.
+
 Replace the `tags` attribute with the Go template directive `{{- template "tags" . }}`.
 When the configurations are generated, this will be replaced with the appropriate assignment to the `tags` attribute.
 The `tags` attribute should be the last line of the resource or data source definition.
 
 Tags should only be applied to the resource that is being tested.
+
+For example:
+
+```terraform
+resource "aws_service_thing" "test" {
+{{- template "region" }}
+
+  name = var.rName
+
+{{- template "tags" . }}
+}
+```
 
 ### Pre-Defined Configuration Sections
 
