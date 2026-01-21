@@ -1505,6 +1505,18 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_route_table_association",
 			Name:     "Route Table Association",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrID, true),
+				inttypes.StringIdentityAttribute("gateway_id", false),
+				inttypes.StringIdentityAttribute(names.AttrSubnetID, false),
+				inttypes.StringIdentityAttribute("route_table_id", true),
+			},
+				inttypes.WithMutableIdentity(),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      routeTableAssociationImportID{},
+			},
 		},
 		{
 			Factory:  resourceSecurityGroup,

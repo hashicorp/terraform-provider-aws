@@ -20,19 +20,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route_table_association", name="Route Table Association")
+// @IdentityAttribute("id")
+// @IdentityAttribute("gateway_id", optional=true)
+// @IdentityAttribute("subnet_id", optional=true)
+// @IdentityAttribute("route_table_id")
+// @ImportIDHandler("routeTableAssociationImportID")
+// @MutableIdentity
+// @Testing(preIdentityVersion="v6.8.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.RouteTableAssociation")
+// @Testing(generator=false)
 func resourceRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceRouteTableAssociationRead,
 		UpdateWithoutTimeout: resourceRouteTableAssociationUpdate,
 		DeleteWithoutTimeout: resourceRouteTableAssociationDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: resourceRouteTableAssociationImport,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -169,52 +176,58 @@ func resourceRouteTableAssociationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
-	}
-
-	targetID := parts[0]
-	routeTableID := parts[1]
-
-	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
-
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-
-	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var associationID string
-
-	for _, association := range routeTable.Associations {
-		if aws.ToString(association.SubnetId) == targetID {
-			d.Set(names.AttrSubnetID, targetID)
-			associationID = aws.ToString(association.RouteTableAssociationId)
-
-			break
-		}
-
-		if aws.ToString(association.GatewayId) == targetID {
-			d.Set("gateway_id", targetID)
-			associationID = aws.ToString(association.RouteTableAssociationId)
-
-			break
-		}
-	}
-
-	if associationID == "" {
-		return nil, fmt.Errorf("No association found between route table ID %s and target ID %s", routeTableID, targetID)
-	}
-
-	d.SetId(associationID)
-	d.Set("route_table_id", routeTableID)
-
-	return []*schema.ResourceData{d}, nil
-}
+// func resourceRouteTableAssociationImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+// 	identitySpec := importer.IdentitySpec(ctx)
+// 	importSpec := importer.ImportSpec(ctx)
+// 	if err := importer.RegionalMultipleParameterized(ctx, d, identitySpec, &importSpec, meta.(importer.AWSClient)); err != nil {
+// 		return nil, err
+// 	}
+//
+// 	parts := strings.Split(d.Id(), "/")
+// 	if len(parts) != 2 {
+// 		return []*schema.ResourceData{}, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", d.Id())
+// 	}
+//
+// 	targetID := parts[0]
+// 	routeTableID := parts[1]
+//
+// 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
+//
+// 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+//
+// 	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
+//
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	var associationID string
+//
+// 	for _, association := range routeTable.Associations {
+// 		if aws.ToString(association.SubnetId) == targetID {
+// 			d.Set(names.AttrSubnetID, targetID)
+// 			associationID = aws.ToString(association.RouteTableAssociationId)
+//
+// 			break
+// 		}
+//
+// 		if aws.ToString(association.GatewayId) == targetID {
+// 			d.Set("gateway_id", targetID)
+// 			associationID = aws.ToString(association.RouteTableAssociationId)
+//
+// 			break
+// 		}
+// 	}
+//
+// 	if associationID == "" {
+// 		return nil, fmt.Errorf("No association found between route table ID %s and target ID %s", routeTableID, targetID)
+// 	}
+//
+// 	d.SetId(associationID)
+// 	d.Set("route_table_id", routeTableID)
+//
+// 	return []*schema.ResourceData{d}, nil
+// }
 
 // routeTableAssociationDelete attempts to delete a route table association.
 func routeTableAssociationDelete(ctx context.Context, conn *ec2.Client, associationID string, timeout time.Duration) error {
@@ -237,4 +250,39 @@ func routeTableAssociationDelete(ctx context.Context, conn *ec2.Client, associat
 	}
 
 	return nil
+}
+
+// Ensure the struct satisfies the import ID interface
+var _ inttypes.SDKv2ImportID = routeTableAssociationImportID{}
+
+type routeTableAssociationImportID struct{}
+
+func (routeTableAssociationImportID) Create(d *schema.ResourceData) string {
+	var target string
+	if v, ok := d.Get(names.AttrSubnetID).(string); ok && v != "" {
+		target = v
+	} else if v, ok := d.Get("gateway_id").(string); ok && v != "" {
+		target = v
+	}
+
+	return fmt.Sprintf("%s/%s", target, d.Get("route_table_id").(string))
+}
+
+func (routeTableAssociationImportID) Parse(id string) (string, map[string]string, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return id, nil, fmt.Errorf("Unexpected format for import: %s. Use 'subnet ID/route table ID' or 'gateway ID/route table ID", id)
+	}
+
+	targetID := parts[0]
+	routeTableID := parts[1]
+
+	// TODO: this isn't complete - the target could be either a gateway ID or subnet ID, and a client
+	// connection is required to retrieve additional details such as the association ID.
+	result := map[string]string{
+		"route_table_id":   routeTableID,
+		names.AttrSubnetID: targetID,
+	}
+
+	return id, result, nil
 }
