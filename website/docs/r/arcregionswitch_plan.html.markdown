@@ -226,6 +226,7 @@ The `execution_block_configuration` block contains one of the following configur
 
 * `arc_routing_control_config` - Configuration for ARC routing control. See [ARC Routing Control Config](#arc-routing-control-config) below.
 * `custom_action_lambda_config` - Configuration for Lambda function execution. See [Custom Action Lambda Config](#custom-action-lambda-config) below.
+* `document_db_config` - Configuration for DocumentDB global cluster operations. See [DocumentDB Config](#documentdb-config) below.
 * `ec2_asg_capacity_increase_config` - Configuration for EC2 Auto Scaling group capacity increase. See [EC2 ASG Capacity Increase Config](#ec2-asg-capacity-increase-config) below.
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
@@ -268,6 +269,20 @@ The `execution_block_configuration` block contains one of the following configur
 ### Ungraceful
 
 * `behavior` - (Required) Behavior when ungraceful. Valid values: `skip`.
+
+### DocumentDB Config
+
+* `behavior` - (Required) Behavior for global cluster operations. Valid values: `switchoverOnly`, `failover`.
+* `database_cluster_arns` - (Required) List of DocumentDB cluster ARNs.
+* `global_cluster_identifier` - (Required) Global cluster identifier.
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [DocumentDB Ungraceful](#documentdb-ungraceful) below.
+
+### DocumentDB Ungraceful
+
+* `ungraceful` - (Required) Ungraceful behavior. Valid values: `failover`.
 
 ### EC2 ASG Capacity Increase Config
 

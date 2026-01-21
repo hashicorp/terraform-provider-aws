@@ -296,6 +296,46 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 														},
 													},
 												},
+												"document_db_config": fwschema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbConfigModel](ctx),
+													NestedObject: fwschema.NestedBlockObject{
+														Attributes: map[string]fwschema.Attribute{
+															"behavior": fwschema.StringAttribute{
+																CustomType: fwtypes.StringEnumType[awstypes.DocumentDbDefaultBehavior](),
+																Required:   true,
+															},
+															"database_cluster_arns": fwschema.ListAttribute{
+																CustomType: fwtypes.ListOfARNType,
+																Required:   true,
+															},
+															"global_cluster_identifier": fwschema.StringAttribute{
+																Required: true,
+															},
+															"cross_account_role": fwschema.StringAttribute{
+																Optional: true,
+															},
+															names.AttrExternalID: fwschema.StringAttribute{
+																Optional: true,
+															},
+															"timeout_minutes": fwschema.Int32Attribute{
+																Optional: true,
+															},
+														},
+														Blocks: map[string]fwschema.Block{
+															"ungraceful": fwschema.ListNestedBlock{
+																CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
+																NestedObject: fwschema.NestedBlockObject{
+																	Attributes: map[string]fwschema.Attribute{
+																		"ungraceful": fwschema.StringAttribute{
+																			CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
+																			Required:   true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 												"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[ec2AsgCapacityIncreaseConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
@@ -609,6 +649,46 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																				},
 																			},
 																		},
+																		"document_db_config": fwschema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbConfigModel](ctx),
+																			NestedObject: fwschema.NestedBlockObject{
+																				Attributes: map[string]fwschema.Attribute{
+																					"behavior": fwschema.StringAttribute{
+																						CustomType: fwtypes.StringEnumType[awstypes.DocumentDbDefaultBehavior](),
+																						Required:   true,
+																					},
+																					"database_cluster_arns": fwschema.ListAttribute{
+																						CustomType: fwtypes.ListOfARNType,
+																						Required:   true,
+																					},
+																					"global_cluster_identifier": fwschema.StringAttribute{
+																						Required: true,
+																					},
+																					"cross_account_role": fwschema.StringAttribute{
+																						Optional: true,
+																					},
+																					names.AttrExternalID: fwschema.StringAttribute{
+																						Optional: true,
+																					},
+																					"timeout_minutes": fwschema.Int32Attribute{
+																						Optional: true,
+																					},
+																				},
+																				Blocks: map[string]fwschema.Block{
+																					"ungraceful": fwschema.ListNestedBlock{
+																						CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
+																						NestedObject: fwschema.NestedBlockObject{
+																							Attributes: map[string]fwschema.Attribute{
+																								"ungraceful": fwschema.StringAttribute{
+																									CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
+																									Required:   true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
 																	},
 																},
 															},
@@ -881,16 +961,16 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 	var apiObject arcregionswitch.CreatePlanInput
 
 	// Manually expand all fields except AssociatedAlarms and complex nested structures
-	diags.Append(flex.Expand(ctx, m.Name, &apiObject.Name)...)
-	diags.Append(flex.Expand(ctx, m.ExecutionRole, &apiObject.ExecutionRole)...)
-	diags.Append(flex.Expand(ctx, m.RecoveryApproach, &apiObject.RecoveryApproach)...)
-	diags.Append(flex.Expand(ctx, m.Regions, &apiObject.Regions)...)
-	diags.Append(flex.Expand(ctx, m.Description, &apiObject.Description)...)
-	diags.Append(flex.Expand(ctx, m.PrimaryRegion, &apiObject.PrimaryRegion)...)
-	diags.Append(flex.Expand(ctx, m.RecoveryTimeObjectiveMinutes, &apiObject.RecoveryTimeObjectiveMinutes)...)
 	diags.Append(flex.Expand(ctx, m.AssociatedAlarms, &apiObject.AssociatedAlarms)...)
-	diags.Append(flex.Expand(ctx, m.Triggers, &apiObject.Triggers)...)
+	diags.Append(flex.Expand(ctx, m.Description, &apiObject.Description)...)
+	diags.Append(flex.Expand(ctx, m.ExecutionRole, &apiObject.ExecutionRole)...)
+	diags.Append(flex.Expand(ctx, m.Name, &apiObject.Name)...)
+	diags.Append(flex.Expand(ctx, m.PrimaryRegion, &apiObject.PrimaryRegion)...)
+	diags.Append(flex.Expand(ctx, m.RecoveryApproach, &apiObject.RecoveryApproach)...)
+	diags.Append(flex.Expand(ctx, m.RecoveryTimeObjectiveMinutes, &apiObject.RecoveryTimeObjectiveMinutes)...)
+	diags.Append(flex.Expand(ctx, m.Regions, &apiObject.Regions)...)
 	diags.Append(flex.Expand(ctx, m.Tags, &apiObject.Tags)...)
+	diags.Append(flex.Expand(ctx, m.Triggers, &apiObject.Triggers)...)
 
 	// Handle Workflows with complex nested ScalingResources transformation
 	if !m.Workflows.IsNull() && !m.Workflows.IsUnknown() {
@@ -1075,6 +1155,15 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 								var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
 								diags.Append(flex.Expand(ctx, data, &r.Value)...)
 								apiStep.ExecutionBlockConfiguration = &r
+							} else if !execConfig.DocumentDbConfig.IsNull() {
+								data, d := execConfig.DocumentDbConfig.ToPtr(ctx)
+								diags.Append(d...)
+								if diags.HasError() {
+									return nil, diags
+								}
+								var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
+								diags.Append(flex.Expand(ctx, data, &r.Value)...)
+								apiStep.ExecutionBlockConfiguration = &r
 							} else if !execConfig.ParallelConfig.IsNull() {
 								data, d := execConfig.ParallelConfig.ToPtr(ctx)
 								diags.Append(d...)
@@ -1115,6 +1204,15 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 												return nil, diags
 											}
 											var pR awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
+											diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
+											apiParallelStep.ExecutionBlockConfiguration = &pR
+										} else if !pStep.DocumentDbConfig.IsNull() {
+											pData, pD := pStep.DocumentDbConfig.ToPtr(ctx)
+											diags.Append(pD...)
+											if diags.HasError() {
+												return nil, diags
+											}
+											var pR awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
 											diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
 											apiParallelStep.ExecutionBlockConfiguration = &pR
 										}
@@ -1228,19 +1326,64 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 					if step.ExecutionBlockConfiguration != nil {
 						// Initialize with empty values for all fields to avoid nil pointer issues
 						execConfig := executionBlockConfigurationModel{
-							ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
-							Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
+							ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
 							CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
-							GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
+							DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
 							Ec2AsgCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2AsgCapacityIncreaseConfigModel](ctx),
 							EcsCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
 							EksResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
-							ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
+							ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+							GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
 							ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
+							Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
 						}
 
 						// Handle union type flattening manually (similar to expand logic)
 						switch t := step.ExecutionBlockConfiguration.(type) {
+						case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
+							// Handle ARC RegionAndRoutingControls complex transformation manually
+							var arcConfig arcRoutingControlConfigModel
+							diags.Append(flex.Flatten(ctx, t.Value.CrossAccountRole, &arcConfig.CrossAccountRole)...)
+							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalID)...)
+							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &arcConfig.TimeoutMinutes)...)
+
+							// Handle RegionAndRoutingControls: map[string][]ArcRoutingControlState → []regionAndRoutingControlsModel
+							if len(t.Value.RegionAndRoutingControls) > 0 {
+								regionControls := make([]regionAndRoutingControlsModel, 0, len(t.Value.RegionAndRoutingControls))
+								for region, controlStates := range t.Value.RegionAndRoutingControls {
+									var regionModel regionAndRoutingControlsModel
+									regionModel.Region = types.StringValue(region)
+
+									// Convert ArcRoutingControlState slice to routingControlModel slice
+									controls := make([]routingControlModel, len(controlStates))
+									for i, state := range controlStates {
+										controls[i] = routingControlModel{
+											RoutingControlArn: fwtypes.ARNValue(aws.ToString(state.RoutingControlArn)),
+											State:             fwtypes.StringEnumValue(state.State),
+										}
+									}
+
+									var d fwdiag.Diagnostics
+									regionModel.RoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, controls)
+									diags.Append(d...)
+
+									regionControls = append(regionControls, regionModel)
+								}
+
+								var d fwdiag.Diagnostics
+								arcConfig.RegionAndRoutingControls, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, regionControls)
+								diags.Append(d...)
+							}
+
+							execConfig.ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
+						case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.CustomActionLambdaConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.DocumentDbConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Ec2AsgCapacityIncreaseConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EcsCapacityIncreaseConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
 							// Handle EKS ScalingResources complex transformation manually
 							var eksConfig eksResourceScalingConfigModel
@@ -1281,50 +1424,10 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 							}
 
 							execConfig.EksResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
-						case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
-							// Handle ARC RegionAndRoutingControls complex transformation manually
-							var arcConfig arcRoutingControlConfigModel
-							diags.Append(flex.Flatten(ctx, t.Value.CrossAccountRole, &arcConfig.CrossAccountRole)...)
-							diags.Append(flex.Flatten(ctx, t.Value.ExternalId, &arcConfig.ExternalID)...)
-							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &arcConfig.TimeoutMinutes)...)
-
-							// Handle RegionAndRoutingControls: map[string][]ArcRoutingControlState → []regionAndRoutingControlsModel
-							if len(t.Value.RegionAndRoutingControls) > 0 {
-								regionControls := make([]regionAndRoutingControlsModel, 0, len(t.Value.RegionAndRoutingControls))
-								for region, controlStates := range t.Value.RegionAndRoutingControls {
-									var regionModel regionAndRoutingControlsModel
-									regionModel.Region = types.StringValue(region)
-
-									// Convert ArcRoutingControlState slice to routingControlModel slice
-									controls := make([]routingControlModel, len(controlStates))
-									for i, state := range controlStates {
-										controls[i] = routingControlModel{
-											RoutingControlArn: fwtypes.ARNValue(aws.ToString(state.RoutingControlArn)),
-											State:             fwtypes.StringEnumValue(state.State),
-										}
-									}
-
-									var d fwdiag.Diagnostics
-									regionModel.RoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, controls)
-									diags.Append(d...)
-
-									regionControls = append(regionControls, regionModel)
-								}
-
-								var d fwdiag.Diagnostics
-								arcConfig.RegionAndRoutingControls, d = fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, regionControls)
-								diags.Append(d...)
-							}
-
-							execConfig.ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
 						case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
 							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ExecutionApprovalConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EcsCapacityIncreaseConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Route53HealthCheckConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.CustomActionLambdaConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.GlobalAuroraConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
 							// Handle ParallelConfig with nested step execution block configurations manually
 							var parallelConfig parallelConfigModel
@@ -1335,6 +1438,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 									// Initialize with empty values for all fields to avoid nil pointer issues
 									parallelSteps[i] = parallelStepModel{
 										CustomActionLambdaConfig: fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
+										DocumentDbConfig:         fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
 										ExecutionApprovalConfig:  fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
 									}
 
@@ -1347,6 +1451,8 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 										switch pType := step.ExecutionBlockConfiguration.(type) {
 										case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].CustomActionLambdaConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].DocumentDbConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
 										}
@@ -1359,10 +1465,8 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 							}
 
 							execConfig.ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
-						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.GlobalAuroraConfig)...)
-						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Ec2AsgCapacityIncreaseConfig)...)
+						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Route53HealthCheckConfig)...)
 						}
 
 						var d fwdiag.Diagnostics
@@ -1493,15 +1597,16 @@ type stepModel struct {
 }
 
 type executionBlockConfigurationModel struct {
-	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
-	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
+	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
 	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
-	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
+	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
 	Ec2AsgCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2AsgCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
 	EcsCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
 	EksResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
-	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
+	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
 	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
+	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
 
 type executionApprovalConfigModel struct {
@@ -1525,6 +1630,21 @@ type lambdaModel struct {
 
 type ungracefulModel struct {
 	Behavior fwtypes.StringEnum[awstypes.LambdaUngracefulBehavior] `tfsdk:"behavior"`
+}
+
+// DocumentDB Configuration Models
+type documentDbConfigModel struct {
+	Behavior                fwtypes.StringEnum[awstypes.DocumentDbDefaultBehavior]     `tfsdk:"behavior"`
+	DatabaseClusterArns     fwtypes.ListOfARN                                          `tfsdk:"database_cluster_arns"`
+	GlobalClusterIdentifier types.String                                               `tfsdk:"global_cluster_identifier"`
+	CrossAccountRole        types.String                                               `tfsdk:"cross_account_role"`
+	ExternalID              types.String                                               `tfsdk:"external_id"`
+	TimeoutMinutes          types.Int32                                                `tfsdk:"timeout_minutes"`
+	Ungraceful              fwtypes.ListNestedObjectValueOf[documentDbUngracefulModel] `tfsdk:"ungraceful"`
+}
+
+type documentDbUngracefulModel struct {
+	Ungraceful fwtypes.StringEnum[awstypes.DocumentDbUngracefulBehavior] `tfsdk:"ungraceful"`
 }
 
 // Global Aurora Configuration Models
@@ -1643,11 +1763,12 @@ type parallelConfigModel struct {
 }
 
 type parallelStepModel struct {
-	Name                     types.String                                                   `tfsdk:"name"`
-	ExecutionBlockType       fwtypes.StringEnum[awstypes.ExecutionBlockType]                `tfsdk:"execution_block_type"`
-	Description              types.String                                                   `tfsdk:"description"`
-	ExecutionApprovalConfig  fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]  `tfsdk:"execution_approval_config"`
 	CustomActionLambdaConfig fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel] `tfsdk:"custom_action_lambda_config"`
+	Description              types.String                                                   `tfsdk:"description"`
+	DocumentDbConfig         fwtypes.ListNestedObjectValueOf[documentDbConfigModel]         `tfsdk:"document_db_config"`
+	ExecutionApprovalConfig  fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]  `tfsdk:"execution_approval_config"`
+	ExecutionBlockType       fwtypes.StringEnum[awstypes.ExecutionBlockType]                `tfsdk:"execution_block_type"`
+	Name                     types.String                                                   `tfsdk:"name"`
 }
 
 // Trigger Configuration Models

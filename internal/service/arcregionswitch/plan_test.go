@@ -708,6 +708,31 @@ resource "aws_arcregionswitch_plan" "test" {
       }
     }
 
+    # DocumentDB step
+    step {
+      name                 = "documentdb-step"
+      execution_block_type = "DocumentDb"
+      description          = "DocumentDB global cluster step"
+
+      execution_block_configuration {
+        document_db_config {
+          behavior                  = "failover"
+          global_cluster_identifier = "test-docdb-global-cluster"
+          database_cluster_arns = [
+            "arn:aws:rds:%[2]s:123456789012:cluster:test-docdb-cluster-1",
+            "arn:aws:rds:%[3]s:123456789012:cluster:test-docdb-cluster-2"
+          ]
+          cross_account_role = "arn:aws:iam::123456789012:role/DocumentDBRole"
+          external_id        = "docdb-external-id"
+          timeout_minutes    = 60
+
+          ungraceful {
+            ungraceful = "failover"
+          }
+        }
+      }
+    }
+
     # EC2AutoScaling step
     step {
       name                 = "ec2-asg-step"
