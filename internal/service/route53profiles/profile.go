@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -27,6 +26,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -225,7 +225,7 @@ func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id st
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
-		Refresh:                   statusProfile(ctx, conn, id),
+		Refresh:                   statusProfile(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -243,7 +243,7 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusProfile(ctx, conn, id),
+		Refresh: statusProfile(conn, id),
 		Timeout: timeout,
 	}
 
@@ -255,8 +255,8 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	return nil, err
 }
 
-func statusProfile(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusProfile(conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findProfileByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -278,9 +278,8 @@ func findProfileByID(ctx context.Context, conn *route53profiles.Client, id strin
 	out, err := conn.GetProfile(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

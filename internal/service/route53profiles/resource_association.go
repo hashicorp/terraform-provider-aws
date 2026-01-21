@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -225,7 +225,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.C
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
-		Refresh:                   statusResourceAssociation(ctx, conn, id),
+		Refresh:                   statusResourceAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -243,7 +243,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
-		Refresh: statusResourceAssociation(ctx, conn, id),
+		Refresh: statusResourceAssociation(conn, id),
 		Timeout: timeout,
 	}
 
@@ -255,8 +255,8 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.C
 	return nil, err
 }
 
-func statusResourceAssociation(ctx context.Context, conn *route53profiles.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceAssociation(conn *route53profiles.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findResourceAssociationByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -278,9 +278,8 @@ func findResourceAssociationByID(ctx context.Context, conn *route53profiles.Clie
 	out, err := conn.GetProfileResourceAssociation(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 
