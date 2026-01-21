@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,12 +51,7 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 
 func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_sagemaker_endpoint.test"
 	sagemakerEndpointConfigurationResourceName1 := "aws_sagemaker_endpoint_configuration.test"
 	sagemakerEndpointConfigurationResourceName2 := "aws_sagemaker_endpoint_configuration.test2"
@@ -92,10 +87,6 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 
 func TestAccSageMakerEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -132,10 +123,6 @@ func TestAccSageMakerEndpoint_tags(t *testing.T) {
 
 func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -173,10 +160,6 @@ func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 
 func TestAccSageMakerEndpoint_deploymentConfig_blueGreen(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -218,10 +201,6 @@ func TestAccSageMakerEndpoint_deploymentConfig_blueGreen(t *testing.T) {
 
 func TestAccSageMakerEndpoint_deploymentConfig_rolling(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint.test"
 
@@ -270,7 +249,7 @@ func TestAccSageMakerEndpoint_disappears(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -289,7 +268,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -307,21 +286,18 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no SageMaker AI Endpoint ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
+
 		_, err := tfsagemaker.FindEndpointByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccEndpointConfig_Base(rName string) string {
+func testAccEndpointConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "access" {
   statement {
@@ -410,16 +386,16 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 
 func testAccEndpointConfig_basic(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_nameUpdate(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test2" {
   name = "%[1]s2"
 
@@ -436,11 +412,11 @@ resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test2.name
   name                 = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_tags(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -449,11 +425,11 @@ resource "aws_sagemaker_endpoint" "test" {
     foo = "bar"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_tagsUpdate(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -462,11 +438,11 @@ resource "aws_sagemaker_endpoint" "test" {
     bar = "baz"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_deploymentBasic(rName, tType string, wait int) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint" "test" {
   endpoint_config_name = aws_sagemaker_endpoint_configuration.test.name
   name                 = %[1]q
@@ -480,11 +456,11 @@ resource "aws_sagemaker_endpoint" "test" {
     }
   }
 }
-`, rName, tType, wait)
+`, rName, tType, wait))
 }
 
 func testAccEndpointConfig_deploymentBlueGreen(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -526,11 +502,11 @@ resource "aws_sagemaker_endpoint" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccEndpointConfig_deploymentRolling(rName string) string {
-	return testAccEndpointConfig_Base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -569,5 +545,5 @@ resource "aws_sagemaker_endpoint" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }

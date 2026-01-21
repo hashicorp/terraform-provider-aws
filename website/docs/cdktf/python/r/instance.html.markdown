@@ -573,8 +573,8 @@ resource "aws_instance" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import instances using the `id`. For example:
 
@@ -599,4 +599,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a8a92955a427bc3172cd8fc04d2c2582761c5f438c82cb3912840f41192fe562 -->
+<!-- cache-key: cdktf-0.20.8 input-826a604246933c61962bdaeaa7cf2123773c0bd582539e65145da57eb934955e -->

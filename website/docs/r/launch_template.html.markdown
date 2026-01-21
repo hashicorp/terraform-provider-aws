@@ -75,6 +75,10 @@ resource "aws_launch_template" "foo" {
     enabled = true
   }
 
+  network_performance_options {
+    bandwidth_weighting = "vpc-1"
+  }
+
   network_interfaces {
     associate_public_ip_address = true
   }
@@ -173,7 +177,7 @@ The `ebs` block supports the following:
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1/io2/gp3"`.
-* `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
+* `kms_key_id` - (Optional) Identifier (key ID, key alias, key ARN, or alias ARN) of the customer managed KMS key to use for EBS encryption.
   `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
@@ -404,6 +408,12 @@ For more information, see the documentation on the [Instance Metadata Service](h
 The `monitoring` block supports the following:
 
 * `enabled` - If `true`, the launched EC2 instance will have detailed monitoring enabled.
+
+### Network Performance Options
+
+The `network_performance_options` block supports the following:
+
+* `bandwidth_weighting` - (Optional) Specify the bandwidth weighting option to boost the associated type of baseline bandwidth. Valid values: `default`, `vpc-1`, `ebs-1`. Default value is `default`. Setting `vpc-1` boosts networking baseline bandwidth and reduces EBS baseline bandwidth. Setting `ebs-1` boosts EBS baseline bandwidth and reduces networking baseline bandwidth. Only supported on select instance types. See [AWS Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configure-bandwidth-weighting.html) for more information.
 
 ### Network Interfaces
 

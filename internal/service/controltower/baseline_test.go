@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package controltower_test
@@ -90,7 +90,7 @@ func testAccBaseline_disappears(t *testing.T) {
 				Config: testAccBaselineConfig_basic(rName, baselineARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaselineExists(ctx, resourceName, &baseline),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceBaseline, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcontroltower.ResourceBaseline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

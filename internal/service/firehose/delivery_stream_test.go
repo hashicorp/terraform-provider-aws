@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package firehose_test
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -147,7 +147,7 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffirehose.ResourceDeliveryStream(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffirehose.ResourceDeliveryStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2563,7 +2563,7 @@ func testAccCheckDeliveryStreamDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

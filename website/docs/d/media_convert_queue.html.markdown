@@ -6,7 +6,7 @@ description: |-
   Retrieve information about a AWS Elemental MediaConvert Queue.
 ---
 
-# Resource: aws_media_convert_queue
+# Data Source: aws_media_convert_queue
 
 Retrieve information about a AWS Elemental MediaConvert Queue.
 

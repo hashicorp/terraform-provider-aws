@@ -84,8 +84,8 @@ resource "aws_ssm_maintenance_window" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSM  Maintenance Windows using the maintenance window `id`. For example:
 
@@ -110,4 +110,4 @@ Using `terraform import`, import SSM  Maintenance Windows using the maintenance 
 % terraform import aws_ssm_maintenance_window.example mw-0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-dbd661dce9ab9a6a151e74ce0fc3c6de6a393c1cab73b7f9930058fe9a0e9690 -->
+<!-- cache-key: cdktf-0.20.8 input-9e83810a75b33423a7768988cc21c809ea25322601fb5a1bc1fdfcbd1143eb16 -->

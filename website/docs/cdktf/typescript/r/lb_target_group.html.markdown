@@ -318,6 +318,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_lb_target_group.example
+  identity = {
+    "arn" = "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/my-targets/73e2d6bc24d8a067"
+  }
+}
+
+resource "aws_lb_target_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the target group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Target Groups using their ARN. For example:
 
 ```typescript
@@ -348,4 +369,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ba4d01d41f8f09e4a997f6dd80ae23eff5aff0b16432416537872bcf71a7ee8a -->
+<!-- cache-key: cdktf-0.20.8 input-fe844fdcd548ce79ebf9e0f2703d375dd606d408573e8bfef3816fe96dac2a10 -->

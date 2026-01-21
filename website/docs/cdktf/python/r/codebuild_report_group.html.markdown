@@ -111,6 +111,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:report-group/report-group-name"
+  }
+}
+
+resource "aws_codebuild_report_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild report group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
 
 ```python
@@ -134,4 +155,4 @@ Using `terraform import`, import CodeBuild Report Group using the CodeBuild Repo
 % terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-25b9334b88ebbecd60d2c5e4dcf48a26e87fafd1bd6398a5a7960787a264ec0f -->
+<!-- cache-key: cdktf-0.20.8 input-2531648929e28bb11aaf1ac92b7cdd6c18298e4882c845a4cf4d26f604cccad3 -->

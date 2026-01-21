@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfchimesdkvoice "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func TestAccChimeSDKVoiceSipRule_disappears(t *testing.T) {
 				Config: testAccSipRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSipRuleExists(ctx, resourceName, chimeSipRule),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceSipRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceSipRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,7 +168,7 @@ func testAccCheckSipRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				return tfchimesdkvoice.FindSIPRuleByID(ctx, conn, rs.Primary.ID)
 			})
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package batch
 
@@ -16,7 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -26,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -40,6 +43,7 @@ import (
 // @ArnFormat("job-definition/{name}:{revision}")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition")
 // @Testing(preIdentityVersion="6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -846,7 +850,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	jobDefinition, err := findJobDefinitionByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -963,7 +967,9 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				}
 
 				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					if node.Container != nil {
+						diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
+					}
 				}
 				input.NodeProperties = props
 			}
@@ -1070,7 +1076,7 @@ func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string)
 	}
 
 	if status := aws.ToString(output.Status); status == jobDefinitionStatusInactive {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
 		}

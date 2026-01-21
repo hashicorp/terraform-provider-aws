@@ -55,6 +55,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_vpc_security_group_vpc_association.example
+  identity = {
+    vpc_id            = "vpc-67890"
+    security_group_id = "sg-12345"
+  }
+}
+
+resource "aws_vpc_security_group_vpc_association" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `vpc_id` (String) VPC ID.
+* `security_group_id` (String) Security Group ID.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Security Group VPC Association using the `security_group_id` and `vpc_id` arguments, separated by a comma (`,`). For example:
 
 ```python
@@ -78,4 +106,4 @@ Using `terraform import`, import a Security Group VPC Association using the `sec
 % terraform import aws_vpc_security_group_vpc_association.example sg-12345,vpc-67890
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9768425a48cd05fce3839b5319d5f1ae94d691e2a4fccedf70ffb4e2c77f03c2 -->
+<!-- cache-key: cdktf-0.20.8 input-04830f1b9a3984d65215e67daca6961a558f4b52a839c1240c688ad537001ef9 -->

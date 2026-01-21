@@ -142,6 +142,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codepipeline_webhook.example
+  identity = {
+    "arn" = "arn:aws:codepipeline:us-west-2:123456789012:webhook:example-webhook"
+  }
+}
+
+resource "aws_codepipeline_webhook" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodePipeline webhook.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodePipeline Webhooks using their ARN. For example:
 
 ```python
@@ -165,4 +186,4 @@ Using `terraform import`, import CodePipeline Webhooks using their ARN. For exam
 % terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c3ce7151839b2e8eacba62ae11df1ee45755d8a3f4549a7f852a5826ecf63ece -->
+<!-- cache-key: cdktf-0.20.8 input-e87f1892a7a3f13ccec036ebca6b0a8dc7b07ee8a01375b236dfd3f37187decb -->

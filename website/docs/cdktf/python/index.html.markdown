@@ -11,7 +11,7 @@ description: |-
 
 The Amazon Web Services (AWS) provider is Terraform’s most widely-used provider and the industry-standard way to manage AWS infrastructure as code. It is an indispensable part of how leading technology companies, global banks, government agencies, and some of the largest enterprises in the world build and operate in the cloud. Every day, it provisions and orchestrates billions of dollars of AWS infrastructure across thousands of organizations.
 
-With 1,536 resources and 609 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
+With 1,543 resources and 615 data sources, the AWS provider spans the full breadth of AWS services—from foundational capabilities like compute, storage, networking, and identity management to advanced services for AI, analytics, and event-driven architectures, including Lambda, RDS, SageMaker, and Bedrock. Whether automating a single S3 bucket or orchestrating a multi-region, enterprise-scale environment, the provider delivers consistent, reliable workflows that scale with your needs.
 
 Configure the provider with your AWS credentials, and you can immediately begin creating and managing infrastructure in a safe, repeatable way. Use the navigation on the left to explore the available resources, or start with our [Get Started tutorials](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) to learn the fundamentals. For deeper guidance on specific AWS services, visit the [AWS services tutorials](https://developer.hashicorp.com/terraform/tutorials/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -897,4 +897,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.20.8 input-a239f9cebb7a9ac4db5969a8a7412c7a552c1f2025eb69c895221b2c1f08c5f7 -->
+<!-- cache-key: cdktf-0.20.8 input-f1c44ff94f1fe868f2fbf2a0154a5fc578cf6423a1f46bd50f1833dfe46e2d7f -->

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb_target_group: Fix update error when switching `health_check.protocol` from `HTTP` to `TCP` when `protocol` is `TCP`
+```

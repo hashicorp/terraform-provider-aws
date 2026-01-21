@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -199,7 +199,7 @@ func testAccRotation_disappears(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceRotation, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfssmcontacts.ResourceRotation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -462,7 +462,7 @@ func testAccCheckRotationDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfssmcontacts.FindRotationByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

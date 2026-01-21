@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -33,8 +33,8 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -239,7 +239,7 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -6364,7 +6364,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -10048,7 +10048,7 @@ resource "aws_instance" "test" {
 resource "aws_ec2_capacity_reservation" "test" {
   instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
   instance_platform = %[2]q
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_count    = 10
 
   tags = {

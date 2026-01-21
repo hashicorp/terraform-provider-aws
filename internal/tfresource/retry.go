@@ -1,16 +1,16 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfresource
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -142,7 +142,7 @@ func RetryWhenNotFound[T any](ctx context.Context, timeout time.Duration, f func
 // RetryWhenNewResourceNotFound retries the specified function when it returns a retry.NotFoundError and `isNewResource` is true.
 func RetryWhenNewResourceNotFound[T any](ctx context.Context, timeout time.Duration, f func(context.Context) (T, error), isNewResource bool) (T, error) {
 	return retry.Op(f).If(func(_ T, err error) (bool, error) {
-		if isNewResource && NotFound(err) {
+		if isNewResource && retry.NotFound(err) {
 			return true, err
 		}
 
@@ -158,7 +158,7 @@ type Options struct {
 	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
-func (o Options) Apply(c *sdkretry.StateChangeConf) {
+func (o Options) Apply(c *retry.StateChangeConf) {
 	if o.Delay > 0 {
 		c.Delay = o.Delay
 	}
@@ -191,7 +191,12 @@ func WithDelay(delay time.Duration) OptionsFunc {
 // WithDelayRand sets the delay to a value between 0s and the passed duration
 func WithDelayRand(delayRand time.Duration) OptionsFunc {
 	return func(o *Options) {
-		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
+		n, err := rand.Int(rand.Reader, big.NewInt(delayRand.Milliseconds()))
+		if err != nil {
+			// Fallback to maximum delay if crypto/rand fails
+			n = big.NewInt(delayRand.Milliseconds())
+		}
+		o.Delay = time.Duration(n.Int64()) * time.Millisecond
 	}
 }
 

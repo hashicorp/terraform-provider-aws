@@ -28,10 +28,9 @@ See the Amazon S3 User Guide on [setting lifecycle configuration on a bucket](ht
 
 ### With neither a filter nor prefix specified
 
-The Lifecycle rule applies to a subset of objects based on the key name prefix (`""`).
+When you don't specify a filter or prefix, the lifecycle rule applies to all objects in the bucket. This has the same effect as setting an empty `filter` element.
 
-This configuration is intended to replicate the default behavior of the `lifecycle_rule`
-parameter in the Terraform AWS Provider `aws_s3_bucket` resource prior to `v4.0`.
+This configuration maintains compatibility with the default behavior of the `lifecycle_rule` parameter from the `aws_s3_bucket` resource in versions prior to v4.0 of the Terraform AWS Provider.
 
 ```terraform
 resource "aws_s3_bucket_lifecycle_configuration" "example" {
@@ -384,16 +383,12 @@ The `rule` configuration block supports the following arguments:
 * `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker. [See below](#expiration).
 * `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to.
   [See below](#filter).
-  If not specified, the `rule` will default to using `prefix`.
-  One of `filter` or `prefix` should be specified.
 * `id` - (Required) Unique identifier for the rule. The value cannot be longer than 255 characters.
 * `noncurrent_version_expiration` - (Optional) Configuration block that specifies when noncurrent object versions expire. [See below](#noncurrent_version_expiration).
 * `noncurrent_version_transition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class. [See below](#noncurrent_version_transition).
 * `prefix` - (Optional) **DEPRECATED** Use `filter` instead.
   This has been deprecated by Amazon S3.
   Prefix identifying one or more objects to which the rule applies.
-  Defaults to an empty string (`""`) if `filter` is not specified.
-  One of `prefix` or `filter` should be specified.
 * `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
 * `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 

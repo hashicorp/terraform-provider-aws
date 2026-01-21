@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -82,7 +82,7 @@ func TestAccFinSpaceKxEnvironment_disappears(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxEnvironment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

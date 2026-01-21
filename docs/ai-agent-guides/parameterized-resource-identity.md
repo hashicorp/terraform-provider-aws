@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Adding Resource Identity to parameterized Resources
 
 You are working on the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws), specifically focused on adding [resource identity](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/identity) to Plugin SDKV2 resources whose identity is composed from multiple parameters (parameterized).
@@ -94,8 +97,8 @@ resource "<resource-name>" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 ````
 
 - The instructions for importing by `identity`, including the identity schema, should appear before instructions for import blocks with an `id` argument or importing via the CLI.

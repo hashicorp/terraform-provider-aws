@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway
@@ -305,7 +305,7 @@ func sweepDomainNames(region string) error {
 		for _, v := range page.Items {
 			r := resourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.DomainName))
+			d.SetId(domainNameCreateResourceID(aws.ToString(v.DomainName), aws.ToString(v.DomainNameId)))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

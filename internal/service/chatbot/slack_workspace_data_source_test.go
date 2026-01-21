@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chatbot_test
@@ -31,7 +31,7 @@ func TestAccChatbotSlackWorkspaceDataSource_basic(t *testing.T) {
 
 	dataSourceName := "data.aws_chatbot_slack_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kinesisanalytics
@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalytics"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalytics/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -19,7 +19,7 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationDeletedTimeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
@@ -39,7 +39,7 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationStartedTimeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),
@@ -59,7 +59,7 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationStoppedTimeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
 		Refresh: statusApplication(ctx, conn, name),
@@ -79,7 +79,7 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalytics.Client, 
 	const (
 		applicationUpdatedTimeout = 5 * time.Minute
 	)
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(ctx, conn, name),

@@ -143,11 +143,32 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_sqs_queue.example
+  identity = {
+    url = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
+  }
+}
+
+resource "aws_sqs_queue" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `url` (String) URL of the SQS queue.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queues using the queue `url`. For example:
 
 ```terraform
 import {
-  to = aws_sqs_queue.public_queue
+  to = aws_sqs_queue.example
   id = "https://queue.amazonaws.com/80398EXAMPLE/MyQueue"
 }
 ```
@@ -155,5 +176,5 @@ import {
 Using `terraform import`, import SQS Queues using the queue `url`. For example:
 
 ```console
-% terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
+% terraform import aws_sqs_queue.example https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```

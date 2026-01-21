@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3tables_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3tables "github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func TestAccS3TablesTablePolicy_disappears(t *testing.T) {
 				Config: testAccTablePolicyConfig_basic(rName, namespace, bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTablePolicyExists(ctx, resourceName, &tablepolicy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.ResourceTablePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3tables.ResourceTablePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +105,7 @@ func testAccCheckTablePolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				rs.Primary.Attributes[names.AttrName],
 			)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

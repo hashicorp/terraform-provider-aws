@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkvoice_test
@@ -94,7 +94,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkvoice.ResourceVoiceProfileDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

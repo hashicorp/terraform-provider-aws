@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -59,6 +62,7 @@ var routeValidTargets = []string{
 // @Testing(importStateIdFunc="testAccRouteImportStateIdFunc")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;types.Route")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
@@ -254,7 +258,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		if route.Origin == awstypes.RouteOriginCreateRoute {
 			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
 		}
-	case tfresource.NotFound(err):
+	case retry.NotFound(err):
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
@@ -312,7 +316,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return routeFinder(ctx, conn, routeTableID, destination)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
 		d.SetId("")
 		return diags

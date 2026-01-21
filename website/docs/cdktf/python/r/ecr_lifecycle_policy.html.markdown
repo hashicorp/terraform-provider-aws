@@ -110,8 +110,8 @@ resource "aws_ecr_lifecycle_policy" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Lifecycle Policy using the name of the repository. For example:
 
@@ -136,4 +136,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7410280af72d2ad72ea3d2aeb166bddb116c84ace3563b5d4bd6494b37a53b85 -->
+<!-- cache-key: cdktf-0.20.8 input-53d56512218d03c2134728fa742975b333d9d826165629799db2caf9c4197f2f -->

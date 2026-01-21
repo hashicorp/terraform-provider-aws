@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package connect_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -187,7 +187,7 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceSecurityProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconnect.ResourceSecurityProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -227,7 +227,7 @@ func testAccCheckSecurityProfileDestroy(ctx context.Context) resource.TestCheckF
 
 			_, err := tfconnect.FindSecurityProfileByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["security_profile_id"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

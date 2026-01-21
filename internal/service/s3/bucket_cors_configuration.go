@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -12,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,6 +33,7 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(importIgnore="cors_rule.0.max_age_seconds")
 // @Testing(plannableImportAction="NoOp")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
@@ -151,7 +155,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 
 	corsRules, err := findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket CORS Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -254,7 +258,7 @@ func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	output, err := conn.GetBucketCors(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -265,7 +269,7 @@ func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketO
 	}
 
 	if output == nil || len(output.CORSRules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.CORSRules, nil

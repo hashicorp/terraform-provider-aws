@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpclattice_resource_gateway: Add `ipv4_addresses_per_eni` argument
+```

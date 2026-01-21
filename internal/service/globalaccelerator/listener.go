@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -13,13 +15,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,6 +30,7 @@ import (
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
@@ -120,7 +124,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -206,7 +210,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	output, err := conn.DescribeListener(ctx, input)
 
 	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -217,7 +221,7 @@ func findListenerByARN(ctx context.Context, conn *globalaccelerator.Client, arn 
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.Listener, nil

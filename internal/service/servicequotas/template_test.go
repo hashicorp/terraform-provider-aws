@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicequotas_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicequotas "github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -92,7 +92,7 @@ func testAccTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaConcurrentExecQuotaCode, lambdaServiceCode, lambdaConcurrentExecValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicequotas.ResourceTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfservicequotas.ResourceTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -196,7 +196,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfservicequotas.FindTemplateByThreePartKey(ctx, conn, rs.Primary.Attributes["aws_region"], rs.Primary.Attributes["quota_code"], rs.Primary.Attributes["service_code"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

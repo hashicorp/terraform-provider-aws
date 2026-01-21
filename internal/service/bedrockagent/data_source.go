@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrockagent
 
@@ -29,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -38,6 +40,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -858,7 +861,7 @@ func (r *dataSourceResource) Read(ctx context.Context, request resource.ReadRequ
 
 	ds, err := findDataSourceByTwoPartKey(ctx, conn, data.DataSourceID.ValueString(), data.KnowledgeBaseID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -952,7 +955,7 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	output, err := conn.GetDataSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -963,17 +966,17 @@ func findDataSourceByTwoPartKey(ctx context.Context, conn *bedrockagent.Client, 
 	}
 
 	if output == nil || output.DataSource == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.DataSource, nil
 }
 
-func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) retry.StateRefreshFunc {
+func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		output, err := findDataSourceByTwoPartKey(ctx, conn, dataSourceID, knowledgeBaseID)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -986,7 +989,7 @@ func statusDataSource(ctx context.Context, conn *bedrockagent.Client, dataSource
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.DataSourceStatusAvailable),
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
@@ -996,7 +999,7 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -1005,7 +1008,7 @@ func waitDataSourceCreated(ctx context.Context, conn *bedrockagent.Client, dataS
 }
 
 func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataSourceID, knowledgeBaseID string, timeout time.Duration) (*awstypes.DataSource, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DataSourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDataSource(ctx, conn, dataSourceID, knowledgeBaseID),
@@ -1015,7 +1018,7 @@ func waitDataSourceDeleted(ctx context.Context, conn *bedrockagent.Client, dataS
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.DataSource); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+		retry.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -1122,7 +1125,7 @@ type intermediateStorageModel struct {
 }
 
 type s3LocationModel struct {
-	Uri types.String `tfsdk:"uri"`
+	URI types.String `tfsdk:"uri"`
 }
 
 type transformationModel struct {

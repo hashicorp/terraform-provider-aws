@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty
@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 )
 
 // statusAdminAccountAdmin fetches the AdminAccount and its AdminStatus
-func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminAccountID string) retry.StateRefreshFunc {
+func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminAccountID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		adminAccount, err := getOrganizationAdminAccount(ctx, conn, adminAccountID)
 
@@ -41,7 +41,7 @@ func statusAdminAccountAdmin(ctx context.Context, conn *guardduty.Client, adminA
 }
 
 // statusPublishingDestination fetches the PublishingDestination and its Status
-func statusPublishingDestination(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) retry.StateRefreshFunc {
+func statusPublishingDestination(ctx context.Context, conn *guardduty.Client, destinationID, detectorID string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		input := &guardduty.DescribePublishingDestinationInput{
 			DetectorId:    aws.String(detectorID),

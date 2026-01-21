@@ -149,8 +149,8 @@ resource "aws_route53_resolver_rule" "example" {
 
 #### Optional
 
-- `account_id` (String) AWS Account where this resource is managed.
-- `region` (String) Region where this resource is managed.
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Resolver rules using the `id`. For example:
 
@@ -175,4 +175,4 @@ Using `terraform import`, import Route53 Resolver rules using the `id`. For exam
 % terraform import aws_route53_resolver_rule.example rslvr-rr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0ed20a93915b0a4dd4f7e87e7a26bed51250c855daddaa8c9214bddf9586f672 -->
+<!-- cache-key: cdktf-0.20.8 input-bcabb57c8da16ab09ce1a56dee2b588ac41a3e1934657f3ae3200e0c60fca0fb -->

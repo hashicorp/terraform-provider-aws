@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -152,7 +152,7 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 				Config: testAccNodeGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceNodeGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -506,7 +506,7 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 	})
 }
 
-func TestAccEKSNodeGroup_nodeRepairConfig(t *testing.T) {
+func TestAccEKSNodeGroup_nodeRepairConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1 types.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -519,11 +519,111 @@ func TestAccEKSNodeGroup_nodeRepairConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_nodeRepairConfig(rName),
+				Config: testAccNodeGroupConfig_nodeRepairConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_counts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigCounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_parallel_nodes_repaired_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_unhealthy_node_threshold_count", "3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_percentages(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigPercentages(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_parallel_nodes_repaired_percentage", "25"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.max_unhealthy_node_threshold_percentage", "40"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig_overrides(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfigOverrides(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.min_repair_wait_time_mins", "30"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_monitoring_condition", "NodeNotReady"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.node_unhealthy_reason", "NetworkUnavailable"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.0.repair_action", "Replace"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.min_repair_wait_time_mins", "60"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_monitoring_condition", "NodeNotReady"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.node_unhealthy_reason", "AutoScalingGroupNotFound"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.node_repair_config_overrides.1.repair_action", "Reboot"),
 				),
 			},
 			{
@@ -969,6 +1069,52 @@ func TestAccEKSNodeGroup_update(t *testing.T) {
 	})
 }
 
+func TestAccEKSNodeGroup_updateStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1, nodeGroup2 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_update1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.max_unavailable_percentage", "0"),
+				),
+			},
+			{
+				Config: testAccNodeGroupConfig_updateStrategy(rName, "DEFAULT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "DEFAULT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccNodeGroupConfig_updateStrategy(rName, "MINIMAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
+					resource.TestCheckResourceAttr(resourceName, "update_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "update_config.0.update_strategy", "MINIMAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSNodeGroup_version(t *testing.T) {
 	ctx := acctest.Context(t)
 	var nodeGroup1, nodeGroup2 types.Nodegroup
@@ -1053,7 +1199,7 @@ func testAccCheckNodeGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfeks.FindNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -2117,7 +2263,7 @@ resource "aws_eks_node_group" "test" {
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
 }
 
-func testAccNodeGroupConfig_nodeRepairConfig(rName string) string {
+func testAccNodeGroupConfig_nodeRepairConfigBasic(rName string) string {
 	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
@@ -2133,6 +2279,108 @@ resource "aws_eks_node_group" "test" {
 
   node_repair_config {
     enabled = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigCounts(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled                            = true
+    max_parallel_nodes_repaired_count  = 2
+    max_unhealthy_node_threshold_count = 3
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigPercentages(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled                                 = true
+    max_parallel_nodes_repaired_percentage  = 25
+    max_unhealthy_node_threshold_percentage = 40
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName))
+}
+
+func testAccNodeGroupConfig_nodeRepairConfigOverrides(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled = true
+
+    node_repair_config_overrides {
+      min_repair_wait_time_mins = 30
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "NetworkUnavailable"
+      repair_action             = "Replace"
+    }
+
+    node_repair_config_overrides {
+      min_repair_wait_time_mins = 60
+      node_monitoring_condition = "NodeNotReady"
+      node_unhealthy_reason     = "AutoScalingGroupNotFound"
+      repair_action             = "Reboot"
+    }
   }
 
   depends_on = [
@@ -2199,6 +2447,35 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccNodeGroupConfig_updateStrategy(rName, updateStrategy string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  update_config {
+    max_unavailable = 1
+    update_strategy = %[2]q
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodeMinimalPolicy,
+  ]
+}
+`, rName, updateStrategy))
 }
 
 func testAccNodeGroupConfig_version(rName, version string) string {

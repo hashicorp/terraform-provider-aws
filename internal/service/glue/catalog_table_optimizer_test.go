@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -115,7 +115,7 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTableOptimizer, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfglue.ResourceCatalogTableOptimizer, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -387,7 +387,7 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 			_, err := tfglue.FindCatalogTableOptimizer(ctx, conn, rs.Primary.Attributes[names.AttrCatalogID], rs.Primary.Attributes[names.AttrDatabaseName],
 				rs.Primary.Attributes[names.AttrTableName], rs.Primary.Attributes[names.AttrType])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

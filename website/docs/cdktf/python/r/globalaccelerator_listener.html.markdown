@@ -82,6 +82,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_listener.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz"
+  }
+}
+
+resource "aws_globalaccelerator_listener" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator listener.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator listeners using the `id`. For example:
 
 ```python
@@ -105,4 +126,4 @@ Using `terraform import`, import Global Accelerator listeners using the `id`. Fo
 % terraform import aws_globalaccelerator_listener.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2e087db43a47da12d51211b2482f49e4584ad5db796d9301aee46b9711f85b79 -->
+<!-- cache-key: cdktf-0.20.8 input-41fff3eee154c8af5e4167243ed2cb626f35c7389a4da6a5109101ff14ab0ed9 -->

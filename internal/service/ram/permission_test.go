@@ -191,7 +191,7 @@ func TestAccRAMPermission_disappears(t *testing.T) {
 				Config: testAccPermissionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfram.ResourcePermission, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfram.ResourcePermission, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

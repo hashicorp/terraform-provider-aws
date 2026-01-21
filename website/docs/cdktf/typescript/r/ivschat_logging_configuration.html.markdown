@@ -195,6 +195,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ivschat_logging_configuration.example
+  identity = {
+    "arn" = "arn:aws:ivschat:us-west-2:123456789012:logging-configuration/abcdABCDefgh"
+  }
+}
+
+resource "aws_ivschat_logging_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat logging configuration.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Logging Configuration using the ARN. For example:
 
 ```typescript
@@ -225,4 +246,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Logging Configurat
 % terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9833752dfd4061aee60a880c9e85a985bb464fac5c96897af5091cca3cb179cb -->
+<!-- cache-key: cdktf-0.20.8 input-b7175c7e988d9a9bbc0b3c4717e97a3c2213590397241c072ea4fdd3e069bce7 -->

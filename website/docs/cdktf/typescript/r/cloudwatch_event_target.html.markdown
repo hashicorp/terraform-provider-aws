@@ -926,6 +926,36 @@ This resource exports no additional attributes.
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_event_target.example
+  identity = {
+    event_bus_name = "default"
+    rule           = "rule-name"
+    target_id      = "target-id"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `eventBusName` (String) Event bus name for the target.
+* `rule` (String) Rule name for the target.
+* `targetId` (String) Target ID.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
  ```typescript
@@ -942,7 +972,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     CloudwatchEventTarget.generateConfigForImport(
       this,
-      "testEventTarget",
+      "example",
       "rule-name/target-id"
     );
   }
@@ -953,7 +983,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
  ```console
-% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+% terraform import aws_cloudwatch_event_target.example rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4c16b50e4d084f2bdd73c8f93285521d5ad87e9bd6a834dd34651580561c90b2 -->
+<!-- cache-key: cdktf-0.20.8 input-6449ccd183debaacb3e84982033d932cbbdc62d9beb9dd4ca86738468e73fd62 -->

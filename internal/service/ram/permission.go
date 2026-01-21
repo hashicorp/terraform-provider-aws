@@ -315,7 +315,7 @@ func findPermissionByARN(ctx context.Context, conn *ram.Client, arn string) (*aw
 	}
 
 	if out == nil || out.Permission == nil {
-		return nil, smarterr.NewError(tfresource.NewEmptyResultError(&input))
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return out.Permission, nil

@@ -103,13 +103,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `action_after_completion` - (Optional) Action that applies to the schedule after completing invocation of the target. Valid values are `NONE` and `DELETE`. Defaults to `NONE`.
 * `description` - (Optional) Brief description of the schedule.
 * `endDate` - (Optional) The date, in UTC, before which the schedule can invoke its target. Depending on the schedule's recurrence expression, invocations might stop on, or before, the end date you specify. EventBridge Scheduler ignores the end date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `groupName` - (Optional, Forces new resource) Name of the schedule group to associate with this schedule. When omitted, the `default` schedule group is used.
 * `kmsKeyArn` - (Optional) ARN for the customer managed KMS key that EventBridge Scheduler will use to encrypt and decrypt your data.
 * `name` - (Optional, Forces new resource) Name of the schedule. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `scheduleExpressionTimezone` - (Optional) Timezone in which the scheduling expression is evaluated. Defaults to `UTC`. Example: `Australia/Sydney`.
 * `startDate` - (Optional) The date, in UTC, after which the schedule can begin invoking its target. Depending on the schedule's recurrence expression, invocations might occur on, or after, the start date you specify. EventBridge Scheduler ignores the start date for one-time schedules. Example: `2030-01-01T01:00:00Z`.
 * `state` - (Optional) Specifies whether the schedule is enabled or disabled. One of: `ENABLED` (default), `DISABLED`.
@@ -253,4 +254,4 @@ Using `terraform import`, import schedules using the combination `group_name/nam
 % terraform import aws_scheduler_schedule.example my-schedule-group/my-schedule
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2ebad3e1766844bd71ef2371cd6bc9463dad94e385ee6f6373786362bf63e1ea -->
+<!-- cache-key: cdktf-0.20.8 input-4c212c0c6218bfd08fcbd9f86d05796c8c1792de4da9df1323513206148d2bde -->

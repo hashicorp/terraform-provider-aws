@@ -589,6 +589,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codebuild_project.example
+  identity = {
+    "arn" = "arn:aws:codebuild:us-west-2:123456789012:project/project-name"
+  }
+}
+
+resource "aws_codebuild_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeBuild project.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to
 import CodeBuild Project using the `name`. For example:
 
@@ -616,4 +637,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d9bede0846a6fc6749b98f9263d8da010257e827b0e9941c75edb32aab7f0040 -->
+<!-- cache-key: cdktf-0.20.8 input-0144060aac5e5b6604402ac284bde6d095c21e728b54843f8c9694c50ff4ca14 -->

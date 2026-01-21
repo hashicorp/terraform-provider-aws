@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package s3
 
@@ -15,13 +17,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,6 +32,7 @@ import (
 // @IdentityAttribute("bucket")
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetBucketNotificationConfigurationOutput")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
@@ -346,7 +350,7 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 
 	output, err := findBucketNotificationConfiguration(ctx, conn, bucket, "")
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Notification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -412,7 +416,7 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -422,8 +426,8 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 		return nil, err
 	}
 
-	if itypes.IsZero(output) {
-		return nil, tfresource.NewEmptyResultError(input)
+	if inttypes.IsZero(output) {
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

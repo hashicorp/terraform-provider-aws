@@ -68,13 +68,14 @@ Custom add-on configuration can be passed using `configurationValues` as a singl
 
 ~> **Note:** `configurationValues` is a single JSON string should match the valid JSON schema for each add-on with specific version.
 
-To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) call.
-This below is an example for extracting the `configurationValues` schema for `coredns`.
+You can use [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) to extract each add-on's JSON schema.
+Here's an example command to extract the `configurationValues` schema for `coredns`.
 
 ```bash
- aws eks describe-addon-configuration \
- --addon-name coredns \
- --addon-version v1.10.1-eksbuild.1
+aws eks describe-addon-configuration \
+  --addon-name coredns \
+  --addon-version v1.10.1-eksbuild.1 \
+  | jq -r .configurationSchema | jq .
 ```
 
 Example to create a `coredns` managed addon with custom `configurationValues`.
@@ -320,4 +321,4 @@ Using `terraform import`, import EKS add-on using the `clusterName` and `addonNa
 % terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c73f8260cf457fff5cfd8a0b49569977fbcb4f2b70abbf416d11d4bf1c4cbc84 -->
+<!-- cache-key: cdktf-0.20.8 input-8803991f8ee5790c4f13c6fd7ff29e971f90bfc6ce1a41b219532c2e0b1679d8 -->
