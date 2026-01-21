@@ -227,9 +227,22 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		names.AttrRegion: fwschema.StringAttribute{
 																			Required: true,
 																		},
-																		"routing_control_arns": fwschema.ListAttribute{
-																			CustomType: fwtypes.ListOfARNType,
-																			Required:   true,
+																	},
+																	Blocks: map[string]fwschema.Block{
+																		"routing_control": fwschema.ListNestedBlock{
+																			CustomType: fwtypes.NewListNestedObjectTypeOf[routingControlModel](ctx),
+																			NestedObject: fwschema.NestedBlockObject{
+																				Attributes: map[string]fwschema.Attribute{
+																					"routing_control_arn": fwschema.StringAttribute{
+																						CustomType: fwtypes.ARNType,
+																						Required:   true,
+																					},
+																					names.AttrState: fwschema.StringAttribute{
+																						CustomType: fwtypes.StringEnumType[awstypes.RoutingControlStateChange](),
+																						Required:   true,
+																					},
+																				},
+																			},
 																		},
 																	},
 																},
@@ -1000,19 +1013,19 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 									for _, rc := range regionControls {
 										region := rc.Region.ValueString()
 
-										if !rc.RoutingControlARNs.IsNull() && !rc.RoutingControlARNs.IsUnknown() {
-											var arns []string
-											diags.Append(rc.RoutingControlARNs.ElementsAs(ctx, &arns, false)...)
+										if !rc.RoutingControls.IsNull() && !rc.RoutingControls.IsUnknown() {
+											var controls []routingControlModel
+											diags.Append(rc.RoutingControls.ElementsAs(ctx, &controls, false)...)
 											if diags.HasError() {
 												return nil, diags
 											}
 
-											states := make([]awstypes.ArcRoutingControlState, len(arns))
-											for i, arn := range arns {
+											states := make([]awstypes.ArcRoutingControlState, len(controls))
+											for i, control := range controls {
+												arn := control.RoutingControlArn.ValueString()
 												states[i] = awstypes.ArcRoutingControlState{
 													RoutingControlArn: &arn,
-													// Default state - could be configurable
-													State: awstypes.RoutingControlStateChangeOn,
+													State:             control.State.ValueEnum(),
 												}
 											}
 
@@ -1281,15 +1294,18 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 									var regionModel regionAndRoutingControlsModel
 									regionModel.Region = types.StringValue(region)
 
-									// Extract ARNs from ArcRoutingControlState slice
-									arns := make([]string, len(controlStates))
+									// Convert ArcRoutingControlState slice to routingControlModel slice
+									controls := make([]routingControlModel, len(controlStates))
 									for i, state := range controlStates {
-										if state.RoutingControlArn != nil {
-											arns[i] = aws.ToString(state.RoutingControlArn)
+										controls[i] = routingControlModel{
+											RoutingControlArn: fwtypes.ARNValue(aws.ToString(state.RoutingControlArn)),
+											State:             fwtypes.StringEnumValue(state.State),
 										}
 									}
 
-									diags.Append(flex.Flatten(ctx, arns, &regionModel.RoutingControlARNs)...)
+									var d fwdiag.Diagnostics
+									regionModel.RoutingControls, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, controls)
+									diags.Append(d...)
 
 									regionControls = append(regionControls, regionModel)
 								}
@@ -1611,8 +1627,13 @@ type arcRoutingControlConfigModel struct {
 }
 
 type regionAndRoutingControlsModel struct {
-	Region             types.String      `tfsdk:"region"`
-	RoutingControlARNs fwtypes.ListOfARN `tfsdk:"routing_control_arns"`
+	Region          types.String                                         `tfsdk:"region"`
+	RoutingControls fwtypes.ListNestedObjectValueOf[routingControlModel] `tfsdk:"routing_control"`
+}
+
+type routingControlModel struct {
+	RoutingControlArn fwtypes.ARN                                            `tfsdk:"routing_control_arn"`
+	State             fwtypes.StringEnum[awstypes.RoutingControlStateChange] `tfsdk:"state"`
 }
 
 // Parallel Configuration Models

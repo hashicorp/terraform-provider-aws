@@ -288,7 +288,12 @@ The `execution_block_configuration` block contains one of the following configur
 ### Region and Routing Controls
 
 * `region` - (Required) AWS region.
-* `routing_control_arns` - (Required) List of routing control ARNs.
+* `routing_control` - (Required) List of routing controls. See [Routing Control](#routing-control) below.
+
+### Routing Control
+
+* `routing_control_arn` - (Required) ARN of the routing control.
+* `state` - (Required) State of the routing control. Valid values: `On`, `Off`.
 
 ### EC2 ASG Capacity Increase Config
 

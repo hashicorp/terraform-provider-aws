@@ -444,10 +444,6 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 				ImportStateVerify: true,
 				// API may return regions in different order than specified
 				ImportStateVerifyIgnore: []string{
-					"workflow.0.step.6.execution_block_configuration.0.arc_routing_control_config.0.region_and_routing_controls.0.region",
-					"workflow.0.step.6.execution_block_configuration.0.arc_routing_control_config.0.region_and_routing_controls.1.region",
-					"workflow.0.step.6.execution_block_configuration.0.arc_routing_control_config.0.region_and_routing_controls.0.routing_control_arns.0",
-					"workflow.0.step.6.execution_block_configuration.0.arc_routing_control_config.0.region_and_routing_controls.1.routing_control_arns.0",
 					// EKS scaling resources may be returned in different order
 					"workflow.0.step.5.execution_block_configuration.0.eks_resource_scaling_config.0.scaling_resources.0.resources.0.hpa_name",
 					"workflow.0.step.5.execution_block_configuration.0.eks_resource_scaling_config.0.scaling_resources.0.resources.0.name",
@@ -826,12 +822,18 @@ resource "aws_arcregionswitch_plan" "test" {
       execution_block_configuration {
         arc_routing_control_config {
           region_and_routing_controls {
-            region               = %[3]q
-            routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"]
+            region = %[3]q
+            routing_control {
+              routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"
+              state               = "On"
+            }
           }
           region_and_routing_controls {
-            region               = %[2]q
-            routing_control_arns = ["arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"]
+            region = %[2]q
+            routing_control {
+              routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"
+              state               = "Off"
+            }
           }
           cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
           external_id        = "routing-external-id"
