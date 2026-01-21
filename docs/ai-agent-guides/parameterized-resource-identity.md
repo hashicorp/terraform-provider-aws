@@ -44,7 +44,7 @@ Use the following steps to add resource identity to an existing resource:
 resource "aws_service_thing" "test" {
 {{- template "region" }}
   name = var.rName
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 ```
 
