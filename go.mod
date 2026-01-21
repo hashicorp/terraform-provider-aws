@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.7
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.20.19
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/account v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.37.19
@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/arczonalshift v1.22.19
 	github.com/aws/aws-sdk-go-v2/service/athena v1.56.6
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.46.8
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.5
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.30.10
 	github.com/aws/aws-sdk-go-v2/service/backup v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/batch v1.58.12
@@ -150,7 +150,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.46.7
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.60.17
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.24.10
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.42.10
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.30.19
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.36.20
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.5.19
 	github.com/aws/aws-sdk-go-v2/service/oam v1.23.11
 	github.com/aws/aws-sdk-go-v2/service/observabilityadmin v1.9.2
-	github.com/aws/aws-sdk-go-v2/service/odb v1.7.1
+	github.com/aws/aws-sdk-go-v2/service/odb v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.57.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.50.1
@@ -265,7 +265,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.35.16
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.68.6
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.30.7
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/waf v1.30.16
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.30.17
