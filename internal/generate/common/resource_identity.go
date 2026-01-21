@@ -128,7 +128,7 @@ func (a IdentityAttribute) ResourceAttributeName() string {
 	return namesgen.ConstOrQuote(a.ResourceAttributeName_)
 }
 
-func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity, goImports *[]GoImport) error {
+func ParseResourceIdentity(annotationName string, args Args, implementation Implementation, d *ResourceIdentity, goImports *[]GoImport) (errs error) {
 	switch annotationName {
 	case "ArnIdentity":
 		d.isARNIdentity = true
@@ -140,42 +140,28 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		parseIdentityDuplicateAttrNames(args, implementation, d)
 
-		var err error
 		for k := range args.Keyword {
-			if k == "identityDuplicateAttributes" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@ArnIdentity\"", k))
-		}
-		if err != nil {
-			return err
+			errs = errors.Join(errs, fmt.Errorf("annotation \"@ArnIdentity\": unexpected keyword parameter %q", k))
 		}
 
 	case "CustomInherentRegionIdentity":
 		d.isCustomInherentRegionIdentity = true
 
 		if len(args.Positional) < 2 {
-			return errors.New("CustomInherentRegionIdentity missing required parameters")
+			errs = errors.Join(errs, errors.New("annotation \"@CustomInherentRegionIdentity\": missing required positional parameters"))
 		}
 
 		d.identityAttributeName = args.Positional[0]
 
 		parseIdentityDuplicateAttrNames(args, implementation, d)
 
-		var err error
 		for k := range args.Keyword {
-			if k == "identityDuplicateAttributes" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@CustomInherentRegionIdentity\"", k))
-		}
-		if err != nil {
-			return err
+			errs = errors.Join(errs, fmt.Errorf("annotation \"@CustomInherentRegionIdentity\": unexpected keyword parameter %q", k))
 		}
 
 		attr := args.Positional[1]
 		if funcName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
-			return fmt.Errorf("%q: %w", attr, err)
+			errs = errors.Join(errs, fmt.Errorf("%q: %w", attr, err))
 		} else {
 			d.CustomInherentRegionParser = funcName
 			if importSpec != nil {
@@ -185,41 +171,36 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 	case "IdentityAttribute":
 		if len(args.Positional) == 0 {
-			return errors.New("no Identity attribute name")
+			errs = errors.Join(errs, errors.New("no Identity attribute name"))
 		}
 
 		identityAttribute := IdentityAttribute{
 			Name_: args.Positional[0],
 		}
 
-		var err error
 		for k := range args.Keyword {
-			if k == "optional" || k == "resourceAttributeName" || k == "testNotNull" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@IdentityAttribute(%q)\"", k, args.Positional[0]))
-		}
-		if err != nil {
-			return err
-		}
+			switch k {
+			case "optional":
+				attr := args.Keyword[k]
+				if b, err := ParseBoolAttr("optional", attr); err != nil {
+					errs = errors.Join(errs, err)
+				} else {
+					identityAttribute.Optional = b
+				}
 
-		if attr, ok := args.Keyword["optional"]; ok {
-			if b, err := ParseBoolAttr("optional", attr); err != nil {
-				return err
-			} else {
-				identityAttribute.Optional = b
-			}
-		}
+			case "resourceAttributeName":
+				identityAttribute.ResourceAttributeName_ = args.Keyword[k]
 
-		if attr, ok := args.Keyword["resourceAttributeName"]; ok {
-			identityAttribute.ResourceAttributeName_ = attr
-		}
+			case "testNotNull":
+				attr := args.Keyword[k]
+				if b, err := ParseBoolAttr("testNotNull", attr); err != nil {
+					errs = errors.Join(errs, err)
+				} else {
+					identityAttribute.TestNotNull = b
+				}
 
-		if attr, ok := args.Keyword["testNotNull"]; ok {
-			if b, err := ParseBoolAttr("testNotNull", attr); err != nil {
-				return err
-			} else {
-				identityAttribute.TestNotNull = b
+			default:
+				errs = errors.Join(errs, fmt.Errorf("annotation \"@IdentityAttribute\": unexpected keyword parameter %q", k))
 			}
 		}
 
@@ -233,26 +214,22 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			d.IdentityVersion = i
 		}
 
-		var err error
 		for k := range args.Keyword {
-			if k == "sdkV2IdentityUpgraders" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@IdentityVersion\"", k))
-		}
-		if err != nil {
-			return err
-		}
+			switch k {
+			case "sdkV2IdentityUpgraders":
+				attr := args.Keyword[k]
+				attrs := strings.Split(attr, ";")
+				d.SDKv2IdentityUpgraders = attrs
 
-		if attr, ok := args.Keyword["sdkV2IdentityUpgraders"]; ok {
-			attrs := strings.Split(attr, ";")
-			d.SDKv2IdentityUpgraders = attrs
+			default:
+				errs = errors.Join(errs, fmt.Errorf("annotation \"@IdentityVersion\": unexpected keyword parameter %q", k))
+			}
 		}
 
 	case "ImportIDHandler":
 		attr := args.Positional[0]
 		if typeName, importSpec, err := ParseIdentifierSpec(attr); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		} else {
 			d.ImportIDHandler = typeName
 			if importSpec != nil {
@@ -260,22 +237,18 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 			}
 		}
 
-		var err error
 		for k := range args.Keyword {
-			if k == "setIDAttribute" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@ImportIDHandler\"", k))
-		}
-		if err != nil {
-			return err
-		}
+			switch k {
+			case "setIDAttribute":
+				attr := args.Keyword[k]
+				if b, err := strconv.ParseBool(attr); err != nil {
+					errs = errors.Join(errs, err)
+				} else {
+					d.SetIDAttribute = b
+				}
 
-		if attr, ok := args.Keyword["setIDAttribute"]; ok {
-			if b, err := strconv.ParseBool(attr); err != nil {
-				return err
-			} else {
-				d.SetIDAttribute = b
+			default:
+				errs = errors.Join(errs, fmt.Errorf("annotation \"@ImportIDHandler\": unexpected keyword parameter %q", k))
 			}
 		}
 
@@ -290,42 +263,34 @@ func ParseResourceIdentity(annotationName string, args Args, implementation Impl
 
 		parseIdentityDuplicateAttrNames(args, implementation, d)
 
-		var err error
 		for k := range args.Keyword {
-			if k == "identityDuplicateAttributes" {
-				continue
+			switch k {
+			default:
+				errs = errors.Join(errs, fmt.Errorf("annotation \"@SingletonIdentity\": unexpected keyword parameter %q", k))
 			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@SingletonIdentity\"", k))
-		}
-		if err != nil {
-			return err
 		}
 
 	// TODO: allow underscore?
 	case "V60SDKv2Fix":
 		d.HasV6_0NullValuesError = true
 
-		var err error
 		for k := range args.Keyword {
-			if k == "v60RefreshError" {
-				continue
-			}
-			err = errors.Join(err, fmt.Errorf("unexpected keyword parameter %q in annotation \"@V60SDKv2Fix\"", k))
-		}
-		if err != nil {
-			return err
-		}
+			switch k {
+			case "v60RefreshError":
+				attr := args.Keyword[k]
+				if b, err := strconv.ParseBool(attr); err != nil {
+					errs = errors.Join(errs, err)
+				} else {
+					d.HasV6_0RefreshError = b
+				}
 
-		if attr, ok := args.Keyword["v60RefreshError"]; ok {
-			if b, err := ParseBoolAttr("v60RefreshError", attr); err != nil {
-				return err
-			} else {
-				d.HasV6_0RefreshError = b
+			default:
+				errs = errors.Join(errs, fmt.Errorf("annotation \"@V60SDKv2Fix\": unexpected keyword parameter %q", k))
 			}
 		}
 	}
 
-	return nil
+	return errs
 }
 
 type GoImport struct {
@@ -383,4 +348,6 @@ func parseIdentityDuplicateAttrNames(args Args, implementation Implementation, d
 		}
 	})
 	d.IdentityDuplicateAttrNames = slices.Compact(attrs)
+
+	delete(args.Keyword, "identityDuplicateAttributes")
 }
