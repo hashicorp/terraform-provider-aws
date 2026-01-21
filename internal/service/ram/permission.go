@@ -205,6 +205,10 @@ func (r *permissionResource) Update(ctx context.Context, req resource.UpdateRequ
 		if resp.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		plan.DefaultVersion = state.DefaultVersion
+		plan.Status = state.Status
+		plan.Version = state.Version
 	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
