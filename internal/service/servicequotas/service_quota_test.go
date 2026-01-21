@@ -237,6 +237,45 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 	})
 }
 
+func TestAccServiceQuotasServiceQuota_Value_updateToSameValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	const dataSourceName = "data.aws_servicequotas_service_quota.test"
+	const resourceName = "aws_servicequotas_service_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
+				),
+			},
+			{
+				// Update to the same value - should not open a case
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+					// Most importantly: no request_id should be created
+					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
@@ -267,7 +306,38 @@ func TestAccServiceQuotasServiceQuota_valueLessThanCurrent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
-				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value less than current`),
+				ExpectError: regexache.MustCompile(`requesting Service Quotas Service Quota \([^)]+\) with value.*less than current`),
+			},
+		},
+	})
+}
+
+func TestAccServiceQuotasServiceQuota_valueLessThanCurrentOnUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	const dataSourceName = "data.aws_servicequotas_service_quota.test"
+	const resourceName = "aws_servicequotas_service_quota.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "quota_code", setQuotaQuotaCode),
+					resource.TestCheckResourceAttr(resourceName, "service_code", setQuotaServiceCode),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
+				),
+			},
+			{
+				Config:      testAccServiceQuotaConfig_valueLessThanCurrent(setQuotaServiceCode, setQuotaQuotaCode),
+				ExpectError: regexache.MustCompile(`updating Service Quotas Service Quota \([^)]+\) with value.*less than current`),
 			},
 		},
 	})
