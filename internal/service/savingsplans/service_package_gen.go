@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			TypeName: "aws_savingsplans_plan",
 			Name:     "Savings Plan",
 			Tags:     unique.Make(inttypes.ServicePackageResourceTags{}),
-			Region:   unique.Make(inttypes.ResourceRegionDefault()),
+			Region:   unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }
@@ -39,9 +39,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_savingsplans_plan",
 			Name:     "Savings Plan",
 			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "savings_plan_arn",
 			}),
-			Region: unique.Make(inttypes.ResourceRegionDefault()),
+			Region: unique.Make(inttypes.ResourceRegionDisabled()),
 		},
 	}
 }

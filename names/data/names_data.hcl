@@ -7776,6 +7776,8 @@ service "savingsplans" {
   provider_package_correct = "savingsplans"
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
+
+  is_global = true
 }
 
 service "simpledb" {
