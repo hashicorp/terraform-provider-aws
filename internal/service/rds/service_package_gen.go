@@ -23,6 +23,11 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newDataSourceOptionGroup,
+			TypeName: "aws_db_option_group",
+			Name:     "Option Group",
+		},
+		{
 			Factory:  newClusterParameterGroupDataSource,
 			TypeName: "aws_rds_cluster_parameter_group",
 			Name:     "Cluster Parameter Group",
