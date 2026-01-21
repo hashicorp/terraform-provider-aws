@@ -137,6 +137,7 @@ resource "aws_ssm_parameter" "test" {
   name  = %[1]q
   type  = "String"
   value = "TestValue"
+
   description = "Test parameter"
 }
 
