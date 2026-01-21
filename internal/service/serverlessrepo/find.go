@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	serverlessrepo "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
 func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
@@ -23,10 +23,8 @@ func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicati
 
 	resp, err := conn.GetApplication(ctx, input)
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:    err,
-			LastRequest:  input,
-			LastResponse: resp,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 	if err != nil {
@@ -34,10 +32,8 @@ func findApplication(ctx context.Context, conn *serverlessrepo.Client, applicati
 	}
 
 	if resp == nil {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest:  input,
-			LastResponse: resp,
-			Message:      "returned empty response",
+		return nil, &retry.NotFoundError{
+			Message: "returned empty response",
 		}
 	}
 

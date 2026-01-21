@@ -1,8 +1,3 @@
-resource "aws_sns_topic" "test" {
-{{- template "region" }}
-  name = var.rName
-}
-
 resource "aws_sns_topic_policy" "test" {
 {{- template "region" }}
   arn    = aws_sns_topic.test.arn
@@ -28,5 +23,9 @@ resource "aws_sns_topic_policy" "test" {
   ]
 }
 POLICY
-{{- template "tags" }}
+}
+
+resource "aws_sns_topic" "test" {
+{{- template "region" }}
+  name = var.rName
 }

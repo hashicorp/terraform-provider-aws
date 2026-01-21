@@ -2,10 +2,10 @@ resource "aws_ivs_recording_configuration" "test" {
 {{- template "region" }}
   destination_configuration {
     s3 {
-      bucket_name = aws_s3_bucket.test.id
+      bucket_name = aws_s3_bucket.test.bucket
     }
   }
-{{- template "tags" }}
+{{- template "tags" . }}
 }
 
 resource "aws_s3_bucket" "test" {
