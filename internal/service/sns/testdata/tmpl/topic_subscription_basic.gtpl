@@ -3,7 +3,6 @@ resource "aws_sns_topic_subscription" "test" {
   topic_arn = aws_sns_topic.test.arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.test.arn
-{{- template "tags" . }}
 }
 
 resource "aws_sns_topic" "test" {

@@ -23,7 +23,6 @@ resource "aws_sns_topic_data_protection_policy" "test" {
       "Version" = "2021-06-01"
     }
   )
-{{- template "tags" . }}
 }
 
 data "aws_partition" "current" {}

@@ -23,7 +23,6 @@ resource "aws_sns_topic_policy" "test" {
   ]
 }
 POLICY
-{{- template "tags" . }}
 }
 
 resource "aws_sns_topic" "test" {
