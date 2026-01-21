@@ -372,10 +372,10 @@ func resourceServiceQuotaUpdate(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		// Value is already satisfied, log and skip
 		tflog.Info(ctx, "Service Quota value already satisfied, skipping increase request", map[string]any{
-			"service_code":     serviceCode,
-			"quota_code":       quotaCode,
-			"current_value":    quotaValue,
-			"requested_value":  requestedValue,
+			"service_code":    serviceCode,
+			"quota_code":      quotaCode,
+			"current_value":   quotaValue,
+			"requested_value": requestedValue,
 		})
 	}
 
