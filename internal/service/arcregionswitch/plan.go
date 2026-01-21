@@ -1695,7 +1695,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 }
 
 func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, arn string, expectedCount int) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		healthChecks, err := findRoute53HealthChecks(ctx, conn, arn)
 		if err != nil {
 			return nil, "", err
@@ -1719,7 +1719,7 @@ func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client
 }
 
 func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -1750,7 +1750,7 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 }
 
 func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
-	return func(ctx context.Context) (any, string, error) {
+	return func(_ context.Context) (any, string, error) {
 		plan, err := findPlanByARN(ctx, conn, arn)
 		if retry.NotFound(err) {
 			return nil, "", nil
