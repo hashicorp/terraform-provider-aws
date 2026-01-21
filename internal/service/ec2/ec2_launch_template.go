@@ -705,20 +705,6 @@ func resourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"network_performance_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bandwidth_weighting": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
-						},
-					},
-				},
-			},
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -896,6 +882,20 @@ func resourceLaunchTemplate() *schema.Resource {
 						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+					},
+				},
+			},
+			"network_performance_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bandwidth_weighting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceBandwidthWeighting](),
 						},
 					},
 				},
@@ -1153,8 +1153,8 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"license_specification",
 		"metadata_options",
 		"monitoring",
-		"network_performance_options",
 		"network_interfaces",
+		"network_performance_options",
 		"placement",
 		"private_dns_name_options",
 		"ram_disk_id",
@@ -1349,12 +1349,12 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *s
 		}
 	}
 
-	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
-	}
-
 	if v, ok := d.GetOk("network_interfaces"); ok && len(v.([]any)) > 0 {
 		apiObject.NetworkInterfaces = expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequests(v.([]any))
+	}
+
+	if v, ok := d.GetOk("network_performance_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.NetworkPerformanceOptions = expandLaunchTemplateNetworkPerformanceOptionsRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("placement"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
@@ -2296,15 +2296,15 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.Client, d 
 	} else {
 		d.Set("monitoring", nil)
 	}
+	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
+		return fmt.Errorf("setting network_interfaces: %w", err)
+	}
 	if apiObject.NetworkPerformanceOptions != nil {
 		if err := d.Set("network_performance_options", []any{flattenLaunchTemplateNetworkPerformanceOptions(apiObject.NetworkPerformanceOptions)}); err != nil {
 			return fmt.Errorf("setting network_performance_options: %w", err)
 		}
 	} else {
 		d.Set("network_performance_options", nil)
-	}
-	if err := d.Set("network_interfaces", flattenLaunchTemplateInstanceNetworkInterfaceSpecifications(apiObject.NetworkInterfaces)); err != nil {
-		return fmt.Errorf("setting network_interfaces: %w", err)
 	}
 	if apiObject.Placement != nil {
 		if err := d.Set("placement", []any{flattenLaunchTemplatePlacement(apiObject.Placement)}); err != nil {
@@ -3005,7 +3005,7 @@ func flattenLaunchTemplateNetworkPerformanceOptions(apiObject *awstypes.LaunchTe
 	tfMap := map[string]any{}
 
 	if v := apiObject.BandwidthWeighting; v != "" {
-		tfMap["bandwidth_weighting"] = string(v)
+		tfMap["bandwidth_weighting"] = v
 	}
 
 	return tfMap

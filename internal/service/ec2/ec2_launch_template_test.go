@@ -70,6 +70,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_performance_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ram_disk_id", ""),
