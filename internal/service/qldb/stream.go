@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	"github.com/aws/aws-sdk-go-v2/service/qldb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -244,9 +244,8 @@ func findStreamByTwoPartKey(ctx context.Context, conn *qldb.Client, ledgerName, 
 	// See https://docs.aws.amazon.com/qldb/latest/developerguide/streams.create.html#streams.create.states.
 	switch status := output.Status; status {
 	case types.StreamStatusCompleted, types.StreamStatusCanceled, types.StreamStatusFailed:
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
@@ -257,9 +256,8 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.Client, input *qld
 	output, err := conn.DescribeJournalKinesisStream(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -274,9 +272,8 @@ func findJournalKinesisStream(ctx context.Context, conn *qldb.Client, input *qld
 	return output.Stream, nil
 }
 
-func statusStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
-		// Don't call FindStream as it maps useful statuses to NotFoundError.
+func statusStreamCreated(conn *qldb.Client, ledgerName, streamID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findJournalKinesisStream(ctx, conn, &qldb.DescribeJournalKinesisStreamInput{
 			LedgerName: aws.String(ledgerName),
 			StreamId:   aws.String(streamID),
@@ -298,7 +295,7 @@ func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusImpaired),
 		Target:     enum.Slice(types.StreamStatusActive),
-		Refresh:    statusStreamCreated(ctx, conn, ledgerName, streamID),
+		Refresh:    statusStreamCreated(conn, ledgerName, streamID),
 		Timeout:    timeout,
 		MinTimeout: 3 * time.Second,
 	}
@@ -314,8 +311,8 @@ func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	return nil, err
 }
 
-func statusStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, streamID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusStreamDeleted(conn *qldb.Client, ledgerName, streamID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findStreamByTwoPartKey(ctx, conn, ledgerName, streamID)
 
 		if retry.NotFound(err) {
@@ -334,7 +331,7 @@ func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, strea
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusActive, types.StreamStatusImpaired),
 		Target:     []string{},
-		Refresh:    statusStreamDeleted(ctx, conn, ledgerName, streamID),
+		Refresh:    statusStreamDeleted(conn, ledgerName, streamID),
 		Timeout:    timeout,
 		MinTimeout: 1 * time.Second,
 	}
