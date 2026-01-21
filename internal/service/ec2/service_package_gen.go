@@ -791,6 +791,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.Service
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),
 		},
 		{
+			Factory:  dataSourceIPAMPoolCIDRAllocations,
+			TypeName: "aws_vpc_ipam_pool_cidr_allocations",
+		},
+		{
 			Factory:  dataSourceIPAMPoolCIDRs,
 			TypeName: "aws_vpc_ipam_pool_cidrs",
 			Name:     "IPAM Pool CIDRs",
