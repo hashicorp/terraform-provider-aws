@@ -1145,7 +1145,6 @@ func (m resourcePlanModel) Expand(ctx context.Context) (result any, diags fwdiag
 	return apiObject, diags
 }
 
-// Custom flatten to handle reverse transformations
 // Flatten converts AWS API output to Terraform resource model.
 // Custom flattening is required because:
 // 1. Union Type Handling: ExecutionBlockConfiguration union types need manual type switching and field extraction
@@ -1172,6 +1171,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 	}
 
 	// Handle simple fields with AutoFlex
+	// Attempting to Flatten the entire structure results in Autoflex errors for parts it can't handle
 	diags.Append(flex.Flatten(ctx, plan.Name, &m.Name)...)
 	diags.Append(flex.Flatten(ctx, plan.ExecutionRole, &m.ExecutionRole)...)
 	diags.Append(flex.Flatten(ctx, plan.RecoveryApproach, &m.RecoveryApproach)...)
