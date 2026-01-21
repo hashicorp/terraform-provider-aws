@@ -341,7 +341,7 @@ resource "aws_service_thing" "test" {
 
 ### Pre-Defined Configuration Sections
 
-To aid in simplifying and standardizing Terraform configurations for testing, there are a number of pre-defined configuration sections that mirror the pre-defined config functions in the `acctest` pacakge.
+To aid in simplifying and standardizing Terraform configurations for testing, there are a number of pre-defined configuration sections that mirror the pre-defined config functions in the `acctest` package.
 The configuration sections have the same name as the pre-defined config function.
 
 To include the pre-defined configuration sections add a line like
