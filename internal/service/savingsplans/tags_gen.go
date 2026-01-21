@@ -18,39 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists savingsplans service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *savingsplans.Client, identifier string, optFns ...func(*savingsplans.Options)) (tftags.KeyValueTags, error) {
-	input := savingsplans.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
-
-	if err != nil {
-		return tftags.New(ctx, nil), smarterr.NewError(err)
-	}
-
-	return keyValueTags(ctx, output.Tags), nil
-}
-
-// ListTags lists savingsplans service tags and set them in Context.
-// It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SavingsPlansClient(ctx), identifier)
-
-	if err != nil {
-		return smarterr.NewError(err)
-	}
-
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(tags)
-	}
-
-	return nil
-}
-
 // map[string]string handling
 
 // svcTags returns savingsplans service tags.

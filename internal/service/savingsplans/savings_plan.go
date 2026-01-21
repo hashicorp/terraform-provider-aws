@@ -5,23 +5,26 @@ package savingsplans
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/savingsplans"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/savingsplans/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -30,7 +33,7 @@ import (
 )
 
 // @FrameworkResource("aws_savingsplans_plan", name="Savings Plan")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="savings_plan_arn")
 func newSavingsPlanResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &savingsPlanResource{}
 
@@ -39,10 +42,6 @@ func newSavingsPlanResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 	return r, nil
 }
-
-const (
-	ResNameSavingsPlan = "Savings Plan"
-)
 
 type savingsPlanResource struct {
 	framework.ResourceWithModel[savingsPlanResourceModel]
@@ -53,15 +52,6 @@ type savingsPlanResource struct {
 func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
-			"savings_plan_offering_id": schema.StringAttribute{
-				Required:    true,
-				Description: "The unique ID of a Savings Plan offering.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
 			"commitment": schema.StringAttribute{
 				Required:    true,
 				Description: "The hourly commitment, in USD.",
@@ -69,70 +59,91 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"currency": schema.StringAttribute{
+				Computed:    true,
+				Description: "The currency of the Savings Plan.",
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Computed:    true,
+				Description: "The description.",
+			},
+			"ec2_instance_family": schema.StringAttribute{
+				Computed:    true,
+				Description: "The EC2 instance family for the Savings Plan.",
+			},
+			"end": schema.StringAttribute{
+				Computed:    true,
+				Description: "The end time of the Savings Plan.",
+			},
+			"offering_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ID of the offering.",
+			},
+			"payment_option": schema.StringAttribute{
+				Computed:    true,
+				Description: "The payment option for the Savings Plan.",
+			},
+			"product_types": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
+				Description: "The product types.",
+			},
 			"purchase_time": schema.StringAttribute{
+				CustomType:  timetypes.RFC3339Type{},
 				Optional:    true,
 				Description: "The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ).",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"client_token": schema.StringAttribute{
-				Optional:    true,
-				Description: "Unique, case-sensitive identifier to ensure the idempotency of the request.",
+			"recurring_payment_amount": schema.StringAttribute{
+				Computed:    true,
+				Description: "The recurring payment amount.",
+			},
+			names.AttrRegion: schema.StringAttribute{
+				Computed:    true,
+				Description: "The AWS Region.",
+			},
+			"returnable_until": schema.StringAttribute{
+				Computed:    true,
+				Description: "The recurring payment amount.",
+			},
+			"savings_plan_arn": framework.ARNAttributeComputedOnly(),
+			"savings_plan_id":  framework.IDAttribute(),
+			"savings_plan_offering_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The unique ID of a Savings Plan offering.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			names.AttrState: schema.StringAttribute{
-				Computed:    true,
-				Description: "The current state of the Savings Plan.",
-			},
-			"start": schema.StringAttribute{
-				Computed:    true,
-				Description: "The start time of the Savings Plan.",
-			},
-			"end": schema.StringAttribute{
-				Computed:    true,
-				Description: "The end time of the Savings Plan.",
 			},
 			"savings_plan_type": schema.StringAttribute{
 				Computed:    true,
 				Description: "The type of Savings Plan.",
 			},
-			"payment_option": schema.StringAttribute{
+			"start": schema.StringAttribute{
 				Computed:    true,
-				Description: "The payment option for the Savings Plan.",
+				Description: "The start time of the Savings Plan.",
 			},
-			"currency": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.SavingsPlanState](),
 				Computed:    true,
-				Description: "The currency of the Savings Plan.",
+				Description: "The current state of the Savings Plan.",
 			},
-			"upfront_payment_amount": schema.StringAttribute{
-				Computed:    true,
-				Description: "The up-front payment amount.",
-			},
-			"recurring_payment_amount": schema.StringAttribute{
-				Computed:    true,
-				Description: "The recurring payment amount.",
-			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"term_duration_in_seconds": schema.Int64Attribute{
 				Computed:    true,
 				Description: "The duration of the term, in seconds.",
 			},
-			"ec2_instance_family": schema.StringAttribute{
-				Computed:    true,
-				Description: "The EC2 instance family for the Savings Plan.",
+			"upfront_payment_amount": schema.StringAttribute{
+				Optional:    true,
+				Description: "The up-front payment amount.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			// names.AttrRegion: schema.StringAttribute{
-			// 	Computed:    true,
-			// 	Description: "The AWS Region.",
-			// },
-			"offering_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The ID of the offering.",
-			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -144,166 +155,121 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 }
 
 func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().SavingsPlansClient(ctx)
-
 	var plan savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := savingsplans.CreateSavingsPlanInput{
-		SavingsPlanOfferingId: plan.SavingsPlanOfferingID.ValueStringPointer(),
-		Commitment:            plan.Commitment.ValueStringPointer(),
-		Tags:                  getTagsIn(ctx),
+	conn := r.Meta().SavingsPlansClient(ctx)
+
+	savingsPlanOfferingID := fwflex.StringValueFromFramework(ctx, plan.SavingsPlanOfferingID)
+	var input savingsplans.CreateSavingsPlanInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.PurchaseTime.IsNull() && !plan.PurchaseTime.IsUnknown() {
-		purchaseTime, err := time.Parse(time.RFC3339, plan.PurchaseTime.ValueString())
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, "parse purchase_time")
-			return
-		}
-		input.PurchaseTime = aws.Time(purchaseTime)
-	}
-
-	if !plan.ClientToken.IsNull() && !plan.ClientToken.IsUnknown() {
-		input.ClientToken = plan.ClientToken.ValueStringPointer()
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateSavingsPlan(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.SavingsPlanOfferingID.String())
-		return
-	}
-	if out == nil || out.SavingsPlanId == nil {
-		smerr.AddError(ctx, &resp.Diagnostics, errors.New("empty output"), smerr.ID, plan.SavingsPlanOfferingID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, savingsPlanOfferingID)
 		return
 	}
 
-	plan.ID = types.StringPointerValue(out.SavingsPlanId)
-
-	// Read the full details of the created savings plan
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	savingsPlan, err := waitSavingsPlanCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	id := aws.ToString(out.SavingsPlanId)
+	savingsPlan, err := waitSavingsPlanCreated(ctx, conn, id, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	// Flatten the response into the plan
-	// Flatten the response into the plan
-	flattenSavingsPlan(ctx, savingsPlan, &plan)
+	// Set values for unknowns.
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, savingsPlan, &plan))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	diags := resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().SavingsPlansClient(ctx)
-
 	var state savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findSavingsPlanByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().SavingsPlansClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, state.SavingsPlanID)
+	out, err := findSavingsPlanByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	flattenSavingsPlan(ctx, out, &state)
-	diags := resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-}
-
-func (r *savingsPlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// Savings Plans cannot be updated - all attributes require replacement
-	// Tags are handled separately by the framework
-	var plan savingsPlanResourceModel
-	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// The framework handles tags, so we only need to set the state
-	diags := resp.State.Set(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	setTagsOut(ctx, out.Tags)
+
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &state))
 }
 
 func (r *savingsPlanResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().SavingsPlansClient(ctx)
-
 	var state savingsPlanResourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().SavingsPlansClient(ctx)
+
 	// Only queued Savings Plans can be deleted
-	// Check current state first
-	sp, err := findSavingsPlanByID(ctx, conn, state.ID.ValueString())
-	if retry.NotFound(err) {
+	if state := state.State.ValueEnum(); state != awstypes.SavingsPlanStateQueued && state != awstypes.SavingsPlanStateQueuedDeleted {
+		return
+	}
+
+	id := fwflex.StringValueFromFramework(ctx, state.SavingsPlanID)
+	input := savingsplans.DeleteQueuedSavingsPlanInput{
+		SavingsPlanId: aws.String(id),
+	}
+	_, err := conn.DeleteQueuedSavingsPlan(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	// Only attempt to delete if in queued state
-	if sp.State == awstypes.SavingsPlanStateQueued || sp.State == awstypes.SavingsPlanStateQueuedDeleted {
-		input := savingsplans.DeleteQueuedSavingsPlanInput{
-			SavingsPlanId: state.ID.ValueStringPointer(),
-		}
-
-		_, err = conn.DeleteQueuedSavingsPlan(ctx, &input)
-		if err != nil {
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return
-			}
-
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-			return
-		}
-
-		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err = waitSavingsPlanDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-		if err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.String())
-			return
-		}
+	if _, err := waitSavingsPlanDeleted(ctx, conn, id, r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+		return
 	}
-	// For active plans, we simply remove from state but cannot actually delete them
 }
 
-// nosemgrep: ci.semgrep.framework.with-import-by-id
-// func (r *resourceSavingsPlan) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-// }
+func (r *savingsPlanResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("savings_plan_id"), req, resp)
+}
 
-// Waiters
 func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
-		Target:                    enum.Slice(awstypes.SavingsPlanStateActive, awstypes.SavingsPlanStateQueued),
-		Refresh:                   statusSavingsPlan(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
+		Target:  enum.Slice(awstypes.SavingsPlanStateActive),
+		Refresh: statusSavingsPlan(conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -318,7 +284,7 @@ func waitSavingsPlanDeleted(ctx context.Context, conn *savingsplans.Client, id s
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SavingsPlanStateQueued, awstypes.SavingsPlanStateQueuedDeleted),
 		Target:  []string{},
-		Refresh: statusSavingsPlan(ctx, conn, id),
+		Refresh: statusSavingsPlan(conn, id),
 		Timeout: timeout,
 	}
 
@@ -330,9 +296,10 @@ func waitSavingsPlanDeleted(ctx context.Context, conn *savingsplans.Client, id s
 	return nil, err
 }
 
-func statusSavingsPlan(_ context.Context, conn *savingsplans.Client, id string) retry.StateRefreshFunc {
+func statusSavingsPlan(conn *savingsplans.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		out, err := findSavingsPlanByID(ctx, conn, id)
+
 		if retry.NotFound(err) {
 			return nil, "", nil
 		}
@@ -350,68 +317,67 @@ func findSavingsPlanByID(ctx context.Context, conn *savingsplans.Client, id stri
 		SavingsPlanIds: []string{id},
 	}
 
-	out, err := conn.DescribeSavingsPlans(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
-		}
+	return findSavingsPlan(ctx, conn, &input)
+}
 
+func findSavingsPlan(ctx context.Context, conn *savingsplans.Client, input *savingsplans.DescribeSavingsPlansInput) (*awstypes.SavingsPlan, error) {
+	output, err := findSavingsPlans(ctx, conn, input)
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || len(out.SavingsPlans) == 0 {
-		return nil, tfresource.NewEmptyResultError()
-	}
-
-	return &out.SavingsPlans[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-// nosemgrep: ci.semgrep.framework.manual-flattener-functions
-func flattenSavingsPlan(ctx context.Context, sp *awstypes.SavingsPlan, model *savingsPlanResourceModel) {
-	model.ARN = fwflex.StringToFramework(ctx, sp.SavingsPlanArn)
-	model.ID = fwflex.StringToFramework(ctx, sp.SavingsPlanId)
-	model.State = types.StringValue(string(sp.State))
-	model.SavingsPlanType = types.StringValue(string(sp.SavingsPlanType))
-	model.PaymentOption = types.StringValue(string(sp.PaymentOption))
-	model.Currency = types.StringValue(string(sp.Currency))
-	model.UpfrontPaymentAmount = fwflex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
-	model.RecurringPaymentAmount = fwflex.StringToFramework(ctx, sp.RecurringPaymentAmount)
-	model.TermDurationInSeconds = types.Int64Value(sp.TermDurationInSeconds)
-	model.EC2InstanceFamily = fwflex.StringToFramework(ctx, sp.Ec2InstanceFamily)
-	model.Region = fwflex.StringToFramework(ctx, sp.Region)
-	model.OfferingID = fwflex.StringToFramework(ctx, sp.OfferingId)
-	model.Commitment = fwflex.StringToFramework(ctx, sp.Commitment)
+func findSavingsPlans(ctx context.Context, conn *savingsplans.Client, input *savingsplans.DescribeSavingsPlansInput) ([]awstypes.SavingsPlan, error) {
+	var output []awstypes.SavingsPlan
 
-	if sp.Start != nil {
-		model.Start = types.StringValue(*sp.Start)
+	err := describeSavingsPlansPages(ctx, conn, input, func(page *savingsplans.DescribeSavingsPlansOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.SavingsPlans...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
 	}
-	if sp.End != nil {
-		model.End = types.StringValue(*sp.End)
+
+	if err != nil {
+		return nil, err
 	}
+
+	return output, nil
 }
 
 type savingsPlanResourceModel struct {
-	ARN                    types.String   `tfsdk:"arn"`
-	ClientToken            types.String   `tfsdk:"client_token"`
-	Commitment             types.String   `tfsdk:"commitment"`
-	Currency               types.String   `tfsdk:"currency"`
-	EC2InstanceFamily      types.String   `tfsdk:"ec2_instance_family"`
-	End                    types.String   `tfsdk:"end"`
-	ID                     types.String   `tfsdk:"id"`
-	OfferingID             types.String   `tfsdk:"offering_id"`
-	PaymentOption          types.String   `tfsdk:"payment_option"`
-	PurchaseTime           types.String   `tfsdk:"purchase_time"`
-	RecurringPaymentAmount types.String   `tfsdk:"recurring_payment_amount"`
-	Region                 types.String   `tfsdk:"region"`
-	SavingsPlanOfferingID  types.String   `tfsdk:"savings_plan_offering_id"`
-	SavingsPlanType        types.String   `tfsdk:"savings_plan_type"`
-	Start                  types.String   `tfsdk:"start"`
-	State                  types.String   `tfsdk:"state"`
-	Tags                   tftags.Map     `tfsdk:"tags"`
-	TagsAll                tftags.Map     `tfsdk:"tags_all"`
-	TermDurationInSeconds  types.Int64    `tfsdk:"term_duration_in_seconds"`
-	Timeouts               timeouts.Value `tfsdk:"timeouts"`
-	UpfrontPaymentAmount   types.String   `tfsdk:"upfront_payment_amount"`
+	Commitment             types.String                                  `tfsdk:"commitment"`
+	Currency               types.String                                  `tfsdk:"currency"`
+	Description            types.String                                  `tfsdk:"description"`
+	EC2InstanceFamily      types.String                                  `tfsdk:"ec2_instance_family"`
+	End                    types.String                                  `tfsdk:"end"`
+	OfferingID             types.String                                  `tfsdk:"offering_id"`
+	PaymentOption          types.String                                  `tfsdk:"payment_option"`
+	ProductTypes           fwtypes.ListOfString                          `tfsdk:"product_types"`
+	PurchaseTime           timetypes.RFC3339                             `tfsdk:"purchase_time"`
+	RecurringPaymentAmount types.String                                  `tfsdk:"recurring_payment_amount"`
+	Region                 types.String                                  `tfsdk:"region"`
+	ReturnableUntil        types.String                                  `tfsdk:"returnable_until"`
+	SavingsPlanARN         types.String                                  `tfsdk:"savings_plan_arn"`
+	SavingsPlanID          types.String                                  `tfsdk:"savings_plan_id"`
+	SavingsPlanOfferingID  types.String                                  `tfsdk:"savings_plan_offering_id"`
+	SavingsPlanType        types.String                                  `tfsdk:"savings_plan_type"`
+	Start                  types.String                                  `tfsdk:"start"`
+	State                  fwtypes.StringEnum[awstypes.SavingsPlanState] `tfsdk:"state"`
+	Tags                   tftags.Map                                    `tfsdk:"tags"`
+	TagsAll                tftags.Map                                    `tfsdk:"tags_all"`
+	TermDurationInSeconds  types.Int64                                   `tfsdk:"term_duration_in_seconds"`
+	Timeouts               timeouts.Value                                `tfsdk:"timeouts"`
+	UpfrontPaymentAmount   types.String                                  `tfsdk:"upfront_payment_amount"`
 }
