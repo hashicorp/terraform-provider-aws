@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_savingsplans_plan", name="Savings Plan")
+// @FrameworkResource("aws_savingsplans_savings_plan", name="Savings Plan")
 // @Tags(identifierAttribute="savings_plan_arn")
 func newSavingsPlanResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &savingsPlanResource{}

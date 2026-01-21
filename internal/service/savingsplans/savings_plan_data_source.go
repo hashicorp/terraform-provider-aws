@@ -6,165 +6,162 @@ package savingsplans
 import (
 	"context"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/savingsplans/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_savingsplans_plan", name="Savings Plan")
+// @FrameworkDataSource("aws_savingsplans_savings_plan", name="Savings Plan")
 // @Tags
-func newDataSourceSavingsPlan(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceSavingsPlan{}, nil
+func newSavingsPlanDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &savingsPlanDataSource{}, nil
 }
 
-type dataSourceSavingsPlan struct {
-	framework.DataSourceWithModel[dataSourceSavingsPlanModel]
+type savingsPlanDataSource struct {
+	framework.DataSourceWithModel[savingsPlanDataSourceModel]
 }
 
-func (d *dataSourceSavingsPlan) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *savingsPlanDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
+			"commitment": schema.StringAttribute{
 				Computed:    true,
-				Description: "The ARN of the Savings Plan.",
-			},
-			names.AttrID: schema.StringAttribute{
-				Required:    true,
-				Description: "The ID of the Savings Plan.",
-			},
-			names.AttrState: schema.StringAttribute{
-				Computed:    true,
-				Description: "The current state of the Savings Plan.",
-			},
-			"start": schema.StringAttribute{
-				Computed:    true,
-				Description: "The start time of the Savings Plan.",
-			},
-			"end": schema.StringAttribute{
-				Computed:    true,
-				Description: "The end time of the Savings Plan.",
-			},
-			"savings_plan_type": schema.StringAttribute{
-				Computed:    true,
-				Description: "The type of Savings Plan.",
-			},
-			"payment_option": schema.StringAttribute{
-				Computed:    true,
-				Description: "The payment option for the Savings Plan.",
+				Description: "The hourly commitment, in USD.",
 			},
 			"currency": schema.StringAttribute{
 				Computed:    true,
 				Description: "The currency of the Savings Plan.",
 			},
-			"commitment": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed:    true,
-				Description: "The hourly commitment, in USD.",
-			},
-			"upfront_payment_amount": schema.StringAttribute{
-				Computed:    true,
-				Description: "The up-front payment amount.",
-			},
-			"recurring_payment_amount": schema.StringAttribute{
-				Computed:    true,
-				Description: "The recurring payment amount.",
-			},
-			"term_duration_in_seconds": schema.Int64Attribute{
-				Computed:    true,
-				Description: "The duration of the term, in seconds.",
+				Description: "The description.",
 			},
 			"ec2_instance_family": schema.StringAttribute{
 				Computed:    true,
 				Description: "The EC2 instance family for the Savings Plan.",
 			},
-			// names.AttrRegion: schema.StringAttribute{
-			// 	Computed:    true,
-			// 	Description: "The AWS Region.",
-			// },
+			"end": schema.StringAttribute{
+				Computed:    true,
+				Description: "The end time of the Savings Plan.",
+			},
 			"offering_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the offering.",
 			},
+			"payment_option": schema.StringAttribute{
+				Computed:    true,
+				Description: "The payment option for the Savings Plan.",
+			},
+			"product_types": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
+				Description: "The product types.",
+			},
+			"purchase_time": schema.StringAttribute{
+				CustomType:  timetypes.RFC3339Type{},
+				Computed:    true,
+				Description: "The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ).",
+			},
+			"recurring_payment_amount": schema.StringAttribute{
+				Computed:    true,
+				Description: "The recurring payment amount.",
+			},
+			names.AttrRegion: schema.StringAttribute{
+				Computed:    true,
+				Description: "The AWS Region.",
+			},
+			"returnable_until": schema.StringAttribute{
+				Computed:    true,
+				Description: "The recurring payment amount.",
+			},
+			"savings_plan_arn": framework.ARNAttributeComputedOnly(),
+			"savings_plan_id": schema.StringAttribute{
+				Required:    true,
+				Description: "The ID of the Savings Plan.",
+			},
+			"savings_plan_offering_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "The unique ID of a Savings Plan offering.",
+			},
+			"savings_plan_type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The type of Savings Plan.",
+			},
+			"start": schema.StringAttribute{
+				Computed:    true,
+				Description: "The start time of the Savings Plan.",
+			},
+			names.AttrState: schema.StringAttribute{
+				Computed:    true,
+				Description: "The current state of the Savings Plan.",
+			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"term_duration_in_seconds": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The duration of the term, in seconds.",
+			},
+			"upfront_payment_amount": schema.StringAttribute{
+				Computed:    true,
+				Description: "The up-front payment amount.",
+			},
 		},
 	}
 }
 
-func (d *dataSourceSavingsPlan) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().SavingsPlansClient(ctx)
-
-	var data dataSourceSavingsPlanModel
+func (d *savingsPlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data savingsPlanDataSourceModel
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findSavingsPlanByID(ctx, conn, data.ID.ValueString())
+	conn := d.Meta().SavingsPlansClient(ctx)
+
+	id := fwflex.StringValueFromFramework(ctx, data.SavingsPlanID)
+	out, err := findSavingsPlanByID(ctx, conn, id)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.String())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	flattenSavingsPlanDataSource(ctx, out, &data)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &data))
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// Set tags
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	setTagsOut(ctx, out.Tags)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
-// nosemgrep: ci.semgrep.framework.manual-flattener-functions
-func flattenSavingsPlanDataSource(ctx context.Context, sp *awstypes.SavingsPlan, model *dataSourceSavingsPlanModel) {
-	model.ARN = flex.StringToFramework(ctx, sp.SavingsPlanArn)
-	model.ID = flex.StringToFramework(ctx, sp.SavingsPlanId)
-	model.State = types.StringValue(string(sp.State))
-	model.SavingsPlanType = types.StringValue(string(sp.SavingsPlanType))
-	model.PaymentOption = types.StringValue(string(sp.PaymentOption))
-	model.Currency = types.StringValue(string(sp.Currency))
-	model.Commitment = flex.StringToFramework(ctx, sp.Commitment)
-	model.UpfrontPaymentAmount = flex.StringToFramework(ctx, sp.UpfrontPaymentAmount)
-	model.RecurringPaymentAmount = flex.StringToFramework(ctx, sp.RecurringPaymentAmount)
-	model.TermDurationInSeconds = types.Int64Value(sp.TermDurationInSeconds)
-	model.EC2InstanceFamily = flex.StringToFramework(ctx, sp.Ec2InstanceFamily)
-	model.Region = flex.StringToFramework(ctx, sp.Region)
-	model.OfferingID = flex.StringToFramework(ctx, sp.OfferingId)
-
-	if sp.Start != nil {
-		model.Start = types.StringValue(*sp.Start)
-	}
-	if sp.End != nil {
-		model.End = types.StringValue(*sp.End)
-	}
-}
-
-type dataSourceSavingsPlanModel struct {
-	ARN                    types.String `tfsdk:"arn"`
-	Commitment             types.String `tfsdk:"commitment"`
-	Currency               types.String `tfsdk:"currency"`
-	EC2InstanceFamily      types.String `tfsdk:"ec2_instance_family"`
-	End                    types.String `tfsdk:"end"`
-	ID                     types.String `tfsdk:"id"`
-	OfferingID             types.String `tfsdk:"offering_id"`
-	PaymentOption          types.String `tfsdk:"payment_option"`
-	RecurringPaymentAmount types.String `tfsdk:"recurring_payment_amount"`
-	Region                 types.String `tfsdk:"region"`
-	SavingsPlanType        types.String `tfsdk:"savings_plan_type"`
-	Start                  types.String `tfsdk:"start"`
-	State                  types.String `tfsdk:"state"`
-	Tags                   tftags.Map   `tfsdk:"tags"`
-	TermDurationInSeconds  types.Int64  `tfsdk:"term_duration_in_seconds"`
-	UpfrontPaymentAmount   types.String `tfsdk:"upfront_payment_amount"`
-}
-
-// KeyValueTags creates tftags.KeyValueTags from savingsplans service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
-	return tftags.New(ctx, tags)
+type savingsPlanDataSourceModel struct {
+	Commitment             types.String         `tfsdk:"commitment"`
+	Currency               types.String         `tfsdk:"currency"`
+	Description            types.String         `tfsdk:"description"`
+	EC2InstanceFamily      types.String         `tfsdk:"ec2_instance_family"`
+	End                    types.String         `tfsdk:"end"`
+	OfferingID             types.String         `tfsdk:"offering_id"`
+	PaymentOption          types.String         `tfsdk:"payment_option"`
+	ProductTypes           fwtypes.ListOfString `tfsdk:"product_types"`
+	PurchaseTime           timetypes.RFC3339    `tfsdk:"purchase_time"`
+	RecurringPaymentAmount types.String         `tfsdk:"recurring_payment_amount"`
+	Region                 types.String         `tfsdk:"region"`
+	ReturnableUntil        types.String         `tfsdk:"returnable_until"`
+	SavingsPlanARN         types.String         `tfsdk:"savings_plan_arn"`
+	SavingsPlanID          types.String         `tfsdk:"savings_plan_id"`
+	SavingsPlanOfferingID  types.String         `tfsdk:"savings_plan_offering_id"`
+	SavingsPlanType        types.String         `tfsdk:"savings_plan_type"`
+	Start                  types.String         `tfsdk:"start"`
+	State                  types.String         `tfsdk:"state"`
+	Tags                   tftags.Map           `tfsdk:"tags"`
+	TermDurationInSeconds  types.Int64          `tfsdk:"term_duration_in_seconds"`
+	UpfrontPaymentAmount   types.String         `tfsdk:"upfront_payment_amount"`
 }
