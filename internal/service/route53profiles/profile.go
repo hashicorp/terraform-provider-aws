@@ -26,7 +26,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -222,7 +221,7 @@ func (r *profileResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusProfile(conn, id),
@@ -240,7 +239,7 @@ func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id st
 }
 
 func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusProfile(conn, id),

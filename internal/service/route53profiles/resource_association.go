@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -222,7 +221,7 @@ func (r *resourceAssociationResource) Delete(ctx context.Context, req resource.D
 }
 
 func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
 		Refresh:                   statusResourceAssociation(conn, id),
@@ -240,7 +239,7 @@ func waitResourceAssociationCreated(ctx context.Context, conn *route53profiles.C
 }
 
 func waitResourceAssociationDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileResourceAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
 		Refresh: statusResourceAssociation(conn, id),

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -292,7 +291,7 @@ func statusStreamCreated(conn *qldb.Client, ledgerName, streamID string) retry.S
 }
 
 func waitStreamCreated(ctx context.Context, conn *qldb.Client, ledgerName, streamID string, timeout time.Duration) (*types.JournalKinesisStreamDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusImpaired),
 		Target:     enum.Slice(types.StreamStatusActive),
 		Refresh:    statusStreamCreated(conn, ledgerName, streamID),
@@ -328,7 +327,7 @@ func statusStreamDeleted(conn *qldb.Client, ledgerName, streamID string) retry.S
 }
 
 func waitStreamDeleted(ctx context.Context, conn *qldb.Client, ledgerName, streamID string, timeout time.Duration) (*types.JournalKinesisStreamDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.StreamStatusActive, types.StreamStatusImpaired),
 		Target:     []string{},
 		Refresh:    statusStreamDeleted(conn, ledgerName, streamID),

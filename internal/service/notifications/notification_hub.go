@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -236,7 +235,7 @@ func statusNotificationHub(conn *notifications.Client, region string) retry.Stat
 }
 
 func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.NotificationHubStatusRegistering),
 		Target:                    enum.Slice(awstypes.NotificationHubStatusActive),
 		Refresh:                   statusNotificationHub(conn, region),
@@ -256,7 +255,7 @@ func waitNotificationHubCreated(ctx context.Context, conn *notifications.Client,
 }
 
 func waitNotificationHubDeleted(ctx context.Context, conn *notifications.Client, region string, timeout time.Duration) (*awstypes.NotificationHubOverview, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.NotificationHubStatusDeregistering),
 		Target:  []string{},
 		Refresh: statusNotificationHub(conn, region),

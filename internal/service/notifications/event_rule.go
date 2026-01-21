@@ -31,7 +31,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -305,7 +304,7 @@ func waitEventRuleCreated(ctx context.Context, conn *notifications.Client, arn s
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
 		Refresh:                   statusEventRule(conn, arn),
@@ -326,7 +325,7 @@ func waitEventRuleUpdated(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		// If regions were added/removed then rule status across regions can be a mix of "CREATING", "DELETING", "UPDATING"
 		Pending:                   enum.Slice(awstypes.EventRuleStatusCreating, awstypes.EventRuleStatusUpdating, awstypes.EventRuleStatusDeleting),
 		Target:                    enum.Slice(awstypes.EventRuleStatusActive, awstypes.EventRuleStatusInactive),
@@ -348,7 +347,7 @@ func waitEventRuleDeleted(ctx context.Context, conn *notifications.Client, id st
 	const (
 		timeout = 10 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EventRuleStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEventRule(conn, id),

@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -382,7 +381,7 @@ func statusPipe(conn *pipes.Client, name string) retry.StateRefreshFunc {
 }
 
 func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateCreating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(conn, id),
@@ -402,7 +401,7 @@ func waitPipeCreated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.PipeStateUpdating),
 		Target:                    enum.Slice(awstypes.PipeStateRunning, awstypes.PipeStateStopped),
 		Refresh:                   statusPipe(conn, id),
@@ -422,7 +421,7 @@ func waitPipeUpdated(ctx context.Context, conn *pipes.Client, id string, timeout
 }
 
 func waitPipeDeleted(ctx context.Context, conn *pipes.Client, id string, timeout time.Duration) (*pipes.DescribePipeOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.PipeStateDeleting),
 		Target:  []string{},
 		Refresh: statusPipe(conn, id),

@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -257,7 +256,7 @@ func statusLedgerState(conn *qldb.Client, name string) retry.StateRefreshFunc {
 }
 
 func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateCreating),
 		Target:     enum.Slice(types.LedgerStateActive),
 		Refresh:    statusLedgerState(conn, name),
@@ -275,7 +274,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.Client, name string, time
 }
 
 func waitLedgerDeleted(ctx context.Context, conn *qldb.Client, name string, timeout time.Duration) (*qldb.DescribeLedgerOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.LedgerStateActive, types.LedgerStateDeleting),
 		Target:     []string{},
 		Refresh:    statusLedgerState(conn, name),
