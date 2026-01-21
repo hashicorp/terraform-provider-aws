@@ -753,6 +753,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.DatabaseName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("db_cluster_instance_class"); ok {
+			input.DBClusterInstanceClass = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_cluster_parameter_group_name"); ok {
 			input.DBClusterParameterGroupName = aws.String(v.(string))
 		}
