@@ -147,7 +147,7 @@ func (r *permissionResource) Read(ctx context.Context, req resource.ReadRequest,
 	arn := fwflex.StringValueFromFramework(ctx, state.ARN)
 	out, err := findPermissionByARN(ctx, conn, arn)
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
