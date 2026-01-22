@@ -1065,13 +1065,13 @@ func (m resourcePlanModel) expandExecutionBlockConfig(ctx context.Context, execC
 		handler execConfigExpander
 	}{
 		{func(c executionBlockConfigurationModel) bool { return !c.ArcRoutingControlConfig.IsNull() }, m.expandArcRoutingControlConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.CustomActionLambdaConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.DocumentDbConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.Ec2AsgCapacityIncreaseConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.EcsCapacityIncreaseConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.ExecutionApprovalConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.GlobalAuroraConfig.IsNull() }, m.expandGenericAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.Route53HealthCheckConfig.IsNull() }, m.expandGenericAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.CustomActionLambdaConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.DocumentDbConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.Ec2AsgCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.EcsCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.ExecutionApprovalConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.GlobalAuroraConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.Route53HealthCheckConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.EksResourceScalingConfig.IsNull() }, m.expandEksConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.ParallelConfig.IsNull() }, m.expandParallelConfig},
 	}
@@ -1106,71 +1106,60 @@ func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, ex
 	return nil
 }
 
-// Generic handler for simple AutoFlex configs
-func (m resourcePlanModel) expandGenericAutoFlexConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+func expandSimpleConfig[T any](ctx context.Context, field fwtypes.ListNestedObjectValueOf[T], target any, diags *fwdiag.Diagnostics) error {
+	data, d := field.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return errors.New("failed to convert config")
+	}
+	diags.Append(flex.Expand(ctx, data, target)...)
+	return nil
+}
+
+// General handler for simple AutoFlex configs
+func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
 	case !execConfig.CustomActionLambdaConfig.IsNull():
-		data, d := execConfig.CustomActionLambdaConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert Custom Action Lambda config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.CustomActionLambdaConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.DocumentDbConfig.IsNull():
-		data, d := execConfig.DocumentDbConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert DocumentDB config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.DocumentDbConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.Ec2AsgCapacityIncreaseConfig.IsNull():
-		data, d := execConfig.Ec2AsgCapacityIncreaseConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert EC2 ASG config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.Ec2AsgCapacityIncreaseConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.EcsCapacityIncreaseConfig.IsNull():
-		data, d := execConfig.EcsCapacityIncreaseConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert ECS config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.EcsCapacityIncreaseConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.ExecutionApprovalConfig.IsNull():
-		data, d := execConfig.ExecutionApprovalConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert Execution Approval config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.ExecutionApprovalConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.GlobalAuroraConfig.IsNull():
-		data, d := execConfig.GlobalAuroraConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert Global Aurora config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.GlobalAuroraConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	case !execConfig.Route53HealthCheckConfig.IsNull():
-		data, d := execConfig.Route53HealthCheckConfig.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return errors.New("failed to convert Route53 config")
-		}
 		var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
-		diags.Append(flex.Expand(ctx, data, &r.Value)...)
+		if err := expandSimpleConfig(ctx, execConfig.Route53HealthCheckConfig, &r.Value, diags); err != nil {
+			return err
+		}
 		apiStep.ExecutionBlockConfiguration = &r
 	}
 	return nil
