@@ -130,10 +130,10 @@ func resourceDomainName() *schema.Resource {
 				},
 			},
 			"routing_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(flattenRoutingModeValues(awstypes.RoutingMode("").Values()), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RoutingMode](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -296,16 +296,6 @@ func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 	}
 
 	return output, nil
-}
-
-func flattenRoutingModeValues(t []awstypes.RoutingMode) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
 }
 
 func statusDomainName(conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
