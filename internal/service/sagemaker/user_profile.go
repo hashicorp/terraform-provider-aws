@@ -719,7 +719,6 @@ func resourceUserProfile() *schema.Resource {
 									"user_group": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										Default:          awstypes.RStudioServerProUserGroupUser,
 										ValidateDiagFunc: enum.Validate[awstypes.RStudioServerProUserGroup](),
 									},
 								},
