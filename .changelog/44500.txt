@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lb_target_group: Suppress diff for `stickiness`, `target_failover`, and `target_group_health` attributes when `target_type` is `lambda`
+```
