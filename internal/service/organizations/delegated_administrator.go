@@ -31,6 +31,7 @@ import (
 // @IdentityAttribute("delegated_account_id", resourceAttributeName="account_id")
 // @IdAttrFormat("{account_id}/{service_principal}")
 // @ImportIDHandler("delegatedAdministratorImportID")
+// Alternate account not working
 // @Testing(identityTest=false)
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/organizations/types;awstypes;awstypes.DelegatedAdministrator")
 // @Testing(serialize=true)
