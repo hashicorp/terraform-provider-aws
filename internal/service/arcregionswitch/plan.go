@@ -52,6 +52,54 @@ type resourcePlan struct {
 	framework.WithTimeouts
 }
 
+func arcRoutingControlConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"region_and_routing_controls": fwschema.SetNestedBlock{
+					CustomType: fwtypes.NewSetNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrRegion: fwschema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]fwschema.Block{
+							"routing_control": fwschema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[routingControlModel](ctx),
+								NestedObject: fwschema.NestedBlockObject{
+									Attributes: map[string]fwschema.Attribute{
+										"routing_control_arn": fwschema.StringAttribute{
+											CustomType: fwtypes.ARNType,
+											Required:   true,
+										},
+										names.AttrState: fwschema.StringAttribute{
+											CustomType: fwtypes.StringEnumType[awstypes.RoutingControlStateChange](),
+											Required:   true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -206,51 +254,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 										CustomType: fwtypes.NewListNestedObjectTypeOf[executionBlockConfigurationModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
 											Blocks: map[string]fwschema.Block{
-												"arc_routing_control_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[arcRoutingControlConfigModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-															"timeout_minutes": fwschema.Int32Attribute{
-																Optional: true,
-															},
-														},
-														Blocks: map[string]fwschema.Block{
-															"region_and_routing_controls": fwschema.SetNestedBlock{
-																CustomType: fwtypes.NewSetNestedObjectTypeOf[regionAndRoutingControlsModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		names.AttrRegion: fwschema.StringAttribute{
-																			Required: true,
-																		},
-																	},
-																	Blocks: map[string]fwschema.Block{
-																		"routing_control": fwschema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[routingControlModel](ctx),
-																			NestedObject: fwschema.NestedBlockObject{
-																				Attributes: map[string]fwschema.Attribute{
-																					"routing_control_arn": fwschema.StringAttribute{
-																						CustomType: fwtypes.ARNType,
-																						Required:   true,
-																					},
-																					names.AttrState: fwschema.StringAttribute{
-																						CustomType: fwtypes.StringEnumType[awstypes.RoutingControlStateChange](),
-																						Required:   true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
+												"arc_routing_control_config": arcRoutingControlConfigBlock(ctx),
 												"custom_action_lambda_config": fwschema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
@@ -598,6 +602,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		},
 																	},
 																	Blocks: map[string]fwschema.Block{
+																		"arc_routing_control_config": arcRoutingControlConfigBlock(ctx),
 																		"execution_approval_config": fwschema.ListNestedBlock{
 																			CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 																			NestedObject: fwschema.NestedBlockObject{
