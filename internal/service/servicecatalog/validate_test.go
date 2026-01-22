@@ -26,6 +26,10 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws:organizations::111122223333:organization/o-abcdefghijkl",             // lintignore:AWSAT005    // organization
 		"arn:aws:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh",        // lintignore:AWSAT005    // ou
 		"arn:aws-us-gov:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh", // lintignore:AWSAT005    // GovCloud ou
+		"o-abcdefghijkl",     // organization ID
+		"ou-ab00-cdefgh",     // OU ID
+		"o-1234567890abcdef", // organization ID (different format)
+		"ou-1234-abcdefgh",   // OU ID (different format)
 	}
 	for _, v := range validNames {
 		_, errors := tfsc.ValidSharePrincipal(v, names.AttrARN)
