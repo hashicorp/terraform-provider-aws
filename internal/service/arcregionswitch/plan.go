@@ -1043,54 +1043,33 @@ func (m resourcePlanModel) expandWorkflowSteps(ctx context.Context, workflow wor
 }
 
 func (m resourcePlanModel) expandStepExecutionBlockConfiguration(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	if step.ExecutionBlockConfiguration.IsNull() || step.ExecutionBlockConfiguration.IsUnknown() {
-		return nil
-	}
-
-	var execConfigs []executionBlockConfigurationModel
-	diags.Append(step.ExecutionBlockConfiguration.ElementsAs(ctx, &execConfigs, false)...)
-	if diags.HasError() {
-		return errors.New("failed to expand execution block configuration")
-	}
-
-	for _, execConfig := range execConfigs {
-		if err := m.expandExecutionBlockConfig(ctx, execConfig, apiStep, diags); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type execConfigExpander func(context.Context, executionBlockConfigurationModel, *awstypes.Step, *fwdiag.Diagnostics) error
-
-func (m resourcePlanModel) expandExecutionBlockConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	// Map of config checkers to their handlers
-	handlers := []struct {
-		check   func(executionBlockConfigurationModel) bool
-		handler execConfigExpander
-	}{
-		{func(c executionBlockConfigurationModel) bool { return !c.ArcRoutingControlConfig.IsNull() }, m.expandArcRoutingControlConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.CustomActionLambdaConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.DocumentDbConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.EC2ASGCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.ECSCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.ExecutionApprovalConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.GlobalAuroraConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.Route53HealthCheckConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.EKSResourceScalingConfig.IsNull() }, m.expandEKSConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.ParallelConfig.IsNull() }, m.expandParallelConfig},
-	}
-
-	for _, h := range handlers {
-		if h.check(execConfig) {
-			return h.handler(ctx, execConfig, apiStep, diags)
-		}
+	switch {
+	case !step.ArcRoutingControlConfig.IsNull():
+		return m.expandArcRoutingControlConfig(ctx, step, apiStep, diags)
+	case !step.CustomActionLambdaConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.DocumentDbConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.EC2ASGCapacityIncreaseConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.ECSCapacityIncreaseConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.ExecutionApprovalConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.GlobalAuroraConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.Route53HealthCheckConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.EKSResourceScalingConfig.IsNull():
+		return m.expandEKSConfig(ctx, step, apiStep, diags)
+	case !step.ParallelConfig.IsNull():
+		return m.expandParallelConfig(ctx, step, apiStep, diags)
 	}
 	return nil
 }
 
-func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := execConfig.ArcRoutingControlConfig.ToPtr(ctx)
+func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+	data, d := step.ArcRoutingControlConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return errors.New("failed to convert ARC routing control config")
@@ -1123,54 +1102,53 @@ func expandSimpleConfig[T any](ctx context.Context, field fwtypes.ListNestedObje
 }
 
 // General handler for simple AutoFlex configs
-func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
-	case !execConfig.CustomActionLambdaConfig.IsNull():
+	case !step.CustomActionLambdaConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig
-		if err := expandSimpleConfig(ctx, execConfig.CustomActionLambdaConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.CustomActionLambdaConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.DocumentDbConfig.IsNull():
+	case !step.DocumentDbConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
-		if err := expandSimpleConfig(ctx, execConfig.DocumentDbConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.DocumentDbConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.EC2ASGCapacityIncreaseConfig.IsNull():
+	case !step.EC2ASGCapacityIncreaseConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, execConfig.EC2ASGCapacityIncreaseConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.EC2ASGCapacityIncreaseConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.ECSCapacityIncreaseConfig.IsNull():
+	case !step.ECSCapacityIncreaseConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, execConfig.ECSCapacityIncreaseConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.ECSCapacityIncreaseConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.ExecutionApprovalConfig.IsNull():
+	case !step.ExecutionApprovalConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
-		if err := expandSimpleConfig(ctx, execConfig.ExecutionApprovalConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.ExecutionApprovalConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.GlobalAuroraConfig.IsNull():
+	case !step.GlobalAuroraConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
-		if err := expandSimpleConfig(ctx, execConfig.GlobalAuroraConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.GlobalAuroraConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.Route53HealthCheckConfig.IsNull():
+	case !step.Route53HealthCheckConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
-		if err := expandSimpleConfig(ctx, execConfig.Route53HealthCheckConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, step.Route53HealthCheckConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
 	}
 	return nil
 }
-
 func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context, data *arcRoutingControlConfigModel, apiArcConfig *awstypes.ArcRoutingControlConfiguration, diags *fwdiag.Diagnostics) error {
 	if data.RegionAndRoutingControls.IsNull() || data.RegionAndRoutingControls.IsUnknown() {
 		return nil
@@ -1208,8 +1186,8 @@ func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context
 }
 
 // Execution block configuration handlers
-func (m resourcePlanModel) expandEKSConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := execConfig.EKSResourceScalingConfig.ToPtr(ctx)
+func (m resourcePlanModel) expandEKSConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+	data, d := step.EKSResourceScalingConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return errors.New("failed to convert EKS config")
@@ -1270,8 +1248,8 @@ func (m resourcePlanModel) expandEKSScalingResources(ctx context.Context, data *
 	return nil
 }
 
-func (m resourcePlanModel) expandParallelConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := execConfig.ParallelConfig.ToPtr(ctx)
+func (m resourcePlanModel) expandParallelConfig(ctx context.Context, step stepModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+	data, d := step.ParallelConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return errors.New("failed to convert Parallel config")
@@ -1317,6 +1295,25 @@ func (m resourcePlanModel) expandParallelSteps(ctx context.Context, data *parall
 
 func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Context, pStep parallelStepModel, apiParallelStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
 	switch {
+	case !pStep.ArcRoutingControlConfig.IsNull():
+		pData, pD := pStep.ArcRoutingControlConfig.ToPtr(ctx)
+		diags.Append(pD...)
+		if diags.HasError() {
+			return errors.New("failed to convert parallel arc routing control config")
+		}
+
+		var apiArcConfig awstypes.ArcRoutingControlConfiguration
+		diags.Append(flex.Expand(ctx, pData.CrossAccountRole, &apiArcConfig.CrossAccountRole)...)
+		diags.Append(flex.Expand(ctx, pData.ExternalID, &apiArcConfig.ExternalId)...)
+		diags.Append(flex.Expand(ctx, pData.TimeoutMinutes, &apiArcConfig.TimeoutMinutes)...)
+
+		if err := m.expandArcRegionAndRoutingControls(ctx, pData, &apiArcConfig, diags); err != nil {
+			return err
+		}
+
+		apiParallelStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig{
+			Value: apiArcConfig,
+		}
 	case !pStep.ExecutionApprovalConfig.IsNull():
 		pData, pD := pStep.ExecutionApprovalConfig.ToPtr(ctx)
 		diags.Append(pD...)
@@ -1427,26 +1424,26 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 			if len(workflow.Steps) > 0 {
 				steps := make([]stepModel, len(workflow.Steps))
 				for j, step := range workflow.Steps {
+					// Initialize step with null values for all config fields
+					steps[j] = stepModel{
+						ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
+						CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
+						DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
+						EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
+						ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
+						EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
+						ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+						GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
+						ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
+						Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
+					}
+
 					diags.Append(flex.Flatten(ctx, step.Name, &steps[j].Name)...)
 					diags.Append(flex.Flatten(ctx, step.Description, &steps[j].Description)...)
 					diags.Append(flex.Flatten(ctx, step.ExecutionBlockType, &steps[j].ExecutionBlockType)...)
 
-					// Handle ExecutionBlockConfiguration - reverse of our complex expand logic
+					// Handle ExecutionBlockConfiguration - flatten directly into step fields
 					if step.ExecutionBlockConfiguration != nil {
-						// Initialize with empty values for all fields to avoid nil pointer issues
-						execConfig := executionBlockConfigurationModel{
-							ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
-							CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
-							DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
-							EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
-							ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
-							EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
-							ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
-							GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
-							ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
-							Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
-						}
-
 						// Handle union type flattening manually (similar to expand logic)
 						switch t := step.ExecutionBlockConfiguration.(type) {
 						case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
@@ -1484,15 +1481,15 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								diags.Append(d...)
 							}
 
-							execConfig.ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
+							steps[j].ArcRoutingControlConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &arcConfig)
 						case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.CustomActionLambdaConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].CustomActionLambdaConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.DocumentDbConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].DocumentDbConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EC2ASGCapacityIncreaseConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].EC2ASGCapacityIncreaseConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ECSCapacityIncreaseConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].ECSCapacityIncreaseConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
 							// Handle EKS ScalingResources complex transformation manually
 							var eksConfig eksResourceScalingConfigModel
@@ -1532,11 +1529,11 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								diags.Append(d...)
 							}
 
-							execConfig.EKSResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
+							steps[j].EKSResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
 						case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ExecutionApprovalConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].ExecutionApprovalConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.GlobalAuroraConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].GlobalAuroraConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberParallelConfig:
 							// Handle ParallelConfig with nested step execution block configurations manually
 							var parallelConfig parallelConfigModel
@@ -1546,6 +1543,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								for i, step := range t.Value.Steps {
 									// Initialize with empty values for all fields to avoid nil pointer issues
 									parallelSteps[i] = parallelStepModel{
+										ArcRoutingControlConfig:  fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
 										CustomActionLambdaConfig: fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
 										DocumentDbConfig:         fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
 										ExecutionApprovalConfig:  fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
@@ -1558,6 +1556,8 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 									// Handle parallel step execution block configurations
 									if step.ExecutionBlockConfiguration != nil {
 										switch pType := step.ExecutionBlockConfiguration.(type) {
+										case *awstypes.ExecutionBlockConfigurationMemberArcRoutingControlConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ArcRoutingControlConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberCustomActionLambdaConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].CustomActionLambdaConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
@@ -1573,19 +1573,10 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								diags.Append(d...)
 							}
 
-							execConfig.ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
+							steps[j].ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
 						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Route53HealthCheckConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].Route53HealthCheckConfig)...)
 						}
-
-						var d fwdiag.Diagnostics
-						steps[j].ExecutionBlockConfiguration, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []executionBlockConfigurationModel{execConfig})
-						diags.Append(d...)
-					} else {
-						// Set empty list if no execution block configuration
-						var d fwdiag.Diagnostics
-						steps[j].ExecutionBlockConfiguration, d = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []executionBlockConfigurationModel{})
-						diags.Append(d...)
 					}
 				}
 
@@ -1854,6 +1845,7 @@ type parallelConfigModel struct {
 }
 
 type parallelStepModel struct {
+	ArcRoutingControlConfig  fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]  `tfsdk:"arc_routing_control_config"`
 	CustomActionLambdaConfig fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel] `tfsdk:"custom_action_lambda_config"`
 	Description              types.String                                                   `tfsdk:"description"`
 	DocumentDbConfig         fwtypes.ListNestedObjectValueOf[documentDbConfigModel]         `tfsdk:"document_db_config"`

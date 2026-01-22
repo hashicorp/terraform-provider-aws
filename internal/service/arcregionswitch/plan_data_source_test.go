@@ -132,17 +132,14 @@ resource "aws_arcregionswitch_plan" "test" {
     step {
       name                 = "route53-health-check-step"
       execution_block_type = "Route53HealthCheck"
+      route53_health_check_config {
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
+        timeout_minutes = 10
 
-      execution_block_configuration {
-        route53_health_check_config {
-          hosted_zone_id  = "Z123456789012345678"
-          record_name     = "test.example.com"
-          timeout_minutes = 10
-
-          record_sets {
-            record_set_identifier = "primary"
-            region                = %[2]q
-          }
+        record_sets {
+          record_set_identifier = "primary"
+          region                = %[2]q
           record_sets {
             record_set_identifier = "secondary"
             region                = %[3]q
@@ -159,17 +156,14 @@ resource "aws_arcregionswitch_plan" "test" {
     step {
       name                 = "route53-health-check-step-primary"
       execution_block_type = "Route53HealthCheck"
+      route53_health_check_config {
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
+        timeout_minutes = 10
 
-      execution_block_configuration {
-        route53_health_check_config {
-          hosted_zone_id  = "Z123456789012345678"
-          record_name     = "test.example.com"
-          timeout_minutes = 10
-
-          record_sets {
-            record_set_identifier = "primary"
-            region                = %[2]q
-          }
+        record_sets {
+          record_set_identifier = "primary"
+          region                = %[2]q
           record_sets {
             record_set_identifier = "secondary"
             region                = %[3]q
