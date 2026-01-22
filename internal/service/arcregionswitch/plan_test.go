@@ -446,15 +446,6 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIgnore:              []string{
-					// EKS scaling resources may be returned in different order
-					/*"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.hpa_name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.resource_name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.hpa_name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.resource_name",*/
-				},
 			},
 		},
 	})
