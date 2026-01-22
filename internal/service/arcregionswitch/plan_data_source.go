@@ -69,7 +69,7 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 						names.AttrRegion:       types.StringType,
 					},
 				},
-				Computed:    true,
+				Computed: true,
 			},
 		},
 		Blocks: map[string]fwschema.Block{},
