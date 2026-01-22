@@ -1,5 +1,5 @@
 ---
-subcategory: "Application Recovery Controller Region Switch"
+subcategory: "ARC (Application Recovery Controller) Region Switch"
 layout: "aws"
 page_title: "AWS: aws_arcregionswitch_plan"
 description: |-
