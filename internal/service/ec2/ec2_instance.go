@@ -14,6 +14,8 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"math/big"
+	"net"
 	"slices"
 	"strconv"
 	"strings"
@@ -732,6 +734,18 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"public_dns_name_dualstack": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_dns_name_ipv4": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"public_dns_name_ipv6": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -967,9 +981,11 @@ func resourceInstance() *schema.Resource {
 				return diff.HasChange("launch_template.0.name")
 			}),
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
-				// Set public_dns and public_ip to newly computed if the instance will be stopped and started
-				// as part of Update and there is already a public_ip value in state.
+				// Will the instance be stopped and started during Update?
+				// If yes, it may get a new IPv4 address. If it already has a `public_ip`
+				// value in the state, we must recompute all dependent values.
 				if diff.Id() != "" && diff.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") {
+
 					// user_data is stored in state as a hash.
 					if diff.HasChange("user_data") && !diff.HasChange(names.AttrInstanceType) {
 						if o, n := diff.GetChange("user_data"); n.(string) == o.(string) {
@@ -979,6 +995,8 @@ func resourceInstance() *schema.Resource {
 
 					if diff.Get("public_ip").(string) != "" {
 						diff.SetNewComputed("public_dns")
+						diff.SetNewComputed("public_dns_name_dualstack")
+						diff.SetNewComputed("public_dns_name_ipv4")
 						diff.SetNewComputed("public_ip")
 					}
 				}
@@ -3149,6 +3167,11 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 	rd.Set("private_ip", instance.PrivateIpAddress)
 	rd.Set("outpost_arn", instance.OutpostArn)
 
+	// values for these are optionally set below
+	rd.Set("public_dns_name_dualstack", "")
+	rd.Set("public_dns_name_ipv6", "")
+	rd.Set("public_dns_name_ipv4", "")
+
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
 		name, err := instanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
 
@@ -3249,10 +3272,29 @@ func resourceInstanceFlatten(ctx context.Context, client *conns.AWSClient, insta
 				ipv6Addresses = append(ipv6Addresses, aws.ToString(address.Ipv6Address))
 			}
 
-			if len(primaryNetworkInterface.Ipv6Addresses) > 0 {
+			var ipv6, ipv4 net.IP
+			region := client.Region(ctx)
+
+			if len(ipv6Addresses) > 0 {
 				if err := rd.Set("enable_primary_ipv6", primaryNetworkInterface.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
 				}
+
+				ipv6 = net.ParseIP(ipv6Addresses[0])
+				if ipv6 == nil {
+					return sdkdiag.AppendErrorf(diags, "parsing IPv6 address: %s", ipv6Addresses[0])
+				}
+				rd.Set("public_dns_name_ipv6", calculatePublicDNSNameIPv6(region, ipv6))
+			}
+
+			ipv4 = net.ParseIP(aws.ToString(instance.PublicIpAddress))
+			if ipv4 != nil && ipv4.To4() != nil {
+				ipv4 = ipv4.To4()
+				rd.Set("public_dns_name_ipv4", calculatePublicDNSNameIPv4(region, ipv4))
+			}
+
+			if ipv6 != nil && ipv4 != nil {
+				rd.Set("public_dns_name_dualstack", calculatePublicDNSNameDualstack(region, ipv6, ipv4))
 			}
 		}
 	} else {
@@ -4010,6 +4052,38 @@ func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.Arch
 		}
 	}
 	return false
+}
+
+func calculatePublicDNSNameIPv4(region string, addr_ipv4 net.IP) string {
+	addr_ipv4 = addr_ipv4.To4()
+	return fmt.Sprintf("ec2-%d-%d-%d-%d.%s.compute.amazonaws.com", addr_ipv4[0], addr_ipv4[1], addr_ipv4[2], addr_ipv4[3], region)
+}
+
+func calculatePublicDNSNameIPv6(region string, addr_ipv6 net.IP) string {
+	n6 := big.NewInt(0)
+	n6.SetBytes(addr_ipv6)
+
+	s6 := n6.Text(36)
+	s6 = strings.Repeat("0", 25-len(s6)) + s6
+	s6 = fmt.Sprintf("%s-%s-%s-%s-%s", s6[0:5], s6[5:10], s6[10:15], s6[15:20], s6[20:25])
+
+	return fmt.Sprintf("%s.%s.ip.aws", s6, region)
+}
+
+func calculatePublicDNSNameDualstack(region string, addr_ipv6 net.IP, addr_ipv4 net.IP) string {
+	n6 := big.NewInt(0)
+	n6.SetBytes(addr_ipv6)
+
+	n4 := big.NewInt(0)
+	n4.SetBytes(addr_ipv4.To4())
+
+	s6 := n6.Text(36)
+	s6 = strings.Repeat("0", 25-len(s6)) + s6
+	s6 = fmt.Sprintf("%s-%s-%s-%s-%s", s6[0:5], s6[5:10], s6[10:15], s6[15:20], s6[20:25])
+
+	s4 := n4.Text(36)
+	s4 = strings.Repeat("0", 7-len(s4)) + s4
+	return fmt.Sprintf("%s-%s.%s.ip.aws", s6, s4, region)
 }
 
 func instanceARN(ctx context.Context, c *conns.AWSClient, instanceID string) string {

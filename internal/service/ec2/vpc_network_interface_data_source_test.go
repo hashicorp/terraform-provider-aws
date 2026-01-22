@@ -147,6 +147,7 @@ func TestAccVPCNetworkInterfaceDataSource_publicIPAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(datasourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(datasourceName, "ipv6_addresses.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "public_dns_names_ipv6.#", "0"),
 					resource.TestCheckResourceAttrSet(datasourceName, "mac_address"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(ctx, datasourceName, names.AttrOwnerID),

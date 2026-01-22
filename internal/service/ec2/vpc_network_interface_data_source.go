@@ -7,6 +7,7 @@ package ec2
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -149,6 +150,11 @@ func dataSourceNetworkInterface() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"public_dns_names_ipv6": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"requester_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -223,6 +229,20 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("requester_id", eni.RequesterId)
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 	d.Set(names.AttrVPCID, eni.VpcId)
+
+	region := meta.(*conns.AWSClient).Region(ctx)
+
+	var dns_names_ipv6 []string
+	for i, ipv6Address := range flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses) {
+		ipv6 := net.ParseIP(ipv6Address)
+		if ipv6 == nil {
+			return sdkdiag.AppendErrorf(diags, "parsing IPv6 address index %d: %s", i, ipv6Address)
+		}
+		dns_names_ipv6 = append(dns_names_ipv6, calculatePublicDNSNameIPv6(region, ipv6))
+	}
+	if err := d.Set("public_dns_names_ipv6", dns_names_ipv6); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting public_dns_names_ipv6: %s", err)
+	}
 
 	setTagsOut(ctx, eni.TagSet)
 

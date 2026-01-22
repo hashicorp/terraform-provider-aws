@@ -1492,6 +1492,43 @@ func TestAccEC2Instance_IPv6AddressesExplicit(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_publicDNSNames(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_IPv6Dualstack(rName, false),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// dual-stack: all DNS names present (!= null, != "")
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.StringExact("")),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.StringExact("")),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				Config: testAccInstanceConfig_IPv6Dualstack(rName, true),
+				ConfigStateChecks: []statecheck.StateCheck{
+					// IPv6-only: only IPv6-based name present
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_dualstack"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv4"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.NotNull()),
+					tfstatecheck.ExpectNotKnownValue(resourceName, tfjsonpath.New("public_dns_name_ipv6"), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -7623,6 +7660,54 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, addressCount))
+}
+
+// Returns a VPC, subnet, and EC2 instance, with public IP addresses: either dual-stack or IPv6-only.
+// All resources are named "test".
+func testAccInstanceConfig_IPv6Dualstack(rName string, IPv6Only bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = %[2]t ? null : "10.1.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = %[2]t ? null : "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
+
+  assign_ipv6_address_on_creation = true
+
+  ipv6_native 									 = %[2]t
+  enable_resource_name_dns_aaaa_record_on_launch = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type      = "t3.nano" # IPv6-only support requires the Nitro hypervisor, so t2 is out
+  subnet_id          = aws_subnet.test.id
+
+  associate_public_ip_address = !%[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, IPv6Only),
+	)
 }
 
 func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {
