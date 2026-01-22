@@ -20,7 +20,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1596,9 +1596,8 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	output, err := conn.DescribeApplication(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1613,8 +1612,8 @@ func findApplicationDetail(ctx context.Context, conn *kinesisanalyticsv2.Client,
 	return output.ApplicationDetail, nil
 }
 
-func statusApplication(ctx context.Context, conn *kinesisanalyticsv2.Client, name string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplication(conn *kinesisanalyticsv2.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationDetailByName(ctx, conn, name)
 
 		if retry.NotFound(err) {
@@ -1633,7 +1632,7 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1650,7 +1649,7 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusForceStopping, awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1667,7 +1666,7 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1684,7 +1683,7 @@ func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
-		Refresh: statusApplication(ctx, conn, name),
+		Refresh: statusApplication(conn, name),
 		Timeout: timeout,
 	}
 
@@ -1710,9 +1709,8 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	output, err := conn.DescribeApplicationOperation(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -1727,8 +1725,8 @@ func findApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Clie
 	return output.ApplicationOperationInfoDetails, nil
 }
 
-func statusApplicationOperation(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusApplicationOperation(conn *kinesisanalyticsv2.Client, applicationName, operationID string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findApplicationOperationByTwoPartKey(ctx, conn, applicationName, operationID)
 
 		if retry.NotFound(err) {
@@ -1747,7 +1745,7 @@ func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyti
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusInProgress),
 		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
-		Refresh: statusApplicationOperation(ctx, conn, applicationName, operationID),
+		Refresh: statusApplicationOperation(conn, applicationName, operationID),
 		Timeout: timeout,
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -210,16 +210,14 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	output, err := conn.DescribeApplicationSnapshot(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidArgumentException](err, "does not exist") {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -234,8 +232,8 @@ func findSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, i
 	return output.SnapshotDetails, nil
 }
 
-func statusSnapshotDetails(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusSnapshotDetails(conn *kinesisanalyticsv2.Client, applicationName, snapshotName string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findSnapshotDetailsByTwoPartKey(ctx, conn, applicationName, snapshotName)
 
 		if retry.NotFound(err) {
@@ -254,7 +252,7 @@ func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusReady),
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 
@@ -271,7 +269,7 @@ func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusDeleting),
 		Target:  []string{},
-		Refresh: statusSnapshotDetails(ctx, conn, applicationName, snapshotName),
+		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
 		Timeout: timeout,
 	}
 
