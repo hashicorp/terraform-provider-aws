@@ -18,13 +18,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -168,17 +167,7 @@ func resourceDomainName() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrPolicy: {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaOptional(),
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -198,10 +187,10 @@ func resourceDomainName() *schema.Resource {
 				Computed: true,
 			},
 			"routing_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(flattenRoutingModeValues(types.RoutingMode("").Values()), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.RoutingMode](),
 			},
 			"security_policy": {
 				Type:             schema.TypeString,
@@ -681,14 +670,4 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 
 func domainNameARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
 	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/domainnames/%s", domainName))
-}
-
-func flattenRoutingModeValues(t []types.RoutingMode) []string {
-	var out []string
-
-	for _, v := range t {
-		out = append(out, string(v))
-	}
-
-	return out
 }
