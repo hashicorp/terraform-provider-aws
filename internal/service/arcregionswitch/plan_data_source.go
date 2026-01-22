@@ -70,7 +70,6 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 					},
 				},
 				Computed:    true,
-				Description: "Route53 health checks associated with the plan",
 			},
 		},
 		Blocks: map[string]fwschema.Block{},
