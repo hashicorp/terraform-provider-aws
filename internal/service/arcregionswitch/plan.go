@@ -1347,15 +1347,6 @@ func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Co
 		apiParallelStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
 			Value: apiEKSConfig,
 		}
-	case !pStep.ExecutionApprovalConfig.IsNull():
-		pData, pD := pStep.ExecutionApprovalConfig.ToPtr(ctx)
-		diags.Append(pD...)
-		if diags.HasError() {
-			return errors.New("failed to convert parallel execution approval config")
-		}
-		var pR awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
-		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
-		apiParallelStep.ExecutionBlockConfiguration = &pR
 	case !pStep.GlobalAuroraConfig.IsNull():
 		var pR awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
 		if err := expandSimpleConfig(ctx, pStep.GlobalAuroraConfig, &pR.Value, diags); err != nil {
