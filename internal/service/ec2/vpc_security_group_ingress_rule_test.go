@@ -988,9 +988,10 @@ func TestAccVPCSecurityGroupIngressRule_securityGroupDeleted(t *testing.T) {
 			{
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-					_, err := conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
+					input := &ec2.DeleteSecurityGroupInput{
 						GroupId: aws.String(sgID),
-					})
+					}
+					_, err := conn.DeleteSecurityGroup(ctx, input)
 					if err != nil {
 						t.Fatalf("error deleting security group %s: %s", sgID, err)
 					}
