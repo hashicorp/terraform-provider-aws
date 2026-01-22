@@ -1685,21 +1685,17 @@ type workflowModel struct {
 }
 
 type stepModel struct {
-	Description                 types.String                                                      `tfsdk:"description"`
-	ExecutionBlockConfiguration fwtypes.ListNestedObjectValueOf[executionBlockConfigurationModel] `tfsdk:"execution_block_configuration"`
-	ExecutionBlockType          fwtypes.StringEnum[awstypes.ExecutionBlockType]                   `tfsdk:"execution_block_type"`
-	Name                        types.String                                                      `tfsdk:"name"`
-}
-
-type executionBlockConfigurationModel struct {
 	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
 	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
+	Description                  types.String                                                       `tfsdk:"description"`
 	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
 	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
 	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
 	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
 	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
+	Name                         types.String                                                       `tfsdk:"name"`
 	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
 	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
