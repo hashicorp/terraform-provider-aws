@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -249,7 +248,7 @@ func statusSnapshotDetails(conn *kinesisanalyticsv2.Client, applicationName, sna
 }
 
 func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusCreating),
 		Target:  enum.Slice(awstypes.SnapshotStatusReady),
 		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),
@@ -266,7 +265,7 @@ func waitSnapshotCreated(ctx context.Context, conn *kinesisanalyticsv2.Client, a
 }
 
 func waitSnapshotDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, snapshotName string, timeout time.Duration) (*awstypes.SnapshotDetails, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.SnapshotStatusDeleting),
 		Target:  []string{},
 		Refresh: statusSnapshotDetails(conn, applicationName, snapshotName),

@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1629,7 +1628,7 @@ func statusApplication(conn *kinesisanalyticsv2.Client, name string) retry.State
 }
 
 func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusStarting),
 		Target:  enum.Slice(awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(conn, name),
@@ -1646,7 +1645,7 @@ func waitApplicationStarted(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusForceStopping, awstypes.ApplicationStatusStopping),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady),
 		Refresh: statusApplication(conn, name),
@@ -1663,7 +1662,7 @@ func waitApplicationStopped(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusUpdating),
 		Target:  enum.Slice(awstypes.ApplicationStatusReady, awstypes.ApplicationStatusRunning),
 		Refresh: statusApplication(conn, name),
@@ -1680,7 +1679,7 @@ func waitApplicationUpdated(ctx context.Context, conn *kinesisanalyticsv2.Client
 }
 
 func waitApplicationDeleted(ctx context.Context, conn *kinesisanalyticsv2.Client, name string, timeout time.Duration) (*awstypes.ApplicationDetail, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ApplicationStatusDeleting),
 		Target:  []string{},
 		Refresh: statusApplication(conn, name),
@@ -1742,7 +1741,7 @@ func statusApplicationOperation(conn *kinesisanalyticsv2.Client, applicationName
 }
 
 func waitApplicationOperationSucceeded(ctx context.Context, conn *kinesisanalyticsv2.Client, applicationName, operationID string, timeout time.Duration) (*awstypes.ApplicationOperationInfoDetails, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.OperationStatusInProgress),
 		Target:  enum.Slice(awstypes.OperationStatusSuccessful),
 		Refresh: statusApplicationOperation(conn, applicationName, operationID),

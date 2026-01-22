@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -299,7 +298,7 @@ func statusCluster(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
 }
 
 func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateActive),
 		Refresh:    statusCluster(conn, id),
@@ -320,7 +319,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, 
 }
 
 func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateDeleteInProgress),
 		Target:     []string{},
 		Refresh:    statusCluster(conn, id),
@@ -341,7 +340,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string,
 }
 
 func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateUninitialized),
 		Refresh:    statusCluster(conn, id),

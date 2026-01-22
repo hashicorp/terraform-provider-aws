@@ -34,7 +34,6 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -401,7 +400,7 @@ type clusterResourceModel struct {
 }
 
 func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusActive),
 		Refresh:                   statusCluster(conn, id),
@@ -419,7 +418,7 @@ func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusUpdating),
 		Target:                    enum.Slice(awstypes.StatusActive),
 		Refresh:                   statusCluster(conn, id),
@@ -437,7 +436,7 @@ func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id strin
 }
 
 func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id string, timeout time.Duration) (*awstypes.Cluster, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusActive, awstypes.StatusDeleting),
 		Target:  []string{},
 		Refresh: statusCluster(conn, id),

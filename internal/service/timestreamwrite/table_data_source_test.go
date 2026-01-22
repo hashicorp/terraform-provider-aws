@@ -33,12 +33,12 @@ func TestAccTimestreamWriteTableDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_basic(rDatabaseName, rTableName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDatabaseName, rDatabaseName),
@@ -71,12 +71,12 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties(t *testi
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_magneticStoreWriteProperties(rDatabaseName, rTableName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
@@ -96,12 +96,12 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3Config
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_magneticStoreWritePropertiesS3(rDatabaseName, rTableName, rTableName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
@@ -124,12 +124,12 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3KMSCon
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_magneticStoreWritePropertiesS3KMS(rDatabaseName, rTableName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
@@ -154,12 +154,12 @@ func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_retentionProperties(rDatabaseName, rTableName, 30, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.magnetic_store_retention_period_in_days", "30"),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.memory_store_retention_period_in_hours", "120"),
@@ -168,7 +168,7 @@ func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 			{
 				Config: testAccTableDataSourceConfig_basic(rDatabaseName, rTableName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.#", "1"),
 				),
 			},
@@ -186,12 +186,12 @@ func TestAccTimestreamWriteTableDataSource_schema(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, rDatabaseName, rTableName),
+		CheckDestroy:             testAccCheckTableDatasourceDestroy(ctx, t, rDatabaseName, rTableName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableDataSourceConfig_schema(rDatabaseName, rTableName, "OPTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExistsNames(ctx, dataSourceName),
+					testAccCheckTableExistsNames(ctx, t, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "schema.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "schema.0.composite_partition_key.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "schema.0.composite_partition_key.0.enforcement_in_record", "OPTIONAL"),
@@ -203,7 +203,7 @@ func TestAccTimestreamWriteTableDataSource_schema(t *testing.T) {
 	})
 }
 
-func testAccCheckTableDatasourceDestroy(ctx context.Context, databaseName string, tableName string) resource.TestCheckFunc {
+func testAccCheckTableDatasourceDestroy(ctx context.Context, t *testing.T, databaseName string, tableName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 		_, err := tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, databaseName, tableName)
@@ -219,7 +219,7 @@ func testAccCheckTableDatasourceDestroy(ctx context.Context, databaseName string
 	}
 }
 
-func testAccCheckTableExistsNames(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTableExistsNames(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

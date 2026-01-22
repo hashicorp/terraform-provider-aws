@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -435,7 +434,7 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 }
 
 func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.KeyStateCreateInProgress),
 		Target:                    enum.Slice(awstypes.KeyStateCreateComplete),
 		Refresh:                   statusKey(conn, id),
@@ -453,7 +452,7 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 }
 
 func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
 		Target:  []string{},
 		Refresh: statusKey(conn, id),

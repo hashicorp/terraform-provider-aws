@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -285,7 +284,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	d.SetId(strings.ToLower(*resp.Cluster.ClusterName))
 
 	pending := []string{"creating", "modifying"}
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     []string{"available"},
 		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
@@ -454,7 +453,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 	if awaitUpdate {
 		log.Printf("[DEBUG] Waiting for update: %s", d.Id())
 		pending := []string{"modifying"}
-		stateConf := &sdkretry.StateChangeConf{
+		stateConf := &retry.StateChangeConf{
 			Pending:    pending,
 			Target:     []string{"available"},
 			Refresh:    clusterStateRefreshFunc(conn, d.Id(), "available", pending),
@@ -520,7 +519,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"creating", "available", "deleting", "incompatible-parameters", "incompatible-network"},
 		Target:     []string{},
 		Refresh:    clusterStateRefreshFunc(conn, d.Id(), "", []string{}),

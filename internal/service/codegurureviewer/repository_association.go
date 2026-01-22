@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -406,7 +405,7 @@ func statusRepositoryAssociation(conn *codegurureviewer.Client, id string) retry
 }
 
 func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewer.Client, id string, timeout time.Duration) (*types.RepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.RepositoryAssociationStateAssociating),
 		Target:                    enum.Slice(types.RepositoryAssociationStateAssociated),
 		Refresh:                   statusRepositoryAssociation(conn, id),
@@ -427,7 +426,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 }
 
 func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewer.Client, id string, timeout time.Duration) (*types.RepositoryAssociation, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RepositoryAssociationStateDisassociating, types.RepositoryAssociationStateAssociated),
 		Target:  []string{},
 		Refresh: statusRepositoryAssociation(conn, id),

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -259,7 +258,7 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Clien
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
 		Refresh: statusApplication(conn, name),
@@ -279,7 +278,7 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Cl
 	const (
 		timeout = 2 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusApplication(conn, name),

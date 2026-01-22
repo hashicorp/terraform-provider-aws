@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
-	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -206,7 +205,7 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 		}
 	}
 
-	return nil, &sdkretry.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
 func statusHSM(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
@@ -226,7 +225,7 @@ func statusHSM(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
 }
 
 func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateCreateInProgress),
 		Target:     enum.Slice(types.HsmStateActive),
 		Refresh:    statusHSM(conn, id),
@@ -247,7 +246,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 }
 
 func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateDeleteInProgress),
 		Target:     []string{},
 		Refresh:    statusHSM(conn, id),
