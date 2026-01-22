@@ -488,6 +488,26 @@ func route53HealthCheckConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func regionSwitchPlanConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[regionSwitchPlanConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				names.AttrARN: fwschema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+				},
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -646,6 +666,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"eks_resource_scaling_config":      eksResourceScalingConfigBlock(ctx),
 									"execution_approval_config":        executionApprovalConfigBlock(ctx),
 									"global_aurora_config":             globalAuroraConfigBlock(ctx),
+									"region_switch_plan_config":        regionSwitchPlanConfigBlock(ctx),
 									"parallel_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[parallelConfigModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
@@ -674,6 +695,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"eks_resource_scaling_config":      eksResourceScalingConfigBlock(ctx),
 															"execution_approval_config":        executionApprovalConfigBlock(ctx),
 															"global_aurora_config":             globalAuroraConfigBlock(ctx),
+															"region_switch_plan_config":        regionSwitchPlanConfigBlock(ctx),
 															"route53_health_check_config":      route53HealthCheckConfigBlock(ctx),
 														},
 													},
@@ -1000,6 +1022,8 @@ func (m resourcePlanModel) expandStepExecutionBlockConfiguration(ctx context.Con
 		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
 	case !step.GlobalAuroraConfig.IsNull():
 		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
+	case !step.RegionSwitchPlanConfig.IsNull():
+		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
 	case !step.Route53HealthCheckConfig.IsNull():
 		return m.expandGeneralAutoFlexConfig(ctx, step, apiStep, diags)
 	case !step.EKSResourceScalingConfig.IsNull():
@@ -1079,6 +1103,12 @@ func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, step
 	case !step.GlobalAuroraConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
 		if err := expandSimpleConfig(ctx, step.GlobalAuroraConfig, &r.Value, diags); err != nil {
+			return err
+		}
+		apiStep.ExecutionBlockConfiguration = &r
+	case !step.RegionSwitchPlanConfig.IsNull():
+		var r awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
+		if err := expandSimpleConfig(ctx, step.RegionSwitchPlanConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
@@ -1332,6 +1362,12 @@ func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Co
 			return err
 		}
 		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.RegionSwitchPlanConfig.IsNull():
+		var pR awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig
+		if err := expandSimpleConfig(ctx, pStep.RegionSwitchPlanConfig, &pR.Value, diags); err != nil {
+			return err
+		}
+		apiParallelStep.ExecutionBlockConfiguration = &pR
 	case !pStep.Route53HealthCheckConfig.IsNull():
 		var pR awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
 		if err := expandSimpleConfig(ctx, pStep.Route53HealthCheckConfig, &pR.Value, diags); err != nil {
@@ -1432,6 +1468,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 						ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
 						GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
 						ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
+						RegionSwitchPlanConfig:       fwtypes.NewListNestedObjectValueOfNull[regionSwitchPlanConfigModel](ctx),
 						Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
 					}
 
@@ -1548,6 +1585,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 										EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
 										ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
 										GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
+										RegionSwitchPlanConfig:       fwtypes.NewListNestedObjectValueOfNull[regionSwitchPlanConfigModel](ctx),
 										Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
 									}
 
@@ -1574,6 +1612,8 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].GlobalAuroraConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].RegionSwitchPlanConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].Route53HealthCheckConfig)...)
 										}
@@ -1586,6 +1626,8 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 							}
 
 							steps[j].ParallelConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &parallelConfig)
+						case *awstypes.ExecutionBlockConfigurationMemberRegionSwitchPlanConfig:
+							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].RegionSwitchPlanConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
 							diags.Append(flex.Flatten(ctx, &t.Value, &steps[j].Route53HealthCheckConfig)...)
 						}
@@ -1700,6 +1742,7 @@ type stepModel struct {
 	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
 	Name                         types.String                                                       `tfsdk:"name"`
 	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
+	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config"`
 	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
 
@@ -1868,6 +1911,7 @@ type parallelStepModel struct {
 	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
 	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
 	Name                         types.String                                                       `tfsdk:"name"`
+	RegionSwitchPlanConfig       fwtypes.ListNestedObjectValueOf[regionSwitchPlanConfigModel]       `tfsdk:"region_switch_plan_config"`
 	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
 
@@ -1883,6 +1927,12 @@ type route53HealthCheckConfigModel struct {
 type recordSetModel struct {
 	RecordSetIdentifier types.String `tfsdk:"record_set_identifier"`
 	Region              types.String `tfsdk:"region"`
+}
+
+type regionSwitchPlanConfigModel struct {
+	ARN              fwtypes.ARN  `tfsdk:"arn"`
+	CrossAccountRole types.String `tfsdk:"cross_account_role"`
+	ExternalID       types.String `tfsdk:"external_id"`
 }
 
 // Trigger Configuration Models

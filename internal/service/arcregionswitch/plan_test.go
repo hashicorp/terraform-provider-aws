@@ -695,6 +695,33 @@ resource "aws_arcregionswitch_plan" "test" {
     workflow_target_action = "activate"
     workflow_description   = "Activation workflow with multiple execution block types"
 
+    # ARCRoutingControl step
+    step {
+      name                 = "arc-routing-control-step"
+      execution_block_type = "ARCRoutingControl"
+      description          = "ARC Routing Control step"
+
+      arc_routing_control_config {
+        region_and_routing_controls {
+          region = %[3]q
+          routing_control {
+            routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"
+            state               = "On"
+          }
+        }
+        region_and_routing_controls {
+          region = %[2]q
+          routing_control {
+            routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"
+            state               = "Off"
+          }
+        }
+        cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
+        external_id        = "routing-external-id"
+        timeout_minutes    = 15
+      }
+    }
+
     # CustomActionLambda step
     step {
       name                 = "custom-lambda-step"
@@ -715,39 +742,6 @@ resource "aws_arcregionswitch_plan" "test" {
 
         ungraceful {
           behavior = "skip"
-        }
-      }
-    }
-
-    # ManualApproval step
-    step {
-      name                 = "manual-approval-step"
-      execution_block_type = "ManualApproval"
-      description          = "Manual approval step"
-
-      execution_approval_config {
-        approval_role   = aws_iam_role.test.arn
-        timeout_minutes = 30
-      }
-    }
-
-    # AuroraGlobalDatabase step
-    step {
-      name                 = "aurora-global-step"
-      execution_block_type = "AuroraGlobalDatabase"
-      description          = "Aurora Global Database step"
-
-      global_aurora_config {
-        behavior                  = "switchoverOnly"
-        global_cluster_identifier = "test-global-cluster"
-        database_cluster_arns = [
-          "arn:aws:rds:%[2]s:123456789012:cluster:test-cluster-1",
-          "arn:aws:rds:%[3]s:123456789012:cluster:test-cluster-2"
-        ]
-        timeout_minutes = 45
-
-        ungraceful {
-          ungraceful = "failover"
         }
       }
     }
@@ -874,51 +868,35 @@ resource "aws_arcregionswitch_plan" "test" {
       }
     }
 
-    # ARCRoutingControl step
+    # Execution approval config
     step {
-      name                 = "arc-routing-control-step"
-      execution_block_type = "ARCRoutingControl"
-      description          = "ARC Routing Control step"
+      name                 = "manual-approval-step"
+      execution_block_type = "ManualApproval"
+      description          = "Manual approval step"
 
-      arc_routing_control_config {
-        region_and_routing_controls {
-          region = %[3]q
-          routing_control {
-            routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789012/routingcontrol/1234567890123456"
-            state               = "On"
-          }
-        }
-        region_and_routing_controls {
-          region = %[2]q
-          routing_control {
-            routing_control_arn = "arn:aws:route53-recovery-control::123456789012:controlpanel/12345678901234567890123456789013/routingcontrol/1234567890123457"
-            state               = "Off"
-          }
-        }
-        cross_account_role = "arn:aws:iam::123456789012:role/RoutingControlRole"
-        external_id        = "routing-external-id"
-        timeout_minutes    = 15
+      execution_approval_config {
+        approval_role   = aws_iam_role.test.arn
+        timeout_minutes = 30
       }
     }
 
-    # Route53HealthCheck step
+    # Global aurora config
     step {
-      name                 = "route53-health-check-step-activate"
-      execution_block_type = "Route53HealthCheck"
-      description          = "Route53 Health Check step for activate"
+      name                 = "aurora-global-step"
+      execution_block_type = "AuroraGlobalDatabase"
+      description          = "Aurora Global Database step"
 
-      route53_health_check_config {
-        hosted_zone_id  = "Z123456789012345678"
-        record_name     = "test.example.com"
-        timeout_minutes = 10
+      global_aurora_config {
+        behavior                  = "switchoverOnly"
+        global_cluster_identifier = "test-global-cluster"
+        database_cluster_arns = [
+          "arn:aws:rds:%[2]s:123456789012:cluster:test-cluster-1",
+          "arn:aws:rds:%[3]s:123456789012:cluster:test-cluster-2"
+        ]
+        timeout_minutes = 45
 
-        record_set {
-          record_set_identifier = "primary"
-          region                = %[2]q
-        }
-        record_set {
-          record_set_identifier = "secondary"
-          region                = %[3]q
+        ungraceful {
+          ungraceful = "failover"
         }
       }
     }
@@ -966,6 +944,28 @@ resource "aws_arcregionswitch_plan" "test" {
               arn = "arn:aws:lambda:%[3]s:123456789012:function:parallel-function-2-secondary"
             }
           }
+        }
+      }
+    }
+
+    # Route53HealthCheck step
+    step {
+      name                 = "route53-health-check-step-activate"
+      execution_block_type = "Route53HealthCheck"
+      description          = "Route53 Health Check step for activate"
+
+      route53_health_check_config {
+        hosted_zone_id  = "Z123456789012345678"
+        record_name     = "test.example.com"
+        timeout_minutes = 10
+
+        record_set {
+          record_set_identifier = "primary"
+          region                = %[2]q
+        }
+        record_set {
+          record_set_identifier = "secondary"
+          region                = %[3]q
         }
       }
     }
@@ -1283,7 +1283,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
     target_region                       = %q
     min_delay_minutes_between_executions = 30
     description                         = "Test trigger for activation"
-    
+
     conditions {
       associated_alarm_name = "test-alarm-1"
       condition            = "red"
@@ -1297,7 +1297,7 @@ func testAccPlanConfig_update(rName, description string, rto int) string {
     target_region                       = %q
     min_delay_minutes_between_executions = 60
     description                         = "Test trigger for deactivation"
-    
+
     conditions {
       associated_alarm_name = "test-alarm-2"
       condition            = "green"

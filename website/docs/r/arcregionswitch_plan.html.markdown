@@ -10,8 +10,6 @@ description: |-
 
 Terraform resource for managing an AWS Application Recovery Controller Region Switch Plan.
 
-~> **NOTE:** All execution block configurations must be wrapped in an `execution_block_configuration` block. This is required to properly handle the different types of execution blocks supported by the AWS API.
-
 ## Example Usage
 
 ### Basic Usage
@@ -49,11 +47,9 @@ resource "aws_arcregionswitch_plan" "example" {
       name                 = "manual-approval"
       execution_block_type = "ManualApproval"
 
-      execution_block_configuration {
-        execution_approval_config {
-          approval_role   = aws_iam_role.example.arn
-          timeout_minutes = 60
-        }
+      execution_approval_config {
+        approval_role   = aws_iam_role.example.arn
+        timeout_minutes = 60
       }
     }
   }
@@ -66,11 +62,9 @@ resource "aws_arcregionswitch_plan" "example" {
       name                 = "manual-approval"
       execution_block_type = "ManualApproval"
 
-      execution_block_configuration {
-        execution_approval_config {
-          approval_role   = aws_iam_role.example.arn
-          timeout_minutes = 60
-        }
+      execution_approval_config {
+        approval_role   = aws_iam_role.example.arn
+        timeout_minutes = 60
       }
     }
   }
@@ -102,15 +96,13 @@ resource "aws_arcregionswitch_plan" "complex" {
       name                 = "lambda-step"
       execution_block_type = "CustomActionLambda"
 
-      execution_block_configuration {
-        custom_action_lambda_config {
-          region_to_run          = "activatingRegion"
-          retry_interval_minutes = 5.0
-          timeout_minutes        = 30
+      custom_action_lambda_config {
+        region_to_run          = "activatingRegion"
+        retry_interval_minutes = 5.0
+        timeout_minutes        = 30
 
-          lambda {
-            arn = aws_lambda_function.example.arn
-          }
+        lambda {
+          arn = aws_lambda_function.example.arn
         }
       }
     }
@@ -119,35 +111,29 @@ resource "aws_arcregionswitch_plan" "complex" {
       name                 = "parallel-step"
       execution_block_type = "Parallel"
 
-      execution_block_configuration {
-        parallel_config {
-          step {
-            name                 = "asg-scaling"
-            execution_block_type = "EC2AutoScaling"
+      parallel_config {
+        step {
+          name                 = "asg-scaling"
+          execution_block_type = "EC2AutoScaling"
 
-            execution_block_configuration {
-              ec2_asg_capacity_increase_config {
-                asg {
-                  arn = aws_autoscaling_group.example.arn
-                }
-                target_percent = 150
-              }
+          ec2_asg_capacity_increase_config {
+            asg {
+              arn = aws_autoscaling_group.example.arn
             }
+            target_percent = 150
           }
+        }
 
-          step {
-            name                 = "ecs-scaling"
-            execution_block_type = "ECSServiceScaling"
+        step {
+          name                 = "ecs-scaling"
+          execution_block_type = "ECSServiceScaling"
 
-            execution_block_configuration {
-              ecs_capacity_increase_config {
-                service {
-                  cluster_arn = aws_ecs_cluster.example.arn
-                  service_arn = aws_ecs_service.example.arn
-                }
-                target_percent = 200
-              }
+          ecs_capacity_increase_config {
+            service {
+              cluster_arn = aws_ecs_cluster.example.arn
+              service_arn = aws_ecs_service.example.arn
             }
+            target_percent = 200
           }
         }
       }
@@ -215,23 +201,17 @@ The following arguments are optional:
 
 ### Step
 
-* `description` - (Optional) Description of the step.
-* `execution_block_configuration` - (Required) Configuration block for the execution block. Contains one of the following nested configuration blocks based on the `execution_block_type`:
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `Route53HealthCheck`.
-* `name` - (Required) Name of the step.
-
-#### Execution Block Configuration
-
-The `execution_block_configuration` block contains one of the following configuration blocks based on the `execution_block_type`:
-
 * `arc_routing_control_config` - Configuration for ARC routing control. See [ARC Routing Control Config](#arc-routing-control-config) below.
 * `custom_action_lambda_config` - Configuration for Lambda function execution. See [Custom Action Lambda Config](#custom-action-lambda-config) below.
+* `description` - (Optional) Description of the step.
 * `document_db_config` - Configuration for DocumentDB global cluster operations. See [DocumentDB Config](#documentdb-config) below.
 * `ec2_asg_capacity_increase_config` - Configuration for EC2 Auto Scaling group capacity increase. See [EC2 ASG Capacity Increase Config](#ec2-asg-capacity-increase-config) below.
 * `ecs_capacity_increase_config` - Configuration for ECS service capacity increase. See [ECS Capacity Increase Config](#ecs-capacity-increase-config) below.
 * `eks_resource_scaling_config` - Configuration for EKS resource scaling. See [EKS Resource Scaling Config](#eks-resource-scaling-config) below.
 * `execution_approval_config` - Configuration for manual approval steps. See [Execution Approval Config](#execution-approval-config) below.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `Route53HealthCheck`.
 * `global_aurora_config` - Configuration for Aurora Global Database operations. See [Global Aurora Config](#global-aurora-config) below.
+* `name` - (Required) Name of the step.
 * `parallel_config` - Configuration for parallel execution of multiple steps. See [Parallel Config](#parallel-config) below.
 * `route53_health_check_config` - Configuration for Route53 health check operations. See [Route53 Health Check Config](#route53-health-check-config) below.
 
