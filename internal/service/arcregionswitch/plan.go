@@ -100,6 +100,98 @@ func arcRoutingControlConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"region_to_run": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.RegionToRunIn](),
+					Required:   true,
+				},
+				"retry_interval_minutes": fwschema.Float32Attribute{
+					Required: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"lambda": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrARN: fwschema.StringAttribute{
+								Required: true,
+							},
+							"cross_account_role": fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrExternalID: fwschema.StringAttribute{
+								Optional: true,
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"behavior": fwschema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func documentDBConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"behavior": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.DocumentDbDefaultBehavior](),
+					Required:   true,
+				},
+				"database_cluster_arns": fwschema.ListAttribute{
+					CustomType: fwtypes.ListOfARNType,
+					Required:   true,
+				},
+				"global_cluster_identifier": fwschema.StringAttribute{
+					Required: true,
+				},
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"ungraceful": fwschema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -250,93 +342,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 								Blocks: map[string]fwschema.Block{
-									"arc_routing_control_config": arcRoutingControlConfigBlock(ctx),
-									"custom_action_lambda_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"region_to_run": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.RegionToRunIn](),
-													Required:   true,
-												},
-												"retry_interval_minutes": fwschema.Float32Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"lambda": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrARN: fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"behavior": fwschema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
-																Required:   true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"document_db_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"behavior": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.DocumentDbDefaultBehavior](),
-													Required:   true,
-												},
-												"database_cluster_arns": fwschema.ListAttribute{
-													CustomType: fwtypes.ListOfARNType,
-													Required:   true,
-												},
-												"global_cluster_identifier": fwschema.StringAttribute{
-													Required: true,
-												},
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												names.AttrExternalID: fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"ungraceful": fwschema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
-																Required:   true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"arc_routing_control_config":  arcRoutingControlConfigBlock(ctx),
+									"custom_action_lambda_config": customActionLambdaConfigBlock(ctx),
+									"document_db_config":          documentDBConfigBlock(ctx),
 									"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[ec2ASGCapacityIncreaseConfigModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
@@ -598,7 +606,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"arc_routing_control_config": arcRoutingControlConfigBlock(ctx),
+															"arc_routing_control_config":  arcRoutingControlConfigBlock(ctx),
+															"custom_action_lambda_config": customActionLambdaConfigBlock(ctx),
+															"document_db_config":          documentDBConfigBlock(ctx),
 															"execution_approval_config": fwschema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
@@ -608,91 +618,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		},
 																		"timeout_minutes": fwschema.Int32Attribute{
 																			Optional: true,
-																		},
-																	},
-																},
-															},
-															"custom_action_lambda_config": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[customActionLambdaConfigModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		"region_to_run": fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		"retry_interval_minutes": fwschema.Float32Attribute{
-																			Required: true,
-																		},
-																		"timeout_minutes": fwschema.Int32Attribute{
-																			Optional: true,
-																		},
-																	},
-																	Blocks: map[string]fwschema.Block{
-																		"lambda": fwschema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[lambdaModel](ctx),
-																			NestedObject: fwschema.NestedBlockObject{
-																				Attributes: map[string]fwschema.Attribute{
-																					names.AttrARN: fwschema.StringAttribute{
-																						Required: true,
-																					},
-																					"cross_account_role": fwschema.StringAttribute{
-																						Optional: true,
-																					},
-																					names.AttrExternalID: fwschema.StringAttribute{
-																						Optional: true,
-																					},
-																				},
-																			},
-																		},
-																		"ungraceful": fwschema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[ungracefulModel](ctx),
-																			NestedObject: fwschema.NestedBlockObject{
-																				Attributes: map[string]fwschema.Attribute{
-																					"behavior": fwschema.StringAttribute{
-																						CustomType: fwtypes.StringEnumType[awstypes.LambdaUngracefulBehavior](),
-																						Required:   true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-															"document_db_config": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbConfigModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		"behavior": fwschema.StringAttribute{
-																			CustomType: fwtypes.StringEnumType[awstypes.DocumentDbDefaultBehavior](),
-																			Required:   true,
-																		},
-																		"database_cluster_arns": fwschema.ListAttribute{
-																			CustomType: fwtypes.ListOfARNType,
-																			Required:   true,
-																		},
-																		"global_cluster_identifier": fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		"cross_account_role": fwschema.StringAttribute{
-																			Optional: true,
-																		},
-																		names.AttrExternalID: fwschema.StringAttribute{
-																			Optional: true,
-																		},
-																		"timeout_minutes": fwschema.Int32Attribute{
-																			Optional: true,
-																		},
-																	},
-																	Blocks: map[string]fwschema.Block{
-																		"ungraceful": fwschema.ListNestedBlock{
-																			CustomType: fwtypes.NewListNestedObjectTypeOf[documentDbUngracefulModel](ctx),
-																			NestedObject: fwschema.NestedBlockObject{
-																				Attributes: map[string]fwschema.Attribute{
-																					"ungraceful": fwschema.StringAttribute{
-																						CustomType: fwtypes.StringEnumType[awstypes.DocumentDbUngracefulBehavior](),
-																						Required:   true,
-																					},
-																				},
-																			},
 																		},
 																	},
 																},
