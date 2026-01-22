@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -78,7 +79,7 @@ func (d *dataSourcePlan) Schema(ctx context.Context, req datasource.SchemaReques
 
 func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data dataSourcePlanModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &data))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -87,7 +88,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 
 	plan, err := findPlanByARN(ctx, conn, data.ARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("reading ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
 
@@ -97,7 +98,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 	data.RecoveryApproach = types.StringValue(string(plan.RecoveryApproach))
 
 	regions, diags := types.ListValueFrom(ctx, types.StringType, plan.Regions)
-	resp.Diagnostics.Append(diags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 	data.Regions = regions
 
 	if plan.Description != nil {
@@ -121,7 +122,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 	// Fetch Route53 health checks
 	healthChecks, err := findRoute53HealthChecks(ctx, conn, data.ARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("listing Route53 health checks", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ARN.ValueString())
 		return
 	}
 
@@ -136,7 +137,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 				names.AttrRegion:       types.StringType,
 			},
 		}, []attr.Value{})
-		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 		return
 	}
 
@@ -154,7 +155,7 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 			"record_name":          types.StringType,
 			names.AttrRegion:       types.StringType,
 		}, healthCheckAttrs)
-		resp.Diagnostics.Append(objDiags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, objDiags)
 		healthCheckElements[i] = healthCheckObj
 	}
 
@@ -166,10 +167,10 @@ func (d *dataSourcePlan) Read(ctx context.Context, req datasource.ReadRequest, r
 			names.AttrRegion:       types.StringType,
 		},
 	}, healthCheckElements)
-	resp.Diagnostics.Append(listDiags...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, listDiags)
 	data.Route53HealthChecks = healthChecksList
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
 
 func (d *dataSourcePlan) ValidateModel(ctx context.Context, schema *fwschema.Schema) fwdiag.Diagnostics {

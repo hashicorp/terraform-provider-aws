@@ -6,6 +6,7 @@ package arcregionswitch
 import (
 	"context"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +29,7 @@ func sweepPlans(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 
 		for _, plan := range page.Plans {

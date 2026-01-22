@@ -9,6 +9,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
@@ -29,6 +30,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -721,7 +723,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan resourcePlanModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -731,7 +733,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	// Use custom Expand method for resourcePlanModel
 	expanded, diags := plan.Expand(ctx)
 	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		return
 	}
 
@@ -742,7 +744,7 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 
 	output, err := conn.CreatePlan(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError("creating ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err)
 		return
 	}
 
@@ -752,25 +754,25 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	// Wait for plan to be available (eventual consistency)
 	planOutput, err := waitPlanCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.AddError("waiting for ARC Region Switch Plan create", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
 	diags = plan.Flatten(ctx, planOutput)
 	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		return
 	}
 
 	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
 	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state resourcePlanModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -783,14 +785,14 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError("reading ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
 	// Use custom Flatten method for resourcePlanModel
 	diags := state.Flatten(ctx, plan)
 	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		return
 	}
 
@@ -801,18 +803,18 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 	// Handle tags
 	tags, err := listTags(ctx, conn, aws.ToString(plan.Arn))
 	if err != nil {
-		resp.Diagnostics.AddError("listing tags for ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 	setTagsOut(ctx, tags.Map())
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, state))
 }
 
 func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan, state resourcePlanModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Plan.Get(ctx, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -822,7 +824,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Use custom expand logic (similar to Create)
 	apiObject, diags := plan.Expand(ctx)
 	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		return
 	}
 
@@ -840,14 +842,14 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	_, err := conn.UpdatePlan(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError("updating ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
 	// Handle tags update
 	if !plan.TagsAll.Equal(state.TagsAll) {
 		if err := updateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			resp.Diagnostics.AddError("updating tags", err.Error())
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
 	}
@@ -855,25 +857,25 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Read after update to refresh state
 	planOutput, err := findPlanByARN(ctx, conn, plan.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("reading ARC Region Switch Plan after update", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
 	diags = plan.Flatten(ctx, planOutput)
 	if diags.HasError() {
-		resp.Diagnostics.Append(diags...)
+		smerr.AddEnrich(ctx, &resp.Diagnostics, diags)
 		return
 	}
 
 	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
 	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
 
 func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state resourcePlanModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.State.Get(ctx, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -894,7 +896,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 		if errs.Contains(err, "health check allocation is in progress") {
 			_, err = waitPlanDeletable(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 			if err != nil {
-				resp.Diagnostics.AddError("waiting for ARC Region Switch Plan to be deletable", err.Error())
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 				return
 			}
 			// Retry delete
@@ -903,12 +905,12 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 				if errors.As(err, &nfe) {
 					return
 				}
-				resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 				return
 			}
 			return
 		}
-		resp.Diagnostics.AddError("deleting ARC Region Switch Plan", err.Error())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
@@ -1659,15 +1661,15 @@ func findPlanByARN(ctx context.Context, conn *arcregionswitch.Client, arn string
 	if err != nil {
 		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	if output == nil || output.Plan == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output.Plan, nil
@@ -1680,7 +1682,7 @@ func findRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client, 
 
 	output, err := conn.ListRoute53HealthChecks(ctx, &input)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	return output.HealthChecks, nil
@@ -1954,12 +1956,12 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 
 	plan, ok := outputRaw.(*awstypes.Plan)
 	if !ok {
-		return nil, nil
+		return nil, nil // nosemgrep:ci.semgrep.smarterr.go-no-bare-return-err
 	}
 
 	// Check if plan has Route53HealthCheck steps
@@ -1985,7 +1987,7 @@ func waitPlanCreated(ctx context.Context, conn *arcregionswitch.Client, arn stri
 
 		_, err = healthCheckConf.WaitForStateContext(ctx)
 		if err != nil {
-			return nil, err
+			return nil, smarterr.NewError(err)
 		}
 	}
 
@@ -1996,7 +1998,7 @@ func statusRoute53HealthChecks(ctx context.Context, conn *arcregionswitch.Client
 	return func(_ context.Context) (any, string, error) {
 		healthChecks, err := findRoute53HealthChecks(ctx, conn, arn)
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		// Wait for expected number of health checks to exist
@@ -2023,7 +2025,7 @@ func statusPlan(ctx context.Context, conn *arcregionswitch.Client, arn string) r
 			return nil, "", nil
 		}
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		return plan, "exists", nil
@@ -2041,10 +2043,10 @@ func waitPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Plan); ok {
-		return output, err
+		return output, smarterr.NewError(err)
 	}
 
-	return nil, err
+	return nil, smarterr.NewError(err)
 }
 
 func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn string) retry.StateRefreshFunc {
@@ -2054,7 +2056,7 @@ func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn 
 			return nil, "", nil
 		}
 		if err != nil {
-			return nil, "", err
+			return nil, "", smarterr.NewError(err)
 		}
 
 		// Try to delete to check if it's ready
@@ -2073,6 +2075,6 @@ func statusPlanDeletable(ctx context.Context, conn *arcregionswitch.Client, arn 
 		}
 
 		// Other error
-		return nil, "", err
+		return nil, "", smarterr.NewError(err)
 	}
 }
