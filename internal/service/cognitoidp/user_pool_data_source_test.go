@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -40,7 +40,7 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 				Config: testAccUserPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -110,6 +110,35 @@ func TestAccCognitoIDPUserPoolDataSource_userPoolTags(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPoolDataSource_userPoolAddOns(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var userpool awsTypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolDataSourceConfig_userPoolAddOns(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_pool_add_ons.0.advanced_security_additional_flows.0.custom_auth_mode", "ENFORCED"),
+				),
+			},
+		},
+	})
+}
+
 func testSchemaAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -124,14 +153,14 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 		}
 		numAttributes, err := strconv.Atoi(numAttributesStr)
 		if err != nil {
-			return fmt.Errorf("error parsing schema_attributes.#: %s", err)
+			return fmt.Errorf("error parsing schema_attributes.#: %w", err)
 		}
 
 		// Loop through the schema_attributes and check the mutable key in each attribute
 		checksCompleted := map[string]bool{
 			names.AttrEmail: false,
 		}
-		for i := 0; i < numAttributes; i++ {
+		for i := range numAttributes {
 			// Get the attribute
 			attribute := fmt.Sprintf("schema_attributes.%d.name", i)
 			name, ok := rs.Primary.Attributes[attribute]
@@ -190,4 +219,22 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, rName, tagKey1, tagValue1)
+}
+
+func testAccUserPoolDataSourceConfig_userPoolAddOns(rName string) string {
+	return fmt.Sprintf(`
+data "aws_cognito_user_pool" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+    advanced_security_additional_flows {
+      custom_auth_mode = "ENFORCED"
+    }
+  }
+}
+`, rName)
 }

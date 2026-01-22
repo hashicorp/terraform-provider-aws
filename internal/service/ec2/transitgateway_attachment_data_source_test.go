@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -32,15 +32,16 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T, semaphore tf
 			{
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrTransitGatewayAttachmentID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayAttachmentID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "transit_gateway_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
 				),
@@ -67,15 +68,16 @@ func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T, semaphore tfsync
 			{
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrTransitGatewayAttachmentID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "transit_gateway_owner_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayAttachmentID, dataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTransitGatewayID, resourceName, names.AttrTransitGatewayID),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "transit_gateway_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
 				),

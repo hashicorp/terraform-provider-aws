@@ -1,11 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pricing
 
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pricing"
@@ -18,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_pricing_product")
+// @SDKDataSource("aws_pricing_product", name="Product")
 func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,
@@ -53,7 +56,7 @@ func dataSourceProduct() *schema.Resource {
 	}
 }
 
-func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PricingClient(ctx)
 
@@ -63,8 +66,8 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	filters := d.Get("filters")
-	for _, v := range filters.([]interface{}) {
-		m := v.(map[string]interface{})
+	for _, v := range filters.([]any) {
+		m := v.(map[string]any)
 		input.Filters = append(input.Filters, types.Filter{
 			Field: aws.String(m[names.AttrField].(string)),
 			Type:  types.FilterTypeTermMatch,
@@ -84,7 +87,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned %d elements", numberOfElements)
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set("result", output.PriceList[0])
 
 	return diags

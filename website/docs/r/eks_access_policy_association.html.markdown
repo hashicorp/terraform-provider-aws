@@ -27,12 +27,13 @@ resource "aws_eks_access_policy_association" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `cluster_name` – (Required) Name of the EKS Cluster.
-* `policy_arn` – (Required) The ARN of the access policy that you're associating.
-* `principal_arn` – (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
-* `access_scope` – (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `cluster_name` - (Required) Name of the EKS Cluster.
+* `policy_arn` - (Required) The ARN of the access policy that you're associating.
+* `principal_arn` - (Required) The IAM Principal ARN which requires Authentication access to the EKS cluster.
+* `access_scope` - (Required) The configuration block to determine the scope of the access. See [`access_scope` Block](#access_scope-block) below.
 
 ### `access_scope` Block
 
@@ -64,7 +65,7 @@ The `associated_access_policy` block has the following attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `principal_arn`and `policy_arn` separated by a colon (`#`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `principal_arn`and `policy_arn` separated by an octothorp (`#`). For example:
 
 ```terraform
 import {
@@ -73,7 +74,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EKS access entry using the `cluster_name` `principal_arn` and `policy_arn` separated by a colon (`#`). For example:
+Using `terraform import`, import EKS access entry using the `cluster_name` `principal_arn` and `policy_arn` separated by an octothorp (`#`). For example:
 
 ```console
 % terraform import aws_eks_access_policy_association.my_eks_access_entry my_cluster_name#my_principal_arn#my_policy_arn

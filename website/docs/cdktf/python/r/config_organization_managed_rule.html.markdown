@@ -49,6 +49,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the rule
 * `rule_identifier` - (Required) Identifier of an available AWS Config Managed Rule to call. For available values, see the [List of AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/managed-rules-by-aws-config.html) documentation
 * `description` - (Optional) Description of the rule
@@ -99,4 +100,4 @@ Using `terraform import`, import Config Organization Managed Rules using the nam
 % terraform import aws_config_organization_managed_rule.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-29a5f024d0a4952e4ef689b372b4e88a2023404e9e31631bc6e865b75a8f3733 -->
+<!-- cache-key: cdktf-0.20.8 input-c497cb4d775c78bf31fc736fc124d454a99defc6a7fdab256aebe79f57738bfc -->

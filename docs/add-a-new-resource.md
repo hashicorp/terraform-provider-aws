@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Resource
 
@@ -9,8 +12,6 @@ Each resource should be submitted for review in isolation. Pull requests contain
 
 If this is the first resource for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
 
-Determine which version of the AWS SDK for Go the resource will be built upon. For more information and instructions on how to determine this choice, please read [AWS SDK for Go Versions](aws-go-sdk-versions.md)
-
 ## Steps to Add a Resource
 
 ### Fork the provider and create a feature branch
@@ -21,7 +22,7 @@ For new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc
 
 See the [Naming Guide](naming.md#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
-Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
 
 ### Fill out the Resource Schema
 
@@ -50,16 +51,16 @@ Resources use a self-registration process that adds them to the provider using t
     )
 
     // @FrameworkResource("aws_something_example", name="Example")
-    func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
+    func newExampleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
     	return &resourceExample{}, nil
     }
 
-    type resourceExample struct {
-    	framework.ResourceWithConfigure
+    type exampleResource struct {
+    	framework.ResourceWithModel[exampleResourceModel]
     }
 
-    func (r *resourceExample) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-    	response.TypeName = "aws_something_example"
+    type exampleResourceModel struct {
+    	// Fields corresponding to attributes in the Schema.
     }
     ```
 

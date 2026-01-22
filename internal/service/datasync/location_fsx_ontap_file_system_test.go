@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,23 +36,23 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "protocol.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.0.mount_options.0.version", "NFS3"),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
 				),
 			},
@@ -80,13 +80,13 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceLocationFSxONTAPFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,17 +111,17 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_smb(rName, netBiosName, domainNetbiosName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "protocol.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", acctest.Ct1),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "protocol.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.nfs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.domain", domainName),
-					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.mount_options.0.version", "SMB3"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.password", "MyPassw0rd1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol.0.smb.0.user", "Admin"),
@@ -152,12 +152,12 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_subdirectory(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
 				),
 			},
@@ -185,13 +185,13 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
+		CheckDestroy:             testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -204,8 +204,8 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -213,8 +213,8 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccLocationFSxONTAPFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationFSxONTAPExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -222,7 +222,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLocationFSxforNetAppONTAPFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
@@ -233,7 +233,7 @@ func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -248,7 +248,7 @@ func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckLocationFSxONTAPExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOntapOutput) resource.TestCheckFunc {
+func testAccCheckLocationFSxforNetAppONTAPFileSystemExists(ctx context.Context, n string, v *datasync.DescribeLocationFsxOntapOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

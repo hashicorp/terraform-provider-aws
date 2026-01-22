@@ -21,7 +21,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
     log_destination_config {
       log_destination = {
         bucketName = aws_s3_bucket.example.bucket
-        prefix     = "/example"
+        prefix     = "example"
       }
       log_destination_type = "S3"
       log_type             = "FLOW"
@@ -68,8 +68,9 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `firewall_arn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the Network Firewall firewall.
-
+* `enable_monitoring_dashboard` - (Optional) Whether to enable the detailed firewall monitoring dashboard on the firewall. Defaults to `false`.
 * `logging_configuration` - (Required) A configuration block describing how AWS Network Firewall performs logging for a firewall. See [Logging Configuration](#logging-configuration) below for details.
 
 ### Logging Configuration
@@ -83,7 +84,7 @@ The `logging_configuration` block supports the following arguments:
 The `log_destination_config` block supports the following arguments:
 
 * `log_destination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
-    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
+    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path (Do not add a leading / in the `prefix` as the configuration will have two // when applied).
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
     * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
 

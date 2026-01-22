@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -118,7 +118,7 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "CENTRAL"),
 				),
 			},
@@ -133,7 +133,7 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "LOCAL"),
 				),
 			},
@@ -167,7 +167,7 @@ func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.
 
 			output, err := tfsecurityhub.FindOrganizationConfiguration(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

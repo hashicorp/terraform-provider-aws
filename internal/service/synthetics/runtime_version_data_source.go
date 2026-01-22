@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package synthetics
 
@@ -26,24 +28,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Runtime Version")
-func newDataSourceRuntimeVersion(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceRuntimeVersion{}, nil
+// @FrameworkDataSource("aws_synthetics_runtime_version", name="Runtime Version")
+func newRuntimeVersionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &runtimeVersionDataSource{}, nil
 }
 
 const (
 	DSNameRuntimeVersion = "Runtime Version Data Source"
 )
 
-type dataSourceRuntimeVersion struct {
-	framework.DataSourceWithConfigure
+type runtimeVersionDataSource struct {
+	framework.DataSourceWithModel[runtimeVersionDataSourceModel]
 }
 
-func (d *dataSourceRuntimeVersion) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_synthetics_runtime_version"
-}
-
-func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *runtimeVersionDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"deprecation_date": schema.StringAttribute{
@@ -91,10 +89,10 @@ func (d *dataSourceRuntimeVersion) Schema(ctx context.Context, req datasource.Sc
 	}
 }
 
-func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *runtimeVersionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().SyntheticsClient(ctx)
 
-	var data dataSourceRuntimeVersionModel
+	var data runtimeVersionDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -149,7 +147,8 @@ func (d *dataSourceRuntimeVersion) Read(ctx context.Context, req datasource.Read
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-type dataSourceRuntimeVersionModel struct {
+type runtimeVersionDataSourceModel struct {
+	framework.WithRegionModel
 	DeprecationDate timetypes.RFC3339 `tfsdk:"deprecation_date"`
 	Description     types.String      `tfsdk:"description"`
 	ID              types.String      `tfsdk:"id"`

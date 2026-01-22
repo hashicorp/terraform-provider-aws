@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -28,8 +28,8 @@ func TestAccImageBuilderImagePipelinesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccImagePipelinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
@@ -95,7 +95,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 

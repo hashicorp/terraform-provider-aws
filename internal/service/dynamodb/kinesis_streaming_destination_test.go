@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dynamodb_test
@@ -9,32 +9,60 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKinesisStreamingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "approximate_creation_date_time_precision", ""),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBKinesisStreamingDestination_approximateCreationDateTimePrecision(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisStreamingDestinationConfig_approximateCreationDateTimePrecision(rName, "MICROSECOND"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					testAccCheckKinesisStreamingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "approximate_creation_date_time_precision", "MICROSECOND"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},
@@ -49,20 +77,20 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 
 func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
+					testAccCheckKinesisStreamingDestinationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,22 +100,22 @@ func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 
 func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	resourceName := "aws_dynamodb_kinesis_streaming_destination.test"
 	tableResourceName := "aws_dynamodb_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx),
+		CheckDestroy:             testAccCheckKinesisStreamingDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
+					testAccCheckKinesisStreamingDestinationExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,7 +123,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 	})
 }
 
-func testAccKinesisStreamingDestinationConfig_basic(rName string) string {
+func testAccKinesisStreamingDestinationConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = %[1]q
@@ -113,22 +141,36 @@ resource "aws_kinesis_stream" "test" {
   name        = %[1]q
   shard_count = 2
 }
+`, rName)
+}
 
+func testAccKinesisStreamingDestinationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccKinesisStreamingDestinationConfig_base(rName), `
 resource "aws_dynamodb_kinesis_streaming_destination" "test" {
   table_name = aws_dynamodb_table.test.name
   stream_arn = aws_kinesis_stream.test.arn
 }
-`, rName)
+`)
 }
 
-func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccKinesisStreamingDestinationConfig_approximateCreationDateTimePrecision(rName, precision string) string {
+	return acctest.ConfigCompose(testAccKinesisStreamingDestinationConfig_base(rName), fmt.Sprintf(`
+resource "aws_dynamodb_kinesis_streaming_destination" "test" {
+  table_name                               = aws_dynamodb_table.test.name
+  stream_arn                               = aws_kinesis_stream.test.arn
+  approximate_creation_date_time_precision = %[1]q
+}
+`, precision))
+}
+
+func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
 		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrStreamARN], rs.Primary.Attributes[names.AttrTableName])
 
@@ -136,9 +178,9 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 	}
 }
 
-func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_kinesis_streaming_destination" {
@@ -147,7 +189,7 @@ func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resourc
 
 			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrStreamARN], rs.Primary.Attributes[names.AttrTableName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -101,6 +101,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `extensionArn` - (Required) The ARN of the extension defined in the association.
 * `resourceArn` - (Optional) The ARN of the application, configuration profile, or environment to associate with the extension.
 * `parameters` - (Optional) The parameter names and values defined for the association.
@@ -145,4 +146,4 @@ Using `terraform import`, import AppConfig Extension Associations using their ex
 % terraform import aws_appconfig_extension_association.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-17365f1464d46d38d1dcf2819aa51132f201f9fd4618e6d0e60185e1fad561f2 -->
+<!-- cache-key: cdktf-0.20.8 input-84228f34ad02da37254faefc981f9a5483213d968bf43ce184a3b98ec7ed6f69 -->

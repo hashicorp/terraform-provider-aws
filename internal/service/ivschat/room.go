@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ivschat
 
@@ -19,24 +21,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ivschat_room", name="Room")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ivschat;ivschat.GetRoomOutput")
+// @Testing(preIdentityVersion="v6.5.0")
+// @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func ResourceRoom() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoomCreate,
 		ReadWithoutTimeout:   resourceRoomRead,
 		UpdateWithoutTimeout: resourceRoomUpdate,
 		DeleteWithoutTimeout: resourceRoomDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -67,7 +70,7 @@ func ResourceRoom() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 10),
+				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"message_review_handler": {
 				Type:     schema.TypeList,
@@ -97,8 +100,6 @@ func ResourceRoom() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -106,7 +107,7 @@ const (
 	ResNameRoom = "Room"
 )
 
-func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
@@ -116,7 +117,7 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("logging_configuration_identifiers"); ok {
-		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(v.([]interface{}))
+		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(v.([]any))
 	}
 
 	if v, ok := d.GetOk("maximum_message_length"); ok {
@@ -127,8 +128,8 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.MaximumMessageRatePerSecond = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]interface{})) > 0 {
-		in.MessageReviewHandler = expandMessageReviewHandler(v.([]interface{}))
+	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]any)) > 0 {
+		in.MessageReviewHandler = expandMessageReviewHandler(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -153,14 +154,14 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
-func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findRoomByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IVSChat Room (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -188,7 +189,7 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
@@ -200,7 +201,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("logging_configuration_identifiers") {
-		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(d.Get("logging_configuration_identifiers").([]interface{}))
+		in.LoggingConfigurationIdentifiers = flex.ExpandStringValueList(d.Get("logging_configuration_identifiers").([]any))
 		update = true
 	}
 
@@ -215,7 +216,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("message_review_handler") {
-		in.MessageReviewHandler = expandMessageReviewHandler(d.Get("message_review_handler").([]interface{}))
+		in.MessageReviewHandler = expandMessageReviewHandler(d.Get("message_review_handler").([]any))
 		update = true
 	}
 
@@ -241,7 +242,7 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
-func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
@@ -268,12 +269,12 @@ func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interface{} {
+func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []any {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	m := map[string]any{}
 
 	if v := apiObject.FallbackResult; v != "" {
 		m["fallback_result"] = v
@@ -283,15 +284,15 @@ func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interf
 		m[names.AttrURI] = aws.ToString(v)
 	}
 
-	return []interface{}{m}
+	return []any{m}
 }
 
-func expandMessageReviewHandler(vSettings []interface{}) *types.MessageReviewHandler {
+func expandMessageReviewHandler(vSettings []any) *types.MessageReviewHandler {
 	if len(vSettings) == 0 || vSettings[0] == nil {
 		return nil
 	}
 
-	tfMap := vSettings[0].(map[string]interface{})
+	tfMap := vSettings[0].(map[string]any)
 
 	messageReviewHandler := &types.MessageReviewHandler{}
 

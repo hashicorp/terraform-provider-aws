@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ssm
 
@@ -54,7 +56,7 @@ func dataSourceDocument() *schema.Resource {
 	}
 }
 
-func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
@@ -77,7 +79,7 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	documentType, name := output.DocumentType, aws.ToString(output.Name)
 	d.SetId(name)
 	if !strings.HasPrefix(name, "AWS-") {
-		d.Set(names.AttrARN, documentARN(meta.(*conns.AWSClient), documentType, name))
+		d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	} else {
 		d.Set(names.AttrARN, name)
 	}

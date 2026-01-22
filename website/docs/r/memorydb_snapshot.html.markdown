@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_snapshot"
 description: |-
@@ -25,6 +25,7 @@ resource "aws_memorydb_snapshot" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -39,7 +40,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the snapshot.
 * `cluster_configuration` - The configuration of the cluster from which the snapshot was taken.
     * `description` - Description for the cluster.
-    * `engine_version` - Version number of the Redis engine used by the cluster.
+    * `engine` - The engine that will run on cluster nodes.
+    * `engine_version` - Version number of the engine used by the cluster.
     * `maintenance_window` - The weekly time range during which maintenance on the cluster is performed.
     * `name` - Name of the cluster.
     * `node_type` - Compute and memory capacity of the nodes in the cluster.

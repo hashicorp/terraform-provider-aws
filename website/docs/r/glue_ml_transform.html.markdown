@@ -123,16 +123,17 @@ resource "aws_glue_catalog_table" "test" {
 
 This resource supports the following arguments:
 
-* `name` – (Required) The name you assign to this ML Transform. It must be unique in your account.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `name` - (Required) The name you assign to this ML Transform. It must be unique in your account.
 * `input_record_tables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).
 * `parameters` - (Required) The algorithmic parameters that are specific to the transform type used. Conditionally dependent on the transform type. see [Parameters](#parameters).
-* `role_arn` – (Required) The ARN of the IAM role associated with this ML Transform.
-* `description` – (Optional) Description of the ML Transform.
+* `role_arn` - (Required) The ARN of the IAM role associated with this ML Transform.
+* `description` - (Optional) Description of the ML Transform.
 * `glue_version` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `max_capacity` – (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
-* `max_retries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
+* `max_capacity` - (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
+* `max_retries` - (Optional) The maximum number of times to retry this ML Transform if it fails.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
+* `timeout` - (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
 * `worker_type` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `number_of_workers`.
 * `number_of_workers` - (Optional) The number of workers of a defined `worker_type` that are allocated when an ML Transform runs. Required with `worker_type`.
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package errs
@@ -11,15 +11,6 @@ import (
 // errorMessager is a simple interface for types with ErrorMessage().
 type errorMessager interface {
 	ErrorMessage() string
-}
-
-func AsContains(err error, target any, message string) bool {
-	if errors.As(err, target) {
-		if v, ok := target.(errorMessager); ok && strings.Contains(v.ErrorMessage(), message) {
-			return true
-		}
-	}
-	return false
 }
 
 type ErrorWithErrorMessage interface {
@@ -59,21 +50,21 @@ func As[T error](err error) (T, bool) {
 	return as, ok
 }
 
-var _ ErrorWithErrorMessage = &ErrorWithMessage{}
+var _ ErrorWithErrorMessage = &MessageError{}
 
-// ErrorWithMessage is a simple error type that implements the errorMessager
-type ErrorWithMessage struct {
+// MessageError is a simple error type that implements the errorMessager
+type MessageError struct {
 	error
 }
 
-func (e *ErrorWithMessage) ErrorMessage() string {
+func (e *MessageError) ErrorMessage() string {
 	if e == nil || e.error == nil {
 		return ""
 	}
 	return e.Error()
 }
 
-// NewErrorWithMessage returns a new ErrorWithMessage
-func NewErrorWithMessage(err error) *ErrorWithMessage {
-	return &ErrorWithMessage{error: err}
+// NewMessageError returns a new MessageError
+func NewMessageError(err error) *MessageError {
+	return &MessageError{error: err}
 }

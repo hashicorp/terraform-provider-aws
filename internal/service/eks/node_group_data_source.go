@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package eks
 
@@ -15,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eks_node_group")
+// @SDKDataSource("aws_eks_node_group", name="Node Group")
 func dataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNodeGroupRead,
@@ -176,6 +178,26 @@ func dataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
+			"update_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_unavailable": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"max_unavailable_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"update_strategy": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -184,7 +206,7 @@ func dataSourceNodeGroup() *schema.Resource {
 	}
 }
 
-func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
@@ -216,11 +238,11 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
-	if err := d.Set(names.AttrResources, flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenNodegroupResources(nodeGroup.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+		if err := d.Set("scaling_config", []any{flattenNodegroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
@@ -231,9 +253,16 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting taints: %s", err)
 	}
+	if nodeGroup.UpdateConfig != nil {
+		if err := d.Set("update_config", []any{flattenNodegroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
+		}
+	} else {
+		d.Set("update_config", nil)
+	}
 	d.Set(names.AttrVersion, nodeGroup.Version)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTags(ctx, nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

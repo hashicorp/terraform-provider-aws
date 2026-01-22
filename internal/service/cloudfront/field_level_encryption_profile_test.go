@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,14 +35,15 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "field-level-encryption-profile/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_entities.0.items.*", map[string]string{
 						"provider_id":              rName,
-						"field_patterns.#":         acctest.Ct1,
-						"field_patterns.0.items.#": acctest.Ct1,
+						"field_patterns.#":         "1",
+						"field_patterns.0.items.#": "1",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "DateOfBirth"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -59,12 +60,12 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some other comment"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_entities.0.items.*", map[string]string{
 						"provider_id":              rName,
-						"field_patterns.#":         acctest.Ct1,
-						"field_patterns.0.items.#": acctest.Ct2,
+						"field_patterns.#":         "1",
+						"field_patterns.0.items.#": "2",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "DateOfBirth"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "FirstName"),
@@ -91,7 +92,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_disappears(t *testing.T) {
 				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceFieldLevelEncryptionProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,7 +111,7 @@ func testAccCheckFieldLevelEncryptionProfileDestroy(ctx context.Context) resourc
 
 			_, err := tfcloudfront.FindFieldLevelEncryptionProfileByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

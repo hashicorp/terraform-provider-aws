@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -104,7 +104,7 @@ func TestAccEMRReleaseLabels_empty(t *testing.T) {
 			{
 				Config: testAccReleaseLabelsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "release_labels.#", "0"),
 				),
 			},
 		},

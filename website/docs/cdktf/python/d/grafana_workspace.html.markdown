@@ -35,8 +35,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `workspace_id` - (Required) Grafana workspace ID.
 
 ## Attribute Reference
@@ -62,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the Grafana workspace.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.20.8 input-22d8f7cb4cb1f894ad0c40dec87b3b5711ec96e9e1e76be61286f5e1e2493124 -->
+<!-- cache-key: cdktf-0.20.8 input-7be45a82cd636699f0e337fcb90805858b3e422b8afb883c1ed29898210a2078 -->

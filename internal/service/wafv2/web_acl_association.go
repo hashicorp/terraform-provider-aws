@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package wafv2
 
@@ -12,12 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,7 +64,7 @@ func resourceWebACLAssociation() *schema.Resource {
 	}
 }
 
-func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -78,7 +81,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", d.Id())
-	if _, err = tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	if _, err = tfresource.RetryWhenIsA[any, *awstypes.WAFUnavailableEntityException](ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		return conn.AssociateWebACL(ctx, input)
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL Association (%s): %s", id, err)
@@ -89,7 +92,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	return append(diags, resourceWebACLAssociationRead(ctx, d, meta)...)
 }
 
-func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -101,7 +104,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	resourceARN := parts[1]
 	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,7 +120,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
@@ -128,9 +131,10 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
 	resourceARN := parts[1]
-	_, err = conn.DisassociateWebACL(ctx, &wafv2.DisassociateWebACLInput{
+	input := wafv2.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceARN),
-	})
+	}
+	_, err = conn.DisassociateWebACL(ctx, &input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags
@@ -151,7 +155,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string
 	output, err := conn.GetWebACLForResource(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -162,7 +166,7 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string
 	}
 
 	if output == nil || output.WebACL == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.WebACL, nil

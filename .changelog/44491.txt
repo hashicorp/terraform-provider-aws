@@ -1,0 +1,39 @@
+```release-note:bug
+resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_identifier` is not specified.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Prevents `unknown value` error when optional `account_region` is not specified.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Properly passes `blueprint_identifier` on creation.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Prevents error when updating.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Prevents occasional `unexpected state` error when deleting.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Sets values for `user_parameters` when importing.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Values in `user_parameters` should not be updateable.
+```
+
+```release-note:bug
+resource/aws_datazone_environment: Correctly updates `glossary_terms`.
+```
+
+```release-note:bug
+resource/aws_datazone_project: No longer ignores errors when deleting.
+```
+
+```release-note:bug
+resource/aws_datazone_project: No longer returns error when already deleting.
+```

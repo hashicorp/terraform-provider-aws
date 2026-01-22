@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch
@@ -12,6 +12,7 @@ var (
 
 	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
 	EquivalentECSPropertiesJSON             = equivalentECSPropertiesJSON
+	EquivalentEKSPropertiesJSON             = equivalentEKSPropertiesJSON
 	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
@@ -21,4 +22,6 @@ var (
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
 
 	ListTags = listTags
+
+	ComputeEnvironmentStateUpgradeV0 = computeEnvironmentStateUpgradeV0
 )

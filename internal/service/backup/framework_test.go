@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -57,18 +59,18 @@ func testAccFramework_basic(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, originalDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -80,18 +82,18 @@ func testAccFramework_basic(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -117,18 +119,18 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -140,20 +142,20 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeComplianceResourceID(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "control.0.scope.0.compliance_resource_ids.0", "aws_ebs_volume.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -166,18 +168,18 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, originalControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.Name", originalControlScopeTagValue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -190,18 +192,18 @@ func testAccFramework_updateControlScope(t *testing.T) {
 				Config: testAccFrameworkConfig_controlScopeTag(rName, description, updatedControlScopeTagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.tags.Name", updatedControlScopeTagValue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -228,10 +230,10 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, originalRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyUnit",
 						names.AttrValue: "hours",
@@ -242,14 +244,14 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyValue",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -262,10 +264,10 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 				Config: testAccFrameworkConfig_controlInputParameter(rName, description, updatedRequiredRetentionDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyUnit",
 						names.AttrValue: "hours",
@@ -276,14 +278,14 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyValue",
-						names.AttrValue: acctest.Ct1,
+						names.AttrValue: "1",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -308,18 +310,18 @@ func testAccFramework_updateControls(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
+					resource.TestCheckResourceAttr(resourceName, "control.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "control.0.scope.0.compliance_resource_types.0", "EBS"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -331,25 +333,25 @@ func testAccFramework_updateControls(t *testing.T) {
 				Config: testAccFrameworkConfig_controls(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", regexache.MustCompile("framework:"+rName+"-"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttr(resourceName, "control.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
-						"input_parameter.#":       acctest.Ct1,
+						"input_parameter.#":       "1",
 						"input_parameter.0.name":  "requiredRetentionDays",
 						"input_parameter.0.value": "35",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
-						"input_parameter.#": acctest.Ct3,
+						"input_parameter.#": "3",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName: "BACKUP_RECOVERY_POINT_ENCRYPTED",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:                        "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
-						"scope.#":                             acctest.Ct1,
-						"scope.0.compliance_resource_types.#": acctest.Ct1,
+						"scope.#":                             "1",
+						"scope.0.compliance_resource_types.#": "1",
 						"scope.0.compliance_resource_types.0": "EBS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
@@ -360,7 +362,7 @@ func testAccFramework_updateControls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -384,7 +386,7 @@ func testAccFramework_disappears(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceFramework(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceFramework(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -395,7 +397,8 @@ func testAccFramework_disappears(t *testing.T) {
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListFrameworks(ctx, &backup.ListFrameworksInput{})
+	input := backup.ListFrameworksInput{}
+	_, err := conn.ListFrameworks(ctx, &input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -417,7 +420,7 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbackup.FindFrameworkByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

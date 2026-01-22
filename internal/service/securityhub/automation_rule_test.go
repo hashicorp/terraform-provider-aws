@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,20 +64,20 @@ func testAccAutomationRule_full(t *testing.T) {
 				Config: testAccAutomationRuleConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "20"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "25"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a critical resource. Please review ASAP."),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelCritical)),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "0"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.0.status", string(types.WorkflowStatusSuppressed)),
 				),
 			},
@@ -90,20 +90,20 @@ func testAccAutomationRule_full(t *testing.T) {
 				Config: testAccAutomationRuleConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "10"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "15"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a non-critical resource. Please review in due time."),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.related_findings.0.id", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelLow)),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "15.5"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.0.status", string(types.WorkflowStatusNew)),
 				),
 			},
@@ -127,7 +127,7 @@ func testAccAutomationRule_disappears(t *testing.T) {
 				Config: testAccAutomationRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceAutomationRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecurityhub.ResourceAutomationRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,7 +151,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_stringFilters(rName, string(types.StringFilterComparisonEquals), "1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.comparison", string(types.StringFilterComparisonEquals)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.value", "1234567890"),
 				),
@@ -165,7 +165,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_stringFilters(rName, string(types.StringFilterComparisonContains), "0987654321"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.comparison", string(types.StringFilterComparisonContains)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.value", "0987654321"),
 				),
@@ -190,7 +190,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_numberFilters(rName, "eq = 5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.eq", "5"),
 				),
 			},
@@ -203,7 +203,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_numberFilters(rName, "lte = 50"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.lte", "50"),
 				),
 			},
@@ -229,7 +229,7 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_dateFiltersAbsoluteRange(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.end", endDate),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.start", startDate),
 				),
@@ -243,10 +243,10 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_dateFiltersRelativeRange(rName, string(types.DateRangeUnitDays), 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.0.unit", string(types.DateRangeUnitDays)),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.0.value", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.0.value", "10"),
 				),
 			},
 		},
@@ -269,7 +269,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonEquals), acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonEquals)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", acctest.CtKey1),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", acctest.CtValue1),
@@ -284,7 +284,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonContains), acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonContains)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", acctest.CtKey2),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.value", acctest.CtValue2),
@@ -310,7 +310,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -323,7 +323,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -332,7 +332,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -372,7 +372,7 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -449,7 +449,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "CRITICAL"
@@ -508,7 +508,7 @@ resource "aws_securityhub_automation_rule" "test" {
       }
       related_findings {
         id          = %[1]q
-        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
+        product_arn = "arn:${data.aws_partition.current.partition}:securityhub:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:product/aws/inspector"
       }
       severity {
         label   = "LOW"

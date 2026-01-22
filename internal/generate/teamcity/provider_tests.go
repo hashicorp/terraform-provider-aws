@@ -1,8 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
@@ -74,7 +73,7 @@ func (g generator) generate(filename, template string) {
 
 	d := g.g.NewUnformattedFileDestination(destFile)
 
-	if err := d.WriteTemplate("teamcity", template, g.dirNames); err != nil {
+	if err := d.BufferTemplate("teamcity", template, g.dirNames); err != nil {
 		g.g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

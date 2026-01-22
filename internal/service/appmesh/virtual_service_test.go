@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,15 +40,15 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
-					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
 				),
 			},
 			{
@@ -57,10 +57,10 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName2),
 				),
 			},
@@ -95,15 +95,15 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
-					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
 			},
 			{
 				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.test2"),
@@ -111,10 +111,10 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName2),
 				),
 			},
@@ -141,7 +141,7 @@ func testAccVirtualService_disappears(t *testing.T) {
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -160,7 +160,7 @@ func testAccCheckVirtualServiceDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfappmesh.FindVirtualServiceByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

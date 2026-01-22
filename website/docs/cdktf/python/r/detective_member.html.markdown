@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
             account_id="AWS ACCOUNT ID",
             disable_email_notification=True,
             email_address="EMAIL",
-            graph_arn=example.id,
+            graph_arn=example.graph_arn,
             message="Message of the invitation"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -43,6 +43,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `account_id` - (Required) AWS account ID for the account.
 * `email_address` - (Required) Email address for the account.
 * `graph_arn` - (Required) ARN of the behavior graph to invite the member accounts to contribute their data to.
@@ -85,4 +86,4 @@ Using `terraform import`, import `aws_detective_member` using the ARN of the gra
 % terraform import aws_detective_member.example arn:aws:detective:us-east-1:123456789101:graph:231684d34gh74g4bae1dbc7bd807d02d/123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4108f05240e0c0f62d7dfe1e0039f5231d9901dad3b7104a04e9f1121a124644 -->
+<!-- cache-key: cdktf-0.20.8 input-a7c484ce9ee222e96ab0082cec81858d2001cd3c075d31de20e4624661af6d9b -->

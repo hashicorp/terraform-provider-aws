@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package sfn
 
@@ -12,13 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,6 +30,9 @@ import (
 
 // @SDKResource("aws_sfn_activity", name="Activity")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.14.1")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceActivity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivityCreate,
@@ -34,11 +40,11 @@ func resourceActivity() *schema.Resource {
 		UpdateWithoutTimeout: resourceActivityUpdate,
 		DeleteWithoutTimeout: resourceActivityDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,12 +83,10 @@ func resourceActivity() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -92,8 +96,8 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateActivity(ctx, input)
@@ -107,13 +111,13 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 	return append(diags, resourceActivityRead(ctx, d, meta)...)
 }
 
-func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	output, err := findActivityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Step Functions Activity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -125,23 +129,24 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.EncryptionConfiguration != nil {
-		if err := d.Set(names.AttrEncryptionConfiguration, []interface{}{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
+		if err := d.Set(names.AttrEncryptionConfiguration, []any{flattenEncryptionConfiguration(output.EncryptionConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 		}
 	} else {
 		d.Set(names.AttrEncryptionConfiguration, nil)
 	}
+	d.Set(names.AttrARN, output.ActivityArn)
 	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
 
-func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	// Tags only.
 	return resourceActivityRead(ctx, d, meta)
 }
 
-func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
@@ -165,7 +170,7 @@ func findActivityByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.
 	output, err := conn.DescribeActivity(ctx, input)
 
 	if errs.IsA[*awstypes.ActivityDoesNotExist](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -176,7 +181,7 @@ func findActivityByARN(ctx context.Context, conn *sfn.Client, arn string) (*sfn.
 	}
 
 	if output == nil || output.CreationDate == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

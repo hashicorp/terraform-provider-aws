@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devopsguru_test
@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdevopsguru "github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,9 +38,9 @@ func testAccServiceIntegration_basic(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "ops_center.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.0.opt_in_status", string(types.OptInStatusEnabled)),
 				),
 			},
@@ -54,9 +53,9 @@ func testAccServiceIntegration_basic(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusDisabled)),
-					resource.TestCheckResourceAttr(resourceName, "ops_center.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.0.opt_in_status", string(types.OptInStatusDisabled)),
 				),
 			},
@@ -83,7 +82,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_kmsCustomerManaged(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_server_side_encryption.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeCustomerManagedKey)),
@@ -98,7 +97,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_kmsAWSOwned(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeAwsOwnedKmsKey)),
 				),
@@ -117,7 +116,7 @@ func testAccCheckServiceIntegrationDestroy(ctx context.Context) resource.TestChe
 			}
 
 			out, err := tfdevopsguru.FindServiceIntegration(ctx, conn)
-			if errs.IsA[*tfresource.EmptyResultError](err) {
+			if errors.Is(err, tfresource.ErrEmptyResult) {
 				return nil
 			}
 			if err != nil {
@@ -179,6 +178,7 @@ func testAccServiceIntegrationConfig_kmsCustomerManaged() string {
 	return `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_devopsguru_service_integration" "test" {

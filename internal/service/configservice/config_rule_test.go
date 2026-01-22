@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func testAccConfigRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_identifier", "S3_BUCKET_VERSIONING_ENABLED"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
@@ -119,17 +119,17 @@ func testAccConfigRule_ownerAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 				Config: testAccConfigRuleConfig_ownerAWS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform Acceptance tests"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_identifier", "REQUIRED_TAGS"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_id", "blablah"),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.compliance_resource_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "scope.0.compliance_resource_types.*", "AWS::EC2::Instance"),
 				),
 			},
@@ -158,21 +158,21 @@ func testAccConfigRule_customlambda(t *testing.T) {
 				Config: testAccConfigRuleConfig_customLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform Acceptance tests"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "Six_Hours"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "source.0.source_detail.*", map[string]string{
 						"event_source":                "aws.config",
 						"message_type":                "ConfigurationSnapshotDeliveryCompleted",
 						"maximum_execution_frequency": "",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "IsTemporary"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "yes"),
 				),
@@ -202,15 +202,15 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 				Config: testAccConfigRuleConfig_ownerPolicy(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.enable_debug_log_delivery", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
 				),
@@ -225,15 +225,15 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 				Config: testAccConfigRuleConfig_ownerPolicy(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.enable_debug_log_delivery", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
 				),
@@ -258,7 +258,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 				Config: testAccConfigRuleConfig_scopeTagKey(rName, acctest.CtKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", acctest.CtKey1),
 				),
 			},
@@ -266,7 +266,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 				Config: testAccConfigRuleConfig_scopeTagKey(rName, acctest.CtKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", acctest.CtKey2),
 				),
 			},
@@ -312,7 +312,7 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 				Config: testAccConfigRuleConfig_scopeTagValue(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", acctest.CtValue1),
 				),
 			},
@@ -320,54 +320,8 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 				Config: testAccConfigRuleConfig_scopeTagValue(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
-func testAccConfigRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cr types.ConfigRule
-	resourceName := "aws_config_config_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccConfigRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -390,7 +344,7 @@ func testAccConfigRule_disappears(t *testing.T) {
 				Config: testAccConfigRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigRule(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -430,7 +384,7 @@ func testAccCheckConfigRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfconfig.FindConfigRuleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -719,45 +673,6 @@ resource "aws_config_config_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagValue))
-}
-
-func testAccConfigRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), fmt.Sprintf(`
-resource "aws_config_config_rule" "test" {
-  name = %[1]q
-
-  source {
-    owner             = "AWS"
-    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
-  }
-
-  tags = {
-    %[2]s = %[3]q
-  }
-
-  depends_on = [aws_config_configuration_recorder.test]
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccConfigRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), fmt.Sprintf(`
-resource "aws_config_config_rule" "test" {
-  name = %[1]q
-
-  source {
-    owner             = "AWS"
-    source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
-  }
-
-  tags = {
-    %[2]s = %[3]q
-    %[4]s = %[5]q
-  }
-
-  depends_on = [aws_config_configuration_recorder.test]
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccConfigRuleConfig_evaluationMode(rName, evaluationMode string) string {

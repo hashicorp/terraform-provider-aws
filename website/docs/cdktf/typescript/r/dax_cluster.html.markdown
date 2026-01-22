@@ -41,49 +41,37 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `clusterEndpointEncryptionType` – (Optional) The type of encryption the
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `clusterEndpointEncryptionType` - (Optional) The type of encryption the
 cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
 Default value is `NONE`.
-
-* `clusterName` – (Required) Group identifier. DAX converts this name to
+* `clusterName` - (Required) Group identifier. DAX converts this name to
 lowercase
-
 * `iamRoleArn` - (Required) A valid Amazon Resource Name (ARN) that identifies
 an IAM role. At runtime, DAX will assume this role and use the role's
 permissions to access DynamoDB on your behalf
-
-* `nodeType` – (Required) The compute and memory capacity of the nodes. See
+* `nodeType` - (Required) The compute and memory capacity of the nodes. See
 [Nodes][1] for supported node types
-
-* `replicationFactor` – (Required) The number of nodes in the DAX cluster. A
+* `replicationFactor` - (Required) The number of nodes in the DAX cluster. A
 replication factor of 1 will create a single-node cluster, without any read
 replicas
-
 * `availabilityZones` - (Optional) List of Availability Zones in which the
 nodes will be created
-
-* `description` – (Optional) Description for the cluster
-
-* `notificationTopicArn` – (Optional) An Amazon Resource Name (ARN) of an
+* `description` - (Optional) Description for the cluster
+* `notificationTopicArn` - (Optional) An Amazon Resource Name (ARN) of an
 SNS topic to send DAX notifications to. Example:
 `arn:aws:sns:us-east-1:012345678999:my_sns_topic`
-
-* `parameterGroupName` – (Optional) Name of the parameter group to associate
+* `parameterGroupName` - (Optional) Name of the parameter group to associate
 with this DAX cluster
-
-* `maintenanceWindow` – (Optional) Specifies the weekly time range for when
+* `maintenanceWindow` - (Optional) Specifies the weekly time range for when
 maintenance on the cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi`
 (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example:
 `sun:05:00-sun:09:00`
-
-* `securityGroupIds` – (Optional) One or more VPC security groups associated
+* `securityGroupIds` - (Optional) One or more VPC security groups associated
 with the cluster
-
 * `serverSideEncryption` - (Optional) Encrypt at rest options
-
-* `subnetGroupName` – (Optional) Name of the subnet group to be used for the
+* `subnetGroupName` - (Optional) Name of the subnet group to be used for the
 cluster
-
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `serverSideEncryption` object supports the following:
@@ -147,4 +135,4 @@ Using `terraform import`, import DAX Clusters using the `clusterName`. For examp
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes
 
-<!-- cache-key: cdktf-0.20.8 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->
+<!-- cache-key: cdktf-0.20.8 input-cee3accb734b2434226e3a9963e343843fafa96b81d1172982dc10b774928876 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -37,7 +37,7 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", string(awstypes.AutodefinedReverseFlagDisable)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
 				),
 			},
@@ -51,7 +51,7 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", string(awstypes.AutodefinedReverseFlagEnable)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
 				),
 			},
@@ -76,7 +76,7 @@ func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
 				Config: testAccConfigConfig_basic(rName, "ENABLE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,7 +32,7 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckResourceAttrSet(resourceName, "csr"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
@@ -58,7 +58,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPrivateKey),
@@ -86,7 +86,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "iot", "cert/{id}"),
 					resource.TestCheckResourceAttrSet(resourceName, acctest.CtCertificatePEM),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
@@ -130,7 +130,7 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfiot.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

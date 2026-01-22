@@ -45,6 +45,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
+This resource supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the Selenium testing project.
 * `description` - (Optional) Human-readable description of the project.
 * `vpcConfig` - (Required) The VPC security groups and subnets that are attached to a project. See [VPC Config](#vpc-config) below.
@@ -64,6 +67,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_test_grid_project.example
+  identity = {
+    "arn" = "arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4e7e7e7e-7e7e-7e7e-7e7e-7e7e7e7e7e7e"
+  }
+}
+
+resource "aws_devicefarm_test_grid_project" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Device Farm test grid project.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Test Grid Projects using their ARN. For example:
 
@@ -95,4 +119,4 @@ Using `terraform import`, import DeviceFarm Test Grid Projects using their ARN. 
 % terraform import aws_devicefarm_test_grid_project.example arn:aws:devicefarm:us-west-2:123456789012:testgrid-project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2f5eb3ada6471cdbf41632a80ae508f4c526e15908f83a9d3ac70cb7c05f37b2 -->
+<!-- cache-key: cdktf-0.20.8 input-b54a3dc619ab7309c91b560b3c62e2274382139b290c82710cc0e216ab128717 -->

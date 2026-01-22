@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -52,7 +52,7 @@ func TestAccVPCEndpointPrivateDNS_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCEndpointID),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrVPCEndpointID,
 			},
@@ -91,7 +91,7 @@ func TestAccVPCEndpointPrivateDNS_disabled(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCEndpointID),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrVPCEndpointID,
 			},
@@ -123,7 +123,7 @@ func TestAccVPCEndpointPrivateDNS_disappears_Endpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), endpointResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVPCEndpoint(), endpointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -230,17 +230,6 @@ func testAccCheckVPCEndpointPrivateDNSDisabled(ctx context.Context, n string) re
 	}
 }
 
-func testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrVPCEndpointID], nil
-	}
-}
-
 func testAccVPCEndpointPrivateDNSConfig_basic(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -257,7 +246,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {
@@ -286,7 +275,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
   vpc_endpoint_type = "Interface"
 
   tags = {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package signer_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,16 +40,18 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "signer", "/signing-profiles/{name}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_display_name"),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "signing_material"),
+					resource.TestCheckResourceAttr(resourceName, "signing_parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "version_arn"),
 				),
@@ -82,7 +84,7 @@ func TestAccSignerSigningProfile_disappears(t *testing.T) {
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsigner.ResourceSigningProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsigner.ResourceSigningProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +174,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -185,7 +187,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				Config: testAccSigningProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -194,7 +196,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -221,10 +223,53 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 				Config: testAccSigningProfileConfig_svp(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSignerSigningProfile_signingParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domainName := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	var conf signer.GetSigningProfileOutput
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+	resourceName := "aws_signer_signing_profile.test_sp"
+	certificateName := "aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AmazonFreeRTOS-Default")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSigningProfileConfig_signingParameters(rName, rootDomain, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "signer", "/signing-profiles/{name}"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "platform_id", "AmazonFreeRTOS-Default"),
+					resource.TestCheckResourceAttrPair(resourceName, "signing_material.0.certificate_arn", certificateName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "signing_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "signing_parameters.param1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "signing_parameters.param2", acctest.CtValue2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, "version_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -293,7 +338,7 @@ func testAccCheckSigningProfileDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfsigner.FindSigningProfileByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -368,4 +413,45 @@ resource "aws_signer_signing_profile" "test_sp" {
   }
 }
 `, rName)
+}
+
+func testAccSigningProfileConfig_signingParameters(rName, rootDomain, domainName string) string {
+	return fmt.Sprintf(`
+data "aws_route53_zone" "test" {
+  name         = %[2]q
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "test" {
+  domain_name       = %[3]q
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "test" {
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+  certificate_arn         = aws_acm_certificate.test.arn
+  validation_record_fqdns = [aws_route53_record.test.fqdn]
+}
+
+resource "aws_signer_signing_profile" "test_sp" {
+  platform_id = "AmazonFreeRTOS-Default"
+  name        = %[1]q
+
+  signing_material {
+    certificate_arn = aws_acm_certificate.test.arn
+  }
+  signing_parameters = {
+    "param1" = "value1"
+    "param2" = "value2"
+  }
+  depends_on = [aws_acm_certificate_validation.test]
+}`, rName, rootDomain, domainName)
 }

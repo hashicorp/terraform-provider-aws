@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch_test
@@ -63,7 +63,7 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-						expectedArn, err := buildDomainARN(name, awsClient.Partition, awsClient.AccountID, awsClient.Region)
+						expectedArn, err := buildDomainARN(name, awsClient.Partition(ctx), awsClient.AccountID(ctx), awsClient.Region(ctx))
 						if err != nil {
 							return err
 						}

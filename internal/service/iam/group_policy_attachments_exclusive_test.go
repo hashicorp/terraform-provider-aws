@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -52,7 +53,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -83,8 +84,8 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Group(t *testing.T) {
 					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policies must be detached before group can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroup(), groupResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroup(), groupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,8 +116,8 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					// Managed policy must be detached before it can be deleted
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourcePolicy(), policyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -159,7 +160,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -197,7 +198,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_empty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
 				// The empty `policy_arns` argument in the exclusive lock will remove the
 				// managed policy defined in this configuration, so a diff is expected
@@ -242,7 +243,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -280,7 +281,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -331,22 +332,11 @@ func testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx context.Context, name
 		}
 
 		policyCount := rs.Primary.Attributes["policy_arns.#"]
-		if policyCount != fmt.Sprint(len(out)) {
+		if policyCount != strconv.Itoa(len(out)) {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPolicyAttachmentsExclusive, groupName, errors.New("unexpected policy_arns count"))
 		}
 
 		return nil
-	}
-}
-
-func testAccGroupPolicyAttachmentsExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrGroupName], nil
 	}
 }
 

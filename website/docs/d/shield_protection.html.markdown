@@ -24,18 +24,18 @@ data "aws_shield_protection" "example" {
 
 ```terraform
 data "aws_shield_protection" "example" {
-  resource_arn = "arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  resource_arn = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
 }
 ```
 
 ## Argument Reference
 
-~> Exactly one of `protection_id` or `resource_arn` is required.
-
-The following arguments are optional:
+This data source supports the following arguments:
 
 * `protection_id` - (Optional) Unique identifier for the protection.
 * `resource_arn` - (Optional) ARN (Amazon Resource Name) of the resource being protected.
+
+~> Exactly one of `protection_id` or `resource_arn` is required.
 
 ## Attribute Reference
 

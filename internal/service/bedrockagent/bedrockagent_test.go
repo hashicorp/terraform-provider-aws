@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrockagent_test
@@ -14,11 +14,18 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"KnowledgeBase": {
-			"basicRDS":           testAccKnowledgeBase_basicRDS,
-			acctest.CtDisappears: testAccKnowledgeBase_disappears,
-			"tags":               testAccKnowledgeBase_tags,
-			"basicOpenSearch":    testAccKnowledgeBase_basicOpenSearch,
-			"updateOpenSearch":   testAccKnowledgeBase_updateOpenSearch,
+			acctest.CtDisappears:                     testAccKnowledgeBase_disappears,
+			"tags":                                   testAccKnowledgeBase_tags,
+			"update":                                 testAccKnowledgeBase_update,
+			"OpenSearchServerlessBasic":              testAccKnowledgeBase_OpenSearchServerless_basic,
+			"Kendra":                                 testAccKnowledgeBase_Kendra_basic,
+			"NeptuneAnalytics":                       testAccKnowledgeBase_NeptuneAnalytics_basic,
+			"OpenSearchManagedClusterBasic":          testAccKnowledgeBase_OpenSearchManagedCluster_basic,
+			"S3Vectors":                              testAccKnowledgeBase_S3Vectors_update,
+			"StructuredDataStoreRedshiftProvisioned": testAccKnowledgeBase_StructuredDataStore_redshiftProvisioned,
+			"StructuredDataStoreRedshiftServerless":  testAccKnowledgeBase_StructuredDataStore_redshiftServerless,
+			"RDS":                                    testAccKnowledgeBase_RDS_basic,
+			"RDSSupplementalDataStorage":             testAccKnowledgeBase_RDS_supplementalDataStorage,
 		},
 		"DataSource": {
 			acctest.CtBasic:        testAccDataSource_basic,
@@ -29,6 +36,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"hierarchical":         testAccDataSource_fullHierarchical,
 			"parsing":              testAccDataSource_parsing,
 			"customtransformation": testAccDataSource_fullCustomTranformation,
+			"webconfiguration":     testAccDataSource_webConfiguration,
 		},
 	}
 

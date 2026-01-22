@@ -1,11 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package elbv2
 
 import (
 	"context"
-	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -207,6 +208,45 @@ func dataSourceListener() *schema.Resource {
 								},
 							},
 						},
+						"jwt_validation": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrIssuer: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"jwks_endpoint": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"additional_claim": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrFormat: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"order": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -266,16 +306,20 @@ func dataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"trust_store_arn": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ignore_client_certificate_expiry": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -301,7 +345,7 @@ func dataSourceListener() *schema.Resource {
 	}
 }
 
-func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
@@ -334,9 +378,9 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
-	})
+
+	sortListenerActions(listener.DefaultActions)
+
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}

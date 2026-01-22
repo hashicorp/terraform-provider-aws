@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -25,7 +25,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_dataSourceName(rName),
+				Config: testAccNodeGroupConfig_name(rName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
@@ -49,6 +49,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceResourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "taint.#", dataSourceResourceName, "taints.#"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, "update_config.#", dataSourceResourceName, "update_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, dataSourceResourceName, names.AttrVersion),
 				),
 			},
@@ -57,7 +58,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 }
 
 func testAccNodeGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupConfig_dataSourceName(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_name(rName), fmt.Sprintf(`
 data "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,8 +36,8 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -72,7 +72,7 @@ func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -106,7 +106,7 @@ func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.Tes
 
 			_, err := tfdms.FindReplicationSubnetGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -16,7 +16,7 @@ Manages an ECR repository lifecycle policy.
 
 ## Example Usage
 
-### Policy on untagged image
+### Policy on Untagged Images
 
 ```terraform
 resource "aws_ecr_repository" "example" {
@@ -28,27 +28,27 @@ resource "aws_ecr_lifecycle_policy" "example" {
 
   policy = <<EOF
 {
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Expire images older than 14 days",
-            "selection": {
-                "tagStatus": "untagged",
-                "countType": "sinceImagePushed",
-                "countUnit": "days",
-                "countNumber": 14
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
-    ]
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire images older than 14 days",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "sinceImagePushed",
+        "countUnit": "days",
+        "countNumber": 14
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
 }
 EOF
 }
 ```
 
-### Policy on tagged image
+### Policy on Tagged Images
 
 ```terraform
 resource "aws_ecr_repository" "example" {
@@ -60,21 +60,68 @@ resource "aws_ecr_lifecycle_policy" "example" {
 
   policy = <<EOF
 {
-    "rules": [
-        {
-            "rulePriority": 1,
-            "description": "Keep last 30 images",
-            "selection": {
-                "tagStatus": "tagged",
-                "tagPrefixList": ["v"],
-                "countType": "imageCountMoreThan",
-                "countNumber": 30
-            },
-            "action": {
-                "type": "expire"
-            }
-        }
-    ]
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Keep last 30 images",
+      "selection": {
+        "tagStatus": "tagged",
+        "tagPrefixList": ["v"],
+        "countType": "imageCountMoreThan",
+        "countNumber": 30
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+}
+```
+
+### Policy to Archive and Delete
+
+```terraform
+resource "aws_ecr_repository" "example" {
+  name = "example-repo"
+}
+
+resource "aws_ecr_lifecycle_policy" "example" {
+  repository = aws_ecr_repository.example.name
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Archive images not pulled in 90 days",
+      "selection": {
+        "tagStatus": "any",
+        "countType": "sinceImagePulled",
+        "countUnit": "days",
+        "countNumber": 90
+      },
+      "action": {
+        "type": "transition",
+        "targetStorageClass": "archive"
+      }
+    },
+    {
+      "rulePriority": 2,
+      "description": "Delete images archived for more than 365 days",
+      "selection": {
+        "tagStatus": "any",
+        "storageClass": "archive",
+        "countType": "sinceImageTransitioned",
+        "countUnit": "days",
+        "countNumber": 365
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
 }
 EOF
 }
@@ -84,6 +131,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) Name of the repository to apply the policy.
 * `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `policy` argument.
 
@@ -95,6 +143,32 @@ This resource exports the following attributes in addition to the arguments abov
 * `registry_id` - The registry ID where the repository was created.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_ecr_lifecycle_policy.example
+  identity = {
+    repository = "tf-example"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `repository` - (String) Name of the ECR repository.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECR Lifecycle Policy using the name of the repository. For example:
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -25,7 +25,7 @@ func TestAccVPCSecurityGroupRulesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRulesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_security_group_rules.test", "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_vpc_security_group_rules.test", "ids.#", "1"),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func TestAccVPCSecurityGroupRulesDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRulesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpc_security_group_rules.test", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_vpc_security_group_rules.test", "ids.#", "2"),
 				),
 			},
 		},

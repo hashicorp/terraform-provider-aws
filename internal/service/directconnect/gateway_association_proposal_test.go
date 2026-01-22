@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package directconnect_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,9 +40,9 @@ func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 				),
@@ -76,11 +76,11 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 				Config: testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
 					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
 				),
@@ -112,7 +112,7 @@ func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -138,7 +138,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 				Config: testAccGatewayAssociationProposalConfig_allowedPrefixes1(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal2),
 					testAccCheckGatewayAssociationProposalRecreated(&proposal1, &proposal2),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 				),
 			},
 		},
@@ -243,7 +243,7 @@ func testAccCheckGatewayAssociationProposalDestroy(ctx context.Context) resource
 
 			_, err := tfdirectconnect.FindGatewayAssociationProposalByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

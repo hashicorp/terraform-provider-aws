@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package macie2_test
@@ -34,7 +34,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "admin_account_id"),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

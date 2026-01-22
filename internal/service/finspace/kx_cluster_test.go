@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -93,7 +93,7 @@ func TestAccFinSpaceKxCluster_disappears(t *testing.T) {
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -509,7 +509,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue1, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -518,7 +518,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue2, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -551,7 +551,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -559,7 +559,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 				Config: testAccKxClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -568,7 +568,7 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -771,6 +771,7 @@ output "account_id" {
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_finspace_kx_environment" "test" {

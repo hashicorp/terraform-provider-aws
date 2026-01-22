@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package globalaccelerator
 
@@ -14,29 +16,30 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_endpoint_group", name="Endpoint Group")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.4.0")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types;awstypes.EndpointGroup")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEndpointGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointGroupCreate,
 		ReadWithoutTimeout:   resourceEndpointGroupRead,
 		UpdateWithoutTimeout: resourceEndpointGroupUpdate,
 		DeleteWithoutTimeout: resourceEndpointGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -149,12 +152,12 @@ func resourceEndpointGroup() *schema.Resource {
 	}
 }
 
-func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
-		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region),
+		EndpointGroupRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		IdempotencyToken:    aws.String(id.UniqueId()),
 		ListenerArn:         aws.String(d.Get("listener_arn").(string)),
 	}
@@ -215,13 +218,13 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEndpointGroupRead(ctx, d, meta)...)
 }
 
-func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	endpointGroup, err := findEndpointGroupByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -260,7 +263,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -322,7 +325,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceEndpointGroupRead(ctx, d, meta)...)
 }
 
-func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
@@ -359,7 +362,7 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 	output, err := conn.DescribeEndpointGroup(ctx, input)
 
 	if errs.IsA[*awstypes.EndpointGroupNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -370,13 +373,13 @@ func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client,
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.EndpointGroup, nil
 }
 
-func expandEndpointConfiguration(tfMap map[string]interface{}) *awstypes.EndpointConfiguration {
+func expandEndpointConfiguration(tfMap map[string]any) *awstypes.EndpointConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -402,7 +405,7 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *awstypes.Endpoin
 	return apiObject
 }
 
-func expandEndpointConfigurations(tfList []interface{}) []awstypes.EndpointConfiguration {
+func expandEndpointConfigurations(tfList []any) []awstypes.EndpointConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -410,7 +413,7 @@ func expandEndpointConfigurations(tfList []interface{}) []awstypes.EndpointConfi
 	var apiObjects []awstypes.EndpointConfiguration
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -428,7 +431,7 @@ func expandEndpointConfigurations(tfList []interface{}) []awstypes.EndpointConfi
 	return apiObjects
 }
 
-func expandPortOverride(tfMap map[string]interface{}) *awstypes.PortOverride {
+func expandPortOverride(tfMap map[string]any) *awstypes.PortOverride {
 	if tfMap == nil {
 		return nil
 	}
@@ -446,7 +449,7 @@ func expandPortOverride(tfMap map[string]interface{}) *awstypes.PortOverride {
 	return apiObject
 }
 
-func expandPortOverrides(tfList []interface{}) []awstypes.PortOverride {
+func expandPortOverrides(tfList []any) []awstypes.PortOverride {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -454,7 +457,7 @@ func expandPortOverrides(tfList []interface{}) []awstypes.PortOverride {
 	var apiObjects []awstypes.PortOverride
 
 	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]any)
 
 		if !ok {
 			continue
@@ -472,12 +475,12 @@ func expandPortOverrides(tfList []interface{}) []awstypes.PortOverride {
 	return apiObjects
 }
 
-func flattenEndpointDescription(apiObject *awstypes.EndpointDescription, crossAccountAttachments map[string]string) map[string]interface{} {
+func flattenEndpointDescription(apiObject *awstypes.EndpointDescription, crossAccountAttachments map[string]string) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.ClientIPPreservationEnabled; v != nil {
 		tfMap["client_ip_preservation_enabled"] = aws.ToBool(v)
@@ -499,12 +502,12 @@ func flattenEndpointDescription(apiObject *awstypes.EndpointDescription, crossAc
 	return tfMap
 }
 
-func flattenEndpointDescriptions(apiObjects []awstypes.EndpointDescription, crossAccountAttachments map[string]string) []interface{} {
+func flattenEndpointDescriptions(apiObjects []awstypes.EndpointDescription, crossAccountAttachments map[string]string) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenEndpointDescription(&apiObject, crossAccountAttachments))
@@ -513,12 +516,12 @@ func flattenEndpointDescriptions(apiObjects []awstypes.EndpointDescription, cros
 	return tfList
 }
 
-func flattenPortOverride(apiObject *awstypes.PortOverride) map[string]interface{} {
+func flattenPortOverride(apiObject *awstypes.PortOverride) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.EndpointPort; v != nil {
 		tfMap["endpoint_port"] = aws.ToInt32(v)
@@ -531,12 +534,12 @@ func flattenPortOverride(apiObject *awstypes.PortOverride) map[string]interface{
 	return tfMap
 }
 
-func flattenPortOverrides(apiObjects []awstypes.PortOverride) []interface{} {
+func flattenPortOverrides(apiObjects []awstypes.PortOverride) []any {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var tfList []any
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenPortOverride(&apiObject))

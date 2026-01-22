@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package datazone
 
@@ -22,19 +24,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_datazone_user_profile", name="User Profile")
-func newResourceUserProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserProfile{}
+func newUserProfileResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userProfileResource{}
+
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
 
@@ -45,17 +49,13 @@ const (
 	ResNameUserProfile = "User Profile"
 )
 
-type resourceUserProfile struct {
-	framework.ResourceWithConfigure
+type userProfileResource struct {
+	framework.ResourceWithModel[userProfileResourceModel]
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
 
-func (r *resourceUserProfile) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_datazone_user_profile"
-}
-
-func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *userProfileResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"domain_identifier": schema.StringAttribute{
@@ -71,12 +71,7 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.UserProfileStatus](),
 				Optional:   true,
@@ -117,9 +112,9 @@ func (r *resourceUserProfile) Schema(ctx context.Context, _ resource.SchemaReque
 	}
 }
 
-func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *userProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var plan userProfileData
+	var plan userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,7 +145,7 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id) // set partial state to taint if wait fails
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := tfresource.RetryGWhenNotFound(ctx, createTimeout, func() (*datazone.GetUserProfileOutput, error) {
+	output, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 		return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 	})
 
@@ -170,16 +165,16 @@ func (r *resourceUserProfile) Create(ctx context.Context, req resource.CreateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *userProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
-	var state userProfileData
+	var state userProfileResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findUserProfileByID(ctx, conn, state.DomainIdentifier.ValueString(), state.UserIdentifier.ValueString(), state.Type.ValueEnum())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -200,17 +195,17 @@ func (r *resourceUserProfile) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *userProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataZoneClient(ctx)
 
-	var plan, state userProfileData
+	var plan, state userProfileResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Calculate(ctx, plan, state)
+	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -234,7 +229,7 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := tfresource.RetryGWhenNotFound(ctx, updateTimeout, func() (*datazone.GetUserProfileOutput, error) {
+		output, err := tfresource.RetryWhenNotFound(ctx, updateTimeout, func(ctx context.Context) (*datazone.GetUserProfileOutput, error) {
 			return findUserProfileByID(ctx, conn, plan.DomainIdentifier.ValueString(), plan.UserIdentifier.ValueString(), out.Type)
 		})
 
@@ -255,7 +250,7 @@ func (r *resourceUserProfile) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceUserProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *userProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	parts := strings.Split(req.ID, ",")
 
 	if len(parts) != 3 {
@@ -278,7 +273,7 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	out, err := conn.GetUserProfile(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -289,13 +284,14 @@ func findUserProfileByID(ctx context.Context, conn *datazone.Client, domainId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
 }
 
-type userProfileData struct {
+type userProfileResourceModel struct {
+	framework.WithRegionModel
 	DomainIdentifier types.String                                   `tfsdk:"domain_identifier"`
 	Details          fwtypes.ListNestedObjectValueOf[detailsData]   `tfsdk:"details"`
 	ID               types.String                                   `tfsdk:"id"`

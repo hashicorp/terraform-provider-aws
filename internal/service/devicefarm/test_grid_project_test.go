@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package devicefarm_test
@@ -10,13 +10,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,20 +34,20 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 			{
@@ -57,9 +58,9 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 			{
 				Config: testAccTestGridProjectConfig_project(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 		},
@@ -78,18 +79,18 @@ func TestAccDeviceFarmTestGridProject_vpc(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_projectVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
@@ -114,17 +115,17 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_projectTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -136,8 +137,8 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 			{
 				Config: testAccTestGridProjectConfig_projectTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -145,8 +146,8 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 			{
 				Config: testAccTestGridProjectConfig_projectTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -166,18 +167,18 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy(ctx),
+		CheckDestroy:             testAccCheckTestGridProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					testAccCheckTestGridProjectExists(ctx, resourceName, &proj),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdevicefarm.ResourceTestGridProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,15 +186,11 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProjectTestGridProjectExists(ctx context.Context, n string, v *awstypes.TestGridProject) resource.TestCheckFunc {
+func testAccCheckTestGridProjectExists(ctx context.Context, n string, v *awstypes.TestGridProject) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
@@ -211,7 +208,7 @@ func testAccCheckProjectTestGridProjectExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckProjectTestGridProjectDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTestGridProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 
@@ -222,7 +219,7 @@ func testAccCheckProjectTestGridProjectDestroy(ctx context.Context) resource.Tes
 
 			// Try to find the resource
 			_, err := tfdevicefarm.FindTestGridProjectByARN(ctx, conn, rs.Primary.ID)
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

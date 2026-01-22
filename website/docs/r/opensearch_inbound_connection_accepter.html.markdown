@@ -22,13 +22,13 @@ resource "aws_opensearch_outbound_connection" "foo" {
   connection_alias = "outbound_connection"
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.local_domain.domain_name
   }
 
   remote_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
-    region      = data.aws_region.current.name
+    region      = data.aws_region.current.region
     domain_name = aws_opensearch_domain.remote_domain.domain_name
   }
 }
@@ -42,6 +42,7 @@ resource "aws_opensearch_inbound_connection_accepter" "foo" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
 ## Attribute Reference

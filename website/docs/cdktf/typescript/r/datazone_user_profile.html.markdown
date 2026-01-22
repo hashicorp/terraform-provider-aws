@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status` - (Optional) The user profile status.
 * `userType` - (Optional) The user type.
 
@@ -84,7 +85,7 @@ class MyConvertedCode extends TerraformStack {
     DatazoneUserProfile.generateConfigForImport(
       this,
       "example",
-      "arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6sri,IAM"
+      "arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6sri,IAM"
     );
   }
 }
@@ -94,7 +95,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import DataZone User Profile using the `user_identifier,domain_identifier,type`. For example:
 
 ```console
-% terraform import aws_datazone_user_profile.example arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6suo,IAM
+% terraform import aws_datazone_user_profile.example arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6suo,IAM
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ed42392dcc7abcb1a522b0ab89cc797c63cbf2c82f67a3fc37ba7b6ab824ec35 -->
+<!-- cache-key: cdktf-0.20.8 input-25f607d2532271e185be6d290a28dd805a41bae45c0535465452dff3c3c35f3c -->

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Filtering Support
 
@@ -33,7 +36,7 @@ Add the AWS Go SDK service name (e.g., `rds`) to `sliceServiceNames` in `interna
 
 === "Terraform Plugin SDK V2"
     ```go
-    input := &ec2.DescribeInternetGatewaysInput{}
+    input := ec2.DescribeInternetGatewaysInput{}
 
     // Filters based on attributes.
     filters := namevaluesfilters.New(map[string]string{

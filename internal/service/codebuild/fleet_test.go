@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codebuild_test
@@ -15,13 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodebuild "github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeBuildFleet_basic(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -35,7 +35,7 @@ func TestAccCodeBuildFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -66,7 +66,7 @@ func TestAccCodeBuildFleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceFleet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodebuild.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -106,7 +106,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccCodeBuildFleet_tags(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -129,14 +129,52 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 				Config: testAccFleetConfig_baseCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
 				),
 			},
 			{
 				Config: testAccFleetConfig_baseCapacity(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildFleet_computeConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_computeConfiguration(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", string(types.MachineTypeGeneral)),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.vcpu", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_computeConfiguration(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", string(types.MachineTypeGeneral)),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.vcpu", "4"),
 				),
 			},
 		},
@@ -144,7 +182,7 @@ func TestAccCodeBuildFleet_baseCapacity(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_computeType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -173,7 +211,7 @@ func TestAccCodeBuildFleet_computeType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_environmentType(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -202,7 +240,7 @@ func TestAccCodeBuildFleet_environmentType(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_imageId(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -229,7 +267,7 @@ func TestAccCodeBuildFleet_imageId(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -243,24 +281,36 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 				Config: testAccFleetConfig_scalingConfiguration1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.scaling_type", "TARGET_TRACKING_SCALING"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "97.5"),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccFleetConfig_scalingConfiguration2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.scaling_type", "TARGET_TRACKING_SCALING"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.metric_type", "FLEET_UTILIZATION_RATE"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.target_tracking_scaling_configs.0.target_value", "90.5"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_scalingConfiguration3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 				),
 			},
 		},
@@ -268,7 +318,7 @@ func TestAccCodeBuildFleet_scalingConfiguration(t *testing.T) {
 }
 
 func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_fleet.test"
 
@@ -282,9 +332,9 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 				Config: testAccFleetConfig_vpcConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.1", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
 				),
@@ -298,11 +348,58 @@ func TestAccCodeBuildFleet_vpcConfig(t *testing.T) {
 				Config: testAccFleetConfig_vpcConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.subnets.0", "aws_subnet.test.0", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexache.MustCompile(`^vpc-`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeBuildFleet_customInstanceType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_customInstanceType(rName, "t3.medium"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.disk", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.instance_type", "t3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.0.machine_type", "GENERAL"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "CUSTOM_INSTANCE_TYPE"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "QUEUE"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compute_type", "BUILD_GENERAL1_SMALL"),
+					resource.TestCheckResourceAttr(resourceName, "environment_type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "overflow_behavior", "ON_DEMAND"),
 				),
 			},
 		},
@@ -320,7 +417,7 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodebuild.FindFleetByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -372,6 +469,22 @@ resource "aws_codebuild_fleet" "test" {
   overflow_behavior = "ON_DEMAND"
 }
 `, rName, baseCapacity)
+}
+
+func testAccFleetConfig_computeConfiguration(rName string, vcpu int) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity    = 1
+  compute_type     = "ATTRIBUTE_BASED_COMPUTE"
+  environment_type = "LINUX_CONTAINER"
+  name             = %[1]q
+
+  compute_configuration {
+    machine_type = "GENERAL"
+    vcpu         = %[2]d
+  }
+}
+`, rName, vcpu)
 }
 
 func testAccFleetConfig_computeType(rName string, computeType types.ComputeType) string {
@@ -451,6 +564,18 @@ resource "aws_codebuild_fleet" "test" {
       target_value = 90.5
     }
   }
+}
+`, rName)
+}
+
+func testAccFleetConfig_scalingConfiguration3(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity     = 1
+  compute_type      = "BUILD_GENERAL1_SMALL"
+  environment_type  = "ARM_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
 }
 `, rName)
 }
@@ -590,4 +715,19 @@ resource "aws_codebuild_fleet" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccFleetConfig_customInstanceType(rName, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_fleet" "test" {
+  base_capacity = 1
+  compute_type  = "CUSTOM_INSTANCE_TYPE"
+  compute_configuration {
+    instance_type = %[2]q
+  }
+  environment_type  = "LINUX_CONTAINER"
+  name              = %[1]q
+  overflow_behavior = "QUEUE"
+}
+`, rName, instanceType)
 }

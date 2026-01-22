@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codeartifact_test
@@ -27,28 +27,28 @@ func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
 				Config: testAccRepositoryEndpointDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -81,6 +81,7 @@ func testAccCheckRepositoryEndpointBaseConfig(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_codeartifact_domain" "test" {

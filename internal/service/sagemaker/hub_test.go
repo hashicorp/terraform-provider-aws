@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,10 +38,10 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
-					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", acctest.Ct0),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -55,8 +55,8 @@ func TestAccSageMakerHub_basic(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rNameUpdated),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("hub/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
-					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "hub_search_keywords.*", rName),
 				),
 			},
@@ -96,7 +96,7 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
-					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "hub_search_keywords.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "hub_search_keywords.*", fmt.Sprintf("%s-1", rName)),
 				),
@@ -107,7 +107,7 @@ func TestAccSageMakerHub_searchKeywords(t *testing.T) {
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "hub_description", rName),
-					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "hub_search_keywords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "hub_search_keywords.*", rName),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccSageMakerHub_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "hub_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "s3_storage_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_config.0.s3_output_path"),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 				Config: testAccHubConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -174,7 +174,7 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 				Config: testAccHubConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -183,7 +183,7 @@ func TestAccSageMakerHub_tags(t *testing.T) {
 				Config: testAccHubConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -207,7 +207,7 @@ func TestAccSageMakerHub_disappears(t *testing.T) {
 				Config: testAccHubConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHubExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHub(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceHub(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,12 +226,12 @@ func testAccCheckHubDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfsagemaker.FindHubByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Hub (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Hub (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Hub %s still exists", rs.Primary.ID)

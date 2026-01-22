@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,16 +36,18 @@ func TestAccIoTDomainConfiguration_basic(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "CUSTOMER_MANAGED"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "DATA"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_config.0.security_policy"),
 					resource.TestCheckResourceAttr(resourceName, "validation_certificate_arn", ""),
 				),
@@ -75,8 +78,8 @@ func TestAccIoTDomainConfiguration_disappears(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_basic(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceDomainConfiguration(), resourceName),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceDomainConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,7 +104,7 @@ func TestAccIoTDomainConfiguration_tags(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_tags1(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -114,7 +117,7 @@ func TestAccIoTDomainConfiguration_tags(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_tags2(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -123,7 +126,7 @@ func TestAccIoTDomainConfiguration_tags(t *testing.T) {
 				Config: testAccDomainConfigurationConfig_tags1(rName, rootDomain, domain, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -145,12 +148,14 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_3_2022_10", true),
+				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_3_2022_10", true, "CUSTOM_AUTH", "MQTT_WSS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_protocol", "MQTT_WSS"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "CUSTOM_AUTH"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_3_2022_10"),
 				),
 			},
@@ -160,12 +165,14 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_2_2022_10", false),
+				Config: testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, "IoTSecurityPolicy_TLS13_1_2_2022_10", false, "CUSTOM_AUTH_X509", "HTTPS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "application_protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "CUSTOM_AUTH_X509"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_2_2022_10"),
 				),
 			},
@@ -190,16 +197,16 @@ func TestAccIoTDomainConfiguration_awsManaged(t *testing.T) { // nosemgrep:ci.aw
 				Config: testAccDomainConfigurationConfig_awsManaged(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", regexache.MustCompile(`domainconfiguration/`+rName+`/[a-z0-9]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_type", "AWS_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "DATA"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_config.0.security_policy"),
 					resource.TestCheckResourceAttr(resourceName, "validation_certificate_arn", ""),
 				),
@@ -234,7 +241,7 @@ func testAccCheckDomainConfigurationDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfiot.FindDomainConfigurationByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -323,10 +330,13 @@ resource "aws_iot_domain_configuration" "test" {
 `, rName, domain, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, securityPolicy string, allowAuthorizerOverride bool) string {
+func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, securityPolicy string, allowAuthorizerOverride bool, authenticationType, applicationProtocol string) string {
 	return acctest.ConfigCompose(testAccAuthorizerConfig_basic(rName), testAccDomainConfigurationConfig_base(rootDomain, domain), fmt.Sprintf(`
 resource "aws_iot_domain_configuration" "test" {
   depends_on = [aws_acm_certificate_validation.test]
+
+  authentication_type  = %[5]q
+  application_protocol = %[6]q
 
   authorizer_config {
     allow_authorizer_override = %[4]t
@@ -341,7 +351,7 @@ resource "aws_iot_domain_configuration" "test" {
     security_policy = %[3]q
   }
 }
-`, rName, domain, securityPolicy, allowAuthorizerOverride))
+`, rName, domain, securityPolicy, allowAuthorizerOverride, authenticationType, applicationProtocol))
 }
 
 func testAccDomainConfigurationConfig_awsManaged(rName string) string { // nosemgrep:ci.aws-in-func-name

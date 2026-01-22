@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package detective_test
@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +72,7 @@ func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -97,7 +97,7 @@ resource "aws_detective_graph" "test" {}
 
 resource "aws_detective_member" "test" {
   account_id    = data.aws_caller_identity.member.account_id
-  graph_arn     = aws_detective_graph.test.id
+  graph_arn     = aws_detective_graph.test.graph_arn
   email_address = %[1]q
   message       = "This is a message of the invite"
 }

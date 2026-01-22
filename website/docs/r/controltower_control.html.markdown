@@ -23,7 +23,7 @@ data "aws_organizations_organizational_units" "example" {
 }
 
 resource "aws_controltower_control" "example" {
-  control_identifier = "arn:aws:controltower:${data.aws_region.current.name}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK"
+  control_identifier = "arn:aws:controltower:${data.aws_region.current.region}::control/AWS-GR_EC2_VOLUME_INUSE_CHECK"
   target_identifier = [
     for x in data.aws_organizations_organizational_units.example.children :
     x.arn if x.name == "Infrastructure"
@@ -38,13 +38,14 @@ resource "aws_controltower_control" "example" {
 
 ## Argument Reference
 
-This following arguments are required:
+The following arguments are required:
 
 * `control_identifier` - (Required) The ARN of the control. Only Strongly recommended and Elective controls are permitted, with the exception of the Region deny guardrail.
 * `target_identifier` - (Required) The ARN of the organizational unit.
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `parameters` - (Optional) Parameter values which are specified to configure the control when you enable it. See [Parameters](#parameters) for more details.
 
 ### Parameters

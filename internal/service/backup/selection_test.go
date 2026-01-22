@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -63,7 +63,7 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 				Config: testAccSelectionConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", "2"),
 				),
 			},
 			{
@@ -116,11 +116,11 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 				Config: testAccSelectionConfig_conditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", "1"),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 				Config: testAccSelectionConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
 				),
 			},
 			{
@@ -178,7 +178,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 				Config: testAccSelectionConfig_notResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "not_resources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbackup.FindSelectionByTwoPartKey(ctx, conn, rs.Primary.Attributes["plan_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -328,7 +328,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
@@ -357,7 +357,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))
@@ -489,7 +489,7 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/*"
+    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:volume/*"
   ]
 }
 `, rName))

@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `restApiId` - (Required) ID of the associated REST API.
 
 ## Attribute Reference
@@ -46,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `ids` - List of Authorizer identifiers.
 
-<!-- cache-key: cdktf-0.20.8 input-c3a17d70af9b0ac8d5e391a543335f1243e9dec902c7497cf1df2083482e833c -->
+<!-- cache-key: cdktf-0.20.8 input-06923b48b8049f6fb82863075767bf1841a89fa4c09f8a0c9b0255d2668ef551 -->

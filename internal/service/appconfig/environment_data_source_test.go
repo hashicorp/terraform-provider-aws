@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appconfig_test
@@ -31,7 +31,6 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),
@@ -40,7 +39,7 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Example AppConfig Environment"),
 					resource.TestMatchResourceAttr(dataSourceName, "environment_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
-					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "monitor.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),

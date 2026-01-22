@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package waf_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,9 +36,9 @@ func TestAccWAFGeoMatchSet_basic(t *testing.T) {
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`geomatchset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`geomatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSet),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "US",
@@ -76,7 +76,7 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSet),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccWAFGeoMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, geoMatchSetNewName),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccWAFGeoMatchSet_disappears(t *testing.T) {
 				Config: testAccGeoMatchSetConfig_basic(geoMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceGeoMatchSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwaf.ResourceGeoMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +137,7 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "US",
@@ -153,7 +153,7 @@ func TestAccWAFGeoMatchSet_changeConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "geo_match_constraint.*", map[string]string{
 						names.AttrType:  "Country",
 						names.AttrValue: "RU",
@@ -190,7 +190,7 @@ func TestAccWAFGeoMatchSet_noConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "geo_match_constraint.#", "0"),
 				),
 			},
 			{
@@ -234,7 +234,7 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfwaf.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

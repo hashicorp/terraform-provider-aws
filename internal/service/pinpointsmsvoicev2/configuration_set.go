@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package pinpointsmsvoicev2
 
@@ -19,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,12 +41,8 @@ func newConfigurationSetResource(context.Context) (resource.ResourceWithConfigur
 }
 
 type configurationSetResource struct {
-	framework.ResourceWithConfigure
+	framework.ResourceWithModel[configurationSetResourceModel]
 	framework.WithImportByID
-}
-
-func (*configurationSetResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_pinpointsmsvoicev2_configuration_set"
 }
 
 func (r *configurationSetResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -128,7 +126,7 @@ func (r *configurationSetResource) Read(ctx context.Context, request resource.Re
 
 	out, err := findConfigurationSetByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
@@ -230,11 +228,8 @@ func (r *configurationSetResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func (r *configurationSetResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
 type configurationSetResourceModel struct {
+	framework.WithRegionModel
 	ID                   types.String                             `tfsdk:"id"`
 	ConfigurationSetARN  types.String                             `tfsdk:"arn"`
 	ConfigurationSetName types.String                             `tfsdk:"name"`
@@ -281,8 +276,7 @@ func findConfigurationSets(ctx context.Context, conn *pinpointsmsvoicev2.Client,
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
+				LastError: err,
 			}
 		}
 

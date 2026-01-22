@@ -1,17 +1,18 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
 import (
 	"context"
-	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -115,22 +116,23 @@ func dataSourceEBSSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	c := meta.(*conns.AWSClient)
+	conn := c.EC2Client(ctx)
 
-	input := &ec2.DescribeSnapshotsInput{}
+	input := ec2.DescribeSnapshotsInput{}
 
-	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.OwnerIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("owners"); ok && len(v.([]any)) > 0 {
+		input.OwnerIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
-		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]any)) > 0 {
+		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]any))
 	}
 
-	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
+	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]any)) > 0 {
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]any))
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
@@ -141,7 +143,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	snapshots, err := findSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
@@ -151,27 +153,19 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(snapshots) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
-				"specific search criteria, or set `most_recent` attribute to true.")
-		}
-
-		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.ToTime(snapshots[i].StartTime).Unix() > aws.ToTime(snapshots[j].StartTime).Unix()
-		})
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
+			"specific search criteria, or set `most_recent` attribute to true.")
 	}
 
-	snapshot := snapshots[0]
+	sortSnapshotsDescending(snapshots)
+
+	snapshot := slices.MaxFunc(snapshots, func(a, b awstypes.Snapshot) int {
+		return aws.ToTime(a.StartTime).Compare(aws.ToTime(b.StartTime))
+	})
 
 	d.SetId(aws.ToString(snapshot.SnapshotId))
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, ebsSnapshotARN(ctx, c, d.Id()))
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set(names.AttrDescription, snapshot.Description)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)

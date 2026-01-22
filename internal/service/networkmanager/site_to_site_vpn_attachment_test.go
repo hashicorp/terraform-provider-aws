@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,17 +43,17 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.Ct1),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpnResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_connection_arn", vpnResourceName, names.AttrARN),
 				),
 			},
@@ -88,7 +88,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
+func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabel(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
@@ -106,6 +106,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	label := "testlabel"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -114,34 +115,54 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label),
 				),
 			},
 			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerSiteToSiteVPNAttachment_routingPolicyLabelUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.SiteToSiteVpnAttachment
+	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bgpASN := sdkacctest.RandIntRange(64512, 65534)
+	vpnIP, err := sdkacctest.RandIpAddress("172.0.0.0/24")
+	if err != nil {
+		t.Fatal(err)
+	}
+	label1 := "testlabel1"
+	label2 := "testlabel2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label1),
 				),
 			},
 			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
+				Config: testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName, bgpASN, vpnIP, label2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
+					resource.TestCheckResourceAttr(resourceName, "routing_policy_label", label2),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -152,10 +173,6 @@ func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Site To Site VPN Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -183,7 +200,7 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.Te
 
 			_, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -199,9 +216,7 @@ func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.Te
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_base(rName string, bgpASN int, vpnIP string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_region" "current" {}
-
+	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn     = %[2]d
   ip_address  = %[3]q
@@ -241,12 +256,14 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
+data "aws_region" "current" {}
+
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
     edge_locations {
-      location = data.aws_region.current.name
+      location = data.aws_region.current.region
       asn      = 64512
     }
   }
@@ -281,7 +298,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     }
   }
 }
-`, rName, bgpASN, vpnIP))
+`, rName, bgpASN, vpnIP)
 }
 
 func testAccSiteToSiteVPNAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) string {
@@ -302,14 +319,15 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `)
 }
 
-func testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, tagKey1, tagValue1 string, bgpASN int) string {
-	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
+func testAccSiteToSiteVPNAttachmentConfig_routingPolicyLabel(rName string, bgpASN int, vpnIP, label string) string {
+	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName, bgpASN, vpnIP, label), fmt.Sprintf(`
 resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpn_connection_arn = aws_vpn_connection.test.arn
+  core_network_id      = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpn_connection_arn   = aws_vpn_connection.test.arn
+  routing_policy_label = %[1]q
 
   tags = {
-    %[1]q = %[2]q
+    segment = "shared"
   }
 }
 
@@ -317,24 +335,116 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
   attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
 }
-`, tagKey1, tagValue1))
+`, label))
 }
 
-func testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, tagKey1, tagValue1, tagKey2, tagValue2 string, bgpASN int) string {
-	return acctest.ConfigCompose(testAccSiteToSiteVPNAttachmentConfig_base(rName, bgpASN, vpnIP), fmt.Sprintf(`
-resource "aws_networkmanager_site_to_site_vpn_attachment" "test" {
-  core_network_id    = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  vpn_connection_arn = aws_vpn_connection.test.arn
+func testAccSiteToSiteVPNAttachmentConfig_baseWithRoutingPolicy(rName string, bgpASN int, vpnIP, label string) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn     = %[2]d
+  ip_address  = %[3]q
+  type        = "ipsec.1"
+  device_name = %[1]q
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    Name = %[1]q
   }
 }
 
-resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_site_to_site_vpn_attachment.test.id
-  attachment_type = aws_networkmanager_site_to_site_vpn_attachment.test.attachment_type
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_region" "current" {}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2025.11"
+
+  core_network_configuration {
+    asn_ranges = ["64512-64555"]
+
+    edge_locations {
+      location = data.aws_region.current.region
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number     = 100
+    condition_logic = "or"
+
+    conditions {
+      type = "tag-exists"
+      key  = "segment"
+    }
+
+    action {
+      association_method = "tag"
+      tag_value_of_key   = "segment"
+    }
+  }
+
+  routing_policies {
+    routing_policy_name      = "policy1"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 1
+
+    conditions {
+      type  = "routing-policy-label"
+      value = %[4]q
+    }
+
+    action {
+      associate_routing_policies = ["policy1"]
+    }
+  }
+}
+`, rName, bgpASN, vpnIP, label)
 }

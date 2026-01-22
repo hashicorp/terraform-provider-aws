@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkmanager
@@ -7,10 +7,12 @@ package networkmanager
 var (
 	ResourceAttachmentAccepter                   = resourceAttachmentAccepter
 	ResourceConnectAttachment                    = resourceConnectAttachment
+	ResourceConnectPeer                          = resourceConnectPeer
 	ResourceConnection                           = resourceConnection
 	ResourceCoreNetwork                          = resourceCoreNetwork
 	ResourceCustomerGatewayAssociation           = resourceCustomerGatewayAssociation
 	ResourceDevice                               = resourceDevice
+	ResourceDirectConnectGatewayAttachment       = newDirectConnectGatewayAttachmentResource
 	ResourceGlobalNetwork                        = resourceGlobalNetwork
 	ResourceLink                                 = resourceLink
 	ResourceLinkAssociation                      = resourceLinkAssociation
@@ -29,6 +31,7 @@ var (
 	FindCoreNetworkPolicyByTwoPartKey                    = findCoreNetworkPolicyByTwoPartKey
 	FindCustomerGatewayAssociationByTwoPartKey           = findCustomerGatewayAssociationByTwoPartKey
 	FindDeviceByTwoPartKey                               = findDeviceByTwoPartKey
+	FindDirectConnectGatewayAttachmentByID               = findDirectConnectGatewayAttachmentByID
 	FindGlobalNetworkByID                                = findGlobalNetworkByID
 	FindLinkAssociationByThreePartKey                    = findLinkAssociationByThreePartKey
 	FindLinkByTwoPartKey                                 = findLinkByTwoPartKey

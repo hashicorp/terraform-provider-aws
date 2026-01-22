@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling
@@ -14,4 +14,9 @@ const (
 var (
 	errCodeResourceInUseFault             = (*awstypes.ResourceInUseFault)(nil).ErrorCode()
 	errCodeScalingActivityInProgressFault = (*awstypes.ScalingActivityInProgressFault)(nil).ErrorCode()
+)
+
+const (
+	errCodeOperationError = "operation error"
+	errCodeUpdateASG      = "UpdateAutoScalingGroup"
 )

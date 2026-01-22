@@ -33,11 +33,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available APIs in the current region.
-The given filters must match exactly one API whose data will be exported as attributes.
-
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `api_id` - (Required) API identifier.
 
 ## Attribute Reference
@@ -70,4 +68,4 @@ The `cors_configuration` object supports the following:
 * `expose_headers` - Set of exposed HTTP headers.
 * `max_age` - Number of seconds that the browser should cache preflight request results.
 
-<!-- cache-key: cdktf-0.20.8 input-07def8e516a65dc957df3faf29d3393a72b9685bf3a34d4aa3801030f8f0dd38 -->
+<!-- cache-key: cdktf-0.20.8 input-4c79dc7e2a5e287b40fad50e71e8091a89f716883977c66572eaaf3620e21feb -->

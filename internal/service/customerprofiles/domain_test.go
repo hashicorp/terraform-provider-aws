@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package customerprofiles_test
@@ -8,29 +8,27 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfcustomerprofiles "github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 )
 
 func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_base(rName, 120),
+				Config: testAccDomainConfig_basic(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
 				),
 			},
@@ -40,9 +38,9 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_base(rName, 365),
+				Config: testAccDomainConfig_basic(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
 				),
 			},
@@ -53,52 +51,52 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 func TestAccCustomerProfilesDomain_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.conflict_resolving_model", "SOURCE"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.source_name", "FirstName"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.matching_attributes_list.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.matching_attributes_list.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.min_allowed_confidence_score_for_merging", "0.1"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "matching.0.exporting_config.0.s3_exporting.0.s3_bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.s3_key_name", "example/"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.day_of_the_week", "MONDAY"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.time", "18:00"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", "8"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.attribute_matching_model", "ONE_TO_ONE"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.email_address.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.phone_number.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.email_address.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.phone_number.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.conflict_resolving_model", "SOURCE"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.source_name", "FirstName"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.s3_bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.s3_key_name", "example/"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.matching_rules.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_matching", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_merging", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.matching_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_matching", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_merging", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_based_matching.0.status"),
 				),
 			},
@@ -110,42 +108,42 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 			{
 				Config: testAccDomainConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.conflict_resolving_model", "RECENCY"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.conflict_resolution.0.source_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.matching_attributes_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.consolidation.0.matching_attributes_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.min_allowed_confidence_score_for_merging", "0.8"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "matching.0.exporting_config.0.s3_exporting.0.s3_bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.exporting_config.0.s3_exporting.0.s3_key_name", "exampleupdated/"),
-					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.day_of_the_week", "SUNDAY"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.time", "20:00"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", "8"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.attribute_matching_model", "MANY_TO_MANY"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.email_address.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.phone_number.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.email_address.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.phone_number.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.conflict_resolving_model", "RECENCY"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.conflict_resolution.0.source_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.s3_bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.exporting_config.0.s3_exporting.0.s3_key_name", "exampleupdated/"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.matching_rules.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_matching", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_merging", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.matching_rules.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_matching", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.max_allowed_rule_level_for_merging", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_based_matching.0.status"),
 				),
 			},
@@ -156,18 +154,18 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckDomainExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -179,8 +177,8 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomainConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckDomainExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -188,8 +186,8 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 			{
 				Config: testAccDomainConfig_tags(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckDomainExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -200,18 +198,18 @@ func TestAccCustomerProfilesDomain_tags(t *testing.T) {
 func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_customerprofiles_domain.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_base(rName, 365),
+				Config: testAccDomainConfig_basic(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, customerprofiles.ResourceDomain(), resourceName),
+					testAccCheckDomainExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcustomerprofiles.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -219,33 +217,33 @@ func TestAccCustomerProfilesDomain_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDomainExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
+		_, err := tfcustomerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDomainDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).CustomerProfilesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_customerprofiles_domain" {
 				continue
 			}
 
-			_, err := customerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
+			_, err := tfcustomerprofiles.FindDomainByDomainName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -260,7 +258,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccDomainConfig_base(rName string, defaultExpirationDays int) string {
+func testAccDomainConfig_basic(rName string, defaultExpirationDays int) string {
 	return fmt.Sprintf(`
 resource "aws_customerprofiles_domain" "test" {
   domain_name             = %[1]q
@@ -321,6 +319,7 @@ resource "aws_sqs_queue" "test" {
 resource "aws_kms_key" "test" {
   description             = "test"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "example" {
@@ -448,6 +447,7 @@ resource "aws_sqs_queue" "test" {
 resource "aws_kms_key" "test" {
   description             = "test"
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_s3_bucket" "example" {

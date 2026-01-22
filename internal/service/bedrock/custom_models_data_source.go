@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -18,17 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Custom Models")
+// @FrameworkDataSource("aws_bedrock_custom_models", name="Custom Models")
 func newCustomModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &customModelsDataSource{}, nil
 }
 
 type customModelsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *customModelsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_custom_models"
+	framework.DataSourceWithModel[customModelsDataSourceModel]
 }
 
 func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -72,7 +70,7 @@ func (d *customModelsDataSource) Read(ctx context.Context, request datasource.Re
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -95,6 +93,7 @@ func findCustomModels(ctx context.Context, conn *bedrock.Client, input *bedrock.
 }
 
 type customModelsDataSourceModel struct {
+	framework.WithRegionModel
 	ID             types.String                                             `tfsdk:"id"`
 	ModelSummaries fwtypes.ListNestedObjectValueOf[customModelSummaryModel] `tfsdk:"model_summaries"`
 }

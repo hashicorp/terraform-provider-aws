@@ -51,6 +51,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceId` - (Required) The ID of the VPC that the configuration is for.
 * `autodefinedReverseFlag` - (Required) Indicates whether or not the Resolver will create autodefined rules for reverse DNS lookups. Valid values: `ENABLE`, `DISABLE`.
 
@@ -93,4 +94,4 @@ Using `terraform import`, import Route 53 Resolver configs using the Route 53 Re
 % terraform import aws_route53_resolver_config.example rslvr-rc-715aa20c73a23da7
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-9e9ab64717f5492816cdea672c9253b6943b2cad6b967b971fcb44194acec4cf -->
+<!-- cache-key: cdktf-0.20.8 input-8e28036cdc1ebe039bb785f145020c5cab12eb8b9c1d18ad8e2f64d076b65bc3 -->

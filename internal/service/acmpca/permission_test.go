@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package acmpca_test
@@ -12,9 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,23 +23,23 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct3),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "acm.amazonaws.com"),
-					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "source_account"),
 				),
 			},
 		},
@@ -53,17 +52,17 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfacmpca.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,26 +76,26 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionDestroy(ctx),
+		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionConfig_sourceAccount(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
+					testAccCheckPermissionExists(ctx, t, resourceName, &permission),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "source_account"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPermissionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_permission" {
@@ -105,7 +104,7 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -120,14 +119,14 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPermissionExists(ctx context.Context, n string, v *types.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, t *testing.T, n string, v *types.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
 

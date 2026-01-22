@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2
@@ -16,7 +16,7 @@ import (
 )
 
 func securityGroupRuleMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	v int, is *terraform.InstanceState, meta any) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Security Group State v0; migrating to v1")
@@ -39,13 +39,15 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	perm, err := migrateExpandIPPerm(is.Attributes)
-
 	if err != nil {
 		return nil, fmt.Errorf("making new IP Permission in Security Group migration")
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := securityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
+	newID, err := securityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
+	if err != nil {
+		return nil, err
+	}
 	is.Attributes[names.AttrID] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)

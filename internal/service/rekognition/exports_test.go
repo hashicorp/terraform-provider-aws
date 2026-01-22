@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition
@@ -6,9 +6,9 @@ package rekognition
 // Exports for use in tests only.
 
 var (
-	ResourceProject         = newResourceProject
-	ResourceCollection      = newResourceCollection
-	ResourceStreamProcessor = newResourceStreamProcessor
+	ResourceProject         = newProjectResource
+	ResourceCollection      = newCollectionResource
+	ResourceStreamProcessor = newStreamProcessorResource
 )
 
 var (

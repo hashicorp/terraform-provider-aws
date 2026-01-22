@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codecommit_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodecommit "github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,9 +33,9 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "trigger.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "all"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
 				),
@@ -59,7 +59,7 @@ func TestAccCodeCommitTrigger_disappears(t *testing.T) {
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceTrigger(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodecommit.ResourceTrigger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,10 +82,10 @@ func TestAccCodeCommitTrigger_branches(t *testing.T) {
 				Config: testAccTriggerConfig_branches(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.0", "main"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.1", "develop"),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "updateReference"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.1", "createReference"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
@@ -106,7 +106,7 @@ func testAccCheckTriggerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodecommit.FindRepositoryTriggersByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

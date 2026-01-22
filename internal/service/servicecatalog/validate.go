@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog
@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func validSharePrincipal(v interface{}, k string) (ws []string, errors []error) {
+func validSharePrincipal(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	// either account ID, or organization or organization unit
 

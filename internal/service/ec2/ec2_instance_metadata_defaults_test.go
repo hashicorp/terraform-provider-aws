@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,7 +46,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
-					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),
 				),
@@ -56,7 +56,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "no-preference"),
-					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "no-preference"),
 				),
@@ -96,7 +96,7 @@ func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceMetadataDefaults, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceInstanceMetadataDefaults, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,7 +115,7 @@ func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.T
 
 			output, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 
-			if tfresource.NotFound(err) || err == nil && itypes.IsZero(output) {
+			if retry.NotFound(err) || err == nil && inttypes.IsZero(output) {
 				continue
 			}
 

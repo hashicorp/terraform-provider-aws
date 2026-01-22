@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package guardduty
 
@@ -22,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_guardduty_publishing_destination")
-func ResourcePublishingDestination() *schema.Resource {
+// @SDKResource("aws_guardduty_publishing_destination", name="Publishing Destination")
+func resourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePublishingDestinationCreate,
 		ReadWithoutTimeout:   resourcePublishingDestinationRead,
@@ -60,7 +62,7 @@ func ResourcePublishingDestination() *schema.Resource {
 	}
 }
 
-func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -91,7 +93,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -123,7 +125,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 
@@ -149,7 +151,7 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyClient(ctx)
 

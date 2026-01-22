@@ -1,0 +1,3 @@
+```release-note:bug
+aws_sagemaker_mlflow_tracking_server: Fix `ValidationException: The provided MLflow version is not supported` errors
+```

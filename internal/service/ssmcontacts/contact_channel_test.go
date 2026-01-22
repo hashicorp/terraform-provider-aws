@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmcontacts_test
@@ -52,7 +52,7 @@ func testAccContactChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(channelResourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(channelResourceName, names.AttrType, "EMAIL"),
 					resource.TestCheckResourceAttrPair(channelResourceName, "contact_id", contactResourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(channelResourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
+					acctest.MatchResourceAttrRegionalARN(ctx, channelResourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile("contact-channel/test-contact-for-"+rName+"/.")),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func testAccContactChannel_disappears(t *testing.T) {
 				Config: testAccContactChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactChannelExists(ctx, channelResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceContactChannel(), channelResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourceContactChannel(), channelResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -215,8 +215,8 @@ func testAccContactChannel_name(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct1)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.Ct2)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "1")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "2")
 	contactResourceName := "aws_ssmcontacts_contact.test"
 	channelResourceName := "aws_ssmcontacts_contact_channel.test"
 

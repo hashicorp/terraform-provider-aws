@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -8,18 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestDecodeServiceLinkedRoleID(t *testing.T) {
+func TestServiceLinkedRoleParseResourceID(t *testing.T) {
 	t.Parallel()
 
 	var testCases = []struct {
@@ -61,7 +60,7 @@ func TestDecodeServiceLinkedRoleID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		serviceName, roleName, customSuffix, err := tfiam.DecodeServiceLinkedRoleID(tc.Input)
+		serviceName, roleName, customSuffix, err := tfiam.ServiceLinkedRoleParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -98,16 +97,9 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 				PreConfig: func() {
 					// Remove existing if possible
 					client := acctest.Provider.Meta().(*conns.AWSClient)
-					arn := arn.ARN{
-						Partition: client.Partition,
-						Service:   "iam",
-						Region:    client.Region,
-						AccountID: client.AccountID,
-						Resource:  arnResource,
-					}.String()
 					r := tfiam.ResourceServiceLinkedRole()
 					d := r.Data(nil)
-					d.SetId(arn)
+					d.SetId(client.RegionalARN(ctx, "iam", arnResource))
 					err := acctest.DeleteResource(ctx, r, d, client)
 
 					if err != nil {
@@ -117,14 +109,14 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", arnResource),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", arnResource),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -154,7 +146,7 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
 			},
@@ -184,7 +176,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
 					resource.TestCheckResourceAttr(resourceName, "custom_suffix", "CustomResource"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
@@ -249,8 +241,8 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceServiceLinkedRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -267,15 +259,14 @@ func testAccCheckServiceLinkedRoleDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
-
+			_, roleName, _, err := tfiam.ServiceLinkedRoleParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
 			_, err = tfiam.FindRoleByName(ctx, conn, roleName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -299,8 +290,7 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
-
+		_, roleName, _, err := tfiam.ServiceLinkedRoleParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}

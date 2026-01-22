@@ -1,7 +1,6 @@
 # Needed for testing our workflows
 # The `full` variants are needed for Maven for TeamCity configuration validation
 -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-22.04
--P linux=ghcr.io/catthehacker/ubuntu:act-22.04
--P custom-linux-medium=ghcr.io/catthehacker/ubuntu:act-22.04
--P custom-linux-large=ghcr.io/catthehacker/ubuntu:act-22.04
--P custom-linux-xl=ghcr.io/catthehacker/ubuntu:act-22.04
+-P custom-ubuntu-22.04-medium=ghcr.io/catthehacker/ubuntu:act-22.04
+-P custom-ubuntu-22.04-large=ghcr.io/catthehacker/ubuntu:act-22.04
+-P custom-ubuntu-22.04-xl=ghcr.io/catthehacker/ubuntu:act-22.04

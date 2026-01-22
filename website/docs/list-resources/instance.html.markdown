@@ -1,0 +1,65 @@
+---
+subcategory: "EC2 (Elastic Compute Cloud)"
+layout: "aws"
+page_title: "AWS: aws_instance"
+description: |-
+  Lists EC2 Instance resources.
+---
+
+# List Resource: aws_instance
+
+~> **Note:** The `aws_instance` List Resource is in beta. Its interface and behavior may change as the feature evolves, and breaking changes are possible. It is offered as a technical preview without compatibility guarantees until Terraform 1.14 is generally available.
+
+Lists EC2 Instance resources.
+
+By default, EC2 Instances managed by an Auto Scaling Group and EC2 Instances in either the `terminated` or `shutting-down` state are excluded.
+
+## Example Usage
+
+### Basic Usage
+
+```terraform
+list "aws_instance" "example" {
+  provider = aws
+}
+```
+
+### Filter Usage
+
+This example will return instances in the `stopped` state.
+
+```terraform
+list "aws_instance" "example" {
+  provider = aws
+
+  config {
+    filter {
+      name   = "instance-state-name"
+      values = ["stopped"]
+    }
+  }
+}
+```
+
+## Argument Reference
+
+This list resource supports the following arguments:
+
+* `filter` - (Optional) One or more filters to apply to the search.
+  If multiple `filter` blocks are provided, they all must be true.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+  See [`filter` Block](#filter-block) below.
+* `include_auto_scaled` - (Optional) Whether to include EC2 instances that are managed by an Auto Scaling Group.
+  Default value is `false`.
+* `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query.
+  Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
+### `filter` Block
+
+The `filter` block supports the following arguments:
+
+* `name` - (Required) Name of the filter.
+  For a full reference of filter names, see [describe-instances in the AWS CLI reference][1].
+* `values` - (Required) One or more values to match.
+
+[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

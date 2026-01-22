@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 /*
@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
 // Canonicalize validates IAM resources are appropriate for the authenticator
@@ -53,7 +53,12 @@ func Canonicalize(arn string) (string, error) {
 			}
 			// IAM ARNs can contain paths, part[0] is resource, parts[len(parts)] is the SessionName.
 			role := strings.Join(parts[1:len(parts)-1], "/")
-			return fmt.Sprintf("arn:%s:iam::%s:role/%s", parsed.Partition, parsed.AccountID, role), nil
+			return awsarn.ARN{
+				Partition: parsed.Partition,
+				Service:   "iam",
+				AccountID: parsed.AccountID,
+				Resource:  "role/" + role,
+			}.String(), nil
 		default:
 			return "", fmt.Errorf("unrecognized resource %q for service sts", parsed.Resource)
 		}
@@ -71,9 +76,9 @@ func Canonicalize(arn string) (string, error) {
 
 func checkPartition(partition string) error {
 	switch partition {
-	case names.StandardPartitionID:
-	case names.ChinaPartitionID:
-	case names.USGovCloudPartitionID:
+	case endpoints.AwsPartitionID:
+	case endpoints.AwsCnPartitionID:
+	case endpoints.AwsUsGovPartitionID:
 	default:
 		return fmt.Errorf("partion %q is not recognized", partition)
 	}

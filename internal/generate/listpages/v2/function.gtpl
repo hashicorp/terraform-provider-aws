@@ -1,8 +1,8 @@
-func {{ .Name }}Pages(ctx context.Context, conn *{{ .AWSService }}.Client, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool) error {
+func {{ .Name }}Pages(ctx context.Context, conn *{{ .AWSService }}.Client, input {{ .ParamType }}, fn func({{ .ResultType }}, bool) bool, optFns ...func(*{{ .AWSService }}.Options)) error {
 	for {
-		output, err := conn.{{ .AWSName }}(ctx, input)
+		output, err := conn.{{ .AWSName }}(ctx, input, optFns...)
 		if err != nil {
-			return err
+			return smarterr.NewError(err)
 		}
 
 		lastPage := aws.ToString(output.{{ .OutputPaginator }}) == ""

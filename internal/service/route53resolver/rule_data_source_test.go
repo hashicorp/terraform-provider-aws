@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -97,9 +97,42 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "share_status", resourceName, "share_status"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key1", resourceName, "tags.Key1"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key2", resourceName, "tags.Key2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRuleDataSource_targetIPs(t *testing.T) {
+	ctx := acctest.Context(t)
+	domainName := acctest.RandomDomainName()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_rule.test"
+	dsResourceName := "data.aws_route53_resolver_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleDataSourceConfig_targetIPs(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dsResourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dsResourceName, "target_ips.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(dsResourceName, "target_ips.*", map[string]string{
+						"ip":               "192.0.2.7",
+						names.AttrPort:     "53",
+						names.AttrProtocol: "Do53",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dsResourceName, "target_ips.*", map[string]string{
+						"ip":               "192.0.2.8",
+						names.AttrPort:     "53",
+						names.AttrProtocol: "Do53",
+					}),
 				),
 			},
 		},
@@ -135,7 +168,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "share_status", "SHARED_BY_ME"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key1", resourceName, "tags.Key1"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),
@@ -173,7 +206,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "rule_type", resourceName, "rule_type"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "share_status", "SHARED_WITH_ME"),
 					// Tags cannot be retrieved for rules shared with us.
-					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(ds1ResourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -314,6 +347,30 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
   resolver_endpoint_id = aws_route53_resolver_rule.test.resolver_endpoint_id
 
   depends_on = [aws_ram_resource_association.test, aws_ram_principal_association.test]
+}
+`, rName, domainName))
+}
+
+func testAccRuleDataSourceConfig_targetIPs(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
+  rule_type   = "FORWARD"
+  name        = %[1]q
+
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
+
+  target_ip {
+    ip = "192.0.2.7"
+  }
+
+  target_ip {
+    ip = "192.0.2.8"
+  }
+}
+
+data "aws_route53_resolver_rule" "test" {
+  resolver_rule_id = aws_route53_resolver_rule.test.id
 }
 `, rName, domainName))
 }

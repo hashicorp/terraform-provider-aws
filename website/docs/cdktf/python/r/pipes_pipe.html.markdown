@@ -250,10 +250,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) A description of the pipe. At most 512 characters.
 * `desired_state` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichment_parameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `kms_key_identifier` - (Optional) Identifier of the AWS KMS customer managed key for EventBridge to use, if you choose to use a customer managed key to encrypt pipe data. The identifier can be the key Amazon Resource Name (ARN), KeyId, key alias, or key alias ARN. If not set, EventBridge uses an AWS owned key to encrypt pipe data.
 * `log_configuration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
@@ -340,7 +342,7 @@ You can find out more about EventBridge Pipes Sources in the [User Guide](https:
 * `maximum_retry_attempts` - (Optional) Discard records after the specified number of retries. The default value is -1, which sets the maximum number of retries to infinite. When MaximumRetryAttempts is infinite, EventBridge retries failed records until the record expires in the event source. Maximum value of 10,000.
 * `on_partial_batch_item_failure` - (Optional) Define how to handle item process failures. AUTOMATIC_BISECT halves each batch and retry each half until all the records are processed or there is one failed message left in the batch. Valid values: AUTOMATIC_BISECT.
 * `parallelization_factor` - (Optional)The number of batches to process concurrently from each shard. The default value is 1. Maximum value of 10.
-* `starting_position` - (Optional) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
+* `starting_position` - (Required) The position in a stream from which to start reading. Valid values: TRIM_HORIZON, LATEST.
 
 ##### source_parameters.dynamodb_stream_parameters.dead_letter_config Configuration Block
 
@@ -430,7 +432,7 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 * `kinesis_stream_parameters` - (Optional) The parameters for using a Kinesis stream as a source. Detailed below.
 * `lambda_function_parameters` - (Optional) The parameters for using a Lambda function as a target. Detailed below.
 * `redshift_data_parameters` - (Optional) These are custom parameters to be used when the target is a Amazon Redshift cluster to invoke the Amazon Redshift Data API BatchExecuteStatement. Detailed below.
-* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker pipeline as a target. Detailed below.
+* `sagemaker_pipeline_parameters` - (Optional) The parameters for using a SageMaker AI pipeline as a target. Detailed below.
 * `sqs_queue_parameters` - (Optional) The parameters for using a Amazon SQS stream as a target. Detailed below.
 * `step_function_state_machine_parameters` - (Optional) The parameters for using a Step Functions state machine as a target. Detailed below.
 
@@ -601,12 +603,12 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 #### target_parameters.sagemaker_pipeline_parameters Configuration Block
 
-* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution. Detailed below.
+* `pipeline_parameter` - (Optional) List of Parameter names and values for SageMaker AI Model Building Pipeline execution. Detailed below.
 
 ##### target_parameters.sagemaker_pipeline_parameters.parameters Configuration Block
 
-* `name` - (Optional) Name of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 256.
-* `value` - (Optional) Value of parameter to start execution of a SageMaker Model Building Pipeline. Maximum length of 1024.
+* `name` - (Optional) Name of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 256.
+* `value` - (Optional) Value of parameter to start execution of a SageMaker AI Model Building Pipeline. Maximum length of 1024.
 
 #### target_parameters.sqs_queue_parameters Configuration Block
 
@@ -658,4 +660,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1dc037f0f5d2d7b250197accf6c0f7783efa70c8165657f2fd106a1f7d1b38c4 -->
+<!-- cache-key: cdktf-0.20.8 input-ea42928be23308e16f08dc8e3449738e22fee8ad9ba0b9c8fc75ab6bcb3eda90 -->

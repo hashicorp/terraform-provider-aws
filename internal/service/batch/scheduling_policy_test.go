@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package batch_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,13 +35,13 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "scheduling-policy/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
@@ -54,13 +54,13 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "batch", "scheduling-policy/{name}"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.compute_reservation", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_decay_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "fair_share_policy.0.share_distribution.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 		},
@@ -83,7 +83,7 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 				Config: testAccSchedulingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &schedulingPolicy1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceSchedulingPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbatch.ResourceSchedulingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +122,7 @@ func testAccCheckSchedulingPolicyDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfbatch.FindSchedulingPolicyByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

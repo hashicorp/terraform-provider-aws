@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,18 +38,18 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				Config: testAccServiceConfig_private(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "DNS_HTTP"),
 				),
 			},
@@ -63,19 +63,19 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				Config: testAccServiceConfig_privateUpdate(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.type", "AAAA"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "DNS_HTTP"),
 				),
 			},
@@ -102,16 +102,16 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 				Config: testAccServiceConfig_public(rName, 5, "/path"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "5"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/path"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -124,27 +124,27 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 				Config: testAccServiceConfig_public(rName, 3, "/updated-path"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/updated-path"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				Config: testAccServiceConfig_publicUpdateNoHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dns_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -169,10 +169,10 @@ func TestAccServiceDiscoveryService_private_http(t *testing.T) {
 				Config: testAccServiceConfig_private_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -203,9 +203,9 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 				Config: testAccServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -236,7 +236,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicediscovery.ResourceService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicediscovery.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -262,7 +262,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				Config: testAccServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -276,7 +276,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				Config: testAccServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -285,7 +285,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				Config: testAccServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -304,7 +304,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfservicediscovery.FindServiceByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

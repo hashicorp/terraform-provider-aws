@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package finspace_test
@@ -80,7 +80,7 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDataview(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tffinspace.ResourceKxDataview(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -172,7 +172,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -197,7 +197,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -289,6 +289,7 @@ func testAccKxDataviewConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_finspace_kx_environment" "test" {

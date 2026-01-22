@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -40,7 +40,7 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 					testAccCheckServiceActionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -72,7 +72,7 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceActionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfservicecatalog.ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 					testAccCheckServiceActionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -201,7 +201,7 @@ data "aws_iam_policy_document" "test" {
       type = "Service"
 
       identifiers = [
-        "servicecatalog.${data.aws_region.current.name}.${data.aws_partition.current.dns_suffix}",
+        "servicecatalog.${data.aws_region.current.region}.${data.aws_partition.current.dns_suffix}",
       ]
     }
 

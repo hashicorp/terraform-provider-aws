@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `display_name` - (Optional) A string containing the name of the group. This value is commonly displayed when the group is referenced.
 * `description` - (Optional) A string containing the description of the group.
 
@@ -37,6 +38,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the Group.
 * `group_id` - The identifier of the newly created group in the identity store.
 * `external_ids` - A list of external IDs that contains the identifiers issued to this resource by an external identity provider. See [External IDs](#external-ids) below.
 

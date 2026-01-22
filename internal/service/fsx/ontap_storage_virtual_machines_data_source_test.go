@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package fsx_test
@@ -31,7 +31,7 @@ func TestAccFSxONTAPStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccONTAPStorageVirtualMachinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
 			},
 		},

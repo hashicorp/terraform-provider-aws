@@ -48,9 +48,10 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument are required:
+This data source supports the following arguments:
 
-- `inferenceProfileId` – (Required) Inference Profile identifier.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `inferenceProfileId` - (Required) Inference Profile identifier.
 
 ## Attribute Reference
 
@@ -60,7 +61,7 @@ This data source exports the following attributes in addition to the arguments a
 - `inferenceProfileName` - The unique identifier of the inference profile.
 - `models` - A list of information about each model in the inference profile. See [`models`](#models).
 - `status` - The status of the inference profile. `ACTIVE` means that the inference profile is available to use.
-- `type` - The type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock.
+- `type` - The type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock. `APPLICATION` means that the inference profile is defined by the user.
 - `createdAt` - The time at which the inference profile was created.
 - `description` - The description of the inference profile.
 - `updatedAt` - The time at which the inference profile was last updated.
@@ -69,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `modelArn` - The Amazon Resource Name (ARN) of the model.
 
-<!-- cache-key: cdktf-0.20.8 input-6cb7659134a0b4e950ada674f9185504b35f36503ed89038e82ed2ff3312b4f2 -->
+<!-- cache-key: cdktf-0.20.8 input-ce9c57bc602aee4011dc55abf62f1a45ad4a18bc33669a0e70b4e9d1ed631871 -->

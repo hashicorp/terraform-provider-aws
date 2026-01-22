@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks
@@ -7,9 +7,10 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validClusterName(v interface{}, k string) (ws []string, errors []error) {
+func validClusterName(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 || len(value) > 100 {
 		errors = append(errors, fmt.Errorf(
@@ -26,3 +27,5 @@ func validClusterName(v interface{}, k string) (ws []string, errors []error) {
 
 	return
 }
+
+var validateIPv4CIDRPrivateRange = validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16")

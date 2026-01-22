@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -20,11 +20,11 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameDataSourceConfig_regionalCertificateARN(rName, key, certificate),
@@ -36,6 +36,8 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "cloudfront_domain_name", dataSourceName, "cloudfront_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudfront_zone_id", dataSourceName, "cloudfront_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, dataSourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_id", dataSourceName, "domain_name_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_access_mode", dataSourceName, "endpoint_access_mode"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_configuration.#", dataSourceName, "endpoint_configuration.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_certificate_arn", dataSourceName, "regional_certificate_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_certificate_name", dataSourceName, "regional_certificate_name"),
@@ -43,6 +45,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "regional_zone_id", dataSourceName, "regional_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_policy", dataSourceName, "security_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_configuration.0.ip_address_type", dataSourceName, "endpoint_configuration.0.ip_address_type"),
 				),
 			},
 		},

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_domain_configuration: Add `application_protocol` and `authentication_type` arguments
+```

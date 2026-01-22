@@ -91,6 +91,7 @@ resource "aws_config_configuration_recorder" "foo" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
 * `recording_group` - (Optional) Recording group - see below.
@@ -114,7 +115,7 @@ This resource supports the following arguments:
 
 ### recording_mode Configuration Block
 
-* `recording_frequency` - (Required) Default reecording frequency. `CONTINUOUS` or `DAILY`.
+* `recording_frequency` - (Required) Default recording frequency. `CONTINUOUS` or `DAILY`.
 * `recording_mode_override` - (Optional) Recording mode overrides. Detailed below.
 
 #### recording_mode_override Configuration Block

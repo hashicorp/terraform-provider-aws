@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sns_test
@@ -71,7 +71,7 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 				Config: testAccSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_sms_type", "Transactional"),
-					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "usage_report_s3_bucket", "some-bucket"),
 				),
 			},

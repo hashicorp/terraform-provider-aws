@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ds_test
@@ -12,11 +12,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +46,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
@@ -92,7 +96,7 @@ func TestAccDSTrust_disappears(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfds.ResourceTrust, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfds.ResourceTrust, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -400,12 +404,26 @@ func TestAccDSTrust_TrustTypeSpecifyDefault(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeForest)),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("trust_type"), tfknownvalue.StringExact(awstypes.TrustTypeForest)),
+				},
 			},
 			{
-				Config:   testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeForest),
-				PlanOnly: true,
+				Config: testAccTrustConfig_TrustType(rName, domainName, domainNameOther, awstypes.TrustTypeForest),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -432,7 +450,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 				),
 			},
 			{
@@ -449,7 +467,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "1"),
 				),
 			},
 			{
@@ -488,7 +506,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtTrue),
 				),
 			},
@@ -542,7 +560,7 @@ func testAccCheckTrustDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfds.FindTrustByTwoPartKey(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

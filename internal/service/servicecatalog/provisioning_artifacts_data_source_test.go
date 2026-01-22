@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicecatalog_test
@@ -31,7 +31,7 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(dataSourceName, "provisioning_artifact_details.0.description"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", string(awstypes.ProvisioningArtifactGuidanceDefault)),

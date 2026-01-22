@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package qldb_test
@@ -10,38 +10,36 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/qldb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfqldb "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQLDBLedger_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -56,20 +54,20 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 func TestAccQLDBLedger_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqldb.ResourceLedger(), resourceName),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfqldb.ResourceLedger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,16 +80,16 @@ func TestAccQLDBLedger_nameGenerated(t *testing.T) {
 	var v qldb.DescribeLedgerOutput
 	resourceName := "aws_qldb_ledger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_nameGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(`tf\d+`)),
 				),
 			},
@@ -107,19 +105,19 @@ func TestAccQLDBLedger_nameGenerated(t *testing.T) {
 func TestAccQLDBLedger_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 				),
@@ -132,7 +130,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 			{
 				Config: testAccLedgerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "STANDARD"),
 				),
@@ -140,7 +138,7 @@ func TestAccQLDBLedger_update(t *testing.T) {
 			{
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 				),
@@ -152,20 +150,20 @@ func TestAccQLDBLedger_update(t *testing.T) {
 func TestAccQLDBLedger_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -177,7 +175,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 			{
 				Config: testAccLedgerConfig_kmsKeyUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, "AWS_OWNED_KMS_KEY"),
 				),
 			},
@@ -188,20 +186,20 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 func TestAccQLDBLedger_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v qldb.DescribeLedgerOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLedgerDestroy(ctx),
+		CheckDestroy:             testAccCheckLedgerDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLedgerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -213,8 +211,8 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 			{
 				Config: testAccLedgerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -222,8 +220,8 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 			{
 				Config: testAccLedgerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckLedgerExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -231,9 +229,9 @@ func TestAccQLDBLedger_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLedgerDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckLedgerDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QLDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qldb_ledger" {
@@ -242,7 +240,7 @@ func testAccCheckLedgerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfqldb.FindLedgerByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -257,7 +255,7 @@ func testAccCheckLedgerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLedgerExists(ctx context.Context, n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
+func testAccCheckLedgerExists(ctx context.Context, t *testing.T, n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -268,7 +266,7 @@ func testAccCheckLedgerExists(ctx context.Context, n string, v *qldb.DescribeLed
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).QLDBClient(ctx)
 
 		output, err := tfqldb.FindLedgerByName(ctx, conn, rs.Primary.ID)
 
@@ -316,6 +314,7 @@ func testAccLedgerConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_qldb_ledger" "test" {
@@ -332,6 +331,7 @@ func testAccLedgerConfig_kmsKeyUpdated(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_qldb_ledger" "test" {

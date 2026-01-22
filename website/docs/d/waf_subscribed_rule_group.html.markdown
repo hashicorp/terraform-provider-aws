@@ -6,7 +6,7 @@ description: |-
   Retrieves information about a Managed WAF Rule Group from AWS Marketplace.
 ---
 
-# Data Source: aws_waf_rule
+# Data Source: aws_waf_subscribed_rule_group
 
 `aws_waf_subscribed_rule_group` retrieves information about a Managed WAF Rule Group from AWS Marketplace (needs to be subscribed to first).
 
@@ -40,10 +40,12 @@ resource "aws_waf_web_acl" "acl" {
 
 ## Argument Reference
 
-This data source supports the following arguments: (at least one needs to be specified)
+This data source supports the following arguments:
 
 * `name` - (Optional) Name of the WAF rule group.
 * `metric_name` - (Optional) Name of the WAF rule group.
+
+At least one of `name` or `metric_name` must be configured.
 
 ## Attribute Reference
 

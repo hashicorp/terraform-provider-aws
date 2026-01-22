@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,8 +40,8 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -59,8 +59,38 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "Sun:01:00"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSageMakerMlflowTrackingServer_mlflowVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mpg sagemaker.DescribeMlflowTrackingServerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_mlflow_tracking_server.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMlflowTrackingServerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMlflowTrackingServerConfig_mflowVersion(rName, "2.16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
+					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mlflow_version", "2.16"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
+					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("mlflow-tracking-server/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -83,7 +113,7 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -96,7 +126,7 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -105,7 +135,7 @@ func TestAccSageMakerMlflowTrackingServer_tags(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -129,7 +159,7 @@ func TestAccSageMakerMlflowTrackingServer_disappears(t *testing.T) {
 				Config: testAccMlflowTrackingServerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceMlflowTrackingServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -148,12 +178,12 @@ func testAccCheckMlflowTrackingServerDestroy(ctx context.Context) resource.TestC
 
 			_, err := tfsagemaker.FindMlflowTrackingServerByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Mlflow Tracking Server (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Mlflow Tracking Server %s still exists", rs.Primary.ID)
@@ -244,6 +274,17 @@ resource "aws_sagemaker_mlflow_tracking_server" "test" {
   artifact_store_uri   = "s3://${aws_s3_bucket.test.bucket}/path"
 }
 `, rName))
+}
+
+func testAccMlflowTrackingServerConfig_mflowVersion(rName, mlflowVersion string) string {
+	return acctest.ConfigCompose(testAccMlflowTrackingServerConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_mlflow_tracking_server" "test" {
+  tracking_server_name = %[1]q
+  mlflow_version       = %[2]q
+  role_arn             = aws_iam_role.test.arn
+  artifact_store_uri   = "s3://${aws_s3_bucket.test.bucket}/path"
+}
+`, rName, mlflowVersion))
 }
 
 func testAccMlflowTrackingServerConfig_update(rName string) string {

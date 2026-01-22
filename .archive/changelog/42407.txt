@@ -1,0 +1,8 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `uri_fragment` to `field_to_match` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `uri_fragment` to `field_to_match` configuration blocks
+```
+

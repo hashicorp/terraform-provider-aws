@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package neptune_test
@@ -13,13 +13,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfneptune "github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,16 +64,16 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -76,7 +81,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.3"),
 					resource.TestCheckNoResourceAttr(resourceName, "neptune_instance_parameter_group_name"),
@@ -86,13 +91,13 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "replication_source_identifier", ""),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -116,7 +121,7 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfneptune.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -188,7 +193,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -197,7 +202,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -206,7 +211,7 @@ func TestAccNeptuneCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -268,7 +273,7 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_serverlessConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.min_capacity", "4.5"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.0.max_capacity", "12.5"),
 				),
@@ -323,14 +328,14 @@ func TestAccNeptuneCluster_updateIAMRoles(t *testing.T) {
 				Config: testAccClusterConfig_addIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_removeIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -413,7 +418,7 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "03:00-09:00"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
 			},
@@ -469,7 +474,7 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_cloudWatchLogsExports(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enable_cloudwatch_logs_exports.*", "slowquery"),
 				),
@@ -478,7 +483,7 @@ func TestAccNeptuneCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", "0"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -550,7 +555,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 	})
 }
 
-func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *testing.T) {
+func TestAccNeptuneCluster_GlobalCluster_primarySecondaryClusters(t *testing.T) {
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
 	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
@@ -573,11 +578,297 @@ func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *t
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
+				Config: testAccClusterConfig_globalPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_GlobalUpgrade_major(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/cluster/GlobalUpgrade_major/"),
+				ConfigVariables: config.Variables{
+					"upgrade": config.BoolVariable(false),
+					"rname":   config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/cluster/GlobalUpgrade_major/"),
+				ConfigVariables: config.Variables{
+					"upgrade": config.BoolVariable(true),
+					"rname":   config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_GlobalUpgrade_majorSecondary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var p, s awstypes.DBCluster
+	resourceNamePrimary := "aws_neptune_cluster.primary"
+	resourceNameSecondary := "aws_neptune_cluster.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalCluster(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_majorSecondary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":    config.BoolVariable(false),
+					"rname":      config.StringVariable(rName),
+					"alt_rname":  config.StringVariable(rNameAlternate),
+					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_majorSecondary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":    config.BoolVariable(true),
+					"rname":      config.StringVariable(rName),
+					"alt_rname":  config.StringVariable(rNameAlternate),
+					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_GlobalUpgrade_minor(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/cluster/GlobalUpgrade_minor/"),
+				ConfigVariables: config.Variables{
+					"upgrade": config.BoolVariable(false),
+					"rname":   config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/cluster/GlobalUpgrade_minor/"),
+				ConfigVariables: config.Variables{
+					"upgrade": config.BoolVariable(true),
+					"rname":   config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_GlobalUpgrade_minorSecondary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var p, s awstypes.DBCluster
+	resourceNamePrimary := "aws_neptune_cluster.primary"
+	resourceNameSecondary := "aws_neptune_cluster.secondary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckGlobalCluster(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_minorSecondary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":    config.BoolVariable(false),
+					"rname":      config.StringVariable(rName),
+					"alt_rname":  config.StringVariable(rNameAlternate),
+					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_minorSecondary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":    config.BoolVariable(true),
+					"rname":      config.StringVariable(rName),
+					"alt_rname":  config.StringVariable(rNameAlternate),
+					"alt_region": config.StringVariable(acctest.AlternateRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNeptuneCluster_GlobalUpgrade_minorTertiary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	var p, s, n awstypes.DBCluster
+	resourceNamePrimary := "aws_neptune_cluster.primary"
+	resourceNameSecondary := "aws_neptune_cluster.secondary"
+	resourceNameTertiary := "aws_neptune_cluster.tertiary"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameAlternate := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameThird := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+			testAccPreCheckGlobalCluster(ctx, t)
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.NeptuneServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersThird(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_minorTertiary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":      config.BoolVariable(false),
+					"rname":        config.StringVariable(rName),
+					"alt_rname":    config.StringVariable(rNameAlternate),
+					"third_rname":  config.StringVariable(rNameThird),
+					"alt_region":   config.StringVariable(acctest.AlternateRegion()),
+					"third_region": config.StringVariable(acctest.ThirdRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameTertiary, &n, acctest.RegionProviderFunc(ctx, acctest.ThirdRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameTertiary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameTertiary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.test", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersThird(ctx, t, &providers),
+				ConfigDirectory:          config.StaticDirectory("testdata/cluster/GlobalUpgrade_minorTertiary/"),
+				ConfigVariables: config.Variables{
+					"upgrade":      config.BoolVariable(true),
+					"rname":        config.StringVariable(rName),
+					"alt_rname":    config.StringVariable(rNameAlternate),
+					"third_rname":  config.StringVariable(rNameThird),
+					"alt_region":   config.StringVariable(acctest.AlternateRegion()),
+					"third_region": config.StringVariable(acctest.ThirdRegion()),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &p, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &s, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameTertiary, &n, acctest.RegionProviderFunc(ctx, acctest.ThirdRegion(), &providers)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceNamePrimary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNamePrimary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameSecondary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameSecondary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceNameTertiary, tfjsonpath.New(names.AttrEngine), knownvalue.StringExact("neptune")),
+					statecheck.CompareValuePairs(resourceNameTertiary, tfjsonpath.New(names.AttrEngineVersion), "data.aws_neptune_engine_version.upgrade", tfjsonpath.New("version_actual"), compare.ValuesSame()),
+				},
 			},
 		},
 	})
@@ -643,9 +934,9 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -695,7 +986,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -711,10 +1002,10 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, acctest.DefaultProviderFunc)
 }
 
-func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -761,7 +1052,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 			_, err = tfneptune.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -1160,7 +1451,9 @@ resource "aws_iam_role" "kms_admin" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1195,7 +1488,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1211,7 +1504,7 @@ resource "aws_kms_key" "test" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1337,7 +1630,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName, engineVersion, clusterParameterGroupName))
 }
 
-func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
+func testAccClusterConfig_globalPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		fmt.Sprintf(`
@@ -1467,7 +1760,9 @@ resource "aws_iam_role" "kms_admin" {
 }
 
 resource "aws_kms_key" "test1" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1502,7 +1797,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1518,7 +1813,7 @@ resource "aws_kms_key" "test1" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }
@@ -1528,7 +1823,9 @@ POLICY
 }
 
 resource "aws_kms_key" "test2" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -1563,7 +1860,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     },
@@ -1579,7 +1876,7 @@ resource "aws_kms_key" "test2" {
       "Resource": "*",
       "Condition": {
         "StringNotEquals": {
-          "kms:ViaService": "rds.${data.aws_region.current.name}.amazonaws.com"
+          "kms:ViaService": "rds.${data.aws_region.current.region}.amazonaws.com"
         }
       }
     }

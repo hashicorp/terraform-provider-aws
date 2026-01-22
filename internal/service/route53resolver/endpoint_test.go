@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package route53resolver_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,14 +37,15 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "route53resolver", "resolver-endpoint/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct3),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -73,14 +74,14 @@ func TestAccRoute53ResolverEndpoint_basic_ipv6(t *testing.T) {
 				Config: testAccEndpointConfig_basic_ipv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "route53resolver", "resolver-endpoint/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV6"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -108,7 +109,7 @@ func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfroute53resolver.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -132,7 +133,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -145,7 +146,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -154,7 +155,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -181,10 +182,10 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, initialName),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 				),
 			},
 			{
@@ -193,10 +194,41 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedName),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverEndpoint_directionInboundDelegation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep awstypes.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_directionInboundDelegation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND_DELEGATION"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -232,6 +264,43 @@ func TestAccRoute53ResolverEndpoint_resolverEndpointType(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverEndpoint_detailedMetrics(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep awstypes.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_detailedMetrics(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "rni_enhanced_metrics_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "target_name_server_metrics_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfig_detailedMetrics(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "rni_enhanced_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "target_name_server_metrics_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
@@ -243,7 +312,7 @@ func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfroute53resolver.FindResolverEndpointByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -532,6 +601,31 @@ resource "aws_route53_resolver_endpoint" "test" {
 `, name))
 }
 
+func testAccEndpointConfig_directionInboundDelegation(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND_DELEGATION"
+  name      = %[1]q
+
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+}
+`, rName))
+}
+
 func testAccEndpointConfig_resolverEndpointType(rName, resolverEndpointType string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -592,4 +686,31 @@ resource "aws_route53_resolver_endpoint" "test" {
   resolver_endpoint_type = %[2]q
 }
 `, rName, resolverEndpointType))
+}
+
+func testAccEndpointConfig_detailedMetrics(rName string, rniEnhancedMetricsEnabled, targetNameServerMetricsEnabled bool) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "OUTBOUND"
+
+  resolver_endpoint_type = "IPV4"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  rni_enhanced_metrics_enabled       = %[1]t
+  target_name_server_metrics_enabled = %[2]t
+}
+`, rniEnhancedMetricsEnabled, targetNameServerMetricsEnabled))
 }

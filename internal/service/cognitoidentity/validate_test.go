@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidentity_test
@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -123,7 +122,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.Ct1,
+		"1",
 		"foo",
 		"1.2",
 		"foo1-bar2-baz3",
@@ -156,7 +155,7 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		AmbiguousRoleResolution interface{}
+		AmbiguousRoleResolution any
 		Type                    string
 		ErrCount                int
 	}{
@@ -183,7 +182,7 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		// Reproducing the undefined ambiguous_role_resolution
 		if tc.AmbiguousRoleResolution != nil {
 			m["ambiguous_role_resolution"] = tc.AmbiguousRoleResolution
@@ -201,7 +200,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		MappingRule []interface{}
+		MappingRule []any
 		Type        string
 		ErrCount    int
 	}{
@@ -211,8 +210,8 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 			ErrCount:    1,
 		},
 		{
-			MappingRule: []interface{}{
-				map[string]interface{}{
+			MappingRule: []any{
+				map[string]any{
 					"Claim":     "isAdmin",
 					"MatchType": "Equals",
 					"RoleARN":   "arn:foo",
@@ -223,8 +222,8 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
-			MappingRule: []interface{}{
-				map[string]interface{}{
+			MappingRule: []any{
+				map[string]any{
 					"Claim":     "isAdmin",
 					"MatchType": "Equals",
 					"RoleARN":   "arn:foo",
@@ -242,7 +241,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		m := make(map[string]interface{})
+		m := make(map[string]any)
 		// Reproducing the undefined mapping_rule
 		if tc.MappingRule != nil {
 			m["mapping_rule"] = tc.MappingRule
@@ -259,7 +258,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 func TestValidRoles(t *testing.T) {
 	t.Parallel()
 
-	validValues := []map[string]interface{}{
+	validValues := []map[string]any{
 		{"authenticated": "hoge"},
 		{"unauthenticated": "hoge"},
 		{"authenticated": "hoge", "unauthenticated": "hoge"},
@@ -272,7 +271,7 @@ func TestValidRoles(t *testing.T) {
 		}
 	}
 
-	invalidValues := []map[string]interface{}{
+	invalidValues := []map[string]any{
 		{},
 		{"invalid": "hoge"},
 	}

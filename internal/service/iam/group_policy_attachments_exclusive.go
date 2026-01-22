@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -9,41 +11,40 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_iam_group_policy_attachments_exclusive", name="Group Policy Attachments Exclusive")
-func newResourceGroupPolicyAttachmentsExclusive(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceGroupPolicyAttachmentsExclusive{}, nil
+func newGroupPolicyAttachmentsExclusiveResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &groupPolicyAttachmentsExclusiveResource{}, nil
 }
 
 const (
 	ResNameGroupPolicyAttachmentsExclusive = "Group Policy Attachments Exclusive"
 )
 
-type resourceGroupPolicyAttachmentsExclusive struct {
-	framework.ResourceWithConfigure
+type groupPolicyAttachmentsExclusiveResource struct {
+	framework.ResourceWithModel[groupPolicyAttachmentsExclusiveResourceModel]
 	framework.WithNoOpDelete
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_iam_group_policy_attachments_exclusive"
-}
-
-func (r *resourceGroupPolicyAttachmentsExclusive) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *groupPolicyAttachmentsExclusiveResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrGroupName: schema.StringAttribute{
@@ -53,15 +54,19 @@ func (r *resourceGroupPolicyAttachmentsExclusive) Schema(ctx context.Context, re
 				},
 			},
 			"policy_arns": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.Set{
+					setvalidator.NoNullValues(),
+				},
 			},
 		},
 	}
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceGroupPolicyAttachmentsExclusiveData
+func (r *groupPolicyAttachmentsExclusiveResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan groupPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -85,17 +90,17 @@ func (r *resourceGroupPolicyAttachmentsExclusive) Create(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *groupPolicyAttachmentsExclusiveResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
-	var state resourceGroupPolicyAttachmentsExclusiveData
+	var state groupPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findGroupPolicyAttachmentsByName(ctx, conn, state.GroupName.ValueString())
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -107,12 +112,12 @@ func (r *resourceGroupPolicyAttachmentsExclusive) Read(ctx context.Context, req 
 		return
 	}
 
-	state.PolicyARNs = flex.FlattenFrameworkStringValueSetLegacy(ctx, out)
+	state.PolicyARNs = flex.FlattenFrameworkStringValueSetOfStringLegacy(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceGroupPolicyAttachmentsExclusiveData
+func (r *groupPolicyAttachmentsExclusiveResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state groupPolicyAttachmentsExclusiveResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -139,13 +144,13 @@ func (r *resourceGroupPolicyAttachmentsExclusive) Update(ctx context.Context, re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// syncAttachments handles keeping the configured customer managed policy
+// syncAttachments handles keeping the configured managed IAM policy
 // attachments in sync with the remote resource.
 //
-// Customer managed policies defined on this resource but not attached to
+// Managed IAM policies defined on this resource but not attached to
 // the group will be added. Policies attached to the group but not configured
 // on this resource will be removed.
-func (r *resourceGroupPolicyAttachmentsExclusive) syncAttachments(ctx context.Context, groupName string, want []string) error {
+func (r *groupPolicyAttachmentsExclusiveResource) syncAttachments(ctx context.Context, groupName string, want []string) error {
 	conn := r.Meta().IAMClient(ctx)
 
 	have, err := findGroupPolicyAttachmentsByName(ctx, conn, groupName)
@@ -172,7 +177,7 @@ func (r *resourceGroupPolicyAttachmentsExclusive) syncAttachments(ctx context.Co
 	return nil
 }
 
-func (r *resourceGroupPolicyAttachmentsExclusive) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *groupPolicyAttachmentsExclusiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrGroupName), req, resp)
 }
 
@@ -187,7 +192,7 @@ func findGroupPolicyAttachmentsByName(ctx context.Context, conn *iam.Client, gro
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
 			if errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return nil, &retry.NotFoundError{
+				return nil, &sdkretry.NotFoundError{
 					LastError:   err,
 					LastRequest: in,
 				}
@@ -205,7 +210,7 @@ func findGroupPolicyAttachmentsByName(ctx context.Context, conn *iam.Client, gro
 	return policyARNs, nil
 }
 
-type resourceGroupPolicyAttachmentsExclusiveData struct {
-	GroupName  types.String `tfsdk:"group_name"`
-	PolicyARNs types.Set    `tfsdk:"policy_arns"`
+type groupPolicyAttachmentsExclusiveResourceModel struct {
+	GroupName  types.String        `tfsdk:"group_name"`
+	PolicyARNs fwtypes.SetOfString `tfsdk:"policy_arns"`
 }

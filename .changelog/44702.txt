@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add `transform` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener_rule: Add `transform` attribute
+```

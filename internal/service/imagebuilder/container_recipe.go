@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -14,12 +16,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,16 +32,15 @@ import (
 
 // @SDKResource("aws_imagebuilder_container_recipe", name="Container Recipe")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @Testing(preIdentityVersion="v6.3.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerRecipeCreate,
 		ReadWithoutTimeout:   resourceContainerRecipeRead,
 		UpdateWithoutTimeout: resourceContainerRecipeUpdate,
 		DeleteWithoutTimeout: resourceContainerRecipeDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -67,11 +69,13 @@ func resourceContainerRecipe() *schema.Resource {
 									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -176,7 +180,7 @@ func resourceContainerRecipe() *schema.Resource {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
-													ValidateFunc: validation.IntBetween(125, 1000),
+													ValidateFunc: validation.IntBetween(125, 2000),
 												},
 												names.AttrVolumeSize: {
 													Type:         schema.TypeInt,
@@ -264,11 +268,13 @@ func resourceContainerRecipe() *schema.Resource {
 						names.AttrRepositoryName: {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 						"service": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
 						},
 					},
@@ -286,12 +292,10 @@ func resourceContainerRecipe() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -300,8 +304,8 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("component"); ok && len(v.([]interface{})) > 0 {
-		input.Components = expandComponentConfigurations(v.([]interface{}))
+	if v, ok := d.GetOk("component"); ok && len(v.([]any)) > 0 {
+		input.Components = expandComponentConfigurations(v.([]any))
 	}
 
 	if v, ok := d.GetOk("container_type"); ok {
@@ -320,8 +324,8 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DockerfileTemplateUri = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.InstanceConfiguration = expandInstanceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("instance_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.InstanceConfiguration = expandInstanceConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
@@ -340,8 +344,8 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PlatformOverride = awstypes.Platform(v.(string))
 	}
 
-	if v, ok := d.GetOk("target_repository"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TargetRepository = expandTargetContainerRepository(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("target_repository"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TargetRepository = expandTargetContainerRepository(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
@@ -363,13 +367,13 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }
 
-func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	containerRecipe, err := findContainerRecipeByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Image Builder Container Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -389,7 +393,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
 	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
 	if containerRecipe.InstanceConfiguration != nil {
-		if err := d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)}); err != nil {
+		if err := d.Set("instance_configuration", []any{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 		}
 	} else {
@@ -400,7 +404,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
-	if err := d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)}); err != nil {
+	if err := d.Set("target_repository", []any{flattenTargetContainerRepository(containerRecipe.TargetRepository)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_repository: %s", err)
 	}
 	d.Set(names.AttrVersion, containerRecipe.Version)
@@ -411,7 +415,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -419,7 +423,7 @@ func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, 
 	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }
 
-func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -447,7 +451,7 @@ func findContainerRecipeByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	output, err := conn.GetContainerRecipe(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -458,13 +462,13 @@ func findContainerRecipeByARN(ctx context.Context, conn *imagebuilder.Client, ar
 	}
 
 	if output == nil || output.ContainerRecipe == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ContainerRecipe, nil
 }
 
-func expandInstanceConfiguration(tfMap map[string]interface{}) *awstypes.InstanceConfiguration {
+func expandInstanceConfiguration(tfMap map[string]any) *awstypes.InstanceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -482,12 +486,12 @@ func expandInstanceConfiguration(tfMap map[string]interface{}) *awstypes.Instanc
 	return apiObject
 }
 
-func flattenInstanceConfiguration(apiObject *awstypes.InstanceConfiguration) map[string]interface{} {
+func flattenInstanceConfiguration(apiObject *awstypes.InstanceConfiguration) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]any{}
 
 	if v := apiObject.BlockDeviceMappings; v != nil {
 		tfMap["block_device_mapping"] = flattenInstanceBlockDeviceMappings(v)

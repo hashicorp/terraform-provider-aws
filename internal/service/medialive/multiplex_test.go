@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -46,10 +46,10 @@ func testAccMultiplex_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
 				),
 			},
@@ -88,7 +88,7 @@ func testAccMultiplex_start(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func testAccMultiplex_start(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 				),
 			},
 		},
@@ -128,10 +128,10 @@ func testAccMultiplex_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
 				),
 			},
@@ -140,10 +140,10 @@ func testAccMultiplex_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "multiplex:{id}"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "2"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
 				),
 			},
@@ -175,7 +175,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplex(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceMultiplex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -194,7 +194,7 @@ func testAccCheckMultiplexDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,16 +52,17 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "continuous-deployment-policy/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, names.AttrDomainName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleWeight",
-						"single_weight_config.#":        acctest.Ct1,
+						"single_weight_config.#":        "1",
 						"single_weight_config.0.weight": "0.01",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
@@ -102,7 +103,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 					testAccCheckDistributionExists(ctx, stagingDistributionResourceName, &stagingDistribution),
 					testAccCheckDistributionExists(ctx, productionDistributionResourceName, &productionDistribution),
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfcloudfront.ResourceContinuousDeploymentPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,9 +144,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
+						"single_weight_config.#":                                         "1",
 						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
@@ -163,9 +164,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
+						"single_weight_config.#":                                         "1",
 						"single_weight_config.0.weight":                                  "0.02",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "600",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "1200",
 					}),
@@ -178,7 +179,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
-						"single_header_config.#":        acctest.Ct1,
+						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test",
 						"single_header_config.0.value":  "test",
 					}),
@@ -196,7 +197,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                  "SingleHeader",
-						"single_header_config.#":        acctest.Ct1,
+						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test2",
 						"single_header_config.0.value":  "test2",
 					}),
@@ -242,9 +243,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
+						"single_weight_config.#":                                         "1",
 						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
@@ -263,9 +264,9 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
 						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
+						"single_weight_config.#":                                         "1",
 						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
@@ -292,7 +293,7 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 
 			_, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

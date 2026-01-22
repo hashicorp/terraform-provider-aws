@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package rds
@@ -30,6 +30,7 @@ const (
 	clusterStatusRenaming                      = "renaming"
 	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
 	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusScalingStorage                = "scaling-storage"
 	clusterStatusUpgrading                     = "upgrading"
 
 	// Non-standard status values.
@@ -39,6 +40,7 @@ const (
 const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusCopying   = "copying"
 )
 
 const (
@@ -109,7 +111,9 @@ const (
 	instanceStatusStarting                                     = "starting"
 	instanceStatusStopped                                      = "stopped"
 	instanceStatusStopping                                     = "stopping"
+	instanceStatusStorageConfigUpgrade                         = "storage-config-upgrade"
 	instanceStatusStorageFull                                  = "storage-full"
+	instanceStatusStorageInitialization                        = "storage-initialization"
 	instanceStatusStorageOptimization                          = "storage-optimization"
 	instanceStatusUpgrading                                    = "upgrading"
 )
@@ -209,19 +213,21 @@ func engineLifecycleSupport_Values() []string {
 }
 
 const (
-	exportableLogTypeAgent      = "agent"
-	exportableLogTypeAlert      = "alert"
-	exportableLogTypeAudit      = "audit"
-	exportableLogTypeDiagLog    = "diag.log"
-	exportableLogTypeError      = "error"
-	exportableLogTypeGeneral    = "general"
-	exportableLogTypeListener   = "listener"
-	exportableLogTypeNotifyLog  = "notify.log"
-	exportableLogTypeOEMAgent   = "oemagent"
-	exportableLogTypePostgreSQL = "postgresql"
-	exportableLogTypeSlowQuery  = "slowquery"
-	exportableLogTypeTrace      = "trace"
-	exportableLogTypeUpgrade    = "upgrade"
+	exportableLogTypeAgent          = "agent"
+	exportableLogTypeAlert          = "alert"
+	exportableLogTypeAudit          = "audit"
+	exportableLogTypeDiagLog        = "diag.log"
+	exportableLogTypeError          = "error"
+	exportableLogTypeGeneral        = "general"
+	exportableLogTypeIAMDBAuthError = "iam-db-auth-error"
+	exportableLogTypeInstance       = "instance"
+	exportableLogTypeListener       = "listener"
+	exportableLogTypeNotifyLog      = "notify.log"
+	exportableLogTypeOEMAgent       = "oemagent"
+	exportableLogTypePostgreSQL     = "postgresql"
+	exportableLogTypeSlowQuery      = "slowquery"
+	exportableLogTypeTrace          = "trace"
+	exportableLogTypeUpgrade        = "upgrade"
 )
 
 func clusterExportableLogType_Values() []string {
@@ -229,6 +235,8 @@ func clusterExportableLogType_Values() []string {
 		exportableLogTypeAudit,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
+		exportableLogTypeInstance,
 		exportableLogTypePostgreSQL,
 		exportableLogTypeSlowQuery,
 		exportableLogTypeUpgrade,
@@ -243,6 +251,7 @@ func instanceExportableLogType_Values() []string {
 		exportableLogTypeDiagLog,
 		exportableLogTypeError,
 		exportableLogTypeGeneral,
+		exportableLogTypeIAMDBAuthError,
 		exportableLogTypeListener,
 		exportableLogTypeNotifyLog,
 		exportableLogTypeOEMAgent,

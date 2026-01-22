@@ -69,7 +69,7 @@ data "aws_iam_policy_document" "example" {
     }
 
     actions   = ["es:*"]
-    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+    resources = ["arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
 
     condition {
       test     = "IpAddress"
@@ -188,7 +188,7 @@ data "aws_iam_policy_document" "example" {
     }
 
     actions   = ["es:*"]
-    resources = ["arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
+    resources = ["arn:aws:es:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:domain/${var.domain}/*"]
   }
 }
 
@@ -320,6 +320,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `aiml_options` - (Optional) Configuration block for parameters required to enable all machine learning features. Detailed below.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your OpenSearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
@@ -331,6 +333,7 @@ The following arguments are optional:
 * `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
   See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
   Defaults to the lastest version of OpenSearch.
+* `identity_center_options` - (Optional) Configuration block for enabling and managing IAM Identity Center integration within a domain. Detailed below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
@@ -353,6 +356,19 @@ The following arguments are optional:
 * `master_user_arn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
 * `master_user_name` - (Optional) Main user's username, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 * `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
+
+### aiml_options
+
+* `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
+* `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
+
+#### natural_language_query_generation_options
+
+* `desired_state` - (Optional)  The desired state of the natural language query generation feature. Valid values are `ENABLED` and `DISABLED`.
+
+#### s3_vectors_engine
+
+* `enabled` - (Optional) Enables S3 vectors engine features.
 
 ### auto_tune_options
 
@@ -383,11 +399,25 @@ The following arguments are optional:
 * `instance_count` - (Optional) Number of instances in the cluster.
 * `instance_type` - (Optional) Instance type of data nodes in the cluster.
 * `multi_az_with_standby_enabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
+* `node_options` - (Optional) List of node options for the domain.
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
 * `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+
+#### node_options
+
+Container object to specify configuration for a node type.
+
+* `node_config` - (Optional) Container to specify sizing of a node type.
+* `node_type` - (Optional) Type of node this configuration describes. Valid values: `coordinator`.
+
+#### node_config
+
+* `count` - (Optional) Number of nodes of a particular node type in the cluster.
+* `enabled` - (Optional) Whether a particular node type is enabled.
+* `type` - (Optional) The instance type of a particular node type in the cluster.
 
 #### cold_storage_options
 
@@ -421,6 +451,13 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
+
+### identity_center_options
+
+* enabled_api_access - (Optional) Boolean that indicates whether IAM Identity Center is enabled for API access. [Fine-grained access control](#enabling-fine-grained-access-control-on-an-existing-domain) must be enabled to use this feature. To disable it after enabling, set this argument to `false` or remove the `identity_center_options` block entirely.
+* identity_center_instance_arn - (Optional) ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication. Required if `enabled_api_access` is set to `true`.
+* roles_key - (Optional) Attribute that contains the backend role identifier in IAM Identity Center. Valid values: `GroupName`, `GroupId`. Defaults to `GroupId`.
+* subject_key - (Optional) Attribute that contains the subject identifier in IAM Identity Center. Valid values: `UserName`, `UserId`, `Email`. Defaults to `UserId`.
 
 ### encrypt_at_rest
 
@@ -482,7 +519,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint_v2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
 * `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
 * `dashboard_endpoint_v2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
-* `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.

@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package iam
 
@@ -10,19 +12,21 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,6 +38,7 @@ const (
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="id", resourceType="InstanceProfile")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -87,12 +92,10 @@ func resourceInstanceProfile() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -106,7 +109,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateInstanceProfile(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -119,7 +122,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(output.InstanceProfile.InstanceProfileName))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 		return findInstanceProfileByName(ctx, conn, d.Id())
 	})
 
@@ -140,7 +143,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		err := instanceProfileCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 		}
 
@@ -149,16 +152,20 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if err := waitInstanceProfileReady(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", name, err)
+	}
+
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	instanceProfile, err := findInstanceProfileByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -173,7 +180,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		_, err := findRoleByName(ctx, conn, roleName)
 
 		if err != nil {
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				err := instanceProfileRemoveRole(ctx, conn, d.Id(), roleName)
 
 				if err != nil {
@@ -205,7 +212,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -229,10 +236,14 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if err := waitInstanceProfileReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
@@ -267,7 +278,7 @@ func instanceProfileAddRole(ctx context.Context, conn *iam.Client, profileName, 
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func(ctx context.Context) (any, error) {
 			return conn.AddRoleToInstanceProfile(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -317,7 +328,7 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	output, err := conn.GetInstanceProfile(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -328,21 +339,71 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	if output == nil || output.InstanceProfile == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.InstanceProfile, nil
 }
 
-func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListInstanceProfileTags(ctx, &iam.ListInstanceProfileTagsInput{
-		InstanceProfileName: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
+const (
+	instanceProfileFoundState      = "Found"
+	instanceProfileInvalidARNState = "InvalidARN"
+)
+
+func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findInstanceProfileByName(ctx, conn, name)
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		_, err = arn.Parse(aws.ToString(output.Arn))
+		if err != nil {
+			return nil, instanceProfileInvalidARNState, nil // lint:ignore nilerr // this is usually a temporary state
+		}
+
+		return output, instanceProfileFoundState, nil
+	}
+}
+
+func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
+	stateConf := &sdkretry.StateChangeConf{
+		Pending:                   []string{"", instanceProfileInvalidARNState},
+		Target:                    enum.Slice(instanceProfileFoundState),
+		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
 	}
 
-	return output.Tags, nil
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string, optFns ...func(*iam.Options)) ([]awstypes.Tag, error) {
+	input := iam.ListInstanceProfileTagsInput{
+		InstanceProfileName: aws.String(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := iam.NewListInstanceProfileTagsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tags...)
+	}
+
+	return output, nil
 }
 
 type invalidParameterValueError struct {

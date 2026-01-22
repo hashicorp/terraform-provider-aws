@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cognitoidp_test
@@ -26,8 +26,8 @@ func TestAccCognitoIDPUserPoolClientsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolClientsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "client_ids.#", acctest.Ct3),
-					resource.TestCheckResourceAttr(datasourceName, "client_names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasourceName, "client_ids.#", "3"),
+					resource.TestCheckResourceAttr(datasourceName, "client_names.#", "3"),
 				),
 			},
 		},

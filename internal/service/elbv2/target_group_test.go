@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elbv2_test
@@ -16,12 +16,13 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -107,32 +108,33 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 					resource.TestCheckNoResourceAttr(resourceName, "preserve_client_ip"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -167,7 +169,7 @@ func TestAccELBV2TargetGroup_disappears(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceTargetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelbv2.ResourceTargetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -287,28 +289,29 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 				Config: testAccTargetGroupConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -332,29 +335,30 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -386,7 +390,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
 				Config: testAccTargetGroupConfig_grpcProtocolVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/Test.Check/healthcheck"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "0-99"),
 				),
@@ -501,21 +505,22 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/healthz"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "2"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -523,21 +528,22 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz2", 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/healthz2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -561,22 +567,65 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "0"),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 				),
 			},
 		},
 	})
+}
+
+func TestAccELBV2TargetGroup_quic(t *testing.T) {
+	const (
+		resourceName = "aws_lb_target_group.test"
+	)
+
+	t.Parallel()
+
+	testcases := []awstypes.ProtocolEnum{awstypes.ProtocolEnumQuic, awstypes.ProtocolEnumTcpQuic}
+	for _, testcase := range testcases { //nolint:paralleltest // false positive
+		t.Run(string(testcase), func(t *testing.T) {
+			ctx := acctest.Context(t)
+			var conf awstypes.TargetGroup
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccTargetGroupConfig_basicQUIC(rName, testcase),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+							resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(testcase)),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "443"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+							resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+						),
+					},
+				},
+			})
+		})
+	}
 }
 
 func TestAccELBV2TargetGroup_udp(t *testing.T) {
@@ -592,18 +641,19 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_basicUdp(rName),
+				Config: testAccTargetGroupConfig_basicUDP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "514"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "514"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -750,22 +800,23 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 				Config: testAccTargetGroupConfig_albDefaults(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -795,21 +846,22 @@ timeout  = 4
 				Config: testAccTargetGroupConfig_nlbDefaults(rName, healthCheckValid),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -833,9 +885,9 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -843,9 +895,9 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 				Config: testAccTargetGroupConfig_enableHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -869,23 +921,24 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "connection_termination", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -894,21 +947,22 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup2),
 					testAccCheckTargetGroupNotRecreated(&targetGroup1, &targetGroup2),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8082"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "20"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "15"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -1068,15 +1122,15 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 				),
 			},
 		},
@@ -1101,7 +1155,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip"),
 				),
@@ -1112,7 +1166,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip_proto"),
 				),
@@ -1195,7 +1249,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "HTTP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 				),
@@ -1220,7 +1274,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "TCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1229,7 +1283,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "UDP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1238,7 +1292,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "TCP_UDP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1250,6 +1304,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1278,9 +1333,13 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 				ExpectError: regexache.MustCompile("You cannot enable stickiness on target groups with the TLS protocol"),
 			},
 			{
-				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 		},
 	})
@@ -1332,7 +1391,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
@@ -1342,7 +1401,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "lb_cookie", true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
@@ -1368,7 +1427,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1377,7 +1436,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1386,7 +1445,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1395,7 +1454,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
@@ -1420,20 +1479,21 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1441,25 +1501,26 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1467,25 +1528,26 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1509,25 +1571,26 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1535,25 +1598,26 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_appStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1561,25 +1625,26 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1603,24 +1668,25 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 				),
 			},
@@ -1628,25 +1694,70 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 				Config: testAccTargetGroupConfig_updateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_TCPProtocolHealthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_TCPProtocolHeakthCheckHTTP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_TCPProtocolHeakthCheckTCP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 				),
 			},
 		},
@@ -1669,20 +1780,21 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1690,24 +1802,25 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1715,24 +1828,25 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_stickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -1756,9 +1870,9 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -1782,28 +1896,29 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "instance"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
 				),
 			},
@@ -2169,7 +2284,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
 				),
 			},
@@ -2177,7 +2292,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 				Config: testAccTargetGroupConfig_albUpdateTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Type", "ALB Target Group"),
 				),
@@ -2202,23 +2317,24 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 				),
 			},
@@ -2226,23 +2342,24 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 				Config: testAccTargetGroupConfig_albUpdateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -2266,7 +2383,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
 				),
@@ -2275,7 +2392,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
 				),
@@ -2284,7 +2401,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "least_outstanding_requests"),
 				),
@@ -2293,7 +2410,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "weighted_random"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "weighted_random"),
 				),
@@ -2340,7 +2457,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, false, "weighted_random", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
 				),
@@ -2349,7 +2466,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
 				),
@@ -2358,7 +2475,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "on"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "on"),
 				),
@@ -2383,7 +2500,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "use_load_balancer_configuration"),
 				),
@@ -2392,7 +2509,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtTrue),
 				),
@@ -2401,7 +2518,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 				Config: testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtFalse),
 				),
@@ -2426,20 +2543,21 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -2447,24 +2565,25 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -2472,24 +2591,25 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf("targetgroup/%s/[a-z0-9]{16}$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "4"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				),
 			},
@@ -2515,7 +2635,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtFalse),
 				),
 			},
@@ -2525,7 +2645,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtTrue),
 				),
 			},
@@ -2535,7 +2655,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtFalse),
 				),
 			},
@@ -2545,7 +2665,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtTrue),
 				),
 			},
@@ -2571,7 +2691,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyDrainInterval(t *testing.
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.unhealthy_draining_interval", "3600"),
 				),
 			},
@@ -2581,7 +2701,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyDrainInterval(t *testing.
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.unhealthy_draining_interval", "3600"),
 				),
 			},
@@ -2606,69 +2726,113 @@ func TestAccELBV2TargetGroup_targetGroupHealthState(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "off"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "off", 1, "off"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "100", 1, "off"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "100", 1, "off"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "100"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "off"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "off", 1, "100"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "off", 1, "100"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "off"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "100"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, acctest.Ct1, "100", 1, "100"),
+				Config: testAccTargetGroupConfig_targetGroupHealthState(rName, "1", "100", 1, "100"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.dns_failover.0.minimum_healthy_targets_percentage", "100"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_health.0.unhealthy_state_routing.0.minimum_healthy_targets_percentage", "100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_albTargetControlPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var targetGroup awstypes.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumInstance), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumInstance)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albTargetControlPort(rName, string(awstypes.TargetTypeEnumIp), 9443),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumIp)),
+					resource.TestCheckResourceAttr(resourceName, "target_control_port", "9443"),
 				),
 			},
 		},
@@ -2680,108 +2844,142 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		expectedMatcher            string
 		expectedPath               string
 		expectedTimeout            string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidHealthCheckProtocol: true,
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200",
 				expectedPath:    "/",
 				expectedTimeout: "5",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidHealthCheckProtocol: true,
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
 				expectedTimeout: "6",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				expectedMatcher: "200-399",
 				expectedPath:    "/",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				expectedMatcher: "",
 				expectedPath:    "",
-				expectedTimeout: acctest.Ct10,
+				expectedTimeout: "10",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "6",
+			},
+			awstypes.ProtocolEnumHttps: {
+				expectedMatcher: "200-399",
+				expectedPath:    "/",
+				expectedTimeout: "10",
+			},
+			awstypes.ProtocolEnumTcp: {
+				expectedMatcher: "",
+				expectedPath:    "",
+				expectedTimeout: "10",
 			},
 		},
 	}
@@ -2790,9 +2988,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -2801,7 +2998,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -2819,17 +3016,17 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumInstance)),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -2852,79 +3049,103 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		matcher                    string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher: "200",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "200",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher: "200",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "200",
 			},
@@ -2935,9 +3156,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -2946,7 +3166,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -2965,11 +3185,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.matcher),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -2992,79 +3212,103 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		path                       string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				path: "/path",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				path:          "/path",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumHttps: {
+				path: "/path",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				path:          "/path",
 			},
@@ -3075,9 +3319,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -3086,7 +3329,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3105,11 +3348,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3130,92 +3373,120 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		matcher                    string
 		validRange                 string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "500",
 			},
 		},
-		string(awstypes.ProtocolEnumHttps): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttps: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "500",
 				validRange: "200-499",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "500",
 			},
 		},
-		string(awstypes.ProtocolEnumTcp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumTls): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTls: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
-			string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			awstypes.ProtocolEnumHttp: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumHttps): {
+			awstypes.ProtocolEnumHttps: {
 				matcher:    "600",
 				validRange: "200-599",
 			},
-			string(awstypes.ProtocolEnumTcp): {
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
+				invalidConfig: true,
+				matcher:       "600",
+			},
+		},
+		awstypes.ProtocolEnumTcpQuic: {
+			awstypes.ProtocolEnumHttp: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumHttps: {
+				matcher:    "600",
+				validRange: "200-599",
+			},
+			awstypes.ProtocolEnumTcp: {
 				invalidConfig: true,
 				matcher:       "600",
 			},
@@ -3226,9 +3497,8 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			protocolCase := testcases[protocol]
@@ -3237,7 +3507,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 			}
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := protocolCase[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3275,22 +3545,22 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		expectedMatcher string
 		expectedPath    string
 		expectedTimeout string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			expectedMatcher: "200-399",
 			expectedPath:    "/",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			expectedMatcher: "200-399",
 			expectedPath:    "/",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			expectedMatcher: "",
 			expectedPath:    "",
 			expectedTimeout: "5",
@@ -3298,7 +3568,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3318,16 +3588,16 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"), // Should be 80
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						),
 					},
 				},
@@ -3341,33 +3611,33 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		expectedMatcher            string
 		expectedPath               string
 		expectedTimeout            string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			expectedMatcher: "12",
 			expectedPath:    "/AWS.ALB/healthcheck",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			expectedMatcher: "12",
 			expectedPath:    "/AWS.ALB/healthcheck",
 			expectedTimeout: "5",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3384,18 +3654,18 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
 							resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.expectedPath),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", tc.expectedTimeout),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3418,29 +3688,29 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		invalidConfig              bool
 		path                       string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			path: "/path",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			path: "/path",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidConfig: true,
 			path:          "/path",
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3459,11 +3729,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
-							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(protocol)),
+							resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", string(healthCheckProtocol)),
 						)
 					}
 					resource.ParallelTest(t, resource.TestCase{
@@ -3484,27 +3754,27 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		matcher                    string
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			matcher: "101",
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			matcher: "101",
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
-	for _, protocol := range enum.Slice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
-		t.Run(protocol, func(t *testing.T) {
+	for _, protocol := range enum.EnumSlice(awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps) {
+		t.Run(string(protocol), func(t *testing.T) {
 			t.Parallel()
 
 			for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() {
-				t.Run(healthCheckProtocol, func(t *testing.T) {
+				t.Run(string(healthCheckProtocol), func(t *testing.T) {
 					tc, ok := testcases[healthCheckProtocol]
 					if !ok {
 						t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -3540,25 +3810,31 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		validConfig bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTls): {
+		awstypes.ProtocolEnumTls: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumUdp): {
+		awstypes.ProtocolEnumUdp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			validConfig: false,
 		},
 	}
@@ -3567,9 +3843,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			protocolCase, ok := testcases[protocol]
 			if !ok {
 				t.Fatalf("missing case for target protocol %q", protocol)
@@ -3613,25 +3888,31 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 
 	const resourceName = "aws_lb_target_group.test"
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		validConfig bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			validConfig: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTls): {
+		awstypes.ProtocolEnumTls: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumUdp): {
+		awstypes.ProtocolEnumUdp: {
 			validConfig: false,
 		},
-		string(awstypes.ProtocolEnumTcpUdp): {
+		awstypes.ProtocolEnumTcpUdp: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumQuic: {
+			validConfig: false,
+		},
+		awstypes.ProtocolEnumTcpQuic: {
 			validConfig: false,
 		},
 	}
@@ -3640,9 +3921,8 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 		if protocol == awstypes.ProtocolEnumGeneve {
 			continue
 		}
-		protocol := string(protocol)
 
-		t.Run(protocol, func(t *testing.T) {
+		t.Run(string(protocol), func(t *testing.T) {
 			protocolCase, ok := testcases[protocol]
 			if !ok {
 				t.Fatalf("missing case for target protocol %q", protocol)
@@ -3689,7 +3969,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
 					PreCheck:        preCheck,
 					PostCheck:       postCheck,
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3717,7 +3997,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -3747,7 +4027,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
-				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
@@ -3758,10 +4038,10 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
-				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3813,7 +4093,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3879,7 +4159,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 						resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 						resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""), // Should be Null
 					),
-				}.Steps(),
+				}.Steps(resourceName),
 			})
 		})
 	}
@@ -3933,7 +4213,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -3954,7 +4234,7 @@ func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, acctest.Ct0), // Should be Null
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"), // Should be Null
 				),
 			},
 		},
@@ -3983,9 +4263,9 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", string(awstypes.TargetTypeEnumLambda)),
-				resource.TestCheckResourceAttr(resourceName, names.AttrPort, acctest.Ct0), // Should be Null
+				resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"), // Should be Null
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4005,16 +4285,16 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 				),
 			},
 		},
@@ -4037,31 +4317,31 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 			Config:          testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.port", ""),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 			),
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+				resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.port", ""),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.timeout", "35"),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", acctest.Ct3),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 			),
-		}.Steps(),
+		}.Steps(resourceName),
 	})
 }
 
@@ -4070,23 +4350,23 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		warning                    bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -4103,7 +4383,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
@@ -4128,23 +4408,23 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 
 	t.Parallel()
 
-	testcases := map[string]struct {
+	testcases := map[awstypes.ProtocolEnum]struct {
 		invalidHealthCheckProtocol bool
 		warning                    bool
 	}{
-		string(awstypes.ProtocolEnumHttp): {
+		awstypes.ProtocolEnumHttp: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumHttps): {
+		awstypes.ProtocolEnumHttps: {
 			warning: true,
 		},
-		string(awstypes.ProtocolEnumTcp): {
+		awstypes.ProtocolEnumTcp: {
 			invalidHealthCheckProtocol: true,
 		},
 	}
 
 	for _, healthCheckProtocol := range tfelbv2.HealthCheckProtocolEnumValues() { //nolint:paralleltest // false positive
-		t.Run(healthCheckProtocol, func(t *testing.T) {
+		t.Run(string(healthCheckProtocol), func(t *testing.T) {
 			tc, ok := testcases[healthCheckProtocol]
 			if !ok {
 				t.Fatalf("missing case for health check protocol %q", healthCheckProtocol)
@@ -4172,10 +4452,15 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
+				step.ConfigPlanChecks = resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				}
 			} else {
 				t.Fatal("invalid test case, one of invalidHealthCheckProtocol or warning must be set")
 			}
@@ -4190,8 +4475,15 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 							VersionConstraint: "5.26.0",
 						},
 					},
-					Config:   config,
-					PlanOnly: true,
+					Config: config,
+					ConfigPlanChecks: resource.ConfigPlanChecks{
+						PreApply: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+						PostApplyPostRefresh: []plancheck.PlanCheck{
+							plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						},
+					},
 				})
 			}
 
@@ -4233,7 +4525,7 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -4305,7 +4597,7 @@ type testAccMigrateTest struct {
 	PostCheck resource.TestCheckFunc
 }
 
-func (t testAccMigrateTest) Steps() []resource.TestStep {
+func (t testAccMigrateTest) Steps(resourceName string) []resource.TestStep {
 	return []resource.TestStep{
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4316,6 +4608,11 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			},
 			Config: t.Config,
 			Check:  t.PreCheck,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+				},
+			},
 		},
 		{
 			ExternalProviders: map[string]resource.ExternalProvider{
@@ -4324,8 +4621,15 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 					VersionConstraint: t.NextVersion,
 				},
 			},
-			Config:   t.Config,
-			PlanOnly: true,
+			Config: t.Config,
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+				PostApplyPostRefresh: []plancheck.PlanCheck{
+					plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+				},
+			},
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -4797,7 +5101,35 @@ resource "aws_vpc" "test" {
 `, rName, appSstickinessBlock)
 }
 
-func testAccTargetGroupConfig_basicUdp(rName string) string {
+func testAccTargetGroupConfig_basicQUIC(rName string, protocol awstypes.ProtocolEnum) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = %[2]q
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    protocol = "TCP"
+    port     = 443
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, protocol)
+}
+
+func testAccTargetGroupConfig_basicUDP(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name     = %[1]q
@@ -5008,6 +5340,32 @@ resource "aws_vpc" "test" {
   }
 }
 `, rName, protocol, interval)
+}
+
+func testAccTargetGroupConfig_albTargetControlPort(rName, targetType string, targetControlPort int) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  target_type = %[2]q
+
+  target_control_port = %[3]d
+
+  tags = {
+    TestName = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, targetType, targetControlPort)
 }
 
 func testAccTargetGroupConfig_targetGroupHealthState(rName, targetGroupHealthCount string, targetGroupHealthPercentageEnabled string, unhealthyStateRoutingCount int, unhealthyStateRoutingPercentageEnabled string) string {
@@ -5234,6 +5592,56 @@ resource "aws_lb_target_group" "test" {
     healthy_threshold   = 4
     unhealthy_threshold = 4
     matcher             = "200"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_TCPProtocolHeakthCheckHTTP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path     = "/"
+    protocol = "HTTP"
+    matcher  = "200"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_TCPProtocolHeakthCheckTCP(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 80
+  protocol = "TCP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path     = ""
+    protocol = "TCP"
+    matcher  = ""
   }
 }
 
@@ -5955,7 +6363,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -5975,7 +6383,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -5996,7 +6404,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 443
@@ -6017,7 +6425,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_HealthCheckGeneve_basic(healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealthCheckGeneve_basic(healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port     = 6081
@@ -6037,7 +6445,7 @@ resource "aws_vpc" "test" {
 `, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6058,7 +6466,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol, path string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol awstypes.ProtocolEnum, path string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6080,7 +6488,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, path)
 }
 
-func testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol, matcher string) string {
+func testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol awstypes.ProtocolEnum, matcher string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   port             = 443
@@ -6102,7 +6510,7 @@ resource "aws_vpc" "test" {
 `, protocol, healthCheckProtocol, matcher)
 }
 
-func testAccTargetGroupConfig_Instance_protocolVersion(protocol, protocolVersion string) string {
+func testAccTargetGroupConfig_Instance_protocolVersion(protocol awstypes.ProtocolEnum, protocolVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   target_type = "instance"
@@ -6184,7 +6592,7 @@ resource "aws_lb_target_group" "test" {
 `
 }
 
-func testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol string) string {
+func testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol awstypes.ProtocolEnum) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   target_type = "lambda"

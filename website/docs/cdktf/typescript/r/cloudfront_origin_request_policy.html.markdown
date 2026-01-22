@@ -86,6 +86,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The origin request policy ARN.
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
 
@@ -121,4 +122,4 @@ Using `terraform import`, import Cloudfront Origin Request Policies using the `i
 % terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2bef7bc4558d3ce6ae66dcd3bb9da0419f06c50e2e3848dabc38af31c3b16d3b -->
+<!-- cache-key: cdktf-0.20.8 input-0ebc425d606c26b72dc8d9e71809b45e7f749098ec2048ec36c07d7837cec760 -->

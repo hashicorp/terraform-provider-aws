@@ -1,0 +1,3 @@
+```release-note:new-ephemeral
+aws_ecr_authorization_token
+```

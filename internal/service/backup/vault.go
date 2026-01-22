@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package backup
 
@@ -16,13 +18,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,6 +36,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
 // @Testing(importIgnore="force_destroy")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
@@ -81,12 +85,10 @@ func resourceVault() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -111,13 +113,13 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	output, err := findBackupVaultByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Backup Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -135,7 +137,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Tags only.
@@ -143,7 +145,7 @@ func resourceVaultUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return append(diags, resourceVaultRead(ctx, d, meta)...)
 }
 
-func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
@@ -169,10 +171,11 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 				recoveryPointARN := aws.ToString(v.RecoveryPointArn)
 
 				log.Printf("[DEBUG] Deleting Backup Vault recovery point: %s", recoveryPointARN)
-				_, err := conn.DeleteRecoveryPoint(ctx, &backup.DeleteRecoveryPointInput{
+				input := backup.DeleteRecoveryPointInput{
 					BackupVaultName:  aws.String(d.Id()),
 					RecoveryPointArn: aws.String(recoveryPointARN),
-				})
+				}
+				_, err := conn.DeleteRecoveryPoint(ctx, &input)
 
 				if err != nil {
 					errs = append(errs, fmt.Errorf("deleting Backup Vault recovery point (%s): %w", recoveryPointARN, err))
@@ -188,9 +191,10 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
-	_, err := conn.DeleteBackupVault(ctx, &backup.DeleteBackupVaultInput{
+	input := backup.DeleteBackupVaultInput{
 		BackupVaultName: aws.String(d.Id()),
-	})
+	}
+	_, err := conn.DeleteBackupVault(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags
@@ -211,18 +215,18 @@ func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string
 	}
 
 	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
 func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
-	input := &backup.DescribeBackupVaultInput{
+	input := backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
 
-	output, err := findVault(ctx, conn, input)
+	output, err := findVault(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
@@ -235,7 +239,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	output, err := conn.DescribeBackupVault(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -246,7 +250,7 @@ func findVault(ctx context.Context, conn *backup.Client, input *backup.DescribeB
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -265,7 +269,7 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	output, err := conn.DescribeRecoveryPoint(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -276,17 +280,17 @@ func findRecoveryPoint(ctx context.Context, conn *backup.Client, input *backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -299,7 +303,7 @@ func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultNa
 }
 
 func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string, timeout time.Duration) (*backup.DescribeRecoveryPointOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RecoveryPointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusRecoveryPoint(ctx, conn, backupVaultName, recoveryPointARN),
@@ -309,7 +313,7 @@ func waitRecoveryPointDeleted(ctx context.Context, conn *backup.Client, backupVa
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeRecoveryPointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chimesdkmediapipelines_test
@@ -13,11 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfchimesdkmediapipelines "github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
@@ -27,12 +25,12 @@ import (
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mipc awstypes.MediaInsightsPipelineConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
@@ -40,25 +38,20 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_access_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "elements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeCallAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 				),
-			},
-			{
-				Config:             testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 			{
 				ResourceName:      resourceName,
@@ -72,12 +65,12 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mipc awstypes.MediaInsightsPipelineConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
@@ -85,13 +78,13 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_basic(rName, roleName, streamName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &mipc),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchimesdkmediapipelines.ResourceMediaInsightsPipelineConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,14 +95,14 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllProcessorTypes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2, v3, v4 awstypes.MediaInsightsPipelineConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
@@ -117,76 +110,76 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_transcribeCallAnalyticsProcessor(rName, roleName1, streamName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &v1),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
-					resource.TestCheckResourceAttr(resourceName, "elements.#", acctest.Ct2),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
+					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeCallAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.0.type", "IssueDetection"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.0.issue_detection_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.1.type", "KeywordMatch"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.1.keyword_match_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.2.type", "Sentiment"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.2.sentiment_configuration.0.%"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 				),
 			},
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_transcribeProcessor(rName, roleName1, streamName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &v2),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &v2),
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
-					resource.TestCheckResourceAttr(resourceName, "elements.#", acctest.Ct2),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName1)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "elements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "AmazonTranscribeProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
 					resource.TestCheckNoResourceAttr(resourceName, "real_time_alert_configuration.0.%"),
 				),
 			},
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_s3RecordingSink(rName, roleName2, streamName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &v3),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &v3),
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
-					resource.TestCheckResourceAttr(resourceName, "elements.#", acctest.Ct1),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					resource.TestCheckResourceAttr(resourceName, "elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "S3RecordingSink"),
 				),
 			},
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_voiceAnalytics(rName, roleName2, streamName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &v4),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &v4),
 					testAccCheckMediaInsightsPipelineConfigurationNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "elements.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "VoiceAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "LambdaFunctionSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.2.type", "SnsTopicSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.3.type", "SqsQueueSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.4.type", "KinesisDataStreamSink"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.4.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "elements.4.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName2))),
 				),
 			},
 			{
@@ -201,12 +194,12 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var mipc awstypes.MediaInsightsPipelineConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_chimesdkmediapipelines_media_insights_pipeline_configuration.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
@@ -214,14 +207,14 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_tags1(rName, roleName, streamName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -233,9 +226,9 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_tags2(rName, roleName, streamName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -243,9 +236,9 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 			{
 				Config: testAccMediaInsightsPipelineConfigurationConfig_tags1(rName, roleName, streamName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
+					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, t, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -253,9 +246,9 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 	})
 }
 
-func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChimeSDKMediaPipelinesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" {
@@ -278,7 +271,7 @@ func testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx context.Context) 
 	}
 }
 
-func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, name string, mipc *awstypes.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
+func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, t *testing.T, name string, mipc *awstypes.MediaInsightsPipelineConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -291,7 +284,7 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 				tfchimesdkmediapipelines.ResNameMediaInsightsPipelineConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).ChimeSDKMediaPipelinesClient(ctx)
 		resp, err := tfchimesdkmediapipelines.FindMediaInsightsPipelineConfigurationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ChimeSDKMediaPipelines, create.ErrActionCheckingExistence,
@@ -305,7 +298,7 @@ func testAccCheckMediaInsightsPipelineConfigurationExists(ctx context.Context, n
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
+	conn := acctest.ProviderMeta(ctx, t).ChimeSDKMediaPipelinesClient(ctx)
 
 	input := &chimesdkmediapipelines.ListMediaInsightsPipelineConfigurationsInput{}
 	_, err := conn.ListMediaInsightsPipelineConfigurations(ctx, input)
@@ -530,21 +523,21 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "tes
   elements {
     type = "LambdaFunctionSink"
     lambda_function_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
+      insights_target = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:function:MyFunction"
     }
   }
 
   elements {
     type = "SnsTopicSink"
     sns_topic_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
+      insights_target = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:topic/MyTopic"
     }
   }
 
   elements {
     type = "SqsQueueSink"
     sqs_queue_sink_configuration {
-      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
+      insights_target = "arn:${data.aws_partition.current.partition}:sqs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:queue/MyQueue"
     }
   }
 

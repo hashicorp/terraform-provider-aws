@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package drs_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdrs "github.com/hashicorp/terraform-provider-aws/internal/service/drs"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +52,7 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "drs", "replication-configuration-template/{id}"),
 					resource.TestCheckResourceAttr(resourceName, "associate_default_security_group", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", "12"),
 					resource.TestCheckResourceAttr(resourceName, "create_public_ip", acctest.CtFalse),
@@ -61,30 +61,30 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_encryption", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "use_dedicated_replication_server", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replication_server_instance_type", "t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "staging_area_subnet_id", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
 						names.AttrEnabled:    acctest.CtTrue,
-						names.AttrInterval:   acctest.Ct10,
+						names.AttrInterval:   "10",
 						"retention_duration": "60",
 						"units":              "MINUTE",
-						"rule_id":            acctest.Ct1,
+						"rule_id":            "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
 						names.AttrEnabled:    acctest.CtTrue,
-						names.AttrInterval:   acctest.Ct1,
+						names.AttrInterval:   "1",
 						"retention_duration": "24",
 						"units":              "HOUR",
-						"rule_id":            acctest.Ct2,
+						"rule_id":            "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
 						names.AttrEnabled:    acctest.CtTrue,
-						names.AttrInterval:   acctest.Ct1,
-						"retention_duration": acctest.Ct3,
+						names.AttrInterval:   "1",
+						"retention_duration": "3",
 						"units":              "DAY",
-						"rule_id":            acctest.Ct3,
+						"rule_id":            "3",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.Name", rName),
 				),
 			},
@@ -113,7 +113,7 @@ func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
 				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -153,7 +153,7 @@ func testAccCheckReplicationConfigurationTemplateDestroy(ctx context.Context) re
 
 			_, err := tfdrs.FindReplicationConfigurationTemplateByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 			if err != nil {

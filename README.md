@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-disable first-line-h1 no-inline-html -->
 <a href="https://terraform.io">
   <picture>
@@ -21,6 +24,5 @@ The [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/
 - [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/)
 - [Tutorials](https://learn.hashicorp.com/collections/terraform/aws-get-started)
 - [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
-- [Google Groups](http://groups.google.com/group/terraform-tool)
 
 _**Please note:** We take Terraform's security and our users' trust very seriously. If you believe you have found a security issue in the Terraform AWS Provider, please responsibly disclose it by contacting us at security@hashicorp.com._

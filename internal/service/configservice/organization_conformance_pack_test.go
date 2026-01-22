@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,12 +39,12 @@ func testAccOrganizationConformancePack_basic(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func testAccOrganizationConformancePack_disappears(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceOrganizationConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 		},
@@ -155,12 +155,12 @@ func testAccOrganizationConformancePack_updateName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &after),
 					testAccCheckOrganizationConformancePackRecreated(&before, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rNameUpdated))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rNameUpdated))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 			{
@@ -191,7 +191,7 @@ func testAccOrganizationConformancePack_inputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  pKey,
 						"parameter_value": pValue,
@@ -255,12 +255,12 @@ func testAccOrganizationConformancePack_S3Template(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_s3Template(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-conformance-pack/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_updateInputParameter(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey1",
 						"parameter_value": "TestValue1",
@@ -316,7 +316,7 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
 				),
 			},
 		},
@@ -443,7 +443,7 @@ func testAccCheckOrganizationConformancePackDestroy(ctx context.Context) resourc
 
 			_, err := tfconfig.FindOrganizationConformancePackByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
+			if retry.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 				continue
 			}
 
@@ -652,7 +652,7 @@ func testAccOrganizationConformancePackConfig_s3Template(rName, bName string) st
 resource "aws_config_organization_conformance_pack" "test" {
   depends_on      = [aws_config_configuration_recorder.test, aws_organizations_organization.test]
   name            = %q
-  template_s3_uri = "s3://${aws_s3_bucket.test.id}/${aws_s3_object.test.id}"
+  template_s3_uri = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
 }
 
 resource "aws_s3_bucket" "test" {

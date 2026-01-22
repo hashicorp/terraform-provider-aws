@@ -1,3 +1,7 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Running and Writing Acceptance Tests
 
 Terraform includes an acceptance test harness that does most of the repetitive
@@ -647,8 +651,8 @@ func TestAccExampleThing_basic(t *testing.T) {
 
 func testAccPreCheckExample(ctx context.Context, t *testing.T) {
   conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
-	input := &example.ListThingsInput{}
-	_, err := conn.ListThingsWithContext(ctx, input)
+	input := example.ListThingsInput{}
+	_, err := conn.ListThingsWithContext(ctx, &input)
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -757,9 +761,14 @@ func TestAccExampleThing_disappears(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName, &job),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })
@@ -771,7 +780,7 @@ If this test does fail, the fix for this is generally adding error handling imme
 ```go
 output, err := conn.GetThing(input)
 
-if !d.IsNewResource() && tfresource.NotFound(err) {
+if !d.IsNewResource() && retry.NotFound(err) {
   log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
   d.SetId("")
   return nil
@@ -801,9 +810,15 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName),
-          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
+          acctest.CheckSDKResourceDisappears(ctx, t, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
+        ConfigPlanChecks: resource.ConfigPlanChecks{
+          PostApplyPostRefresh: []plancheck.PlanCheck{
+            plancheck.ExpectResourceAction(parentResourceName, plancheck.ResourceActionCreate),
+            plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+          },
+        },
       },
     },
   })
@@ -867,9 +882,9 @@ resource "aws_example_thing" "test" {
 
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
-- In the `PreCheck` function, include `acctest.PreCheckOrganizationsAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
+- In the `PreCheck` function, include `acctest.PreCheckAlternateAccount(ctx, t)` to ensure a standardized set of information is required for cross-account testing credentials
 - Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t)`
-- Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup.
+- Add `acctest.ConfigAlternateAccountProvider()` to the test configuration and use `provider = awsalternate` for cross-account resources. The resource that is the focus of the acceptance test should _not_ use the alternate provider identification to simplify the testing setup
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -882,7 +897,7 @@ func TestAccExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       acctest.PreCheck(ctx, t)
-      acctest.PreCheckOrganizationsAccount(ctx, t)
+      acctest.PreCheckAlternateAccount(ctx, t)
     },
     ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -925,13 +940,13 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for the usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real-world examples of this setup in action.
+Searching for the usage of `acctest.PreCheckAlternateAccount` in the codebase will yield real-world examples of this setup in action.
 
 #### Cross-Region Acceptance Tests
 
 When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckOrganizationsAccount(ctx, t)`
+- In the `PreCheck` function, include `acctest.PreCheckMultipleRegion(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `acctest.PreCheckAlternateAccount(ctx, t)`
 - Switch usage of `ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories` to `ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2)` (where the last parameter is number of regions, 2 or 3)
 - Add `acctest.ConfigMultipleRegionProvider(###)` to the test configuration and use `provider = awsalternate` (and potentially `provider = awsthird`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the alternative providers to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` (EC2) instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
@@ -1116,158 +1131,142 @@ To run sweepers with an assumed role, use the following additional environment v
 
 ### Writing Test Sweepers
 
-Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`). This file should include the following build tags above the package declaration:
+Sweeper logic should be written to a file called `sweep.go` in the appropriate service subdirectory (`internal/service/{serviceName}`).
 
-```go
-package example
-```
+First, implement the sweeper function.
+If the AWS SDK provides a builtin list paginator for the resource, it should be used:
 
-Next, register the resource into the test sweeper framework:
+=== "Terraform Plugin Framework (Preferred)"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            paginator := example.NewListThingsPaginator(conn, input)
+            for paginator.HasMorePages() {
+                    page, err := paginator.NextPage(ctx)
+
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range page.Things {
+                            sweepResources = append(sweepResources, framework.NewSweepResource(newResourceThing, client,
+                                    framework.NewAttribute(names.AttrID, aws.ToString(v.ThingId))),
+                            )
+                    }
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            paginator := example.NewListThingsPaginator(conn, input)
+            for paginator.HasMorePages() {
+                    page, err := paginator.NextPage(ctx)
+
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range page.Things {
+                            r := ResourceThing()
+                            d := r.Data(nil)
+                            d.SetId(aws.StringValue(v.Id))
+
+                            sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+                    }
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+If no paginator is available, consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md), or implement the sweeper as follows:
+
+=== "Terraform Plugin Framework (Preferred)"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            for {
+                    output, err := conn.ListThings(ctx, &input)
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range output.Things {
+                            sweepResources = append(sweepResources, framework.NewSweepResource(newResourceThing, client,
+                                    framework.NewAttribute(names.AttrID, aws.ToString(v.ThingId))),
+                            )
+                    }
+
+                    if aws.StringValue(output.NextToken) == "" {
+                            break
+                    }
+
+                    input.NextToken = output.NextToken
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    func sweepThings(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+            input := &example.ListThingsInput{}
+            conn := client.ExampleClient(ctx)
+            sweepResources := make([]sweep.Sweepable, 0)
+
+            for {
+                    output, err := conn.ListThings(ctx, &input)
+                    if err != nil {
+                            return nil, err
+                    }
+
+                    for _, v := range output.Things {
+                            r := ResourceThing()
+                            d := r.Data(nil)
+                            d.SetId(aws.StringValue(v.Id))
+
+                            sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+                    }
+
+                    if aws.StringValue(output.NextToken) == "" {
+                            break
+                    }
+
+                    input.NextToken = output.NextToken
+            }
+
+            return sweepResources, nil
+    }
+    ```
+
+Once the function is implemented, register it inside the exported `RegisterSweepers` function.
+The final argument to the `awsv2.Register` function is a variadic string which can optionally list any dependencies which must be swept first.
 
 ```go
 func RegisterSweepers() {
-  resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
-    Name: "aws_example_thing",
-    F:    sweepThings,
-    // Optionally
-    Dependencies: []string{
-      "aws_other_thing",
-    },
-  })
-}
-```
-
-Then add the actual implementation. Preferably, if a paginated SDK call is available:
-
-```go
-func sweepThings(region string) error {
-  ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-  if err != nil {
-    return fmt.Errorf("getting client: %w", err)
-  }
-
-  conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
-  var errs *multierror.Error
-
-  input := &example.ListThingsInput{}
-
-  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, lastPage bool) bool {
-    if page == nil {
-      return !lastPage
-    }
-
-    for _, thing := range page.Things {
-      r := ResourceThing()
-      d := r.Data(nil)
-
-      id := aws.StringValue(thing.Id)
-      d.SetId(id)
-
-      // Perform resource specific pre-sweep setup.
-      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
-      //
-      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
-      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
-
-      // This "if" is only needed if the pre-sweep setup can produce errors.
-      // Otherwise, do not include it.
-      if err != nil {
-        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        errs = multierror.Append(errs, err)
-        continue
-      }
-
-      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-    }
-
-    return !lastPage
-  })
-
-  if awsv1.SkipSweepError(err) {
-    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-    return nil
-  }
-  if err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Things for %s: %w", region, err))
-  }
-
-  return errs.ErrorOrNil()
-}
-```
-
-If no paginated SDK call is available,
-consider generating one using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md),
-or implement the sweeper as follows:
-
-```go
-func sweepThings(region string) error {
-  ctx := sweep.Context(region)
-  client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
-  if err != nil {
-    return fmt.Errorf("getting client: %w", err)
-  }
-
-  conn := client.ExampleConn(ctx)
-  sweepResources := make([]sweep.Sweepable, 0)
-  var errs *multierror.Error
-
-  input := &example.ListThingsInput{}
-
-  for {
-    output, err := conn.ListThings(input)
-    if awsv1.SkipSweepError(err) {
-      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, errs)
-      return nil
-    }
-    if err != nil {
-      errs = multierror.Append(errs, fmt.Errorf("listing Example Things for %s: %w", region, err))
-      return errs.ErrorOrNil()
-    }
-
-    for _, thing := range output.Things {
-      r := ResourceThing()
-      d := r.Data(nil)
-
-      id := aws.StringValue(thing.Id)
-      d.SetId(id)
-
-      // Perform resource specific pre-sweep setup.
-      // For example, you may need to perform one or more of these types of pre-sweep tasks, specific to the resource:
-      //
-      // err := sdk.ReadResource(ctx, r, d, client) // fill in data
-      // d.Set("skip_final_snapshot", true)           // set an argument in order to delete
-
-      // This "if" is only needed if the pre-sweep setup can produce errors.
-      // Otherwise, do not include it.
-      if err != nil {
-        err := fmt.Errorf("reading Example Thing (%s): %w", id, err)
-        errs = multierror.Append(errs, err)
-        continue
-      }
-
-      sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-    }
-
-    if aws.StringValue(output.NextToken) == "" {
-      break
-    }
-
-    input.NextToken = output.NextToken
-  }
-
-  if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-    errs = multierror.Append(errs, fmt.Errorf("sweeping Example Thing for %s: %w", region, err))
-  }
-
-  return errs.ErrorOrNil()
+        awsv2.Register("aws_example_thing", sweepThings,
+                // Optionally, add dependencies
+                "aws_example_other_thing",
+        )
 }
 ```
 
@@ -1524,9 +1523,9 @@ resource "aws_iam_role_policy_attachment" "test" {
 
 #### Hardcoded Region
 
-- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
+- __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g., `us-west-2`, should be replaced with the [`aws_region` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.region`
 
-Here's an example of using `aws_region` and `data.aws_region.current.name`:
+Here's an example of using `aws_region` and `data.aws_region.current.region`:
 
 ```terraform
 data "aws_region" "current" {}
@@ -1534,7 +1533,7 @@ data "aws_region" "current" {}
 resource "aws_route53_zone" "test" {
   vpc {
     vpc_id     = aws_vpc.test.id
-    vpc_region = data.aws_region.current.name
+    vpc_region = data.aws_region.current.region
   }
 }
 ```

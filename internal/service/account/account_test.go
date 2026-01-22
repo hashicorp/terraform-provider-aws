@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package account_test
@@ -19,7 +19,9 @@ func TestAccAccount_serial(t *testing.T) {
 			"AccountID":          testAccAlternateContact_accountID,
 		},
 		"PrimaryContact": {
-			acctest.CtBasic: testAccPrimaryContact_basic,
+			acctest.CtBasic:       testAccPrimaryContact_basic,
+			"dataSourceBasic":     testAccPrimaryContactDataSource_basic,
+			"dataSourceAccountID": testAccPrimaryContactDataSource_accountID,
 		},
 		"Region": {
 			acctest.CtBasic: testAccRegion_basic,

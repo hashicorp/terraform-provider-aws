@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,13 +34,13 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "path_found", acctest.CtTrue),
 					acctest.CheckResourceAttrRFC3339(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "succeeded"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", acctest.CtTrue),
 				),
 			},
@@ -69,7 +69,7 @@ func TestAccVPCNetworkInsightsAnalysis_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +92,7 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -106,7 +106,7 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -115,7 +115,7 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
 				),
 			},
 		},
@@ -214,7 +214,7 @@ func testAccCheckNetworkInsightsAnalysisDestroy(ctx context.Context) resource.Te
 
 			_, err := tfec2.FindNetworkInsightsAnalysisByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -294,7 +294,7 @@ data "aws_partition" "current" {}
 
 resource "aws_ec2_network_insights_analysis" "test" {
   network_insights_path_id = aws_ec2_network_insights_path.test.id
-  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:%[2]s"]
+  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.region}:${data.aws_caller_identity.current.id}:%[2]s"]
 
   tags = {
     Name = %[1]q

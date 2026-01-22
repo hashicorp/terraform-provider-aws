@@ -31,6 +31,7 @@ resource "aws_autoscaling_traffic_source_attachment" "example" {
 
 This resource supports the following arguments:
 
+- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 - `autoscaling_group_name` - (Required) The name of the Auto Scaling group.
 - `traffic_source` - (Required) The unique identifiers of a traffic sources.
 

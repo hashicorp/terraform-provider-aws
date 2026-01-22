@@ -49,7 +49,7 @@ class MyConvertedCode(TerraformStack):
         aws_osis_pipeline_example = OsisPipeline(self, "example_2",
             max_units=1,
             min_units=1,
-            pipeline_configuration_body="version: \"2\"\nexample-pipeline:\n  source:\n    http:\n      path: \"/example\"\n  sink:\n    - s3:\n        aws:\n          sts_role_arn: \"${" + example.arn + "}\"\n          region: \"${" + current.name + "}\"\n        bucket: \"example\"\n        threshold:\n          event_collect_timeout: \"60s\"\n        codec:\n          ndjson:\n\n",
+            pipeline_configuration_body="version: \"2\"\nexample-pipeline:\n  source:\n    http:\n      path: \"/example\"\n  sink:\n    - s3:\n        aws:\n          sts_role_arn: \"${" + example.arn + "}\"\n          region: \"${" + current.region + "}\"\n        bucket: \"example\"\n        threshold:\n          event_collect_timeout: \"60s\"\n        codec:\n          ndjson:\n\n",
             pipeline_name="example"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -89,6 +89,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `buffer_options` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`buffer_options`](#buffer_options) below.
 * `encryption_at_rest_options` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryption_at_rest_options`](#encryption_at_rest_options) below.
 * `log_publishing_options` - (Optional) Key-value pairs to configure log publishing. See [`log_publishing_options`](#log_publishing_options) below.
@@ -116,6 +117,7 @@ The following arguments are optional:
 
 * `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoint.
 * `security_group_ids` - (Optional) A list of security groups associated with the VPC endpoint.
+* `vpc_endpoint_management` - (Optional) Whether you or Amazon OpenSearch Ingestion service create and manage the VPC endpoint configured for the pipeline. Valid values are `CUSTOMER` or `SERVICE`
 
 ## Attribute Reference
 
@@ -158,4 +160,4 @@ Using `terraform import`, import OpenSearch Ingestion Pipeline using the `id`. F
 % terraform import aws_osis_pipeline.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-102e9aec43b3118029eeda9efb34ad22903eda3b2298d7b6960f663cf5642db3 -->
+<!-- cache-key: cdktf-0.20.8 input-817bcbbf4e9bfa4e3a60baf5c33695fdcd1f212f25e98f4625d85e2863577c16 -->

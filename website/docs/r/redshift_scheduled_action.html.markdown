@@ -91,6 +91,7 @@ resource "aws_redshift_scheduled_action" "example" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The scheduled action name.
 * `description` - (Optional) The description of the scheduled action.
 * `enable` - (Optional) Whether to enable the scheduled action. Default is `true` .

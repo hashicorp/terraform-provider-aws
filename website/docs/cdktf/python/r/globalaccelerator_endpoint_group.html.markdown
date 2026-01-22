@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
                 weight=100
             )
             ],
-            listener_arn=Token.as_string(aws_globalaccelerator_listener_example.id)
+            listener_arn=Token.as_string(aws_globalaccelerator_listener_example.arn)
         )
 ```
 
@@ -82,6 +82,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_globalaccelerator_endpoint_group.example
+  identity = {
+    "arn" = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh/listener/0123vxyz/endpoint-group/098765zyxwvu"
+  }
+}
+
+resource "aws_globalaccelerator_endpoint_group" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the Global Accelerator endpoint group.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Global Accelerator endpoint groups using the `id`. For example:
 
 ```python
@@ -105,4 +126,4 @@ Using `terraform import`, import Global Accelerator endpoint groups using the `i
 % terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-48677c74b60b74b1eb3424087d22e429d2236cebe37c1b292da850fb32a95838 -->
+<!-- cache-key: cdktf-0.20.8 input-0d603176b007f2a1135149adaf10c30ad2868e770f4695b59c258a9c817e19f3 -->

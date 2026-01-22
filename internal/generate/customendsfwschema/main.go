@@ -1,14 +1,14 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 //go:build generate
-// +build generate
 
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -26,7 +26,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename = `../../../internal/provider/fwprovider/provider_gen.go`
+		filename = `../../../internal/provider/framework/provider_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -56,13 +56,13 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.Slice(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortFunc(td.Services, func(a, b serviceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("endpoints-schema", tmpl, td); err != nil {
+	if err := d.BufferTemplate("endpoints-schema", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

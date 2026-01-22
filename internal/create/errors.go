@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package create
@@ -14,22 +14,30 @@ import (
 )
 
 const (
-	ErrActionChecking             = "checking"
-	ErrActionCheckingDestroyed    = "checking destroyed"
-	ErrActionCheckingExistence    = "checking existence"
-	ErrActionCheckingNotRecreated = "checking not recreated"
-	ErrActionCheckingRecreated    = "checking recreated"
-	ErrActionCreating             = "creating"
-	ErrActionDeleting             = "deleting"
-	ErrActionImporting            = "importing"
-	ErrActionReading              = "reading"
-	ErrActionSetting              = "setting"
-	ErrActionUpdating             = "updating"
-	ErrActionWaitingForCreation   = "waiting for creation"
-	ErrActionWaitingForDeletion   = "waiting for delete"
-	ErrActionWaitingForUpdate     = "waiting for update"
-	ErrActionExpandingResourceId  = "expanding resource id"
-	ErrActionFlatteningResourceId = "flattening resource id"
+	ErrActionCancelling             = "cancelling"
+	ErrActionChecking               = "checking"
+	ErrActionCheckingDestroyed      = "checking destroyed"
+	ErrActionCheckingExistence      = "checking existence"
+	ErrActionCheckingNotRecreated   = "checking not recreated"
+	ErrActionCheckingRecreated      = "checking recreated"
+	ErrActionClosing                = "closing"
+	ErrActionConfiguring            = "configuring"
+	ErrActionCreating               = "creating"
+	ErrActionDeleting               = "deleting"
+	ErrActionExpandingResourceId    = "expanding resource id"
+	ErrActionFlatteningResourceId   = "flattening resource id"
+	ErrActionImporting              = "importing"
+	ErrActionOpening                = "opening"
+	ErrActionReading                = "reading"
+	ErrActionRenewing               = "renewing"
+	ErrActionSetting                = "setting"
+	ErrActionUpdating               = "updating"
+	ErrActionValidating             = "validating"
+	ErrActionWaitingForCreation     = "waiting for creation"
+	ErrActionWaitingForDeletion     = "waiting for delete"
+	ErrActionWaitingForUpdate       = "waiting for update"
+	ErrActionWaitingForCancellation = "waiting for cancellation"
+	ErrActionSynchronizing          = "synchronizing"
 )
 
 // ProblemStandardMessage is a standardized message for reporting errors and warnings

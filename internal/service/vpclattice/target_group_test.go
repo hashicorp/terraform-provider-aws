@@ -1,24 +1,21 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package vpclattice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
-	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,28 +40,28 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", "5"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.healthy_threshold_count", "5"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.0.value", "200"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "INSTANCE"),
 				),
 			},
@@ -97,7 +94,7 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfvpclattice.ResourceTargetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfvpclattice.ResourceTargetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,7 +118,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				Config: testAccTargetGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -134,7 +131,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				Config: testAccTargetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -143,7 +140,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				Config: testAccTargetGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -171,11 +168,11 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 				),
 			},
@@ -208,12 +205,12 @@ func TestAccVPCLatticeTargetGroup_lambdaEventStructureVersion(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambdaEventStructureVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", "V2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 				),
 			},
@@ -245,27 +242,27 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_interval_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.healthy_threshold_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.0.value", "200-299"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "4"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV6"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "IP"),
 				),
 			},
@@ -278,27 +275,27 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_interval_seconds", "180"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.health_check_timeout_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.healthy_threshold_count", "8"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.matcher.0.value", "202"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "3"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV6"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "IP"),
 				),
 			},
@@ -326,16 +323,16 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 				Config: testAccTargetGroupConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ALB"),
 				),
 			},
@@ -357,45 +354,39 @@ func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
-				TargetGroupIdentifier: aws.String(rs.Primary.ID),
-			})
+			_, err := tfvpclattice.FindTargetGroupByID(ctx, conn, rs.Primary.ID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
-					return nil
-				}
 				return err
 			}
 
-			return create.Error(names.VPCLattice, create.ErrActionCheckingDestroyed, tfvpclattice.ResNameService, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Lattice Target Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTargetGroupExists(ctx context.Context, name string, targetGroup *vpclattice.GetTargetGroupOutput) resource.TestCheckFunc {
+func testAccCheckTargetGroupExists(ctx context.Context, n string, v *vpclattice.GetTargetGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
-		resp, err := conn.GetTargetGroup(ctx, &vpclattice.GetTargetGroupInput{
-			TargetGroupIdentifier: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfvpclattice.FindTargetGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.VPCLattice, create.ErrActionCheckingExistence, tfvpclattice.ResNameService, rs.Primary.ID, err)
+			return err
 		}
 
-		*targetGroup = *resp
+		*v = *output
 
 		return nil
 	}

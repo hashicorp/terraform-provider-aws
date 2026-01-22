@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_wafv2_ip_set: Add `name_prefix` argument and plan-time validation of `name`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_regex_pattern_set: Add `name_prefix` argument and plan-time validation of `name`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `name_prefix` argument
+```

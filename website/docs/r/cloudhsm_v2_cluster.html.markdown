@@ -64,6 +64,7 @@ resource "aws_cloudhsm_v2_cluster" "cloudhsm_v2_cluster" {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `source_backup_identifier` - (Optional) ID of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, `hsm1.medium` and `hsm2m.medium` are supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.

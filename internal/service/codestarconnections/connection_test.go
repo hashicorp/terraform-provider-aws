@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package codestarconnections_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcodestarconnections "github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -39,8 +39,8 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeBitbucket)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", string(types.ConnectionStatusPending)),
@@ -74,9 +74,9 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codestar-connections", regexache.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codestar-connections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "host_arn", "codestar-connections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithubEnterpriseServer)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", string(types.ConnectionStatusPending)),
@@ -110,7 +110,7 @@ func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarconnections.ResourceConnection(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcodestarconnections.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +137,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -159,7 +159,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -199,7 +199,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcodestarconnections.FindConnectionByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

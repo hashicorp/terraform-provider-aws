@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package licensemanager_test
@@ -49,7 +49,7 @@ func testAccGrantsDataSource_noMatch(t *testing.T) {
 			{
 				Config: testAccGrantsDataSourceConfig_noMatch(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", "0"),
 				),
 			},
 		},

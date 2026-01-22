@@ -38,10 +38,11 @@ resource "aws_security_group" "from_europe" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `regions` - (Optional) Filter IP ranges by regions (or include all regions, if
 omitted). Valid items are `global` (for `cloudfront`) as well as all AWS regions
 (e.g., `eu-central-1`)
-
 * `services` - (Required) Filter IP ranges by services. Valid items are `amazon`
 (for amazon.com), `amazon_connect`, `api_gateway`, `cloud9`, `cloudfront`,
 `codebuild`, `dynamodb`, `ec2`, `ec2_instance_connect`, `globalaccelerator`,

@@ -1,3 +1,6 @@
+<!-- Copyright IBM Corp. 2014, 2026 -->
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding Resource Tagging Support
 
@@ -24,8 +27,8 @@ including fixes for potential error messages in this process,
 can be found in the [`generate` package documentation](https://github.com/hashicorp/terraform-provider-aws/tree/main/internal/generate/tags/README.md).
 
 The generator will create several types of tagging-related code.
-All services that support tagging will generate the function `KeyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
-and the function `Tags`, which converts from the common format back to the service-specific structs.
+All services that support tagging will generate the function `keyValueTags`, which converts from service-specific structs returned by the AWS SDK into a common format used by the provider,
+and the function `svcTags`, which converts from the common format back to the service-specific structs.
 In addition, many services have separate functions to list or update tags, so the corresponding `listTags` and `updateTags` can be generated.
 Optionally, to retrieve a specific tag, you can generate the `GetTag` function.
 
@@ -112,16 +115,6 @@ For more details on flags for generating tag updating functions, see the
 When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
 If the API does not support tagging on creation, pass the `-CreateTags` flag to generate a `createTags` function that can be called from the resource Create handler function.
 
-### Specifying the AWS SDK for Go version
-
-The majority of the Terraform AWS Provider is implemented using [version 2 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go-v2).
-Some services, however, are only present in [version 1 of the SDK](https://github.com/aws/aws-sdk-go).
-
-By default, the generated code uses the AWS SDK for Go v2.
-To generate code using the AWS SDK for Go v1, pass the flag `-AwsSdkVersion=1`.
-
-For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
-
 ### Running Code generation
 
 Run the command `make gen` to run the code generators for the project.
@@ -173,31 +166,9 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
     }
     ```
 
-Add a plan modifier (Terraform Plugin Framework) or a `CustomizeDiff` function (Terraform Plugin SDK V2) to ensure tagging diffs are handled appropriately.
-These functions handle the combination of tags set on the resource and default tags, and must be set for tagging to function properly.
-
-=== "Terraform Plugin Framework (Preferred)"
-    ```go
-    func (r *resourceExample) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-        r.SetTagsAll(ctx, req, resp)
-    }
-    ```
-
-=== "Terraform Plugin SDK V2"
-    ```go
-    func ResourceExample() *schema.Resource {
-      return &schema.Resource{
-        /* ... other configuration ... */
-        CustomizeDiff: verify.SetTagsDiff,
-      }
-    }
-    ```
-
-If the resource already implements `ModifyPlan`, simply include the `SetTagsAll` function at the end of the method body.
-
 ### Transparent Tagging
 
-Most services can use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+All service that support tagging use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -236,7 +207,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -244,7 +215,7 @@ use the `getTagsIn` function to get any configured tags.
 
 === "Terraform Plugin SDK V2"
     ```go
-    input := &service.CreateExampleInput{
+    input := service.CreateExampleInput{
       /* ... other configuration ... */
       Tags: getTagsIn(ctx),
     }
@@ -303,7 +274,7 @@ In the resource `Update` operation, only non-`tags` updates need to be done as t
 
 === "Terraform Plugin SDK V2"
     ```go
-    if d.HasChangesExcept("tags", "tags_all") {
+    if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
       ...
     }
     ```
@@ -342,9 +313,9 @@ implement the logic to convert the configuration tags into the service tags, e.g
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ... other configuration ... */
-      Tags: Tags(tags.IgnoreAWS()),
+      Tags: svcTags(tags.IgnoreAWS()),
     }
     ```
 
@@ -356,12 +327,12 @@ If the service API does not allow passing an empty list, the logic can be adjust
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &eks.CreateClusterInput{
+    input := eks.CreateClusterInput{
       /* ...other configuration... */
     }
 
     if len(tags) > 0 {
-      input.Tags = Tags(tags.IgnoreAWS())
+      input.Tags = svcTags(tags.IgnoreAWS())
     }
     ```
 
@@ -393,7 +364,7 @@ This example shows using `TagSpecifications`:
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
-    input := &ec2.CreateFleetInput{
+    input := ec2.CreateFleetInput{
         /* ... other configuration ... */
         TagSpecifications: tagSpecificationsFromKeyValue(tags, ec2.ResourceTypeFleet),
     }
@@ -411,7 +382,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
 
     /* ... other d.Set(...) logic ... */
 
-    tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+    tags := keyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
     if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
       return fmt.Errorf("setting tags: %w", err)
@@ -470,7 +441,7 @@ If the resource `Update` function applies specific updates to attributes regardl
     ```go
     if d.HasChangesExcept("tags", "tags_all") {
       /* ... other logic ...*/
-      request := &iam.CreatePolicyVersionInput{
+      request := iam.CreatePolicyVersionInput{
         PolicyArn:      aws.String(d.Id()),
         PolicyDocument: aws.String(d.Get("policy").(string)),
         SetAsDefault:   aws.Bool(true),
@@ -488,109 +459,7 @@ Some services, and some resource or data source types within services, have gene
 These tests cover a broad set of tagging behaviors.
 New services should use the generated acceptance tests.
 
-### Generated Acceptance Tests
-
-To enable generated acceptance tests for a service, add the following line to the service's `generate.go` file:
-
-```go
-//go:generate go run ../../generate/tagstests/main.go
-```
-
-#### Controlling Test Generation
-
-By default, all resource or data source types which support transparent tagging will have tagging tests generated.
-Individual resource or data source types can be excluded from generated acceptance tests by adding the annotation `@Testing(tagsTest=false)` to the resource type declaration.
-If a resource or data source type supports tags but does not use transparent tagging, generate the tests by adding the annotion `@Testing(tagsTest=true)`
-
-Additional `@Testing(...)` parameters can be used to control the generated tests.
-
-Most testing configurations take a single parameter, often a name or a domain name.
-The most common case is parameter `rName` with a value generated by `sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)`, so this is the default.
-If no `rName` is required, add the annotation `@Testing(generator=false)`.
-Other values can be used by setting the `generator` to a reference to a function call.
-The reference optionally contains a Go package path and package alias, using the format
-`[<package path>;[<package alias>;]]<function call>`.
-For example, the Service Catalog Portfolio uses a five-character long random string
-
-```go
-// @Testing(generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)")
-```
-
-Some acceptance tests also require a TLS key and certificate.
-This can be included by setting the annotation `@Testing(tlsKey=true)`,
-which will add the Terraform variables `certificate_pem` and `private_key_pem` to the configuration.
-By default, the common name for the certificate is `example.com`.
-To override the common name, set the annotation `@Testing(tlsKeyDomain=<reference>) to reference an existing variable.
-For example, the API Gateway v2 Domain Name sets the variable `rName` to `acctest.RandomSubdomain()`
-and sets the annotation `@Testing(tlsKeyDomain=rName)` to reference it.
-
-No additional parameters can be defined currently.
-If additional parameters are required, and cannot be derived from `rName`, the resource type must use manually created acceptance tests as described below.
-
-Most `Exists` functions used in acceptance tests take a pointer to the returned API object.
-To specify the type of this parameter, use the annotion `@Testing(existsType=<reference>)`.
-This references a Go type and package path with optional package alias, using the format
-`<package path>;[<package alias>;]<function call>`.
-For example, the S3 Object uses
-
-```go
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
-```
-
-Some services or resource types are using a new variant of the standard `Exists` and `DestroyCheck` functions that use `acctest.ProviderMeta` internally, and thus take a `testing.T` as a parameter.
-In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(destroyTakesT=true)`, respectively.
-
-The generated acceptance tests use `ImportState` steps.
-In most cases, these will work as-is.
-To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
-There are multiple methods for overriding the import ID, if needed.
-To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
-If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
-If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
-If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
-
-If the tests need to be serialized, use the annotion `@Testing(serialize=true)`.
-If a delay is needed between serialized tests, also use the annotation `@Testing(serializeDelay=<duration>)` with a duration in the format used by [`time.ParseDuration()`](https://pkg.go.dev/time#ParseDuration).
-For example, 3 minutes and 30 seconds is `3m30s`.
-
-Some services do not support tags with an empty string value.
-In that case, use the annotation `@Testing(skipEmptyTags=true)`.
-
-Some services do not support tags with an null string value.
-In that case, use the annotation `@Testing(skipNullTags=true)`.
-
-Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
-Use the annotation `@Testing(checkDestroyNoop=true)`.
-
-For some resource types, tags cannot be modified without recreating the resource.
-Use the annotation `@Testing(tagsUpdateForceNew=true)`.
-
-Resource types which pass the result of `getTagsIn` directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
-Use the annotation `@Testing(tagsUpdateGetTagsIn=true)`.
-
-Some tests read the tag values directly from the AWS API.
-If the resource type does not specify `identifierAttribute` in its `@Tags` annotation, specify a `@Testing(tagsIdentifierAttribute=<attribute name>)` annotation to identify which attribute value should be used by the `listTags` function.
-If a resource type is also needed for the `listTags` function, also specify the `tagsResourceType` annotation.
-
-At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
-This is likely an error on the AWS side.
-Add the annotation `@Testing(noRemoveTags=true)` as a workaround.
-
-#### Test Terraform Configurations
-
-The generated acceptance tests use `ConfigDirectory` to specify the test configurations in a directory of Terraform `.tf` files.
-The configuration files are generated from a [Go template](https://pkg.go.dev/text/template) file located in `testdata/tmpl/<name>_tags.gtpl`,
-where `name` is the name of the resource type's implementation file wihtout the `.go` extension.
-For example, the ELB v2 Load Balancer's implementation file is `load_balancer.go`, so the template is `testdata/tmpl/load_balancer_tags.gtpl`.
-
-To generate a configuration for a data source test, the generator reuses the configuration for the corresponding resource type.
-Add an additional file `testdata/tmpl/<name>_data_source.gtpl` which contains only the data source block populated with the parameters needed to associate it with the resource.
-For example, the ELB v2 Load Balancer's data source template is `testdata/tmpl/load_balancer_data_source.gtpl`.
-
-Replace the `tags` attribute with the Go template directive `{{- template "tags" . }}`.
-When the configurations are generated, this will be replaced with the appropriate assignment to the `tags` attribute.
-
-Tags should only be applied to the resource that is being tested.
+See the [acceptance test generation documentation](acc-test-generation.md) for more information on generating tagging tests.
 
 ### Manually Created Acceptance Tests
 

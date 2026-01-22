@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -27,10 +27,10 @@ func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
 			{
 				Config: testAccParametersByPathDataSourceConfig_basic(rName1, rName2, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "arns.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "names.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "types.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "recursive", acctest.CtFalse),
 				),
@@ -85,10 +85,10 @@ func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
 			{
 				Config: testAccParametersByPathDataSourceConfig_recursion(pathPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "arns.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "names.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "types.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recursive", acctest.CtTrue),
 				),
 			},

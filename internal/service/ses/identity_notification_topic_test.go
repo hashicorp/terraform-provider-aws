@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -54,6 +54,33 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/36275.
+func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T) {
+	ctx := acctest.Context(t)
+	domain := acctest.RandomDomainName()
+	resourceName := "aws_ses_identity_notification_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityNotificationTopicConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIdentityNotificationTopicExists(ctx, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

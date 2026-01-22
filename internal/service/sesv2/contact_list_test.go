@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,7 +51,7 @@ func testAccContactList_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func testAccContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_IN"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic1"),
@@ -128,7 +128,7 @@ func testAccContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_OUT"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic2"),
@@ -154,7 +154,7 @@ func testAccContactList_disappears(t *testing.T) {
 				Config: testAccContactListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceContactList(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceContactList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,7 +173,7 @@ func testAccCheckContactListDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfsesv2.FindContactListByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -46,10 +46,9 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `mostRecent` - (Optional) If more than one result is returned, use the most recent snapshot.
-
 * `snapshotIds` - (Optional) Returns information on a specific snapshot_id.
-
 * `filter` - (Optional) One or more name/value pairs to filter off of. The
 supported names are file-system-id or volume-id.
 
@@ -65,4 +64,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - List of Tag values, with a maximum of 50 elements.
 * `volumeId` - ID of the volume that the snapshot is of.
 
-<!-- cache-key: cdktf-0.20.8 input-8de9bd583ae91dc99a2426809f4ba7a76d20e95064b4a418a3d285d9bb3c459b -->
+<!-- cache-key: cdktf-0.20.8 input-fea42c85dff375356d6d807cbadce471b88159054722c9ddb44ec62111996660 -->

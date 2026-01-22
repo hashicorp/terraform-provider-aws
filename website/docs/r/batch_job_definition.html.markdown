@@ -281,6 +281,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `container_properties` - (Optional) Valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `deregister_on_new_revision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
 * `ecs_properties` - (Optional) Valid [ECS properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
@@ -303,9 +304,12 @@ The following arguments are optional:
 * `containers` - (Optional) Properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
 * `dns_policy` - (Optional) DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
 * `host_network` - (Optional) Whether the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `init_containers` - (Optional) Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
 * `image_pull_secret` - (Optional) List of Kubernetes secret resources. See [`image_pull_secret`](#image_pull_secret) below.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `service_account_name` - (Optional) Name of the service account that's used to run the pod.
+* `share_process_namespace` - (Optional) Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
+* `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` - (Optional) Volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
 #### `containers`
@@ -338,6 +342,10 @@ The following arguments are optional:
 
 * `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
 
+#### eks_metadata
+
+* `labels` - Key-value pairs used to identify, sort, and organize kubernetes resources.
+
 #### `eks_secret`
 
 * `secret_name` - (Required) Name of the secret. The name must be allowed as a DNS subdomain name.
@@ -369,6 +377,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_batch_job_definition.example
+  identity = {
+    "arn" = "arn:aws:batch:us-east-1:123456789012:job-definition/sample:1"
+  }
+}
+
+resource "aws_batch_job_definition" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the job definition.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Batch Job Definition using the `arn`. For example:
 

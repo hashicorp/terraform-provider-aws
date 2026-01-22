@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -11,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,6 +27,11 @@ func dataSourceImageRecipe() *schema.Resource {
 		ReadWithoutTimeout: dataSourceImageRecipeRead,
 
 		Schema: map[string]*schema.Schema{
+			"ami_tags": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -43,11 +52,11 @@ func dataSourceImageRecipe() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									names.AttrDeleteOnTermination: {
-										Type:     schema.TypeBool,
+										Type:     nullable.TypeNullableBool,
 										Computed: true,
 									},
 									names.AttrEncrypted: {
-										Type:     schema.TypeBool,
+										Type:     nullable.TypeNullableBool,
 										Computed: true,
 									},
 									names.AttrIOPS: {
@@ -157,7 +166,7 @@ func dataSourceImageRecipe() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
@@ -171,6 +180,11 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	arn = aws.ToString(imageRecipe.Arn)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
+
+	if err := d.Set("ami_tags", flex.FlattenStringValueMap(imageRecipe.AmiTags)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ami_tags: %s", err)
+	}
+
 	if err := d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mapping: %s", err)
 	}

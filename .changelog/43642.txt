@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecr_repository: Add `image_tag_mutability_exclusion_filter` argument
+```
+
+```release-note:enhancement
+resource/aws_ecr_repository: Support `IMMUTABLE_WITH_EXCLUSION` and `MUTABLE_WITH_EXCLUSION` as valid values for `image_tag_mutability`
+```

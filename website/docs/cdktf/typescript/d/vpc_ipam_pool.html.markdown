@@ -60,26 +60,20 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of this data source act as filters for querying the available
-VPCs in the current region. The given filters must match exactly one
-VPC whose data will be exported as attributes.
+This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `ipamPoolId` - (Optional) ID of the IPAM pool you would like information on.
 * `filter` - (Optional) Custom filter block as described below.
 
-### filter
+### `filter`
 
 * `name` - (Required) The name of the filter. Filter names are case-sensitive.
 * `values` - (Required) The filter values. Filter values are case-sensitive.
 
 ## Attribute Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected VPC.
-
-The following attribute is additionally exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `addressFamily` - IP protocol assigned to this pool.
 * `allocationDefaultNetmaskLength` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is `10.0.0.0/8` and you enter 16 here, new allocations will default to `10.0.0.0/16`.
@@ -103,4 +97,4 @@ The following attribute is additionally exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.8 input-14e0ec5a45dd1fac68d4e842a7b8f6c07c038a22e839fecb94a749a7d96d7a4e -->
+<!-- cache-key: cdktf-0.20.8 input-2baf36625da983bca8a3d9fd123a9b13a1f0d5ecde291d1230c3d4421e13f67c -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -54,7 +55,7 @@ func TestAccIAMUserPoliciesExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -87,8 +88,8 @@ func TestAccIAMUserPoliciesExclusive_disappears_User(t *testing.T) {
 					testAccCheckUserPolicyExists(ctx, userPolicyResourceName, &userPolicy),
 					testAccCheckUserPoliciesExclusiveExists(ctx, resourceName),
 					// Inline policy must be deleted before the user can be
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserPolicy(), userPolicyResourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUser(), userResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUserPolicy(), userPolicyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceUser(), userResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,7 +132,7 @@ func TestAccIAMUserPoliciesExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -171,7 +172,7 @@ func TestAccIAMUserPoliciesExclusive_empty(t *testing.T) {
 					testAccCheckUserExists(ctx, userResourceName, &user),
 					testAccCheckUserPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "0"),
 				),
 				// The empty `policy_names` argument in the exclusive lock will remove the
 				// inline policy defined in this configuration, so a diff is expected
@@ -211,7 +212,7 @@ func TestAccIAMUserPoliciesExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckUserExists(ctx, userResourceName, &user),
 					testAccCheckUserPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},
@@ -249,7 +250,7 @@ func TestAccIAMUserPoliciesExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckUserExists(ctx, userResourceName, &user),
 					testAccCheckUserPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},
@@ -300,22 +301,11 @@ func testAccCheckUserPoliciesExclusiveExists(ctx context.Context, name string) r
 		}
 
 		policyCount := rs.Primary.Attributes["policy_names.#"]
-		if policyCount != fmt.Sprint(len(out)) {
+		if policyCount != strconv.Itoa(len(out)) {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameUserPoliciesExclusive, userName, errors.New("unexpected policy_names count"))
 		}
 
 		return nil
-	}
-}
-
-func testAccUserPoliciesExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrUserName], nil
 	}
 }
 

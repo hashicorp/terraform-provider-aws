@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -71,8 +71,8 @@ func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentNameRegex,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
 				),
 			},
 		},
@@ -91,8 +91,8 @@ func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
 				),
 			},
 		},

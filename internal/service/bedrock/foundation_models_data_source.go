@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package bedrock
 
@@ -20,17 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Models")
+// @FrameworkDataSource("aws_bedrock_foundation_models", name="Foundation Models")
 func newFoundationModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelsDataSource{}, nil
 }
 
 type foundationModelsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (d *foundationModelsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
-	response.TypeName = "aws_bedrock_foundation_models"
+	framework.DataSourceWithModel[foundationModelsDataSourceModel]
 }
 
 func (d *foundationModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -88,12 +86,13 @@ func (d *foundationModelsDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type foundationModelsDataSourceModel struct {
+	framework.WithRegionModel
 	ByCustomizationType fwtypes.StringEnum[awstypes.ModelCustomization]              `tfsdk:"by_customization_type"`
 	ByInferenceType     fwtypes.StringEnum[awstypes.InferenceType]                   `tfsdk:"by_inference_type"`
 	ByOutputModality    fwtypes.StringEnum[awstypes.ModelModality]                   `tfsdk:"by_output_modality"`

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,13 +36,13 @@ func testAccMesh_basic(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
-					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, acctest.CtResourceOwner),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func testAccMesh_disappears(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceMesh(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceMesh(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,10 +94,10 @@ func testAccMesh_egressFilter(t *testing.T) {
 				Config: testAccMeshConfig_egressFilter(rName, "ALLOW_ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 				),
 			},
 			{
@@ -112,10 +112,6 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
-			},
-			{
-				PlanOnly: true,
-				Config:   testAccMeshConfig_basic(rName),
 			},
 		},
 	})
@@ -137,8 +133,8 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_PREFERRED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_PREFERRED"),
 				),
 			},
@@ -181,7 +177,7 @@ func testAccCheckServiceMeshDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfappmesh.FindMeshByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["mesh_owner"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kms_test
@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +34,7 @@ func TestAccKMSGrant_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "operations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
@@ -68,9 +68,9 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
-						"encryption_context_equals.%":   acctest.Ct2,
+						"encryption_context_equals.%":   "2",
 						"encryption_context_equals.baz": "kaz",
 						"encryption_context_equals.foo": "bar",
 					}),
@@ -88,9 +88,9 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "constraints.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
-						"encryption_context_subset.%":   acctest.Ct2,
+						"encryption_context_subset.%":   "2",
 						"encryption_context_subset.baz": "kaz",
 						"encryption_context_subset.foo": "bar",
 					}),
@@ -174,7 +174,7 @@ func TestAccKMSGrant_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "operations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
@@ -233,7 +233,7 @@ func TestAccKMSGrant_disappears(t *testing.T) {
 				Config: testAccGrantConfig_basic(rName, "\"Encrypt\", \"Decrypt\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceGrant(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfkms.ResourceGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -260,7 +260,7 @@ func TestAccKMSGrant_crossAccountARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "operations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
@@ -296,7 +296,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "grantee_principal", servicePrincipal),
 					resource.TestCheckResourceAttr(resourceName, "retiring_principal", servicePrincipal),
-					resource.TestCheckResourceAttr(resourceName, "operations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, "aws_kms_key.test", names.AttrKeyID),
@@ -328,7 +328,7 @@ func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfkms.FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -368,6 +368,7 @@ func testAccGrantConfig_base(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "test" {
@@ -463,6 +464,7 @@ resource "aws_kms_grant" "test" {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "RSA_2048"
@@ -493,6 +495,7 @@ func testAccGrantConfig_crossAccountARN(rName string, operations string) string 
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 data "aws_iam_policy_document" "test" {

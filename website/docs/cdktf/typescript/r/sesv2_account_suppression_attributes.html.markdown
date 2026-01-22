@@ -36,8 +36,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `suppressedReasons` - (Required) A list that contains the reasons that email addresses will be automatically added to the suppression list for your account. Valid values: `COMPLAINT`, `BOUNCE`.
 
 ## Attribute Reference
@@ -76,4 +77,4 @@ Using `terraform import`, import account-level suppression attributes using the 
 % terraform import aws_sesv2_account_suppression_attributes.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e4fe45ccad6391ce28893fb1f786a670740820da345f9e02df98116ee33cd05d -->
+<!-- cache-key: cdktf-0.20.8 input-7d7f5f3b889904ca9fa461dfe68a05569be8d6abc2def2b941db845ff5a0d750 -->

@@ -62,6 +62,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ### Multiple Program Settings
 
 * `program_number` - (Required) Unique program number.
@@ -91,6 +93,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30s`)
 
 ## Import
 

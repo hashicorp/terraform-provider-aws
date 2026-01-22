@@ -79,8 +79,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `resourceArn` - (Required) The ID or Amazon Resource Name (ARN) of the service network or service for which the policy is created.
 * `policy` - (Required) An IAM policy. The policy string in JSON must not contain newlines or blank lines.
 
@@ -120,4 +121,4 @@ Using `terraform import`, import VPC Lattice Resource Policy using the `resource
 % terraform import aws_vpclattice_resource_policy.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-c969eed7a7377f14bd03d1b92b78d4bf654be694271ee442b4563386ee2c88bd -->
+<!-- cache-key: cdktf-0.20.8 input-f7f8e67229b23195068edbed70b3a33203cb3cddb2234b4cbdf5d75d30be62f3 -->

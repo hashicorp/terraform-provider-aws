@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package ec2
 
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -56,7 +59,7 @@ func resourceManagedPrefixListEntry() *schema.Resource {
 	}
 }
 
-func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -71,7 +74,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -104,7 +107,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 	return append(diags, resourceManagedPrefixListEntryRead(ctx, d, meta)...)
 }
 
-func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -115,11 +118,11 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, managedPrefixListEntryCreateTimeout, func() (interface{}, error) {
+	entry, err := tfresource.RetryWhenNewResourceNotFound(ctx, managedPrefixListEntryCreateTimeout, func(ctx context.Context) (*awstypes.PrefixListEntry, error) {
 		return findManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
 	}, d.IsNewResource())
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] VPC Managed Prefix List Entry (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,15 +132,13 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
-	entry := outputRaw.(*awstypes.PrefixListEntry)
-
 	d.Set("cidr", entry.Cidr)
 	d.Set(names.AttrDescription, entry.Description)
 
 	return diags
 }
 
-func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -148,7 +149,7 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) (any, error) {
 		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
@@ -185,7 +186,7 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 	return diags
 }
 
-func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	plID, cidr, err := managedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {

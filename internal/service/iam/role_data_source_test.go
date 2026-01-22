@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -35,7 +35,7 @@ func TestAccIAMRoleDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(dataSourceName, "unique_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},

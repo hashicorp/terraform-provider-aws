@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package auditmanager_test
@@ -17,7 +17,7 @@ func TestAccAuditManagerFrameworkDataSource_standard(t *testing.T) {
 	// Standard frameworks are managed by AWS and will exist in the account automatically
 	// once AuditManager is enabled.
 	ctx := acctest.Context(t)
-	name := "Essential Eight"
+	name := "Amazon Web Services (AWS) Audit Manager Sample Framework"
 	dataSourceName := "data.aws_auditmanager_framework.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,7 +32,7 @@ func TestAccAuditManagerFrameworkDataSource_standard(t *testing.T) {
 				Config: testAccFrameworkDataSourceConfig_standard(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", "8"),
+					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", "2"),
 				),
 			},
 		},
@@ -56,9 +56,9 @@ func TestAccAuditManagerFrameworkDataSource_custom(t *testing.T) {
 				Config: testAccFrameworkDataSourceConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.controls.#", "1"),
 				),
 			},
 		},

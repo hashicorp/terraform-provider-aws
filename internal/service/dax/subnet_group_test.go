@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dax_test
@@ -35,7 +35,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
@@ -44,7 +44,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", names.AttrDescription, "update"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
@@ -72,7 +72,7 @@ func TestAccDAXSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceSubnetGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdax.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,9 +89,10 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+			input := dax.DescribeSubnetGroupsInput{
 				SubnetGroupNames: []string{rs.Primary.ID},
-			})
+			}
+			_, err := conn.DescribeSubnetGroups(ctx, &input)
 			if err != nil {
 				if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 					return nil
@@ -112,9 +113,10 @@ func testAccCheckSubnetGroupExists(ctx context.Context, name string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
-		_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+		input := dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []string{rs.Primary.ID},
-		})
+		}
+		_, err := conn.DescribeSubnetGroups(ctx, &input)
 
 		return err
 	}

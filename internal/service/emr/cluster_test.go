@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -13,14 +13,20 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -41,16 +47,17 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
-					resource.TestCheckResourceAttr(resourceName, "applications.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "os_release_label", ""),
+					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applications.*", "Spark"),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "c4.large"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "c4.large"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_master_security_group", "aws_security_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_slave_security_group", "aws_security_group.test", names.AttrID),
@@ -60,10 +67,10 @@ func TestAccEMRCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.emr_service", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_autoscaling_role", names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 				),
 			},
 			{
@@ -87,7 +94,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 	resourceName := "aws_emr_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
@@ -96,7 +103,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 				Config: testAccClusterConfig_autoTermination(rName, 10000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "10000"),
 				),
 			},
@@ -114,7 +121,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 				Config: testAccClusterConfig_autoTermination(rName, 20000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
 				),
 			},
@@ -122,14 +129,14 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 				Config: testAccClusterConfig_noAutoTermination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "0"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_autoTermination(rName, 20000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_termination_policy.0.idle_timeout", "20000"),
 				),
 			},
@@ -161,7 +168,7 @@ func TestAccEMRCluster_additionalInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "additional_info", expectedJSON),
 				),
 			},
@@ -196,8 +203,8 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -321,7 +328,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 				Config: testAccClusterConfig_coreInstanceGroupAutoScalingPolicy(rName, autoscalingPolicy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy1),
 				),
 			},
@@ -340,7 +347,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "core_instance_group.0.autoscaling_policy", autoscalingPolicy2),
 				),
 			},
@@ -349,7 +356,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.autoscaling_policy", ""),
 				),
 			},
@@ -373,7 +380,7 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 				Config: testAccClusterConfig_coreInstanceGroupBidPrice(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.bid_price", "0.50"),
 				),
 			},
@@ -392,7 +399,7 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.bid_price", "0.51"),
 				),
 			},
@@ -416,8 +423,8 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 				Config: testAccClusterConfig_coreInstanceGroupInstanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "2"),
 				),
 			},
 			{
@@ -435,8 +442,8 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "1"),
 				),
 			},
 			{
@@ -444,8 +451,8 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "2"),
 				),
 			},
 		},
@@ -468,7 +475,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 				Config: testAccClusterConfig_coreInstanceGroupInstanceType(rName, "m4.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.large"),
 				),
 			},
@@ -487,7 +494,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "m4.xlarge"),
 				),
 			},
@@ -511,7 +518,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 				Config: testAccClusterConfig_coreInstanceGroupName(rName, "name1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.name", "name1"),
 				),
 			},
@@ -530,7 +537,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.name", "name2"),
 				),
 			},
@@ -557,7 +564,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, t, vpcResourceName, &vpc),
 				),
 			},
 			{
@@ -599,7 +606,7 @@ func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 				Config: testAccClusterConfig_kerberosDedicatedKdc(rName, password),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.kdc_admin_password", password),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.0.realm", "EC2.INTERNAL"),
 				),
@@ -635,7 +642,7 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 				Config: testAccClusterConfig_masterInstanceGroupBidPrice(rName, "0.50"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.bid_price", "0.50"),
 				),
 			},
@@ -654,7 +661,7 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.bid_price", "0.51"),
 				),
 			},
@@ -678,8 +685,8 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 				Config: testAccClusterConfig_masterInstanceGroupInstanceCount(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "3"),
 				),
 			},
 			{
@@ -697,8 +704,8 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "1"),
 				),
 			},
 		},
@@ -721,7 +728,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 				Config: testAccClusterConfig_masterInstanceGroupInstanceType(rName, "m4.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.large"),
 				),
 			},
@@ -740,7 +747,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_type", "m4.xlarge"),
 				),
 			},
@@ -764,7 +771,7 @@ func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 				Config: testAccClusterConfig_masterInstanceGroupName(rName, "name1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.name", "name1"),
 				),
 			},
@@ -783,7 +790,7 @@ func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.name", "name2"),
 				),
 			},
@@ -840,12 +847,12 @@ func TestAccEMRCluster_Step_basic(t *testing.T) {
 				Config: testAccClusterConfig_stepSingle(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.jar", "command-runner.jar"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.main_class", ""),
-					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.properties.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.properties.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.name", "Setup Hadoop Debugging"),
 				),
 			},
@@ -879,7 +886,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 				Config: testAccClusterConfig_stepSingle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 				),
 			},
 			{
@@ -896,7 +903,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 				Config: testAccClusterConfig_stepNoBlocks(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "1"),
 				),
 			},
 			{
@@ -913,7 +920,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 				Config: testAccClusterConfig_stepZeroed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "0"),
 				),
 			},
 			{
@@ -946,7 +953,7 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 				Config: testAccClusterConfig_stepMultiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.jar", "command-runner.jar"),
@@ -954,7 +961,7 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step.1.action_on_failure", "CONTINUE"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.0", "spark-example"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.1", "SparkPi"),
-					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.2", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.2", "10"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.jar", "command-runner.jar"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.name", "Spark Step"),
 				),
@@ -989,7 +996,7 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 				Config: testAccClusterConfig_stepMultipleListStates(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "step.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "step.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.action_on_failure", "TERMINATE_CLUSTER"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.args.0", "state-pusher-script"),
 					resource.TestCheckResourceAttr(resourceName, "step.0.hadoop_jar_step.0.jar", "command-runner.jar"),
@@ -997,7 +1004,7 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step.1.action_on_failure", "CONTINUE"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.0", "spark-example"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.1", "SparkPi"),
-					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.2", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.args.2", "10"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.hadoop_jar_step.0.jar", "command-runner.jar"),
 					resource.TestCheckResourceAttr(resourceName, "step.1.name", "Spark Step"),
 				),
@@ -1033,26 +1040,26 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 				Config: testAccClusterConfig_bootstrap(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 				),
 			},
 			{
@@ -1069,29 +1076,29 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapAdd(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "echo also running on master node"),
 				),
@@ -1110,29 +1117,29 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapReorder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.1", "echo running on master node"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.path", fmt.Sprintf("s3://%s/testscript.sh", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.#", "11"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", "0"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.6", "6"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.7", "7"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.8", "8"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.9", "9"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.10", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.10", "10"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.name", "runif-2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", "instance.isMaster=true"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", "echo also running on master node"),
 				),
@@ -1167,7 +1174,7 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 				Config: testAccClusterConfig_PlacementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.instance_role", "MASTER"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.placement_strategy", "SPREAD"),
 				),
@@ -1176,7 +1183,7 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 				Config: testAccClusterConfig_PlacementGroupWithOptionalUnset(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "placement_group_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.instance_role", "MASTER"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_config.0.placement_strategy", "SPREAD"),
 				),
@@ -1286,56 +1293,6 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 	})
 }
 
-func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cluster awstypes.Cluster
-
-	resourceName := "aws_emr_cluster.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtTrue),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-			{
-				Config: testAccClusterConfig_visibleToAllUsersUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "visible_to_all_users", acctest.CtFalse),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"cluster_state", // Ignore RUNNING versus WAITING changes
-					"configurations",
-					"keep_job_flow_alive_when_no_steps",
-				},
-			},
-		},
-	})
-}
-
 func TestAccEMRCluster_s3Logging(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster awstypes.Cluster
@@ -1388,7 +1345,7 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "log_uri", bucketName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "log_encryption_kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
@@ -1421,7 +1378,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.role", "rolename"),
 					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "env_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "env"),
@@ -1431,7 +1388,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_updatedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "new_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.name", "name-env"),
@@ -1506,14 +1463,14 @@ func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 				Config: testAccClusterConfig_stepConcurrencyLevel(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", "2"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_stepConcurrencyLevel(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "step_concurrency_level", "1"),
 				),
 			},
 			{
@@ -1545,8 +1502,8 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 				Config: testAccClusterConfig_ebs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.ebs_config.0.volumes_per_instance", "2"),
 				),
 			},
 			{
@@ -1615,14 +1572,14 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 				Config: testAccClusterConfig_instanceFleets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", subnetResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "capacity-optimized"),
 				),
 			},
@@ -1642,14 +1599,14 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnet2ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "price-capacity-optimized"),
 				),
 			},
@@ -1684,8 +1641,8 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 				Config: testAccClusterConfig_instanceFleetsMasterOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
 				),
 			},
 			{
@@ -1752,6 +1709,112 @@ func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	})
 }
 
+func TestAccEMRCluster_osReleaseLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 awstypes.Cluster
+
+	var releaseLabel = "emr-6.15.0"
+	var osReleaseLabel1 = "2.0.20240109.0"
+	var osReleaseLabel2 = "2.0.20250116.0"
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "release_label", releaseLabel),
+					resource.TestCheckResourceAttr(resourceName, "os_release_label", osReleaseLabel1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "release_label", releaseLabel),
+					resource.TestCheckResourceAttr(resourceName, "os_release_label", osReleaseLabel2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEMRCluster_upgradeV5_100_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster awstypes.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EMRServiceID),
+		CheckDestroy: testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.100.0",
+					},
+				},
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					tfstatecheck.ExpectNoValue(resourceName, tfjsonpath.New("os_release_label")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("os_release_label"), knownvalue.StringExact("")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
@@ -1763,7 +1826,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfemr.FindClusterByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -3091,6 +3154,7 @@ func testAccClusterConfig_securityConfiguration(rName string) string {
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_emr_cluster" "test" {
@@ -3162,6 +3226,7 @@ EOF
 resource "aws_kms_key" "test" {
   description             = "Terraform %[1]s"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 
   policy = <<POLICY
 {
@@ -3172,7 +3237,16 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Enable EMR instance role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_instance_profile.arn}"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -3540,61 +3614,6 @@ resource "aws_emr_cluster" "test" {
 `, rName, keepJob))
 }
 
-func testAccClusterConfig_visibleToAllUsersUpdated(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterConfig_baseVPC(rName, false),
-		testAccClusterConfig_baseIAMServiceRole(rName),
-		testAccClusterConfig_baseIAMInstanceProfile(rName),
-		testAccClusterConfig_baseIAMAutoScalingRole(rName),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_emr_cluster" "test" {
-  name          = %[1]q
-  release_label = "emr-4.6.0"
-  applications  = ["Spark"]
-
-  ec2_attributes {
-    subnet_id                         = aws_subnet.test.id
-    emr_managed_master_security_group = aws_security_group.test.id
-    emr_managed_slave_security_group  = aws_security_group.test.id
-    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
-  }
-
-  master_instance_group {
-    instance_type = "c4.large"
-  }
-
-  core_instance_group {
-    instance_count = 1
-    instance_type  = "c4.large"
-  }
-
-  tags = {
-    role     = "rolename"
-    dns_zone = "env_zone"
-    env      = "env"
-    name     = "name-env"
-  }
-
-  keep_job_flow_alive_when_no_steps = true
-  visible_to_all_users              = false
-
-  configurations = "test-fixtures/emr_configurations.json"
-
-  depends_on = [
-    aws_route_table_association.test,
-    aws_iam_role_policy_attachment.emr_service,
-    aws_iam_role_policy_attachment.emr_instance_profile,
-    aws_iam_role_policy_attachment.emr_autoscaling_role,
-  ]
-
-  service_role     = aws_iam_role.emr_service.arn
-  autoscaling_role = aws_iam_role.emr_autoscaling_role.arn
-}
-`, rName))
-}
-
 func testAccClusterConfig_s3Logging(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseVPC(rName, false),
@@ -3647,6 +3666,7 @@ func testAccClusterConfig_s3Encryption(rName string) string {
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
 		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -3655,9 +3675,10 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = "Terraform acc test %[1]s"
-
-  policy = <<POLICY
+  description             = "Terraform acc test %[1]s"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  policy                  = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -3666,12 +3687,29 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
-    }
-  ]
+    },
+    {
+      "Sid": "Enable EMR instance role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_instance_profile.arn}"
+      },
+      "Action": "kms:GenerateDataKey",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Enable EMR service role to use key",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.emr_service.arn}"
+      },
+      "Action": "kms:DescribeKey",
+      "Resource": "*"
+    }  ]
 }
 POLICY
 }
@@ -3705,8 +3743,6 @@ resource "aws_emr_cluster" "test" {
 
   service_role = aws_iam_role.emr_service.arn
 }
-
-data "aws_caller_identity" "current" {}
 `, rName))
 }
 
@@ -4473,4 +4509,63 @@ resource "aws_emr_cluster" "test" {
   ]
 }
 `, rName, unhealthyNodeReplacement))
+}
+
+func testAccClusterConfig_osReleaseLabel(rName, releaseLabel, osReleaseLabel string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  name             = %[1]q
+  release_label    = %[2]q
+  os_release_label = %[3]q
+  applications     = ["Spark"]
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
+  }
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 1
+    instance_type  = "c4.large"
+  }
+
+  tags = {
+    role     = "rolename"
+    dns_zone = "env_zone"
+    env      = "env"
+    name     = "name-env"
+  }
+
+  keep_job_flow_alive_when_no_steps = true
+  termination_protection            = false
+
+  scale_down_behavior = "TERMINATE_AT_TASK_COMPLETION"
+
+  configurations = "test-fixtures/emr_configurations.json"
+
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+    aws_iam_role_policy_attachment.emr_autoscaling_role,
+  ]
+
+  service_role         = aws_iam_role.emr_service.arn
+  autoscaling_role     = aws_iam_role.emr_autoscaling_role.arn
+  ebs_root_volume_size = 21
+}
+`, rName, releaseLabel, osReleaseLabel))
 }

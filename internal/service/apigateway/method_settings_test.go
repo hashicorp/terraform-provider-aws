@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigateway_test
@@ -8,33 +8,40 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMethodSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
+				Config: testAccMethodSettingsConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITH_RESPONSE_HEADER"),
 				),
 			},
 			{
@@ -49,28 +56,28 @@ func testAccMethodSettings_basic(t *testing.T) {
 
 func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtFalse),
 				),
 			},
@@ -86,37 +93,37 @@ func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 
 func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", acctest.Ct0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "0"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "1"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", acctest.Ct2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "2"),
 				),
 			},
 			{
@@ -131,28 +138,28 @@ func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 
 func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cachingEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_cachingEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtFalse),
 				),
 			},
@@ -168,28 +175,28 @@ func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 
 func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtFalse),
 				),
 			},
@@ -205,28 +212,28 @@ func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 
 func testAccMethodSettings_Settings_loggingLevel(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "OFF"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "OFF"),
 				),
 			},
@@ -242,28 +249,28 @@ func testAccMethodSettings_Settings_loggingLevel(t *testing.T) {
 
 func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_metricsEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_metricsEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
 				),
 			},
@@ -279,28 +286,28 @@ func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 
 func testAccMethodSettings_Settings_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_multiple(rName, "INFO", true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_multiple(rName, "OFF", false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "OFF"),
 				),
@@ -317,28 +324,28 @@ func testAccMethodSettings_Settings_multiple(t *testing.T) {
 
 func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtFalse),
 				),
 			},
@@ -354,29 +361,29 @@ func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testi
 
 func testAccMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "1"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", acctest.Ct2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "2"),
 				),
 			},
 			{
@@ -392,20 +399,20 @@ func testAccMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Config: testAccMethodSettingsConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "-1"),
 				),
 			},
@@ -417,10 +424,10 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "1"),
 				),
 			},
 		},
@@ -429,28 +436,28 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 
 func testAccMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "1.1"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 2.2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "2.2"),
 				),
 			},
@@ -467,20 +474,20 @@ func testAccMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Config: testAccMethodSettingsConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "-1"),
 				),
 			},
@@ -492,9 +499,9 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "1.1"),
 				),
 			},
@@ -504,28 +511,28 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 
 func testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITH_RESPONSE_HEADER"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITH_RESPONSE_HEADER"),
 				),
 			},
 			{
 				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITHOUT_RESPONSE_HEADER"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITHOUT_RESPONSE_HEADER"),
 				),
 			},
@@ -541,20 +548,20 @@ func testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *te
 
 func testAccMethodSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
+		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMethodSettingsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
+				Config: testAccMethodSettingsConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMethodSettingsExists(ctx, t, resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfapigateway.ResourceMethodSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -562,14 +569,14 @@ func testAccMethodSettings_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodSettingsExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckMethodSettingsExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		_, err := tfapigateway.FindMethodSettingsByThreePartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"], rs.Primary.Attributes["method_path"])
 
@@ -577,9 +584,9 @@ func testAccCheckMethodSettingsExists(ctx context.Context, n string) resource.Te
 	}
 }
 
-func testAccCheckMethodSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckMethodSettingsDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method_settings" {
@@ -588,7 +595,7 @@ func testAccCheckMethodSettingsDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err := tfapigateway.FindMethodSettingsByThreePartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"], rs.Primary.Attributes["method_path"])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -619,7 +626,7 @@ func testAccMethodSettingsImportStateIdFunc(resourceName string) resource.Import
 }
 
 func testAccMethodSettingsConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -664,9 +671,26 @@ EOF
 resource "aws_api_gateway_deployment" "test" {
   depends_on  = [aws_api_gateway_integration.test]
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = "dev"
 }
-`, rName))
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "dev"
+  deployment_id = aws_api_gateway_deployment.test.id
+}
+`, rName)
+}
+
+func testAccMethodSettingsConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), `
+resource "aws_api_gateway_method_settings" "test" {
+  method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = aws_api_gateway_stage.test.stage_name
+
+  settings {}
+}
+`)
 }
 
 func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncrypted bool) string {
@@ -674,7 +698,7 @@ func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncry
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     cache_data_encrypted = %[1]t
@@ -688,7 +712,7 @@ func testAccMethodSettingsConfig_cacheTTLInSeconds(rName string, cacheTtlInSecon
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     cache_ttl_in_seconds = %[1]d
@@ -702,7 +726,7 @@ func testAccMethodSettingsConfig_cachingEnabled(rName string, cachingEnabled boo
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     caching_enabled = %[1]t
@@ -716,7 +740,7 @@ func testAccMethodSettingsConfig_dataTraceEnabled(rName string, dataTraceEnabled
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     data_trace_enabled = %[1]t
@@ -726,11 +750,14 @@ resource "aws_api_gateway_method_settings" "test" {
 }
 
 func testAccMethodSettingsConfig_loggingLevel(rName, loggingLevel string) string {
-	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccMethodSettingsConfig_base(rName),
+		testAccAccountConfig_role0(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     logging_level = %[1]q
@@ -746,7 +773,7 @@ func testAccMethodSettingsConfig_metricsEnabled(rName string, metricsEnabled boo
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     metrics_enabled = %[1]t
@@ -756,10 +783,13 @@ resource "aws_api_gateway_method_settings" "test" {
 }
 
 func testAccMethodSettingsConfig_multiple(rName, loggingLevel string, metricsEnabled bool) string {
-	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccMethodSettingsConfig_base(rName),
+		testAccAccountConfig_role0(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
 
   settings {
@@ -777,7 +807,7 @@ func testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName strin
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     require_authorization_for_cache_control = %[1]t
@@ -791,7 +821,7 @@ func testAccMethodSettingsConfig_throttlingBurstLimit(rName string, throttlingBu
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     throttling_burst_limit = %[1]d
@@ -805,7 +835,7 @@ func testAccMethodSettingsConfig_throttlingRateLimit(rName string, throttlingRat
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     throttling_rate_limit = %[1]f
@@ -819,7 +849,7 @@ func testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, u
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
-  stage_name  = aws_api_gateway_deployment.test.stage_name
+  stage_name  = aws_api_gateway_stage.test.stage_name
 
   settings {
     unauthorized_cache_control_header_strategy = %[1]q

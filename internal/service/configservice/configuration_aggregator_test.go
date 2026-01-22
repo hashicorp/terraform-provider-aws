@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package configservice_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,13 +38,13 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", acctest.Ct1),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "account_aggregation_source.0.account_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", acctest.CtTrue),
 				),
@@ -101,61 +101,15 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 			{
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "0"),
 				),
 			},
 			{
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct1),
-				),
-			},
-		},
-	})
-}
-
-func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ca types.ConfigurationAggregator
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_config_configuration_aggregator.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigurationAggregatorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccConfigurationAggregatorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccConfigurationAggregatorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
 				),
 			},
 		},
@@ -178,7 +132,7 @@ func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationAggregator(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfconfig.ResourceConfigurationAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -218,7 +172,7 @@ func testAccCheckConfigurationAggregatorDestroy(ctx context.Context) resource.Te
 
 			_, err := tfconfig.FindConfigurationAggregatorByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -244,7 +198,7 @@ resource "aws_config_configuration_aggregator" "test" {
 
   account_aggregation_source {
     account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
+    regions     = [data.aws_region.current.region]
   }
 }
 `, rName)
@@ -294,47 +248,4 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRoleForOrganizations"
 }
 `, rName)
-}
-
-func testAccConfigurationAggregatorConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_config_configuration_aggregator" "test" {
-  name = %[1]q
-
-  account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccConfigurationAggregatorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_config_configuration_aggregator" "test" {
-  name = %[1]q
-
-  account_aggregation_source {
-    account_ids = [data.aws_caller_identity.current.account_id]
-    regions     = [data.aws_region.current.name]
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

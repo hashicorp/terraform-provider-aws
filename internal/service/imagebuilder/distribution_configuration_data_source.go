@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package imagebuilder
 
@@ -227,6 +229,50 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"s3_export_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"disk_image_format": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"role_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrS3Bucket: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"s3_prefix": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ssm_parameter_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ami_account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"data_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"parameter_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -239,7 +285,7 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 

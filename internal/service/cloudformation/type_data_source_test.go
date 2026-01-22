@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudformation_test
@@ -69,7 +69,7 @@ func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexache.MustCompile(`^https://.+`)),
@@ -136,7 +136,7 @@ func TestAccCloudFormationTypeDataSource_TypeName_public(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrDescription, regexache.MustCompile(`.*`)),
 					resource.TestCheckResourceAttr(dataSourceName, "documentation_url", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "is_default_version", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 					resource.TestMatchResourceAttr(dataSourceName, "source_url", regexache.MustCompile(`^https://.+`)),
@@ -189,7 +189,7 @@ data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 data "aws_cloudformation_type" "test" {
-  arn = "arn:${data.aws_partition.current.partition}:cloudformation:${data.aws_region.current.name}::type/resource/AWS-Athena-WorkGroup"
+  arn = "arn:${data.aws_partition.current.partition}:cloudformation:${data.aws_region.current.region}::type/resource/AWS-Athena-WorkGroup"
 }
 `
 }

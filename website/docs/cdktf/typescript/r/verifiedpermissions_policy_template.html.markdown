@@ -48,6 +48,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Provides a description for the policy template.
 
 ## Attribute Reference
@@ -89,4 +90,4 @@ Using `terraform import`, import Verified Permissions Policy Store using the `po
 % terraform import aws_verifiedpermissions_policy_template.example policyStoreId:policyTemplateId
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-42f660b66107b10f64a559e6b9570385f505fca4bd368a8c47f9a036cb2dd5cb -->
+<!-- cache-key: cdktf-0.20.8 input-98a2ada288892b7f9bc952a4f7957d0319267336a2265435949471fb34c65625 -->

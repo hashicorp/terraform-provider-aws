@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Improve stabilization logic to handle both new deployments and in-place updates correctly. This fixes a regression introduced in [v6.4.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#640-july-17-2025)
+```
+
+```release-note:note
+resource/aws_ecs_service: Acceptance tests cannot fully reproduce scenarios with deployments older than 3 months. Community feedback on this fix is appreciated, particularly for long-running ECS services with in-place updates
+```

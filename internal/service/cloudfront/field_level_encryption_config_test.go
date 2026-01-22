@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package cloudfront_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,18 +35,19 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 				Config: testAccFieldLevelEncryptionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrGlobalARNFormat(ctx, resourceName, names.AttrARN, "cloudfront", "field-level-encryption-config/{id}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
 						names.AttrContentType: "application/x-www-form-urlencoded",
 						names.AttrFormat:      "URLEncoded",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.forward_when_content_type_is_unknown", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -60,17 +61,17 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some other comment"),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
 						names.AttrContentType: "application/x-www-form-urlencoded",
 						names.AttrFormat:      "URLEncoded",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.*", map[string]string{
 						"query_arg": "Arg1",
 					}),
@@ -100,7 +101,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 				Config: testAccFieldLevelEncryptionConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +120,7 @@ func testAccCheckFieldLevelEncryptionConfigDestroy(ctx context.Context) resource
 
 			_, err := tfcloudfront.FindFieldLevelEncryptionConfigByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

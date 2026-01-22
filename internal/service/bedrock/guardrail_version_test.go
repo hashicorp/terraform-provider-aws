@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package bedrock_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,7 +42,7 @@ func TestAccBedrockGuardrailVersion_basic(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "guardrail_arn"),
 				),
@@ -81,7 +81,7 @@ func TestAccBedrockGuardrailVersion_disappears(t *testing.T) {
 				Config: testAccGuardrailVersion_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceGuardrailVersion, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbedrock.ResourceGuardrailVersion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,7 +107,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			//Executes version resource again and validates first version exists
@@ -115,7 +115,7 @@ func TestAccBedrockGuardrailVersion_skipDestroy(t *testing.T) {
 				Config: testAccGuardrailVersion_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGuardrailVersionExists(ctx, resourceName, &guardrailversion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 		},
@@ -133,7 +133,7 @@ func testAccCheckGuardrailVersionDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tfbedrock.FindGuardrailByTwoPartKey(ctx, conn, rs.Primary.Attributes["guardrail_arn"], rs.Primary.Attributes[names.AttrVersion])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

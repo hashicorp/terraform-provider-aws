@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package efs_test
@@ -24,8 +24,8 @@ func TestAccEFSAccessPointsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAccessPointsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
@@ -45,8 +45,8 @@ func TestAccEFSAccessPointsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccAccessPointsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},

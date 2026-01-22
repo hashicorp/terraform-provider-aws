@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package workspaces
 
@@ -16,18 +18,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Connection Alias")
+// @FrameworkResource("aws_workspaces_connection_alias", name="Connection Alias")
 // @Tags(identifierAttribute="id")
 func newConnectionAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &connectionAliasResource{}
@@ -39,14 +42,9 @@ func newConnectionAliasResource(_ context.Context) (resource.ResourceWithConfigu
 }
 
 type connectionAliasResource struct {
-	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[connectionAliasResourceModel]
+	framework.ResourceWithModel[connectionAliasResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
-}
-
-func (*connectionAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
-	response.TypeName = "aws_workspaces_connection_alias"
 }
 
 func (r *connectionAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -137,7 +135,7 @@ func (r *connectionAliasResource) Read(ctx context.Context, request resource.Rea
 
 	alias, err := findConnectionAliasByID(ctx, conn, data.ID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
@@ -166,9 +164,10 @@ func (r *connectionAliasResource) Delete(ctx context.Context, request resource.D
 
 	conn := r.Meta().WorkSpacesClient(ctx)
 
-	_, err := conn.DeleteConnectionAlias(ctx, &workspaces.DeleteConnectionAliasInput{
+	input := workspaces.DeleteConnectionAliasInput{
 		AliasId: data.ID.ValueStringPointer(),
-	})
+	}
+	_, err := conn.DeleteConnectionAlias(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -185,10 +184,6 @@ func (r *connectionAliasResource) Delete(ctx context.Context, request resource.D
 
 		return
 	}
-}
-
-func (r *connectionAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
 }
 
 func findConnectionAliasByID(ctx context.Context, conn *workspaces.Client, id string) (*awstypes.ConnectionAlias, error) {
@@ -229,11 +224,11 @@ func findConnectionAliases(ctx context.Context, conn *workspaces.Client, input *
 	return output, nil
 }
 
-func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findConnectionAliasByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -246,7 +241,7 @@ func statusConnectionAlias(ctx context.Context, conn *workspaces.Client, id stri
 }
 
 func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateCreating),
 		Target:  enum.Slice(awstypes.ConnectionAliasStateCreated),
 		Refresh: statusConnectionAlias(ctx, conn, id),
@@ -263,7 +258,7 @@ func waitConnectionAliasCreated(ctx context.Context, conn *workspaces.Client, id
 }
 
 func waitConnectionAliasDeleted(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) (*awstypes.ConnectionAlias, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ConnectionAliasStateDeleting),
 		Target:  []string{},
 		Refresh: statusConnectionAlias(ctx, conn, id),
@@ -280,6 +275,7 @@ func waitConnectionAliasDeleted(ctx context.Context, conn *workspaces.Client, id
 }
 
 type connectionAliasResourceModel struct {
+	framework.WithRegionModel
 	ConnectionString types.String   `tfsdk:"connection_string"`
 	ID               types.String   `tfsdk:"id"`
 	OwnerAccountId   types.String   `tfsdk:"owner_account_id"`

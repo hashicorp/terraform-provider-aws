@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package emr_test
@@ -38,7 +38,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 				),
 			},
 			{
@@ -68,8 +68,8 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceInstanceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +97,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, emrClusterResourceName, &cluster),
 					testAccCheckInstanceGroupExists(ctx, resourceName, &ig),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -276,7 +276,7 @@ func TestAccEMRInstanceGroup_instanceCountDecrease(t *testing.T) {
 				Config: testAccInstanceGroupConfig_instanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "2"),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func TestAccEMRInstanceGroup_instanceCountDecrease(t *testing.T) {
 				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "0"),
 				),
 			},
 		},
@@ -315,7 +315,7 @@ func TestAccEMRInstanceGroup_instanceCountCreateZero(t *testing.T) {
 				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "0"),
 				),
 			},
 			{
@@ -345,7 +345,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				Config: testAccInstanceGroupConfig_ebs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtTrue),
 				),
 			},
@@ -363,7 +363,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				Config: testAccInstanceGroupConfig_ebs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 				),
 			},

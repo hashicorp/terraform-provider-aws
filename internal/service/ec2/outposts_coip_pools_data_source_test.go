@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -42,7 +42,7 @@ func TestAccEC2OutpostsCoIPPoolsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccOutpostsCoIPPoolsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", "1"),
 				),
 			},
 		},

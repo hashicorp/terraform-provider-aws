@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -45,7 +45,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -84,7 +84,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -94,7 +94,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "medialive", "inputSecurityGroup:{id}"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
 					}),
@@ -128,7 +128,7 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceInputSecurityGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfmedialive.ResourceInputSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -147,7 +147,7 @@ func testAccCheckInputSecurityGroupDestroy(ctx context.Context) resource.TestChe
 
 			_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

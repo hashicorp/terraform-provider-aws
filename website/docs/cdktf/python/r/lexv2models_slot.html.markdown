@@ -159,6 +159,7 @@ See the [`value_elicitation_setting` argument reference](#value_elicitation_sett
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the slot.
 * `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response.
 See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
@@ -305,4 +306,4 @@ Using `terraform import`, import Lex V2 Models Slot using the `id`. For example:
 % terraform import aws_lexv2models_slot.example bot-1234,1,intent-5678,en-US,slot-9012
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3a61e3173229f9dd10a6c67529a6eb7d5a15d8bfecb7d0955fb5ba469054e47b -->
+<!-- cache-key: cdktf-0.20.8 input-5215ba9230d0538fe3273bb6da7e5ee17d42af56cb40db440b0d8e758b428772 -->

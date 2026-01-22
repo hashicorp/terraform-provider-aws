@@ -47,8 +47,9 @@ resource "aws_backup_restore_testing_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) The name of the backup restore testing selection.
 * `restore_testing_plan_name` - (Required) The name of the restore testing plan.
 * `protected_resource_type` - (Required) The type of the protected resource.
@@ -56,6 +57,7 @@ The following arguments are supported:
 * `protected_resource_arns` - (Optional) The ARNs for the protected resources.
 * `protected_resource_conditions` - (Optional) The conditions for the protected resource.
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
+* `validation_window_hours` - (Optional) The amount of hours available to run a validation script on the data. Valid range is `1` to `168`.
 
 The `protected_resource_conditions` block supports the following arguments:
 

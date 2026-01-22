@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,15 +47,15 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", string(awstypes.PatchComplianceLevelCritical)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", acctest.CtFalse),
-					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", "1"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Name", resourceName, names.AttrName),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Description", resourceName, names.AttrDescription),
@@ -81,8 +81,8 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", acctest.Ct2),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("updated-patch-baseline-%s", name)),
@@ -90,7 +90,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems - August 2017"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.1"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[1]", resourceName, "approved_patches.0"),
-					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct2),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", "2"),
 					func(*terraform.State) error {
 						if aws.ToString(before.BaselineId) != aws.ToString(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -119,7 +119,7 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 				Config: testAccPatchBaselineConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &identity),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourcePatchBaseline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourcePatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -142,10 +142,10 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Config: testAccPatchBaselineConfig_operatingSystem(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelCritical)),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.enable_non_security", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "AMAZON_LINUX"),
 				),
@@ -159,9 +159,9 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Config: testAccPatchBaselineConfig_operatingSystemUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelInformational)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", string(awstypes.OperatingSystemWindows)),
 					testAccCheckPatchBaselineRecreated(t, &before, &after),
@@ -187,9 +187,9 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 				Config: testAccPatchBaselineConfig_approveUntilDate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-01-01"),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelCritical)),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.enable_non_security", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "AMAZON_LINUX"),
@@ -204,9 +204,9 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 				Config: testAccPatchBaselineConfig_approveUntilDateUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-02-02"),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelCritical)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "AMAZON_LINUX"),
 					func(*terraform.State) error {
@@ -215,6 +215,31 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 						}
 						return nil
 					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	var baseline ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_approveAfterDays(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "360"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 				),
 			},
 		},
@@ -237,10 +262,10 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 				Config: testAccPatchBaselineConfig_source(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.products.0", "AmazonLinux2017.09"),
 				),
 			},
@@ -253,14 +278,14 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 				Config: testAccPatchBaselineConfig_sourceUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.products.0", "AmazonLinux2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.name", "My-AL2018.03"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.0", "AmazonLinux2018.03"),
 
 					func(*terraform.State) error {
@@ -380,6 +405,47 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	})
 }
 
+func TestAccSSMPatchBaseline_availableSecurityUpdatesComplianceStatus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before, after ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(name, string(awstypes.PatchComplianceStatusCompliant)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "available_security_updates_compliance_status", string(awstypes.PatchComplianceStatusCompliant)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(name, string(awstypes.PatchComplianceStatusNonCompliant)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "available_security_updates_compliance_status", string(awstypes.PatchComplianceStatusNonCompliant)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
+				),
+			},
+		},
+	})
+}
+
 // testAccSSMPatchBaseline_deleteDefault needs to be serialized with the other
 // Default Patch Baseline acceptance tests because it sets the default patch baseline
 func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
@@ -459,7 +525,7 @@ func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfssm.FindPatchBaselineByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -615,6 +681,32 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
+func testAccPatchBaselineConfig_approveAfterDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = "AMAZON_LINUX"
+  description      = "Baseline containing all updates approved for production systems"
+
+  approval_rule {
+    approve_after_days  = 360
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
+
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
+
+    patch_filter {
+      key    = "SEVERITY"
+      values = ["Critical", "Important"]
+    }
+  }
+}
+`, rName)
+}
+
 func testAccPatchBaselineConfig_source(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
@@ -716,4 +808,32 @@ resource "aws_ssm_patch_baseline" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPatchBaselineConfig_availableSecurityUpdatesComplianceStatus(rName, complianceStatus string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                                         = "patch-baseline-%[1]s"
+  operating_system                             = "WINDOWS"
+  description                                  = "Baseline"
+  approved_patches_compliance_level            = "CRITICAL"
+  available_security_updates_compliance_status = "%[2]s"
+  approval_rule {
+    approve_after_days = 7
+    compliance_level   = "CRITICAL"
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["WindowsServer2019", "WindowsServer2022", "MicrosoftDefenderAntivirus"]
+    }
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates", "FeaturePacks", "SecurityUpdates", "Updates", "UpdateRollups"]
+    }
+    patch_filter {
+      key    = "MSRC_SEVERITY"
+      values = ["*"]
+    }
+  }
+}
+`, rName, complianceStatus)
 }

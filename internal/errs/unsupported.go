@@ -1,11 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package errs
 
 import (
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,7 +33,7 @@ const (
 // Be careful with a return value of `false`, which means either there is NO error
 // or there is an error but not one that suggests an unsupported feature in ISO.
 func IsUnsupportedOperationInPartitionError(partition string, err error) bool {
-	if partition == names.StandardPartitionID {
+	if partition == endpoints.AwsPartitionID {
 		return false
 	}
 

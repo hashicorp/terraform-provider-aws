@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,13 +36,13 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "target_database.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_database.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -93,10 +93,10 @@ func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "ALTER"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
 				),
 			},
@@ -110,10 +110,10 @@ func TestAccGlueCatalogDatabase_createTablePermission(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.permissions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "create_table_default_permission.0.permissions.*", "SELECT"),
-					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permission.0.principal.0.data_lake_principal_identifier", "IAM_ALLOWED_PRINCIPALS"),
 				),
 			},
@@ -137,7 +137,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_database.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
@@ -153,7 +153,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_database.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
@@ -180,7 +180,7 @@ func TestAccGlueCatalogDatabase_targetDatabaseWithRegion(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_database.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", acctest.AlternateRegion()),
@@ -212,10 +212,10 @@ func TestAccGlueCatalogDatabase_federatedDatabase(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "federated_database.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("database/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "federated_database.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "federated_database.0.connection_name", "aws:redshift"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "federated_database.0.identifier", "redshift", regexache.MustCompile(`datashare:+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "federated_database.0.identifier", "redshift", regexache.MustCompile(`datashare:+.`)),
 				),
 			},
 			{
@@ -243,7 +243,7 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -257,7 +257,7 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -267,7 +267,7 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -290,7 +290,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 				Config: testAccCatalogDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfglue.ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -314,7 +314,7 @@ func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfglue.FindDatabaseByName(ctx, conn, catalogId, dbName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -400,7 +400,7 @@ locals {
   # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
   data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
     aws_redshiftserverless_namespace.test.namespace_id,
     "tfacctest",
@@ -420,7 +420,7 @@ resource "aws_redshift_data_share_consumer_association" "test" {
   data_share_arn = local.data_share_arn
   consumer_arn = format("arn:%s:glue:%s:%s:catalog",
     data.aws_partition.current.id,
-    data.aws_region.current.name,
+    data.aws_region.current.region,
     data.aws_caller_identity.current.account_id,
   )
 }

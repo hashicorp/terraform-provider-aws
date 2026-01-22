@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package guardduty_test
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
@@ -49,19 +48,19 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "rank", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "guardduty", "detector/{detector_id}/filter/{name}"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      acctest.Ct1,
+						"equals.#":      "1",
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  acctest.Ct2,
+						"not_equals.#":  "2",
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "another-threat",
 					}),
@@ -85,9 +84,9 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "NOOP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a NOOP"),
-					resource.TestCheckResourceAttr(resourceName, "rank", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 		},
@@ -115,72 +114,49 @@ func testAccFilter_update(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
 			{
 				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      acctest.Ct1,
+						"equals.#":      "1",
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  acctest.Ct2,
+						"not_equals.#":  "2",
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "yet-another-threat",
 					}),
 				),
 			},
-		},
-	})
-}
-
-func testAccFilter_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1, v2, v3 guardduty.GetFilterOutput
-	resourceName := "aws_guardduty_filter.test"
-
-	startDate := "2020-01-01T00:00:00Z"
-	endDate := "2020-02-01T00:00:00Z"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckDetectorNotExists(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFilterDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccFilterConfig_multipleTags(),
+				Config: testAccFilterConfig_matches(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.matches.0", "us-*"),
 				),
 			},
 			{
-				Config: testAccFilterConfig_updateTags(),
+				Config: testAccFilterConfig_notMatches(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
-				),
-			},
-			{
-				Config: testAccFilterConfig_full(startDate, endDate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFilterExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					testAccCheckFilterExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.not_matches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.not_matches.0", "us-*"),
 				),
 			},
 		},
@@ -208,7 +184,7 @@ func testAccFilter_disappears(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourceFilter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfguardduty.ResourceFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -290,7 +266,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -326,7 +302,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -348,35 +324,6 @@ resource "aws_guardduty_detector" "test" {
 `, startDate, endDate)
 }
 
-func testAccFilterConfig_multipleTags() string {
-	return `
-data "aws_region" "current" {}
-
-resource "aws_guardduty_filter" "test" {
-  detector_id = aws_guardduty_detector.test.id
-  name        = "test-filter"
-  action      = "ARCHIVE"
-  rank        = 1
-
-  finding_criteria {
-    criterion {
-      field  = "region"
-      equals = [data.aws_region.current.name]
-    }
-  }
-
-  tags = {
-    Name = "test-filter"
-    Key  = "Value"
-  }
-}
-
-resource "aws_guardduty_detector" "test" {
-  enable = true
-}
-`
-}
-
 func testAccFilterConfig_update() string {
 	return `
 data "aws_region" "current" {}
@@ -390,7 +337,7 @@ resource "aws_guardduty_filter" "test" {
   finding_criteria {
     criterion {
       field  = "region"
-      equals = [data.aws_region.current.name]
+      equals = [data.aws_region.current.region]
     }
 
     criterion {
@@ -406,10 +353,8 @@ resource "aws_guardduty_detector" "test" {
 `
 }
 
-func testAccFilterConfig_updateTags() string {
+func testAccFilterConfig_matches() string {
 	return `
-data "aws_region" "current" {}
-
 resource "aws_guardduty_filter" "test" {
   detector_id = aws_guardduty_detector.test.id
   name        = "test-filter"
@@ -418,13 +363,31 @@ resource "aws_guardduty_filter" "test" {
 
   finding_criteria {
     criterion {
-      field  = "region"
-      equals = [data.aws_region.current.name]
+      field   = "region"
+      matches = ["us-*"]
     }
   }
+}
 
-  tags = {
-    Key = "Updated"
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+`
+}
+
+func testAccFilterConfig_notMatches() string {
+	return `
+resource "aws_guardduty_filter" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "test-filter"
+  action      = "ARCHIVE"
+  rank        = 1
+
+  finding_criteria {
+    criterion {
+      field       = "region"
+      not_matches = ["us-*"]
+    }
   }
 }
 

@@ -189,7 +189,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Example of Exclusive Managed Policies
 
-~> The `managedPolicyArns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managedPolicyArns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role and attaches two managed IAM policies. If someone attaches another managed policy out-of-band, on the next apply, Terraform will detach that policy. If someone detaches these policies out-of-band, Terraform will attach them again.
 
@@ -248,7 +248,7 @@ class MyConvertedCode extends TerraformStack {
 
 ### Example of Removing Managed Policies
 
-~> The `managedPolicyArns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managedPolicyArns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role with an empty `managedPolicyArns` argument. If someone attaches a policy out-of-band, on the next apply, Terraform will detach that policy.
 
@@ -276,7 +276,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The following argument is required:
+The following arguments are required:
 
 * `assumeRolePolicy` - (Required) Policy that grants an entity permission to assume the role.
 
@@ -317,6 +317,31 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_iam_role.example
+  identity = {
+    name = "developer_name"
+  }
+}
+
+resource "aws_iam_role" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `name` (String) Name of the IAM role.
+
+#### Optional
+
+* `accountId` (String) AWS Account where this resource is managed.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Roles using the `name`. For example:
 
 ```typescript
@@ -331,7 +356,7 @@ import { IamRole } from "./.gen/providers/aws/iam-role";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    IamRole.generateConfigForImport(this, "developer", "developer_name");
+    IamRole.generateConfigForImport(this, "example", "developer_name");
   }
 }
 
@@ -340,7 +365,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import IAM Roles using the `name`. For example:
 
 ```console
-% terraform import aws_iam_role.developer developer_name
+% terraform import aws_iam_role.example developer_name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d67bd5d69957baa406a35c98db144d81e10cee4123bbd860c924e559cf2f093f -->
+<!-- cache-key: cdktf-0.20.8 input-5368d8bc2072ec67884864005aebc6c73a9e00af5c6889b2bbc82ff13c703b84 -->

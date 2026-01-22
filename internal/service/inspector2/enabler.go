@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package inspector2
 
@@ -9,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -35,7 +37,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// @SDKResource("aws_inspector2_enabler")
+// @SDKResource("aws_inspector2_enabler", name="Enabler")
 func ResourceEnabler() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnablerCreate,
@@ -47,6 +49,10 @@ func ResourceEnabler() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,7 +82,7 @@ func ResourceEnabler() *schema.Resource {
 				if l := len(accountIDs); l > 1 {
 					client := meta.(*conns.AWSClient)
 
-					if slices.Contains(accountIDs, client.AccountID) {
+					if slices.Contains(accountIDs, client.AccountID(ctx)) {
 						return fmt.Errorf(`"account_ids" can contain either the administrator account or one or more member accounts. Contains %v`, accountIDs)
 					}
 				}
@@ -94,7 +100,7 @@ const (
 	ResNameEnabler = "Enabler"
 )
 
-func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -111,14 +117,14 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	id := enablerID(accountIDs, typeEnable)
 
 	var out *inspector2.EnableOutput
-	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
+	err := tfresource.Retry(ctx, d.Timeout(schema.TimeoutCreate), func(ctx context.Context) *tfresource.RetryError {
 		var err error
 		out, err = conn.Enable(ctx, in)
 		if err != nil {
-			return retry.NonRetryableError(err)
+			return tfresource.NonRetryableError(err)
 		}
 		if out == nil {
-			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+			return tfresource.RetryableError(tfresource.NewEmptyResultError())
 		}
 
 		if len(out.FailedAccounts) == 0 {
@@ -139,14 +145,12 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 			return false
 		}) {
-			return retry.RetryableError(err)
+			return tfresource.RetryableError(err)
 		}
 
-		return retry.NonRetryableError(err)
+		return tfresource.NonRetryableError(err)
 	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.Enable(ctx, in)
-	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}
@@ -192,7 +196,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -202,7 +206,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	s, err := AccountStatuses(ctx, conn, accountIDs)
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Inspector2 Enabler (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -238,7 +242,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
@@ -281,7 +285,7 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 
 			if out == nil {
-				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError(nil))
+				return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameEnabler, id, tfresource.NewEmptyResultError())
 			}
 
 			if len(out.FailedAccounts) > 0 {
@@ -317,15 +321,15 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceEnablerRead(ctx, d, meta)...)
 }
 
-func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient)
 	conn := client.Inspector2Client(ctx)
 
 	accountIDs := getAccountIDs(d)
-	admin := slices.Contains(accountIDs, client.AccountID)
+	admin := slices.Contains(accountIDs, client.AccountID(ctx))
 	members := tfslices.Filter(accountIDs, func(s string) bool {
-		return s != client.AccountID
+		return s != client.AccountID(ctx)
 	})
 	if len(members) > 0 {
 		// Catch legacy case mixing admin account and member accounts
@@ -341,7 +345,7 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 			return diags
 		}
 	} else if admin {
-		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID})...)
+		diags = append(diags, disableAccounts(ctx, conn, d, []string{client.AccountID(ctx)})...)
 	}
 
 	return diags
@@ -378,7 +382,7 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
 	if out == nil {
-		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError())
 	}
 
 	var errs []error
@@ -424,7 +428,7 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) (map[string]AccountResourceStatus, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{statusComplete},
 		Refresh: statusEnablerAccountAndResourceTypes(ctx, conn, accountIDs),
@@ -442,7 +446,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, accountIDs []stri
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, accountIDs []string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: []string{statusInProgress},
 		Target:  []string{},
 		Refresh: statusEnablerAccount(ctx, conn, accountIDs),
@@ -468,7 +472,7 @@ var (
 )
 
 // statusEnablerAccountAndResourceTypes checks the status of Inspector for the account and resource types
-func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
 		if err != nil {
@@ -502,10 +506,10 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 
 // statusEnablerAccount checks only the status of Inspector for the account as a whole.
 // It is only used for deletion, so the non-error states are in-progress or not-found
-func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) retry.StateRefreshFunc {
+func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountIDs []string) sdkretry.StateRefreshFunc {
 	return func() (any, string, error) {
 		st, err := AccountStatuses(ctx, conn, accountIDs)
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -557,8 +561,10 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 			continue
 		}
 		for k, v := range m {
-			if k == "LambdaCode" {
-				k = "LAMBDA_CODE"
+			if strings.ToUpper(k) == "LAMBDACODE" {
+				k = string(types.ResourceScanTypeLambdaCode)
+			} else if strings.ToUpper(k) == "CODEREPOSITORY" {
+				k = string(types.ResourceScanTypeCodeRepository)
 			}
 			status.ResourceStatuses[types.ResourceScanType(strings.ToUpper(k))] = v.Status
 		}
@@ -571,16 +577,16 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 	}
 
 	if len(results) == 0 {
-		return results, &retry.NotFoundError{}
+		return results, &sdkretry.NotFoundError{}
 	}
 
 	return results, err
 }
 
 func enablerID(accountIDs []string, types []types.ResourceScanType) string {
-	sort.Strings(accountIDs)
+	slices.Sort(accountIDs)
 	t := enum.Slice(types...)
-	sort.Strings(t)
+	slices.Sort(t)
 	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(t, ":"))
 }
 

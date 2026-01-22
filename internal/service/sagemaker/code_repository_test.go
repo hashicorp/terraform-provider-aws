@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sagemaker_test
@@ -36,10 +36,10 @@ func TestAccSageMakerCodeRepository_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -68,8 +68,8 @@ func TestAccSageMakerCodeRepository_Git_branch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.branch", "master"),
 				),
@@ -100,8 +100,8 @@ func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
@@ -116,8 +116,8 @@ func TestAccSageMakerCodeRepository_Git_secret(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
 					resource.TestCheckResourceAttr(resourceName, "code_repository_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "git_config.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("code-repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "git_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "git_config.0.repository_url", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckResourceAttrPair(resourceName, "git_config.0.secret_arn", "aws_secretsmanager_secret.test2", names.AttrARN),
 				),
@@ -142,7 +142,7 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 				Config: testAccCodeRepositoryConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 				Config: testAccCodeRepositoryConfig_basicTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,7 +164,7 @@ func TestAccSageMakerCodeRepository_tags(t *testing.T) {
 				Config: testAccCodeRepositoryConfig_basicTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 				Config: testAccCodeRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsagemaker.ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -212,7 +212,7 @@ func testAccCheckCodeRepositoryDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			if err != nil {
-				return fmt.Errorf("reading SageMaker Code Repository (%s): %w", rs.Primary.ID, err)
+				return fmt.Errorf("reading SageMaker AI Code Repository (%s): %w", rs.Primary.ID, err)
 			}
 
 			return fmt.Errorf("sagemaker Code Repository %q still exists", rs.Primary.ID)

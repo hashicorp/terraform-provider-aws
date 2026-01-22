@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iot_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,13 +35,13 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiot.ResourceAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,12 +94,12 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 				Config: testAccAuthorizerConfig_signingDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "0"),
 				),
 			},
 			{
@@ -127,13 +127,13 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 				),
 			},
@@ -141,13 +141,13 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				Config: testAccAuthorizerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-2"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key2"),
 				),
@@ -172,7 +172,7 @@ func TestAccIoTAuthorizer_tags(t *testing.T) {
 				Config: testAccAuthorizerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -185,7 +185,7 @@ func TestAccIoTAuthorizer_tags(t *testing.T) {
 				Config: testAccAuthorizerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -194,7 +194,7 @@ func TestAccIoTAuthorizer_tags(t *testing.T) {
 				Config: testAccAuthorizerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -238,7 +238,7 @@ func testAccCheckAuthorizerDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfiot.FindAuthorizerByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

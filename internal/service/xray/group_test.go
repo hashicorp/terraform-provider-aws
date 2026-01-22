@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package xray_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfxray "github.com/hashicorp/terraform-provider-aws/internal/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,10 +36,10 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1), // Computed.
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
 				),
 			},
 			{
@@ -51,10 +51,10 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 				),
 			},
 		},
@@ -77,7 +77,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      acctest.CtTrue,
 						"notifications_enabled": acctest.CtTrue,
@@ -93,7 +93,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      acctest.CtFalse,
 						"notifications_enabled": acctest.CtFalse,
@@ -120,7 +120,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfxray.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,10 +133,6 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *types.Group) reso
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No XRay Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).XRayClient(ctx)
@@ -164,7 +160,7 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfxray.FindGroupByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

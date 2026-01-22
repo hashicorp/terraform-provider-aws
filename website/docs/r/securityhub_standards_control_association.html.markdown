@@ -28,7 +28,7 @@ resource "aws_securityhub_standards_subscription" "cis_aws_foundations_benchmark
   depends_on    = [aws_securityhub_account.example]
 }
 
-resource "aws_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
+resource "aws_securityhub_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
   standards_arn       = aws_securityhub_standards_subscription.cis_aws_foundations_benchmark.standards_arn
   security_control_id = "IAM.1"
   association_status  = "DISABLED"
@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `updated_reason` - (Optional) The reason for updating the control's enablement status in the standard. Required when `association_status` is `DISABLED`.
 
 ## Attribute Reference

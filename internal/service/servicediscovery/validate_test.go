@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery_test
@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,7 +17,7 @@ func TestValidNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",
 		"V_-.dN01e",
-		acctest.Ct0,
+		"0",
 		".",
 		"-",
 		"_",

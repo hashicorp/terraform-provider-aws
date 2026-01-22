@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package transfer_test
@@ -12,11 +12,12 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,11 +37,11 @@ func testAccUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`user/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "transfer", regexache.MustCompile(`user/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -68,7 +69,7 @@ func testAccUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &userConf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceUser(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftransfer.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +93,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -105,7 +106,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -114,7 +115,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -138,7 +139,7 @@ func testAccUser_posix(t *testing.T) {
 				Config: testAccUserConfig_posix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1000"),
 				),
@@ -152,10 +153,10 @@ func testAccUser_posix(t *testing.T) {
 				Config: testAccUserConfig_posixUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", "2"),
 				),
 			},
 		},
@@ -206,6 +207,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 func testAccUser_UserName_Validation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_transfer_user.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -222,9 +224,12 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserConfig_nameValidation(rName, sdkacctest.RandString(33)),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccUserConfig_nameValidation(rName, sdkacctest.RandString(33)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config:      testAccUserConfig_nameValidation(rName, sdkacctest.RandString(101)),
@@ -235,9 +240,12 @@ func testAccUser_UserName_Validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Invalid "user_name": `),
 			},
 			{
-				Config:             testAccUserConfig_nameValidation(rName, "valid_username"),
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Config: testAccUserConfig_nameValidation(rName, "valid_username"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 			},
 		},
 	})
@@ -263,7 +271,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappings(rName, entry1, target1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "LOGICAL"),
@@ -273,7 +281,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsUpdate(rName, entry1, target1, entry2, target2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.1.entry", entry2),
@@ -290,7 +298,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
 			},
@@ -330,7 +338,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName])
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

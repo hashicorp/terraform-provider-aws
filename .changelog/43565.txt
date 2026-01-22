@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ebs_volume: Add `volume_initialization_rate` argument
+```
+
+```release-note:enhancement
+data-source/aws_ebs_volume: Add `volume_initialization_rate` attribute
+```

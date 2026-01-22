@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package dms_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,18 +42,17 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 						Config: testAccReplicationConfigConfig_basic(rName, migrationType),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-							resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.#", acctest.Ct1),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
 							resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", acctest.Ct0),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
 							resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
 							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_settings", defaultReplicationConfigSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttr(resourceName, "replication_type", migrationType),
@@ -61,10 +60,10 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 							resource.TestCheckResourceAttr(resourceName, "start_replication", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 						),
 					},
 					{
@@ -95,7 +94,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 				Config: testAccReplicationConfigConfig_basic(rName, "cdc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdms.ResourceReplicationConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -245,7 +244,7 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_StreamBuffer(rName, 4, 16),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", acctest.Ct4),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", "4"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
 				),
@@ -276,20 +275,22 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dms", "replication-config:{resource_identifier}"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", rName),
 				),
 			},
 			{
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 4, 32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "dms", "replication-config:{resource_identifier}"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", rName),
 				),
 			},
 		},
@@ -365,7 +366,7 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 
 			_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

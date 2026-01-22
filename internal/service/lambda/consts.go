@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lambda
@@ -34,12 +34,12 @@ type lifecycleScope string
 
 const (
 	lifecycleScopeCreateOnly lifecycleScope = "CREATE_ONLY"
-	lifecycleScopeCrud       lifecycleScope = "CRUD"
+	lifecycleScopeCRUD       lifecycleScope = "CRUD"
 )
 
 func (lifecycleScope) Values() []lifecycleScope {
 	return []lifecycleScope{
 		lifecycleScopeCreateOnly,
-		lifecycleScopeCrud,
+		lifecycleScopeCRUD,
 	}
 }

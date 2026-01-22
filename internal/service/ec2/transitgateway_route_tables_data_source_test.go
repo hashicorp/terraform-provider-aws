@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -55,7 +55,7 @@ func testAccTransitGatewayRouteTablesDataSource_filter(t *testing.T, semaphore t
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
 			},
 		},
@@ -79,7 +79,7 @@ func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T, semaphore tfs
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func testAccTransitGatewayRouteTablesDataSource_empty(t *testing.T, semaphore tf
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},

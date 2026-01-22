@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package athena_test
@@ -8,16 +8,18 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,21 +39,23 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.execution_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.identity_center_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.WorkGroupStateEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -80,10 +84,10 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationACL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
 				),
 			},
@@ -113,7 +117,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfathena.ResourceWorkGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,7 +141,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 12582912),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "12582912"),
 				),
 			},
@@ -151,7 +155,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationBytesScannedCutoffPerQuery(rName, 10485760),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.bytes_scanned_cutoff_per_query", "10485760"),
 				),
 			},
@@ -175,7 +179,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 				Config: testAccWorkGroupConfig_enforce(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", acctest.CtFalse),
 				),
 			},
@@ -189,7 +193,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 				Config: testAccWorkGroupConfig_enforce(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.enforce_workgroup_configuration", acctest.CtTrue),
 				),
 			},
@@ -210,13 +214,13 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 2"),
+				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "Athena engine version 3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.engine_version.0.effective_engine_version", resourceName, "configuration.0.engine_version.0.selected_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "Athena engine version 3"),
 				),
 			},
 			{
@@ -229,8 +233,8 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationEngineVersion(rName, "AUTO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.engine_version.0.effective_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.engine_version.0.selected_engine_version", "AUTO"),
 				),
@@ -270,7 +274,7 @@ func TestAccAthenaWorkGroup_configurationExecutionRole(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationExecutionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.execution_role", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -300,7 +304,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtFalse),
 				),
 			},
@@ -314,7 +318,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationPublishCloudWatchMetricsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.publish_cloudwatch_metrics_enabled", acctest.CtTrue),
 				),
 			},
@@ -338,9 +342,9 @@ func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationEncryptionConfigurationEncryptionOptionSseS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", string(types.EncryptionOptionSseS3)),
 				),
 			},
@@ -372,9 +376,9 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption),
 				),
 			},
@@ -388,9 +392,9 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 				Config: testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, rEncryption2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.encryption_configuration.0.encryption_option", rEncryption2),
 				),
 			},
@@ -416,8 +420,8 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
 				),
 			},
@@ -431,8 +435,8 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocation(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
 				),
 			},
@@ -456,8 +460,8 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationRequesterPaysEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtTrue),
 				),
 			},
@@ -471,8 +475,8 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.requester_pays_enabled", acctest.CtFalse),
 				),
 			},
@@ -500,8 +504,8 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation1+"/test/output"),
 				),
 			},
@@ -515,8 +519,8 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 				Config: testAccWorkGroupConfig_configurationResultConfigurationOutputLocationForceDestroy(rName, rOutputLocation2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.result_configuration.0.output_location", "s3://"+rOutputLocation2+"/test/output"),
 				),
 			},
@@ -654,7 +658,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				Config: testAccWorkGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -668,7 +672,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				Config: testAccWorkGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -677,8 +681,548 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 				Config: testAccWorkGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workGroup2 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workGroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2, workgroup3 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_OutputLocation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_EncryptionConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1, workgroup2, workgroup3 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration_EncryptionConfiguration_removed(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup3),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.managed_query_results_configuration.0.encryption_configuration.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_ManagedQueryResultsConfiguration_conflictValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWorkGroupConfig_ManagedQueryResultsConfiguration_conflictValidation(rName),
+				ExpectError: regexache.MustCompile(`output_location cannot be specified when.*enabled is true`),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_customerContentEncryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, "test1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.customer_content_encryption_configuration.0.kms_key", "aws_kms_key.test1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, "test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.customer_content_encryption_configuration.0.kms_key", "aws_kms_key.test2", names.AttrARN),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_customerContentEncryptionConfigurationRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.customer_content_encryption_configuration.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_enableMinimumEncryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enable_minimum_encryption_configuration", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enable_minimum_encryption_configuration", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAthenaWorkGroup_monitoringConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var workgroup1 types.WorkGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_athena_workgroup.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkGroupConfig_monitoringConfiguration(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_group",
+						"aws_cloudwatch_log_group.test1",
+						names.AttrName,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_stream_name_prefix", "test1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_DRIVER",
+							"values.#":    "2",
+						},
+					),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_EXECUTOR",
+							"values.#":    "0",
+						},
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.managed_logging_configuration.0.kms_key",
+						"aws_kms_key.test1",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.s3_logging_configuration.0.kms_key",
+						"aws_kms_key.test2",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.log_location", fmt.Sprintf("s3://%s/athena_spark1/", rName)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccWorkGroupConfig_monitoringConfigurationUpdated(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_group",
+						"aws_cloudwatch_log_group.test2",
+						names.AttrName,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_stream_name_prefix", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_DRIVER",
+							"values.#":    "1",
+							"values.0":    "STDOUT",
+						},
+					),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_EXECUTOR",
+							"values.#":    "0",
+						},
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.managed_logging_configuration.0.kms_key",
+						"aws_kms_key.test2",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.s3_logging_configuration.0.kms_key",
+						"aws_kms_key.test1",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.log_location", fmt.Sprintf("s3://%s/athena_spark2/", rName)),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_monitoringConfigurationUpdated(rName, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_monitoringConfigurationUpdated(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_group",
+						"aws_cloudwatch_log_group.test2",
+						names.AttrName,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_stream_name_prefix", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_DRIVER",
+							"values.#":    "1",
+							"values.0":    "STDOUT",
+						},
+					),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.0.log_type.*",
+						map[string]string{
+							names.AttrKey: "SPARK_EXECUTOR",
+							"values.#":    "0",
+						},
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.managed_logging_configuration.0.kms_key",
+						"aws_kms_key.test2",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(
+						resourceName,
+						"configuration.0.monitoring_configuration.0.s3_logging_configuration.0.kms_key",
+						"aws_kms_key.test1",
+						names.AttrARN,
+					),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.0.log_location", fmt.Sprintf("s3://%s/athena_spark2/", rName)),
+				),
+			},
+			{
+				Config: testAccWorkGroupConfig_monitoringConfigurationRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "athena", fmt.Sprintf("workgroup/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.cloud_watch_logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.managed_logging_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.monitoring_configuration.0.s3_logging_configuration.#", "0"),
 				),
 			},
 		},
@@ -698,7 +1242,7 @@ func testAccCheckCreateNamedQuery(ctx context.Context, workGroup *types.WorkGrou
 		}
 
 		if _, err := conn.CreateNamedQuery(ctx, input); err != nil {
-			return fmt.Errorf("error creating Named Query (%s) on Workgroup (%s): %s", queryName, aws.ToString(workGroup.Name), err)
+			return fmt.Errorf("error creating Named Query (%s) on Workgroup (%s): %w", queryName, aws.ToString(workGroup.Name), err)
 		}
 
 		return nil
@@ -716,7 +1260,7 @@ func testAccCheckWorkGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfathena.FindWorkGroupByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -953,6 +1497,7 @@ func testAccWorkGroupConfig_resultEncryptionEncryptionOptionKMS(rName, encryptio
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
 }
 
 resource "aws_athena_workgroup" "test" {
@@ -1022,4 +1567,344 @@ resource "aws_athena_database" "test" {
   force_destroy = true
 }
 `, rName, dbName)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_Enabled(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = %[2]t
+    }
+  }
+}
+`, rName, enabled)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = true
+      encryption_configuration {
+        kms_key = aws_kms_key.test.arn
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_EncryptionConfiguration_removed(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = %[2]t
+    }
+  }
+}
+`, rName, enabled)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_OutputLocation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = false
+    }
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/output/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_ManagedQueryResultsConfiguration_conflictValidation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+
+  configuration {
+    managed_query_results_configuration {
+      enabled = true
+    }
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["athena.amazonaws.com"]
+    }
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+`, rName)
+}
+
+func testAccWorkGroupConfig_customerContentEncryptionConfiguration(rName, kmsKeyIdentifier string) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    customer_content_encryption_configuration {
+      kms_key = aws_kms_key.%[2]s.arn
+    }
+    engine_version {
+      selected_engine_version = "PySpark engine version 3"
+    }
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark/"
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName, kmsKeyIdentifier))
+}
+
+func testAccWorkGroupConfig_customerContentEncryptionConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_customerContentEncryptionConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    engine_version {
+      selected_engine_version = "PySpark engine version 3"
+    }
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark/"
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName))
+}
+
+func testAccWorkGroupConfig_enableMinimumEncryptionConfiguration(rName string, enableMinimumEncryptionConfiguration bool) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    enable_minimum_encryption_configuration = %[2]t
+  }
+}
+`, rName, enableMinimumEncryptionConfiguration)
+}
+
+func testAccWorkGroupConfig_monitoringConfigurationBase(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["athena.amazonaws.com"]
+    }
+    effect = "Allow"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+resource "aws_cloudwatch_log_group" "test1" {
+  name = "%[1]s-1"
+}
+
+resource "aws_cloudwatch_log_group" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+  description             = "Terraform Acceptance Testing"
+  enable_key_rotation     = true
+}
+`, rName))
+}
+
+func testAccWorkGroupConfig_monitoringConfiguration(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_monitoringConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    engine_version {
+      selected_engine_version = "Apache Spark version 3.5"
+    }
+    monitoring_configuration {
+      cloud_watch_logging_configuration {
+        enabled                = %[2]t
+        log_group              = aws_cloudwatch_log_group.test1.name
+        log_stream_name_prefix = "test1"
+        log_type {
+          key    = "SPARK_DRIVER"
+          values = ["STDOUT", "STDERR"]
+        }
+        log_type {
+          key    = "SPARK_EXECUTOR"
+          values = []
+        }
+      }
+      managed_logging_configuration {
+        enabled = %[2]t
+        kms_key = aws_kms_key.test1.arn
+      }
+      s3_logging_configuration {
+        enabled      = %[2]t
+        kms_key      = aws_kms_key.test2.arn
+        log_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark1/"
+      }
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName, enabled))
+}
+
+func testAccWorkGroupConfig_monitoringConfigurationUpdated(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_monitoringConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    engine_version {
+      selected_engine_version = "Apache Spark version 3.5"
+    }
+    monitoring_configuration {
+      cloud_watch_logging_configuration {
+        enabled                = %[2]t
+        log_group              = aws_cloudwatch_log_group.test2.name
+        log_stream_name_prefix = "test2"
+        log_type {
+          key    = "SPARK_DRIVER"
+          values = ["STDOUT"]
+        }
+        log_type {
+          key    = "SPARK_EXECUTOR"
+          values = []
+        }
+      }
+      managed_logging_configuration {
+        enabled = %[2]t
+        kms_key = aws_kms_key.test2.arn
+      }
+      s3_logging_configuration {
+        enabled      = %[2]t
+        kms_key      = aws_kms_key.test1.arn
+        log_location = "s3://${aws_s3_bucket.test.bucket}/athena_spark2/"
+      }
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName, enabled))
+}
+
+func testAccWorkGroupConfig_monitoringConfigurationRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccWorkGroupConfig_monitoringConfigurationBase(rName),
+		fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+  name = %[1]q
+  configuration {
+    engine_version {
+      selected_engine_version = "Apache Spark version 3.5"
+    }
+    execution_role = aws_iam_role.test.arn
+  }
+}
+`, rName))
 }

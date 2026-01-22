@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssm_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,10 +37,10 @@ func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:Name2"),
-					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -75,10 +75,10 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:Name2"),
-					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
 				),
@@ -136,10 +136,10 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:Name2"),
-					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -158,10 +158,10 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "owner_information", "something"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:Updated"),
-					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "new-value"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only - updated"),
@@ -194,10 +194,10 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "resource-groups:ResourceTypeFilters"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "AWS::EC2::Instance"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "resource-groups:Name"),
-					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "resource-group-name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
@@ -230,7 +230,7 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -254,7 +254,7 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -294,7 +294,7 @@ func testAccCheckMaintenanceWindowTargetDestroy(ctx context.Context) resource.Te
 
 			_, err := tfssm.FindMaintenanceWindowTargetByTwoPartKey(ctx, conn, rs.Primary.Attributes["window_id"], rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

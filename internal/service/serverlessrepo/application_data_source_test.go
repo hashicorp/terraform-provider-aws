@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package serverlessrepo_test
@@ -18,7 +18,7 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,7 +48,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 		version2 = "1.1.36"
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -61,7 +61,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "0"),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "2"),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),

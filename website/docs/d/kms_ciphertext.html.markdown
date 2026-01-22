@@ -40,13 +40,14 @@ EOF
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
 
 ## Attribute Reference
 
-All of the argument attributes are also exported as result attributes.
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Globally unique key ID for the customer master key.
 * `ciphertext_blob` - Base64 encoded ciphertext

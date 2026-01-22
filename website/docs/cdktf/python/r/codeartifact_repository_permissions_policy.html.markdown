@@ -74,6 +74,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `repository` - (Required) The name of the repository to set the resource policy on.
 * `domain` - (Required) The name of the domain on which to set the resource policy.
 * `policy_document` - (Required) A JSON policy string to be set as the access control resource policy on the provided domain.
@@ -88,6 +89,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `resource_arn` - The ARN of the resource associated with the resource policy.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_codeartifact_repository_permissions_policy.example
+  identity = {
+    "arn" = "arn:aws:codeartifact:us-west-2:123456789012:repository/example-domain/example-repo"
+  }
+}
+
+resource "aws_codeartifact_repository_permissions_policy" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the CodeArtifact repository.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeArtifact Repository Permissions Policies using the CodeArtifact Repository ARN. For example:
 
@@ -112,4 +134,4 @@ Using `terraform import`, import CodeArtifact Repository Permissions Policies us
 % terraform import aws_codeartifact_repository_permissions_policy.example arn:aws:codeartifact:us-west-2:012345678912:repository/tf-acc-test-6968272603913957763/tf-acc-test-6968272603913957763
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-2609ffac94d64cc0a79333020641c78ce36e999d6d8358e8f31df4a0ce52ddb0 -->
+<!-- cache-key: cdktf-0.20.8 input-f92acb04ce87065e02f467c779a70eadd9a1e2da02eb1629e4769dd6881884d1 -->

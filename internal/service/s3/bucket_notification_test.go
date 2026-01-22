@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,9 +37,9 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -68,12 +68,12 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ".png"),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -102,12 +102,12 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ""),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -136,12 +136,12 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_suffix", ".mp4"),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -170,10 +170,10 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_suffix", ""),
 				),
@@ -204,13 +204,13 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_suffix", ".txt"),
-					resource.TestCheckResourceAttr(resourceName, "topic.1.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "topic.1.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.1.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.1.filter_suffix", ".log"),
 				),
@@ -272,16 +272,20 @@ func TestAccS3BucketNotification_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_notification" {
 				continue
 			}
 
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			}
+
 			_, err := tfs3.FindBucketNotificationConfiguration(ctx, conn, rs.Primary.ID, "")
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -304,6 +308,9 @@ func testAccCheckBucketNotificationExists(ctx context.Context, n string, v *s3.G
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindBucketNotificationConfiguration(ctx, conn, rs.Primary.ID, "")
 
@@ -769,7 +776,7 @@ resource "aws_s3_bucket_notification" "test" {
 }
 
 func testAccBucketNotificationConfig_directoryBucket(rName string) string {
-	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_baseAZ(rName), `
 resource "aws_s3_directory_bucket" "test" {
   bucket = local.bucket
 

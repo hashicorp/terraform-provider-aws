@@ -140,6 +140,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `administrationRoleArn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `SELF_MANAGED` permission model.
 * `autoDeployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
     * `enabled` - (Optional) Whether or not auto-deployment is enabled.
@@ -242,4 +243,4 @@ Using `terraform import`, import CloudFormation StackSets when acting a delegate
 % terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-1d380cd88a9c1e44395223f0b9852c5fb06c39c061a9e252dc1ef33d9268e7f5 -->
+<!-- cache-key: cdktf-0.20.8 input-cc8fc531eac7f2a514fffa70517f3bafb8b8acbc30205c2fb9898b60ef250b58 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package medialive_test
@@ -44,7 +44,7 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 					testAccCheckInputExists(ctx, dataSourceName, &input),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_class", dataSourceName, "input_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_devices", dataSourceName, "input_devices"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_partner_ids", dataSourceName, "input_partner_ids"),

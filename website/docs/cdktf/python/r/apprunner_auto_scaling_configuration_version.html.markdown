@@ -39,8 +39,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments supported:
+This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `auto_scaling_configuration_name` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `max_concurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
 * `max_size` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.
@@ -58,6 +59,27 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_apprunner_auto_scaling_configuration_version.example
+  identity = {
+    "arn" = "arn:aws:apprunner:us-east-1:123456789012:autoscalingconfiguration/example-auto-scaling-config/1/a1b2c3d4567890ab"
+  }
+}
+
+resource "aws_apprunner_auto_scaling_configuration_version" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Amazon Resource Name (ARN) of the App Runner auto scaling configuration version.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Runner AutoScaling Configuration Versions using the `arn`. For example:
 
@@ -82,4 +104,4 @@ Using `terraform import`, import App Runner AutoScaling Configuration Versions u
 % terraform import aws_apprunner_auto_scaling_configuration_version.example "arn:aws:apprunner:us-east-1:1234567890:autoscalingconfiguration/example/1/69bdfe0115224b0db49398b7beb68e0f
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-7aac7f85f31408240e0b57ce4afb75ca1e0d9a5e1f5c9aa2ba1d6961146bc1ac -->
+<!-- cache-key: cdktf-0.20.8 input-e829764c40cadbb25f0df2b864ada3153a56f86e34f3cbbb809205ee4b48944a -->

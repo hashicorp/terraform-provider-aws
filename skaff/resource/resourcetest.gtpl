@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package {{ .ServicePackage }}_test
@@ -31,13 +31,11 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
+	// awstypes.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
@@ -45,22 +43,18 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 {{- if .IncludeComments }}
 
@@ -156,7 +150,7 @@ func Test{{ .Resource }}ExampleUnitTest(t *testing.T) {
 // applicable. We prefix its name with "TestAcc", the service, and the
 // resource name.
 //
-// Acceptance test access AWS and cost money to run.
+// Acceptance tests access AWS and cost money to run.
 {{- end }}
 func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -168,32 +162,24 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
+	var {{ .ResourceLower }} {{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			{{- if .AWSGoSDKV2 }}
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
-			{{- else }}
-			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
-			{{- end }}
 			testAccPreCheck(ctx, t)
 		},
-		{{- if .AWSGoSDKV2 }}
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		{{- else }}
-		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		{{- end }}
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx),
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{{ .Resource }}Exists(ctx, t, resourceName, &{{ .ResourceLower }}),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
@@ -202,7 +188,11 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:+.`)),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					{{- end }}
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .ResourceLower }}:.+$`)),
 				),
 			},
 			{
@@ -221,85 +211,65 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var {{ .ResourceLower }} {{ .ServicePackage }}.Describe{{ .Resource }}Response
+	var {{ .ResourceLower }} {{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			{{- if .AWSGoSDKV2 }}
 			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
-			{{- else }}
-			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
-			{{- end }}
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
-		{{- if .AWSGoSDKV2 }}
 		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
-		{{- else }}
-		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		{{- end }}
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx),
+		CheckDestroy:             testAccCheck{{ .Resource }}Destroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Resource }}Config_basic(rName, testAcc{{ .Resource }}VersionNewer),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{{ .Resource }}Exists(ctx, resourceName, &{{ .ResourceLower }}),
-					{{- if .PluginFramework }}
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{{ .Resource }}Exists(ctx, t, resourceName, &{{ .ResourceLower }}),
 					{{- if .IncludeComments }}
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
 					// but expects a new resource factory function as the third argument. To expose this
 					// private function to the testing package, you may need to add a line like the following
 					// to exports_test.go:
 					//
-					//   var Resource{{ .Resource}} = newResource{{ .Resource }}
+					//   var Resource{{ .Resource}} = new{{ .Resource }}Resource
 					{{- end }}
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}, resourceName),
-					{{- else }}
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tf{{ .ServicePackage }}.Resource{{ .Resource }}(), resourceName),
-					{{- end }}
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheck{{ .Resource }}Destroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+		conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}" {
 				continue
 			}
 
-			input := &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			}
-
-			{{- if .AWSGoSDKV2 }}
-			_, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			})
-			{{- else }}
-			_, err := conn.Describe{{ .Resource }}WithContext(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			})
+			{{ if .IncludeComments }}
+			// TIP: ==== FINDERS ====
+			// The find function should be exported. Since it won't be used outside of the package, it can be exported
+			// in the `exports_test.go` file.
 			{{- end }}
-			{{- if .AWSGoSDKV2 }}
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			_, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
+			if retry.NotFound(err) {
 				return nil
 			}
-			{{ else }}
-			if tfawserr.ErrCodeEquals(err, {{ .ServicePackage }}.ErrCodeNotFoundException) {
-				return nil
-			}
-			{{ end -}}
 			if err != nil {
-			        return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
+			    return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, errors.New("not destroyed"))
@@ -309,7 +279,7 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .ResourceLower }} *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
+func testAccCheck{{ .Resource }}Exists(ctx context.Context, t *testing.T, name string, {{ .ResourceLower }} *{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -320,18 +290,9 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+		conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
-		{{- if .AWSGoSDKV2 }}
-		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		})
-		{{- else }}
-		resp, err := conn.Describe{{ .Resource }}WithContext(ctx, &{{ .ServicePackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		})
-		{{- end }}
-
+		resp, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 		}
@@ -343,15 +304,11 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := acctest.ProviderMeta(ctx, t).{{ .Service }}Client(ctx)
 
-	input := &{{ .ServicePackage }}.List{{ .Resource }}sInput{}
+	input := &{{ .SDKPackage }}.List{{ .ResourceAWS }}sInput{}
 
-	{{- if .AWSGoSDKV2 }}
-	_, err := conn.List{{ .Resource }}s(ctx, input)
-	{{- else }}
-	_, err := conn.List{{ .Resource }}sWithContext(ctx, input)
-	{{- end }}
+	_, err := conn.List{{ .ResourceAWS }}s(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -361,10 +318,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .ServicePackage }}.Describe{{ .Resource }}Response) resource.TestCheckFunc {
+func testAccCheck{{ .Resource }}NotRecreated(before, after *{{ .SDKPackage }}.Describe{{ .ResourceAWS }}Response) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(before.{{ .Resource }}Id), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(after.{{ .Resource }}Id); before != after {
-			return create.Error(names.{{ .Service }}, create.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(before.{{ .Resource }}Id), errors.New("recreated"))
+		if before, after := aws.ToString(before.{{ .ResourceAWS }}Id), aws.ToString(after.{{ .ResourceAWS }}Id); before != after {
+			return create.Error(names.{{ .Service }}, create.ErrActionCheckingNotRecreated, tf{{ .ServicePackage }}.ResName{{ .Resource }}, aws.ToString(before.{{ .ResourceAWS }}Id), errors.New("recreated"))
 		}
 
 		return nil

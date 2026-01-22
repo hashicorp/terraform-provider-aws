@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,11 +44,11 @@ func TestAccBackupVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -76,7 +77,7 @@ func TestAccBackupVault_disappears(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVault(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +130,7 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -158,7 +159,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -172,7 +173,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
 				),
 			},
 		},
@@ -189,7 +190,7 @@ func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfbackup.FindBackupVaultByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -231,23 +232,24 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		conn := client.BackupClient(ctx)
 
 		iamRoleARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "iam",
-			AccountID: client.AccountID,
+			AccountID: client.AccountID(ctx),
 			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
 		}.String()
 		resourceARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
-			Region:    client.Region,
-			AccountID: client.AccountID,
+			Region:    client.Region(ctx),
+			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
-		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
+		input := backup.StartBackupJobInput{
 			BackupVaultName: aws.String(rName),
 			IamRoleArn:      aws.String(iamRoleARN),
 			ResourceArn:     aws.String(resourceARN),
-		})
+		}
+		output, err := conn.StartBackupJob(ctx, &input)
 
 		if err != nil {
 			return fmt.Errorf("error starting Backup Job: %w", err)
@@ -289,7 +291,7 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	output, err := conn.DescribeBackupJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, &sdkretry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -300,17 +302,17 @@ func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
 }
 
-func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
+func statusJobState(ctx context.Context, conn *backup.Client, id string) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
 		output, err := findJobByID(ctx, conn, id)
 
-		if tfresource.NotFound(err) {
+		if retry.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -323,7 +325,7 @@ func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.S
 }
 
 func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeout time.Duration) (*backup.DescribeBackupJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
+	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.BackupJobStateCreated, awstypes.BackupJobStatePending, awstypes.BackupJobStateRunning, awstypes.BackupJobStateAborting),
 		Target:  enum.Slice(awstypes.BackupJobStateCompleted),
 		Refresh: statusJobState(ctx, conn, id),
@@ -333,7 +335,7 @@ func waitJobCompleted(ctx context.Context, conn *backup.Client, id string, timeo
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.DescribeBackupJobOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -354,6 +356,7 @@ func testAccVaultConfig_kmsKey(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 10
+  enable_key_rotation     = true
 }
 
 resource "aws_backup_vault" "test" {

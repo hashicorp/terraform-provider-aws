@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package apigatewayv2
@@ -25,9 +25,12 @@ var (
 	FindDomainName                        = findDomainName
 	FindIntegrationByTwoPartKey           = findIntegrationByTwoPartKey
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
+	FindIntegrations                      = findIntegrations
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
+	FindRoutes                            = findRoutes
 	FindStageByTwoPartKey                 = findStageByTwoPartKey
+	FindStages                            = findStages
 	FindVPCLinkByID                       = findVPCLinkByID
 )

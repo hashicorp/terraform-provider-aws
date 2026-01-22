@@ -1,5 +1,7 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package securityhub
 
@@ -20,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Standards Control Associations")
+// @FrameworkDataSource("aws_securityhub_standards_control_associations", name="Standards Control Associations")
 func newStandardsControlAssociationsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &standardsControlAssociationsDataSource{}
 
@@ -28,11 +30,7 @@ func newStandardsControlAssociationsDataSource(context.Context) (datasource.Data
 }
 
 type standardsControlAssociationsDataSource struct {
-	framework.DataSourceWithConfigure
-}
-
-func (*standardsControlAssociationsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	response.TypeName = "aws_securityhub_standards_control_associations"
+	framework.DataSourceWithModel[standardsControlAssociationsDataSourceModel]
 }
 
 func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
@@ -42,13 +40,7 @@ func (d *standardsControlAssociationsDataSource) Schema(ctx context.Context, req
 			"security_control_id": schema.StringAttribute{
 				Required: true,
 			},
-			"standards_control_associations": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[standardsControlAssociationData](ctx),
-				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: fwtypes.AttributeTypesMust[standardsControlAssociationData](ctx),
-				},
-			},
+			"standards_control_associations": framework.DataSourceComputedListOfObjectAttribute[standardsControlAssociationSummaryModel](ctx),
 		},
 	}
 }
@@ -74,20 +66,21 @@ func (d *standardsControlAssociationsDataSource) Read(ctx context.Context, reque
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data.StandardsControlAssociations)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type standardsControlAssociationsDataSourceModel struct {
-	ID                           types.String                                                     `tfsdk:"id"`
-	SecurityControlID            types.String                                                     `tfsdk:"security_control_id"`
-	StandardsControlAssociations fwtypes.ListNestedObjectValueOf[standardsControlAssociationData] `tfsdk:"standards_control_associations"`
+	framework.WithRegionModel
+	ID                           types.String                                                             `tfsdk:"id"`
+	SecurityControlID            types.String                                                             `tfsdk:"security_control_id"`
+	StandardsControlAssociations fwtypes.ListNestedObjectValueOf[standardsControlAssociationSummaryModel] `tfsdk:"standards_control_associations"`
 }
 
-type standardsControlAssociationData struct {
+type standardsControlAssociationSummaryModel struct {
 	AssociationStatus           fwtypes.StringEnum[awstypes.AssociationStatus] `tfsdk:"association_status"`
-	RelatedRequirements         fwtypes.ListValueOf[types.String]              `tfsdk:"related_requirements"`
+	RelatedRequirements         fwtypes.ListOfString                           `tfsdk:"related_requirements"`
 	SecurityControlARN          types.String                                   `tfsdk:"security_control_arn"`
 	SecurityControlID           types.String                                   `tfsdk:"security_control_id"`
 	StandardsARN                types.String                                   `tfsdk:"standards_arn"`

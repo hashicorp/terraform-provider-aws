@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssoadmin_test
@@ -35,8 +35,8 @@ func TestAccSSOAdminPrincipalApplicationAssignmentsDataSource_basic(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "principal_type", "USER"),
-					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(dataSourceName, "application_assignments.0.application_arn", applicationResourceName, "application_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "application_assignments.0.application_arn", applicationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_assignments.0.principal_id", userResourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "application_assignments.0.principal_type", "USER"),
 				),
@@ -68,7 +68,7 @@ resource "aws_identitystore_user" "test" {
 }
 
 resource "aws_ssoadmin_application_assignment" "test" {
-  application_arn = aws_ssoadmin_application.test.application_arn
+  application_arn = aws_ssoadmin_application.test.arn
   principal_id    = aws_identitystore_user.test.user_id
   principal_type  = "USER"
 }

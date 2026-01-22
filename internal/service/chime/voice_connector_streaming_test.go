@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime_test
@@ -42,7 +42,7 @@ func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "1"),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func testAccVoiceConnectorStreaming_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorStreaming(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,11 +104,11 @@ func testAccVoiceConnectorStreaming_update(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_retention", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "media_insights_configuration.0.disabled", acctest.CtFalse),
-					acctest.MatchResourceAttrRegionalARN(resourceName,
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName,
 						"media_insights_configuration.0.configuration_arn",
 						"chime",
 						regexache.MustCompile(fmt.Sprintf(`media-insights-pipeline-configuration/test-config-%s`, name)),

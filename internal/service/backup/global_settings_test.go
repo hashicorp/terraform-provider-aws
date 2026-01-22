@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package backup_test
@@ -45,7 +45,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
 			},
@@ -58,7 +58,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtFalse),
 				),
 			},
@@ -66,7 +66,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
 			},

@@ -28,7 +28,6 @@ import { Fn, Token, TerraformStack } from "cdktf";
  */
 import { DrsReplicationConfigurationTemplate } from "./.gen/providers/aws/drs-replication-configuration-template";
 interface MyConfig {
-  ebsEncryption: any;
   stagingAreaTags: any;
 }
 class MyConvertedCode extends TerraformStack {
@@ -40,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
       createPublicIp: false,
       dataPlaneRouting: "PRIVATE_IP",
       defaultLargeStagingDiskType: "GP2",
-      ebs_ecryption: "DEFAULT",
+      ebsEncryption: "DEFAULT",
       ebsEncryptionKeyArn:
         "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
       pitPolicy: [
@@ -72,7 +71,6 @@ class MyConvertedCode extends TerraformStack {
       ),
       stagingAreaSubnetId: Token.asString(awsSubnetExample.id),
       useDedicatedReplicationServer: false,
-      ebsEncryption: config.ebsEncryption,
       stagingAreaTags: config.stagingAreaTags,
     });
   }
@@ -100,6 +98,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `autoReplicateNewDisks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
 * `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 
@@ -161,4 +160,4 @@ Using `terraform import`, import DRS Replication Configuration Template using th
 % terraform import aws_drs_replication_configuration_template.example templateid
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-6c07abef7048c3cc06087a9898fdf05a3940fa2b0415a9b5c550b599e682141f -->
+<!-- cache-key: cdktf-0.20.8 input-dee126f30e4a14dba110538299426855959f9b711786ddac39da32700eeeb735 -->

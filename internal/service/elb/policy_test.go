@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -8,15 +8,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,7 +60,7 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourcePolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +86,7 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", policyTypeName),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 				),
 			},
 		},
@@ -108,8 +110,10 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
-					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexache.MustCompile(`[^0]+`)),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_attribute"), tfknownvalue.ListNotEmpty()),
+				},
 			},
 		},
 	})
@@ -133,7 +137,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.1",
 						names.AttrValue: acctest.CtTrue,
@@ -150,7 +154,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", "SSLNegotiationPolicyType"),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.2",
 						names.AttrValue: acctest.CtTrue,
@@ -183,7 +187,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Reference-Security-Policy",
 						names.AttrValue: predefinedSecurityPolicy,
@@ -195,7 +199,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicyUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Reference-Security-Policy",
 						names.AttrValue: predefinedSecurityPolicyUpdated,
@@ -277,7 +281,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err = tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

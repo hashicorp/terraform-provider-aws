@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,6 +42,7 @@ func TestAccPinpointEmailChannel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "from_address", address1),
 					resource.TestCheckResourceAttrSet(resourceName, "messages_per_second"),
 					resource.TestCheckResourceAttrPair(resourceName, "identity", "aws_ses_domain_identity.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "orchestration_sending_role_arn", ""),
 				),
 			},
 			{
@@ -124,6 +125,37 @@ func TestAccPinpointEmailChannel_noRole(t *testing.T) {
 	})
 }
 
+func TestAccPinpointEmailChannel_orchestrationSendingRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var channel awstypes.EmailChannelResponse
+	resourceName := "aws_pinpoint_email_channel.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	domain := acctest.RandomDomainName()
+	address := acctest.RandomEmailAddress(domain)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailChannelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailChannelConfig_orchestrationSendingRoleARN(domain, address, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttrPair(resourceName, "orchestration_sending_role_arn", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.EmailChannelResponse
@@ -142,7 +174,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEmailChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceEmailChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -186,7 +218,7 @@ func testAccCheckEmailChannelDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err := tfpinpoint.FindEmailChannelByApplicationId(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -336,6 +368,69 @@ resource "aws_pinpoint_email_channel" "test" {
 
 resource "aws_ses_domain_identity" "test" {
   domain = %[1]q
+}
+`, domain, fromAddress, rName)
+}
+
+func testAccEmailChannelConfig_orchestrationSendingRoleARN(domain, fromAddress, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test" {}
+
+resource "aws_ses_configuration_set" "test" {
+  name = %[3]q
+}
+
+resource "aws_pinpoint_email_channel" "test" {
+  application_id                 = aws_pinpoint_app.test.application_id
+  enabled                        = "false"
+  from_address                   = %[2]q
+  identity                       = aws_ses_domain_identity.test.arn
+  configuration_set              = aws_ses_configuration_set.test.arn
+  orchestration_sending_role_arn = aws_iam_role.test.arn
+}
+
+resource "aws_ses_domain_identity" "test" {
+  domain = %[1]q
+}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "pinpoint.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "test"
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Action": [
+      "ses:SendEmail",
+      "ses:SendRawEmail"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_ses_configuration_set.test.arn}",
+      "${aws_ses_domain_identity.test.arn}"
+    ]
+  }
+}
+EOF
 }
 `, domain, fromAddress, rName)
 }

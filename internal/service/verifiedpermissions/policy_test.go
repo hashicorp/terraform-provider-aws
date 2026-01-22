@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package verifiedpermissions_test
@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -115,6 +116,7 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
 	policyStatementActionUpdated := "permit (principal, action == Action::\"write\", resource in Album:: \"test_album\");"
 	policyStatementEffectUpdated := "forbid (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+	policyStatementResourceUpdated := "forbid (principal, action == Action::\"view\", resource in Album:: \"test_album_updated\");"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -136,6 +138,11 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policyStatementActionUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
@@ -145,10 +152,29 @@ func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policyStatementEffectUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementEffectUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_basic(rName, policyStatementResourceUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementResourceUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
 				),
 			},
@@ -181,7 +207,7 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicy, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfverifiedpermissions.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

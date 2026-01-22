@@ -31,6 +31,12 @@ class MyConvertedCode(TerraformStack):
         DataAwsEcrpublicAuthorizationToken(self, "token")
 ```
 
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
@@ -41,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `password` - Password decoded from the authorization token.
 * `user_name` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.20.8 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->
+<!-- cache-key: cdktf-0.20.8 input-ece012b6e5ae8de14ec6e3b09c22a4ad28d8fd3bcdd6e268233938cf36886aa0 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package elb_test
@@ -10,11 +10,12 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +35,7 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
 			},
@@ -60,22 +61,39 @@ func TestAccELBListenerPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 			{
 				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
-				Config:   testAccListenerPolicyConfig_update(rName, key, certificate, 1),
-				PlanOnly: true,
+				Config: testAccListenerPolicyConfig_update(rName, key, certificate, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -96,7 +114,7 @@ func TestAccELBListenerPolicy_disappears(t *testing.T) {
 				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceListenerPolicy(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfelb.ResourceListenerPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,7 +139,7 @@ func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFu
 
 			_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package glue_test
@@ -41,11 +41,11 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.aws_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_mode", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_service_role", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.sse_aws_kms_key_id", ""),
@@ -60,11 +60,11 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 				Config: testAccDataCatalogEncryptionSettingsConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.aws_kms_key_id", keyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_mode", "SSE-KMS"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_service_role", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.sse_aws_kms_key_id", keyResourceName, names.AttrARN),
@@ -74,11 +74,11 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 				Config: testAccDataCatalogEncryptionSettingsConfig_encrypted_with_catalog_encryption_service_role(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.aws_kms_key_id", keyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_mode", "SSE-KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_service_role", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.sse_aws_kms_key_id", keyResourceName, names.AttrARN),
@@ -88,11 +88,11 @@ func testAccDataCatalogEncryptionSettings_basic(t *testing.T) {
 				Config: testAccDataCatalogEncryptionSettingsConfig_nonEncrypted(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogEncryptionSettingsExists(ctx, resourceName, &settings),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.return_connection_password_encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.connection_password_encryption.0.aws_kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_mode", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.catalog_encryption_service_role", ""),
 					resource.TestCheckResourceAttr(resourceName, "data_catalog_encryption_settings.0.encryption_at_rest.0.sse_aws_kms_key_id", ""),
@@ -132,8 +132,11 @@ func testAccCheckDataCatalogEncryptionSettingsExists(ctx context.Context, resour
 func testAccDataCatalogEncryptionSettingsConfig_encrypted(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",
@@ -171,8 +174,11 @@ resource "aws_glue_data_catalog_encryption_settings" "test" {
 func testAccDataCatalogEncryptionSettingsConfig_encrypted_with_catalog_encryption_service_role(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description = %[1]q
-  policy      = <<POLICY
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Id": "kms-tf-1",

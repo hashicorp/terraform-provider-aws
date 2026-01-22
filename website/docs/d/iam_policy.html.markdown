@@ -31,6 +31,8 @@ data "aws_iam_policy" "example" {
 
 ## Argument Reference
 
+This data source supports the following arguments:
+
 * `arn` - (Optional) ARN of the IAM policy.
   Conflicts with `name` and `path_prefix`.
 * `name` - (Optional) Name of the IAM policy.

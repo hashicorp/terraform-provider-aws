@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package autoscaling_test
@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/autoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,9 +35,9 @@ func TestAccAutoScalingNotification_basic(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrTopicARN),
@@ -62,7 +63,7 @@ func TestAccAutoScalingNotification_disappears(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceNotification(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfautoscaling.ResourceNotification(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,9 +88,9 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups1),
-					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
 				),
@@ -99,10 +100,10 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 				Config: testAccNotificationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups2),
-					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "group_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName+"-2"),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"),
@@ -117,7 +118,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	var groups []string
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		groups = append(groups, fmt.Sprintf("%s-%d", rName, i))
 	}
 
@@ -132,7 +133,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "20"),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", "3"),
 				),
 			},
 		},
@@ -151,7 +152,7 @@ func testAccCheckNotificationExists(ctx context.Context, n string, groups []stri
 		output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 		if err == nil && len(output) == 0 {
-			err = tfresource.NewEmptyResultError(nil)
+			err = tfresource.NewEmptyResultError()
 		}
 
 		return err
@@ -170,10 +171,10 @@ func testAccCheckNotificationDestroy(ctx context.Context, groups []string) resou
 			output, err := tfautoscaling.FindNotificationsByTwoPartKey(ctx, conn, groups, rs.Primary.ID)
 
 			if err == nil && len(output) == 0 {
-				err = tfresource.NewEmptyResultError(nil)
+				err = tfresource.NewEmptyResultError()
 			}
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package imagebuilder_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +37,7 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", fmt.Sprintf("image-pipeline/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_last_run", ""),
 					resource.TestCheckResourceAttr(resourceName, "date_next_run", ""),
@@ -46,16 +46,16 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "distribution_configuration_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.PipelineStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -82,7 +82,7 @@ func TestAccImageBuilderImagePipeline_disappears(t *testing.T) {
 				Config: testAccImagePipelineConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceImagePipeline(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfimagebuilder.ResourceImagePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -280,7 +280,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtFalse),
 				),
 			},
@@ -293,7 +293,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 				),
 			},
@@ -316,7 +316,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string{"a", "b"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "b"),
@@ -332,7 +332,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				Config: testAccImagePipelineConfig_testsConfigurationScanningEnabledAdvanced(rName, []string{"a", "c"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "c"),
@@ -358,7 +358,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 				Config: testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtFalse),
 				),
 			},
@@ -371,7 +371,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 				Config: testAccImagePipelineConfig_testsConfigurationTestsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 				),
 			},
@@ -394,7 +394,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 				Config: testAccImagePipelineConfig_testsConfigurationTimeoutMinutes(rName, 721),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "721"),
 				),
 			},
@@ -407,7 +407,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_timeoutMinutes(t *testing.T) {
 				Config: testAccImagePipelineConfig_testsConfigurationTimeoutMinutes(rName, 722),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "722"),
 				),
 			},
@@ -466,7 +466,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable)),
 				),
 			},
@@ -480,7 +480,7 @@ func TestAccImageBuilderImagePipeline_Schedule_pipelineExecutionStartCondition(t
 				Config: testAccImagePipelineConfig_scheduleExecutionStartCondition(rName, string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.pipeline_execution_start_condition", string(types.PipelineExecutionStartConditionExpressionMatchOnly)),
 				),
 			},
@@ -503,7 +503,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(1 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccImageBuilderImagePipeline_Schedule_scheduleExpression(t *testing.T) 
 				Config: testAccImagePipelineConfig_scheduleExpression(rName, "cron(2 0 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(2 0 * * ? *)"),
 				),
 			},
@@ -540,7 +540,7 @@ func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
 				Config: testAccImagePipelineConfig_scheduleTimezone(rName, "cron(1 0 * * ? *)", "Etc/UTC"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "Etc/UTC"),
 				),
@@ -555,7 +555,7 @@ func TestAccImageBuilderImagePipeline_Schedule_timezone(t *testing.T) {
 				Config: testAccImagePipelineConfig_scheduleTimezone(rName, "cron(1 0 * * ? *)", "America/Los_Angeles"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(1 0 * * ? *)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.timezone", "America/Los_Angeles"),
 				),
@@ -613,7 +613,7 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 				Config: testAccImagePipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -626,7 +626,7 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 				Config: testAccImagePipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -635,7 +635,7 @@ func TestAccImageBuilderImagePipeline_tags(t *testing.T) {
 				Config: testAccImagePipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -658,7 +658,7 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflow(rName, string(types.OnWorkflowFailureAbort), "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", string(types.OnWorkflowFailureAbort)),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test1"),
 				),
@@ -672,7 +672,7 @@ func TestAccImageBuilderImagePipeline_workflow(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflow(rName, string(types.OnWorkflowFailureContinue), "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.on_failure", string(types.OnWorkflowFailureContinue)),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parallel_group", "test2"),
 				),
@@ -696,8 +696,8 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflowParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
 				),
 			},
 			{
@@ -709,8 +709,46 @@ func TestAccImageBuilderImagePipeline_workflowParameter(t *testing.T) {
 				Config: testAccImagePipelineConfig_workflowParameter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderImagePipeline_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_image_pipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImagePipelineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccImagePipelineConfig_loggingConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.image_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image-logs/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.pipeline_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-pipeline-logs/%s", rName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccImagePipelineConfig_loggingConfigurationUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckImagePipelineExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.image_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-image-logs/%s-v2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.pipeline_log_group_name", fmt.Sprintf("/aws/imagebuilder/test-pipeline-logs/%s-v2", rName)),
 				),
 			},
 		},
@@ -728,7 +766,7 @@ func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFun
 
 			_, err := tfimagebuilder.FindImagePipelineByARN(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -812,7 +850,7 @@ resource "aws_imagebuilder_image_recipe" "test" {
   }
 
   name         = %[1]q
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -876,7 +914,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   lifecycle {
@@ -903,7 +941,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       name = "{{ imagebuilder:buildDate }}"
     }
 
-    region = data.aws_region.current.name
+    region = data.aws_region.current.region
   }
 
   lifecycle {
@@ -939,7 +977,7 @@ resource "aws_imagebuilder_image_recipe" "test2" {
   }
 
   name         = "%[1]s-2"
-  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 }
 
@@ -976,7 +1014,7 @@ EOF
 
   name           = "%[1]s-2"
   container_type = "DOCKER"
-  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-x86-latest/x.x.x"
+  parent_image   = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-x86-latest/x.x.x"
   version        = "1.0.0"
 
   target_repository {
@@ -1263,6 +1301,52 @@ resource "aws_imagebuilder_image_pipeline" "test" {
       name  = "waitForActionAtEnd"
       value = "true"
     }
+  }
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_loggingConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "image" {
+  name = "/aws/imagebuilder/test-image-logs/%[1]s"
+}
+
+resource "aws_cloudwatch_log_group" "pipeline" {
+  name = "/aws/imagebuilder/test-pipeline-logs/%[1]s"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  logging_configuration {
+    image_log_group_name    = aws_cloudwatch_log_group.image.name
+    pipeline_log_group_name = aws_cloudwatch_log_group.pipeline.name
+  }
+}
+`, rName))
+}
+
+func testAccImagePipelineConfig_loggingConfigurationUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccImagePipelineConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "image" {
+  name = "/aws/imagebuilder/test-image-logs/%[1]s-v2"
+}
+
+resource "aws_cloudwatch_log_group" "pipeline" {
+  name = "/aws/imagebuilder/test-pipeline-logs/%[1]s-v2"
+}
+
+resource "aws_imagebuilder_image_pipeline" "test" {
+  image_recipe_arn                 = aws_imagebuilder_image_recipe.test.arn
+  infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+  name                             = %[1]q
+
+  logging_configuration {
+    image_log_group_name    = aws_cloudwatch_log_group.image.name
+    pipeline_log_group_name = aws_cloudwatch_log_group.pipeline.name
   }
 }
 `, rName))

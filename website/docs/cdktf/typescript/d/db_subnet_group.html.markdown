@@ -38,6 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 This data source supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the RDS database subnet group.
 
 ## Attribute Reference
@@ -51,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportedNetworkTypes` - The network type of the DB subnet group.
 * `vpcId` - Provides the VPC ID of the DB subnet group.
 
-<!-- cache-key: cdktf-0.20.8 input-c8c709e17391d65123c921a8b10fb4fd4c29d0c36a2dcc845c526ef3b4b3fda7 -->
+<!-- cache-key: cdktf-0.20.8 input-006d32fd18271d3ec26252fbfb306e5eccbee743f5b9ec67a261eca5f2485207 -->

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package m2_test
@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -48,9 +48,9 @@ func TestAccM2Application_basic_Content(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -95,9 +95,9 @@ func TestAccM2Application_basic_S3Location(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.content"),
 					resource.TestMatchResourceAttr(resourceName, "definition.0.s3_location", regexache.MustCompile(`s3://[-a-z0-9]+/definition.json`)),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -157,7 +157,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfm2.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,9 +187,9 @@ func TestAccM2Application_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
@@ -234,14 +234,14 @@ func TestAccM2Application_update(t *testing.T) {
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "current_version", "2"),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			_, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 
@@ -409,7 +409,9 @@ resource "aws_s3_object" "test" {
 }
 
 resource "aws_kms_key" "test" {
-  description = %[1]q
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_iam_role" "test" {

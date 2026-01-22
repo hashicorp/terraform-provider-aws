@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package wafregional_test
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,7 +43,7 @@ func TestAccWAFRegionalIPSet_basic(t *testing.T) {
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.7.0/24",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile("ipset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "waf-regional", regexache.MustCompile("ipset/.+$")),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceIPSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfwafregional.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -139,7 +139,7 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.7.0/24",
@@ -151,7 +151,7 @@ func TestAccWAFRegionalIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptor.*", map[string]string{
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.8.0/24",
@@ -231,7 +231,7 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "0"),
 				),
 			},
 			{
@@ -254,7 +254,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfwafregional.FindIPSetByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

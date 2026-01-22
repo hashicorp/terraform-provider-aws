@@ -1,0 +1,26 @@
+
+Account Management
+BCM Data Exports
+Billing
+CE (Cost Explorer)
+CloudFront
+CloudFront KeyValueStore
+Cost Optimization Hub
+Cost and Usage Report
+Global Accelerator
+IAM (Identity & Access Management)
+Network Manager
+Organizations
+Pricing Calculator
+Roles Anywhere
+Route 53
+Route 53 Domains
+Route 53 Recovery Control Config
+Route 53 Recovery Readiness
+STS (Security Token)
+Savings Plans
+Shield
+User Notifications
+User Notifications Contacts
+WAF Classic
+Web Services Budgets

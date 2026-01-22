@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package synthetics_test
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,8 +36,8 @@ func TestAccSyntheticsGroupAssociation_basic(t *testing.T) {
 				Config: testAccGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", "synthetics", regexache.MustCompile(`canary:.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", "synthetics", regexache.MustCompile(`group:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "canary_arn", "synthetics", regexache.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "group_arn", "synthetics", regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),
@@ -67,7 +67,7 @@ func TestAccSyntheticsGroupAssociation_disappears(t *testing.T) {
 				Config: testAccGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceGroupAssociation(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsynthetics.ResourceGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +122,7 @@ func testAccCheckGroupAssociationDestroy(ctx context.Context) resource.TestCheck
 
 			_, err = tfsynthetics.FindAssociatedGroup(ctx, conn, canaryArn, groupName)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package lightsail_test
@@ -17,8 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,9 +45,10 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`ContainerService/`+verify.UUIDRegexPattern+`$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "power_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
@@ -65,7 +67,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
 		},
@@ -91,7 +93,7 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceContainerService(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tflightsail.ResourceContainerService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,8 +242,8 @@ func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "private_registry_access.0.ecr_image_puller_role.0.principal_arn"),
 				),
@@ -269,14 +271,14 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
 		},
@@ -302,7 +304,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -315,7 +317,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -324,7 +326,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -351,7 +353,7 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
@@ -364,7 +366,7 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
@@ -373,7 +375,7 @@ func TestAccLightsailContainerService_keyOnlyTags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
@@ -392,7 +394,7 @@ func testAccCheckContainerServiceDestroy(ctx context.Context) resource.TestCheck
 
 			_, err := tflightsail.FindContainerServiceByName(ctx, conn, r.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if retry.NotFound(err) {
 				continue
 			}
 

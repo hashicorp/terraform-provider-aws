@@ -62,21 +62,22 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standardsControlArn` - (Required) The standards control ARN. See the AWS documentation for how to list existing controls using [`get-enabled-standards`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/get-enabled-standards.html) and [`describe-standards-controls`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/describe-standards-controls.html).
-* `controlStatus` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabledReason` argument for `DISABLED` control status.
-* `disabledReason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `controlStatus` will be set to `DISABLED` automatically.
+* `controlStatus` - (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabledReason` argument for `DISABLED` control status.
+* `disabledReason` - (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `controlStatus` will be set to `DISABLED` automatically.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The standard control ARN.
-* `controlId` – The identifier of the security standard control.
-* `controlStatusUpdatedAt` – The date and time that the status of the security standard control was most recently updated.
-* `description` – The standard control longer description. Provides information about what the control is checking for.
-* `relatedRequirements` – The list of requirements that are related to this control.
-* `remediationUrl` – A link to remediation information for the control in the Security Hub user documentation.
-* `severityRating` – The severity of findings generated from this security standard control.
-* `title` – The standard control title.
+* `controlId` - The identifier of the security standard control.
+* `controlStatusUpdatedAt` - The date and time that the status of the security standard control was most recently updated.
+* `description` - The standard control longer description. Provides information about what the control is checking for.
+* `relatedRequirements` - The list of requirements that are related to this control.
+* `remediationUrl` - A link to remediation information for the control in the Security Hub user documentation.
+* `severityRating` - The severity of findings generated from this security standard control.
+* `title` - The standard control title.
 
-<!-- cache-key: cdktf-0.20.8 input-4f2686dbc145e094fc564010e6dbf6ac103f5be38f045e92ccb633c43bb96b39 -->
+<!-- cache-key: cdktf-0.20.8 input-3984d501d630d9e4e736d16586970c1001f5a10f32eaa0a6b4dcf3d54ba83004 -->
