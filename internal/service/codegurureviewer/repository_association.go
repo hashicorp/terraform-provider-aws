@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,7 +36,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
 // @Testing(importIgnore="repository", plannableImportAction="Replace")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
@@ -374,9 +373,8 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	output, err := conn.DescribeRepositoryAssociation(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -391,8 +389,8 @@ func findRepositoryAssociationByARN(ctx context.Context, conn *codegurureviewer.
 	return output.RepositoryAssociation, nil
 }
 
-func statusRepositoryAssociation(ctx context.Context, conn *codegurureviewer.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusRepositoryAssociation(conn *codegurureviewer.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findRepositoryAssociationByARN(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -411,7 +409,7 @@ func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewe
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(types.RepositoryAssociationStateAssociating),
 		Target:                    enum.Slice(types.RepositoryAssociationStateAssociated),
-		Refresh:                   statusRepositoryAssociation(ctx, conn, id),
+		Refresh:                   statusRepositoryAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -432,7 +430,7 @@ func waitRepositoryAssociationDeleted(ctx context.Context, conn *codegurureviewe
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(types.RepositoryAssociationStateDisassociating, types.RepositoryAssociationStateAssociated),
 		Target:  []string{},
-		Refresh: statusRepositoryAssociation(ctx, conn, id),
+		Refresh: statusRepositoryAssociation(conn, id),
 		Timeout: timeout,
 	}
 
