@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -337,7 +338,7 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 													},
 												},
 												"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[ec2AsgCapacityIncreaseConfigModel](ctx),
+													CustomType: fwtypes.NewListNestedObjectTypeOf[ec2ASGCapacityIncreaseConfigModel](ctx),
 													NestedObject: fwschema.NestedBlockObject{
 														Attributes: map[string]fwschema.Attribute{
 															"capacity_monitoring_approach": fwschema.StringAttribute{
@@ -345,14 +346,14 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																Required:   true,
 															},
 															"target_percent": fwschema.Int64Attribute{
-																Required: true,
+																Optional: true,
 															},
 															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"asgs": fwschema.ListNestedBlock{
+															"asg": fwschema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[asgModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
@@ -377,6 +378,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																		},
 																	},
 																},
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
+																},
 															},
 														},
 													},
@@ -390,14 +394,14 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																Required:   true,
 															},
 															"target_percent": fwschema.Int64Attribute{
-																Required: true,
+																Optional: true,
 															},
 															"timeout_minutes": fwschema.Int32Attribute{
 																Optional: true,
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"services": fwschema.ListNestedBlock{
+															"service": fwschema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[serviceModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
 																	Attributes: map[string]fwschema.Attribute{
@@ -424,6 +428,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 																			Required: true,
 																		},
 																	},
+																},
+																Validators: []validator.List{
+																	listvalidator.SizeAtMost(1),
 																},
 															},
 														},
@@ -1067,12 +1074,12 @@ func (m resourcePlanModel) expandExecutionBlockConfig(ctx context.Context, execC
 		{func(c executionBlockConfigurationModel) bool { return !c.ArcRoutingControlConfig.IsNull() }, m.expandArcRoutingControlConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.CustomActionLambdaConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.DocumentDbConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.Ec2AsgCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.EcsCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.EC2ASGCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.ECSCapacityIncreaseConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.ExecutionApprovalConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.GlobalAuroraConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.Route53HealthCheckConfig.IsNull() }, m.expandGeneralAutoFlexConfig},
-		{func(c executionBlockConfigurationModel) bool { return !c.EksResourceScalingConfig.IsNull() }, m.expandEksConfig},
+		{func(c executionBlockConfigurationModel) bool { return !c.EKSResourceScalingConfig.IsNull() }, m.expandEKSConfig},
 		{func(c executionBlockConfigurationModel) bool { return !c.ParallelConfig.IsNull() }, m.expandParallelConfig},
 	}
 
@@ -1106,6 +1113,7 @@ func (m resourcePlanModel) expandArcRoutingControlConfig(ctx context.Context, ex
 	return nil
 }
 
+// nosemgrep:ci.semgrep.framework.manual-expander-functions -- AutoFlex is used within this helper; manual wrapper needed for AWS union type handling
 func expandSimpleConfig[T any](ctx context.Context, field fwtypes.ListNestedObjectValueOf[T], target any, diags *fwdiag.Diagnostics) error {
 	data, d := field.ToPtr(ctx)
 	diags.Append(d...)
@@ -1131,15 +1139,15 @@ func (m resourcePlanModel) expandGeneralAutoFlexConfig(ctx context.Context, exec
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.Ec2AsgCapacityIncreaseConfig.IsNull():
+	case !execConfig.EC2ASGCapacityIncreaseConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, execConfig.Ec2AsgCapacityIncreaseConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, execConfig.EC2ASGCapacityIncreaseConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
-	case !execConfig.EcsCapacityIncreaseConfig.IsNull():
+	case !execConfig.ECSCapacityIncreaseConfig.IsNull():
 		var r awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
-		if err := expandSimpleConfig(ctx, execConfig.EcsCapacityIncreaseConfig, &r.Value, diags); err != nil {
+		if err := expandSimpleConfig(ctx, execConfig.ECSCapacityIncreaseConfig, &r.Value, diags); err != nil {
 			return err
 		}
 		apiStep.ExecutionBlockConfiguration = &r
@@ -1202,32 +1210,32 @@ func (m resourcePlanModel) expandArcRegionAndRoutingControls(ctx context.Context
 }
 
 // Execution block configuration handlers
-func (m resourcePlanModel) expandEksConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
-	data, d := execConfig.EksResourceScalingConfig.ToPtr(ctx)
+func (m resourcePlanModel) expandEKSConfig(ctx context.Context, execConfig executionBlockConfigurationModel, apiStep *awstypes.Step, diags *fwdiag.Diagnostics) error {
+	data, d := execConfig.EKSResourceScalingConfig.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return errors.New("failed to convert EKS config")
 	}
 
-	var apiEksConfig awstypes.EksResourceScalingConfiguration
-	diags.Append(flex.Expand(ctx, data.CapacityMonitoringApproach, &apiEksConfig.CapacityMonitoringApproach)...)
-	diags.Append(flex.Expand(ctx, data.TargetPercent, &apiEksConfig.TargetPercent)...)
-	diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiEksConfig.TimeoutMinutes)...)
-	diags.Append(flex.Expand(ctx, data.KubernetesResourceType, &apiEksConfig.KubernetesResourceType)...)
-	diags.Append(flex.Expand(ctx, data.EksClusters, &apiEksConfig.EksClusters)...)
-	diags.Append(flex.Expand(ctx, data.Ungraceful, &apiEksConfig.Ungraceful)...)
+	var apiEKSConfig awstypes.EksResourceScalingConfiguration
+	diags.Append(flex.Expand(ctx, data.CapacityMonitoringApproach, &apiEKSConfig.CapacityMonitoringApproach)...)
+	diags.Append(flex.Expand(ctx, data.TargetPercent, &apiEKSConfig.TargetPercent)...)
+	diags.Append(flex.Expand(ctx, data.TimeoutMinutes, &apiEKSConfig.TimeoutMinutes)...)
+	diags.Append(flex.Expand(ctx, data.KubernetesResourceType, &apiEKSConfig.KubernetesResourceType)...)
+	diags.Append(flex.Expand(ctx, data.EKSClusters, &apiEKSConfig.EksClusters)...)
+	diags.Append(flex.Expand(ctx, data.Ungraceful, &apiEKSConfig.Ungraceful)...)
 
-	if err := m.expandEksScalingResources(ctx, data, &apiEksConfig, diags); err != nil {
+	if err := m.expandEKSScalingResources(ctx, data, &apiEKSConfig, diags); err != nil {
 		return err
 	}
 
 	apiStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
-		Value: apiEksConfig,
+		Value: apiEKSConfig,
 	}
 	return nil
 }
 
-func (m resourcePlanModel) expandEksScalingResources(ctx context.Context, data *eksResourceScalingConfigModel, apiEksConfig *awstypes.EksResourceScalingConfiguration, diags *fwdiag.Diagnostics) error {
+func (m resourcePlanModel) expandEKSScalingResources(ctx context.Context, data *eksResourceScalingConfigModel, apiEKSConfig *awstypes.EksResourceScalingConfiguration, diags *fwdiag.Diagnostics) error {
 	if data.ScalingResources.IsNull() || data.ScalingResources.IsUnknown() {
 		return nil
 	}
@@ -1238,7 +1246,7 @@ func (m resourcePlanModel) expandEksScalingResources(ctx context.Context, data *
 		return errors.New("failed to expand scaling resources")
 	}
 
-	apiEksConfig.ScalingResources = make([]map[string]map[string]awstypes.KubernetesScalingResource, len(scalingResources))
+	apiEKSConfig.ScalingResources = make([]map[string]map[string]awstypes.KubernetesScalingResource, len(scalingResources))
 	for k, sr := range scalingResources {
 		namespaceMap := make(map[string]map[string]awstypes.KubernetesScalingResource)
 
@@ -1252,14 +1260,14 @@ func (m resourcePlanModel) expandEksScalingResources(ctx context.Context, data *
 			resourceMap := make(map[string]awstypes.KubernetesScalingResource)
 			for _, res := range resources {
 				resourceMap[res.ResourceName.ValueString()] = awstypes.KubernetesScalingResource{
-					Name:      aws.String(res.Name.ValueString()),
-					Namespace: aws.String(res.Namespace.ValueString()),
+					Name:      res.Name.ValueStringPointer(),
+					Namespace: res.Namespace.ValueStringPointer(),
 					HpaName:   res.HpaName.ValueStringPointer(),
 				}
 			}
 			namespaceMap[sr.Namespace.ValueString()] = resourceMap
 		}
-		apiEksConfig.ScalingResources[k] = namespaceMap
+		apiEKSConfig.ScalingResources[k] = namespaceMap
 	}
 	return nil
 }
@@ -1432,9 +1440,9 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 							ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
 							CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
 							DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
-							Ec2AsgCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2AsgCapacityIncreaseConfigModel](ctx),
-							EcsCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
-							EksResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
+							EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
+							ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
+							EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
 							ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
 							GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
 							ParallelConfig:               fwtypes.NewListNestedObjectValueOfNull[parallelConfigModel](ctx),
@@ -1484,14 +1492,14 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 						case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
 							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.DocumentDbConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.Ec2AsgCapacityIncreaseConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EC2ASGCapacityIncreaseConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
-							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.EcsCapacityIncreaseConfig)...)
+							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ECSCapacityIncreaseConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
 							// Handle EKS ScalingResources complex transformation manually
 							var eksConfig eksResourceScalingConfigModel
 							diags.Append(flex.Flatten(ctx, t.Value.CapacityMonitoringApproach, &eksConfig.CapacityMonitoringApproach)...)
-							diags.Append(flex.Flatten(ctx, t.Value.EksClusters, &eksConfig.EksClusters)...)
+							diags.Append(flex.Flatten(ctx, t.Value.EksClusters, &eksConfig.EKSClusters)...)
 							diags.Append(flex.Flatten(ctx, t.Value.KubernetesResourceType, &eksConfig.KubernetesResourceType)...)
 							diags.Append(flex.Flatten(ctx, t.Value.TargetPercent, &eksConfig.TargetPercent)...)
 							diags.Append(flex.Flatten(ctx, t.Value.TimeoutMinutes, &eksConfig.TimeoutMinutes)...)
@@ -1526,7 +1534,7 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								diags.Append(d...)
 							}
 
-							execConfig.EksResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
+							execConfig.EKSResourceScalingConfig = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksConfig)
 						case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
 							diags.Append(flex.Flatten(ctx, &t.Value, &execConfig.ExecutionApprovalConfig)...)
 						case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
@@ -1703,9 +1711,9 @@ type executionBlockConfigurationModel struct {
 	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
 	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
 	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
-	Ec2AsgCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2AsgCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
-	EcsCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
-	EksResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
+	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
+	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
+	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
 	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
 	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
 	ParallelConfig               fwtypes.ListNestedObjectValueOf[parallelConfigModel]               `tfsdk:"parallel_config"`
@@ -1766,11 +1774,11 @@ type globalAuroraUngracefulModel struct {
 }
 
 // EC2 ASG Configuration Models
-type ec2AsgCapacityIncreaseConfigModel struct {
+type ec2ASGCapacityIncreaseConfigModel struct {
+	ASGs                       fwtypes.ListNestedObjectValueOf[asgModel]                     `tfsdk:"asg"`
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.Ec2AsgCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
 	TargetPercent              types.Int64                                                   `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                   `tfsdk:"timeout_minutes"`
-	Asgs                       fwtypes.ListNestedObjectValueOf[asgModel]                     `tfsdk:"asgs"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ec2UngracefulModel]           `tfsdk:"ungraceful"`
 }
 
@@ -1787,9 +1795,9 @@ type ec2UngracefulModel struct {
 // ECS Configuration Models
 type ecsCapacityIncreaseConfigModel struct {
 	CapacityMonitoringApproach fwtypes.StringEnum[awstypes.EcsCapacityMonitoringApproach] `tfsdk:"capacity_monitoring_approach"`
+	Services                   fwtypes.ListNestedObjectValueOf[serviceModel]              `tfsdk:"service"`
 	TargetPercent              types.Int64                                                `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                `tfsdk:"timeout_minutes"`
-	Services                   fwtypes.ListNestedObjectValueOf[serviceModel]              `tfsdk:"services"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[ecsUngracefulModel]        `tfsdk:"ungraceful"`
 }
 
@@ -1810,7 +1818,7 @@ type eksResourceScalingConfigModel struct {
 	TargetPercent              types.Int64                                                  `tfsdk:"target_percent"`
 	TimeoutMinutes             types.Int32                                                  `tfsdk:"timeout_minutes"`
 	KubernetesResourceType     fwtypes.ListNestedObjectValueOf[kubernetesResourceTypeModel] `tfsdk:"kubernetes_resource_type"`
-	EksClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
+	EKSClusters                fwtypes.ListNestedObjectValueOf[eksClusterModel]             `tfsdk:"eks_clusters"`
 	ScalingResources           fwtypes.ListNestedObjectValueOf[scalingResourcesModel]       `tfsdk:"scaling_resources"`
 	Ungraceful                 fwtypes.ListNestedObjectValueOf[eksUngracefulModel]          `tfsdk:"ungraceful"`
 }

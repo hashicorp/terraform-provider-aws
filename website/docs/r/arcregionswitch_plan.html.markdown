@@ -127,7 +127,7 @@ resource "aws_arcregionswitch_plan" "complex" {
 
             execution_block_configuration {
               ec2_asg_capacity_increase_config {
-                asgs {
+                asg {
                   arn = aws_autoscaling_group.example.arn
                 }
                 target_percent = 150
@@ -141,7 +141,7 @@ resource "aws_arcregionswitch_plan" "complex" {
 
             execution_block_configuration {
               ecs_capacity_increase_config {
-                services {
+                service {
                   cluster_arn = aws_ecs_cluster.example.arn
                   service_arn = aws_ecs_service.example.arn
                 }
@@ -286,19 +286,19 @@ The `execution_block_configuration` block contains one of the following configur
 
 ### EC2 ASG Capacity Increase Config
 
-* `asgs` - (Required) List of Auto Scaling groups. See [ASGs](#asgs) below.
+* `asg` - (Required) Auto Scaling group configuration. See [ASG](#asg) below.
 * `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `autoscalingMaxInLast24Hours`.
-* `target_percent` - (Required) Target capacity percentage.
+* `target_percent` - (Optional) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
-* `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful](#ungraceful) below.
 
-### ASGs
+### ASG
 
 * `arn` - (Required) ARN of the Auto Scaling group.
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
 * `external_id` - (Optional) External ID for cross-account role assumption.
 
-### Ungraceful Capacity
+### Ungraceful
 
 * `minimum_success_percentage` - (Required) Minimum success percentage required.
 
@@ -344,13 +344,13 @@ The `execution_block_configuration` block contains one of the following configur
 
 ### ECS Capacity Increase Config
 
-* `services` - (Required) List of ECS services. See [ECS Services](#ecs-services) below.
+* `service` - (Required) ECS service configuration. See [ECS Service](#ecs-service) below.
 * `capacity_monitoring_approach` - (Required) Capacity monitoring approach. Valid values: `sampledMaxInLast24Hours`, `containerInsightsMaxInLast24Hours`.
-* `target_percent` - (Required) Target capacity percentage.
+* `target_percent` - (Optional) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [Ungraceful Capacity](#ungraceful-capacity) below.
 
-### ECS Services
+### ECS Service
 
 * `cluster_arn` - (Required) ARN of the ECS cluster.
 * `service_arn` - (Required) ARN of the ECS service.

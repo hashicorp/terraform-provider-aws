@@ -741,12 +741,12 @@ resource "aws_arcregionswitch_plan" "test" {
 
       execution_block_configuration {
         ec2_asg_capacity_increase_config {
-          asgs {
+          asg {
             arn                = "arn:aws:autoscaling:%[3]s:123456789012:autoScalingGroup:12345678-1234-1234-1234-123456789012:autoScalingGroupName/test-asg-1"
             cross_account_role = "arn:aws:iam::123456789012:role/ASGRole"
             external_id        = "asg-external-id"
           }
-          asgs {
+          asg {
             arn = "arn:aws:autoscaling:%[2]s:123456789012:autoScalingGroup:11111111-1111-1111-1111-111111111111:autoScalingGroupName/test-asg-primary"
           }
           capacity_monitoring_approach = "sampledMaxInLast24Hours"
@@ -768,13 +768,13 @@ resource "aws_arcregionswitch_plan" "test" {
 
       execution_block_configuration {
         ecs_capacity_increase_config {
-          services {
+          service {
             cluster_arn        = "arn:aws:ecs:%[3]s:123456789012:cluster/test-cluster"
             service_arn        = "arn:aws:ecs:%[3]s:123456789012:service/test-cluster/test-service"
             cross_account_role = "arn:aws:iam::123456789012:role/ECSRole"
             external_id        = "ecs-external-id"
           }
-          services {
+          service {
             cluster_arn = "arn:aws:ecs:%[2]s:123456789012:cluster/test-cluster-primary"
             service_arn = "arn:aws:ecs:%[2]s:123456789012:service/test-cluster-primary/test-service-primary"
           }
