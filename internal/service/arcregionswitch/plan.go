@@ -192,6 +192,111 @@ func documentDBConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func ec2ASGCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ec2ASGCapacityIncreaseConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"capacity_monitoring_approach": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.Ec2AsgCapacityMonitoringApproach](),
+					Required:   true,
+				},
+				"target_percent": fwschema.Int64Attribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"asg": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[asgModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrARN: fwschema.StringAttribute{
+								Required: true,
+							},
+							"cross_account_role": fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrExternalID: fwschema.StringAttribute{
+								Optional: true,
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ec2UngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"minimum_success_percentage": fwschema.Int64Attribute{
+								Required: true,
+							},
+						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+				},
+			},
+		},
+	}
+}
+
+func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ecsCapacityIncreaseConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"capacity_monitoring_approach": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.EcsCapacityMonitoringApproach](),
+					Required:   true,
+				},
+				"target_percent": fwschema.Int64Attribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"service": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[serviceModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"cluster_arn": fwschema.StringAttribute{
+								Required: true,
+							},
+							"service_arn": fwschema.StringAttribute{
+								Required: true,
+							},
+							"cross_account_role": fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrExternalID: fwschema.StringAttribute{
+								Optional: true,
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[ecsUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"minimum_success_percentage": fwschema.Int64Attribute{
+								Required: true,
+							},
+						},
+					},
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -342,108 +447,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									},
 								},
 								Blocks: map[string]fwschema.Block{
-									"arc_routing_control_config":  arcRoutingControlConfigBlock(ctx),
-									"custom_action_lambda_config": customActionLambdaConfigBlock(ctx),
-									"document_db_config":          documentDBConfigBlock(ctx),
-									"ec2_asg_capacity_increase_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[ec2ASGCapacityIncreaseConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.Ec2AsgCapacityMonitoringApproach](),
-													Required:   true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"asg": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[asgModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrARN: fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[ec2UngracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
-															},
-														},
-													},
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-												},
-											},
-										},
-									},
-									"ecs_capacity_increase_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[ecsCapacityIncreaseConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.EcsCapacityMonitoringApproach](),
-													Required:   true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"service": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[serviceModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"cluster_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"service_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[ecsUngracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
-															},
-														},
-													},
-													Validators: []validator.List{
-														listvalidator.SizeAtMost(1),
-													},
-												},
-											},
-										},
-									},
+									"arc_routing_control_config":       arcRoutingControlConfigBlock(ctx),
+									"custom_action_lambda_config":      customActionLambdaConfigBlock(ctx),
+									"document_db_config":               documentDBConfigBlock(ctx),
+									"ec2_asg_capacity_increase_config": ec2ASGCapacityIncreaseConfigBlock(ctx),
+									"ecs_capacity_increase_config":     ecsCapacityIncreaseConfigBlock(ctx),
 									"eks_resource_scaling_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[eksResourceScalingConfigModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
@@ -606,9 +614,11 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															},
 														},
 														Blocks: map[string]fwschema.Block{
-															"arc_routing_control_config":  arcRoutingControlConfigBlock(ctx),
-															"custom_action_lambda_config": customActionLambdaConfigBlock(ctx),
-															"document_db_config":          documentDBConfigBlock(ctx),
+															"arc_routing_control_config":       arcRoutingControlConfigBlock(ctx),
+															"custom_action_lambda_config":      customActionLambdaConfigBlock(ctx),
+															"document_db_config":               documentDBConfigBlock(ctx),
+															"ec2_asg_capacity_increase_config": ec2ASGCapacityIncreaseConfigBlock(ctx),
+															"ecs_capacity_increase_config":     ecsCapacityIncreaseConfigBlock(ctx),
 															"execution_approval_config": fwschema.ListNestedBlock{
 																CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
 																NestedObject: fwschema.NestedBlockObject{
@@ -1266,6 +1276,18 @@ func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Co
 		var pR awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig
 		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
 		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.EC2ASGCapacityIncreaseConfig.IsNull():
+		var pR awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig
+		if err := expandSimpleConfig(ctx, pStep.EC2ASGCapacityIncreaseConfig, &pR.Value, diags); err != nil {
+			return err
+		}
+		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.ECSCapacityIncreaseConfig.IsNull():
+		var pR awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig
+		if err := expandSimpleConfig(ctx, pStep.ECSCapacityIncreaseConfig, &pR.Value, diags); err != nil {
+			return err
+		}
+		apiParallelStep.ExecutionBlockConfiguration = &pR
 	}
 	return nil
 }
@@ -1468,10 +1490,12 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 								for i, step := range t.Value.Steps {
 									// Initialize with empty values for all fields to avoid nil pointer issues
 									parallelSteps[i] = parallelStepModel{
-										ArcRoutingControlConfig:  fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
-										CustomActionLambdaConfig: fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
-										DocumentDbConfig:         fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
-										ExecutionApprovalConfig:  fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+										ArcRoutingControlConfig:      fwtypes.NewListNestedObjectValueOfNull[arcRoutingControlConfigModel](ctx),
+										CustomActionLambdaConfig:     fwtypes.NewListNestedObjectValueOfNull[customActionLambdaConfigModel](ctx),
+										DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
+										EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
+										ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
+										ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
 									}
 
 									diags.Append(flex.Flatten(ctx, step.Name, &parallelSteps[i].Name)...)
@@ -1487,6 +1511,10 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].CustomActionLambdaConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberDocumentDbConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].DocumentDbConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberEc2AsgCapacityIncreaseConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].EC2ASGCapacityIncreaseConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ECSCapacityIncreaseConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
 										}
@@ -1770,13 +1798,15 @@ type parallelConfigModel struct {
 }
 
 type parallelStepModel struct {
-	ArcRoutingControlConfig  fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]  `tfsdk:"arc_routing_control_config"`
-	CustomActionLambdaConfig fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel] `tfsdk:"custom_action_lambda_config"`
-	Description              types.String                                                   `tfsdk:"description"`
-	DocumentDbConfig         fwtypes.ListNestedObjectValueOf[documentDbConfigModel]         `tfsdk:"document_db_config"`
-	ExecutionApprovalConfig  fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]  `tfsdk:"execution_approval_config"`
-	ExecutionBlockType       fwtypes.StringEnum[awstypes.ExecutionBlockType]                `tfsdk:"execution_block_type"`
-	Name                     types.String                                                   `tfsdk:"name"`
+	ArcRoutingControlConfig      fwtypes.ListNestedObjectValueOf[arcRoutingControlConfigModel]      `tfsdk:"arc_routing_control_config"`
+	CustomActionLambdaConfig     fwtypes.ListNestedObjectValueOf[customActionLambdaConfigModel]     `tfsdk:"custom_action_lambda_config"`
+	Description                  types.String                                                       `tfsdk:"description"`
+	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
+	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
+	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
+	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
+	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
+	Name                         types.String                                                       `tfsdk:"name"`
 }
 
 type route53HealthCheckConfigModel struct {
