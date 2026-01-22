@@ -451,12 +451,11 @@ func ParseTestingAnnotations(args common.Args, stuff *CommonArgs) error {
 		varName := "rBgpAsn"
 		stuff.GoImports = append(stuff.GoImports,
 			common.GoImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
 			},
 		)
 		stuff.InitCodeBlocks = append(stuff.InitCodeBlocks, CodeBlock{
-			Code: fmt.Sprintf("%s := sdkacctest.RandIntRange(%s,%s)", varName, parts[0], parts[1]),
+			Code: fmt.Sprintf("%s := acctest.RandIntRange(t, %s,%s)", varName, parts[0], parts[1]),
 		})
 		stuff.AdditionalTfVars_[varName] = TFVar{
 			GoVarName: varName,
