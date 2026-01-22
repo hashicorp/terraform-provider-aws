@@ -978,7 +978,7 @@ func TestAccVPCSecurityGroupIngressRule_securityGroupDeleted(t *testing.T) {
 					func(s *terraform.State) error {
 						rs, ok := s.RootModule().Resources[sgResourceName]
 						if !ok {
-							return fmt.Errorf("Not found: %%s", sgResourceName)
+							return fmt.Errorf("Not found: %s", sgResourceName)
 						}
 						sgID = rs.Primary.ID
 						return nil
@@ -992,7 +992,7 @@ func TestAccVPCSecurityGroupIngressRule_securityGroupDeleted(t *testing.T) {
 						GroupId: aws.String(sgID),
 					})
 					if err != nil {
-						t.Fatalf("error deleting security group %%s: %%s", sgID, err)
+						t.Fatalf("error deleting security group %s: %s", sgID, err)
 					}
 				},
 				Config:             testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
