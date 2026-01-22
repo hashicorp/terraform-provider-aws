@@ -956,3 +956,47 @@ resource "aws_vpc_security_group_ingress_rule" "test" {
 }
 `, rName, acctest.Region()))
 }
+
+func TestAccVPCSecurityGroupIngressRule_securityGroupDeleted(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_ingress_rule.test"
+	sgResourceName := "aws_security_group.test"
+	var sgID string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, new(awstypes.SecurityGroupRule)),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[sgResourceName]
+						if !ok {
+							return fmt.Errorf("Not found: %%s", sgResourceName)
+						}
+						sgID = rs.Primary.ID
+						return nil
+					},
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+					_, err := conn.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{
+						GroupId: aws.String(sgID),
+					})
+					if err != nil {
+						t.Fatalf("error deleting security group %%s: %%s", sgID, err)
+					}
+				},
+				Config:             testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
