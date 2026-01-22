@@ -28,11 +28,7 @@ func validSharePrincipal(v any, k string) (ws []string, errors []error) {
 		return nil, nil
 	}
 
-	wsARN, errorsARN := verify.ValidARN(v, k)
-	ws = append(ws, wsARN...)
-	errors = append(errors, errorsARN...)
-	errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
-	errors = append(errors, errorsAccount...)
+	errors = append(errors, fmt.Errorf("%q must be a valid account ID, organization ARN/ID, or organizational unit ARN/ID: %q", k, value))
 
 	return ws, errors
 }
