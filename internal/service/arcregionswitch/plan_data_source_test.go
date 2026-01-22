@@ -137,13 +137,13 @@ resource "aws_arcregionswitch_plan" "test" {
         record_name     = "test.example.com"
         timeout_minutes = 10
 
-        record_sets {
+        record_set {
           record_set_identifier = "primary"
           region                = %[2]q
-          record_sets {
-            record_set_identifier = "secondary"
-            region                = %[3]q
-          }
+        }
+        record_set {
+          record_set_identifier = "secondary"
+          region                = %[3]q
         }
       }
     }
@@ -161,13 +161,13 @@ resource "aws_arcregionswitch_plan" "test" {
         record_name     = "test.example.com"
         timeout_minutes = 10
 
-        record_sets {
+        record_set {
           record_set_identifier = "primary"
           region                = %[2]q
-          record_sets {
-            record_set_identifier = "secondary"
-            region                = %[3]q
-          }
+        }
+        record_set {
+          record_set_identifier = "secondary"
+          region                = %[3]q
         }
       }
     }
