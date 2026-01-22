@@ -79,6 +79,8 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_level_cost_allocation_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
