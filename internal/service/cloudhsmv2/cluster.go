@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -242,17 +242,14 @@ func findClusterByID(ctx context.Context, conn *cloudhsmv2.Client, id string) (*
 	}
 
 	if state := output.State; state == types.ClusterStateDeleted {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(state),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.ClusterId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -285,8 +282,8 @@ func findClusters(ctx context.Context, conn *cloudhsmv2.Client, input *cloudhsmv
 	return output, nil
 }
 
-func statusCluster(ctx context.Context, conn *cloudhsmv2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -305,7 +302,7 @@ func waitClusterActive(ctx context.Context, conn *cloudhsmv2.Client, id string, 
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateActive),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -326,7 +323,7 @@ func waitClusterDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string,
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateDeleteInProgress),
 		Target:     []string{},
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -347,7 +344,7 @@ func waitClusterUninitialized(ctx context.Context, conn *cloudhsmv2.Client, id s
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.ClusterStateCreateInProgress, types.ClusterStateInitializeInProgress),
 		Target:     enum.Slice(types.ClusterStateUninitialized),
-		Refresh:    statusCluster(ctx, conn, id),
+		Refresh:    statusCluster(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,

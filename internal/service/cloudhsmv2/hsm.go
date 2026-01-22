@@ -15,13 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -209,8 +209,8 @@ func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, en
 	return nil, &sdkretry.NotFoundError{}
 }
 
-func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusHSM(conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findHSMByTwoPartKey(ctx, conn, id, "")
 
 		if retry.NotFound(err) {
@@ -229,7 +229,7 @@ func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateCreateInProgress),
 		Target:     enum.Slice(types.HsmStateActive),
-		Refresh:    statusHSM(ctx, conn, id),
+		Refresh:    statusHSM(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
@@ -250,7 +250,7 @@ func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, tim
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:    enum.Slice(types.HsmStateDeleteInProgress),
 		Target:     []string{},
-		Refresh:    statusHSM(ctx, conn, id),
+		Refresh:    statusHSM(conn, id),
 		Timeout:    timeout,
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
