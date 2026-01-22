@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package sesv2_test
@@ -154,7 +154,7 @@ func testAccContactList_disappears(t *testing.T) {
 				Config: testAccContactListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceContactList(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceContactList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

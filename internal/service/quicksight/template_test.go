@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package quicksight_test
@@ -73,7 +73,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 				Config: testAccTemplateConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceTemplate(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfquicksight.ResourceTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

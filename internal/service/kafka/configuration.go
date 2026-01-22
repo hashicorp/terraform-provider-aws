@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package kafka
 
@@ -203,7 +205,7 @@ func findConfigurationByARN(ctx context.Context, conn *kafka.Client, arn string)
 	}
 
 	if output == nil || output.LatestRevision == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -222,7 +224,7 @@ func findConfigurationRevisionByTwoPartKey(ctx context.Context, conn *kafka.Clie
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil

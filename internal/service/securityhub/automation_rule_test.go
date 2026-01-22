@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package securityhub_test
@@ -127,7 +127,7 @@ func testAccAutomationRule_disappears(t *testing.T) {
 				Config: testAccAutomationRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceAutomationRule, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsecurityhub.ResourceAutomationRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package route53resolver
 
@@ -120,8 +122,18 @@ func resourceEndpoint() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 				},
 			},
+			"rni_enhanced_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"target_name_server_metrics_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -154,6 +166,14 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("resolver_endpoint_type"); ok {
 		input.ResolverEndpointType = awstypes.ResolverEndpointType(v.(string))
+	}
+
+	if v, ok := d.GetOk("rni_enhanced_metrics_enabled"); ok {
+		input.RniEnhancedMetricsEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("target_name_server_metrics_enabled"); ok {
+		input.TargetNameServerMetricsEnabled = aws.Bool(v.(bool))
 	}
 
 	output, err := conn.CreateResolverEndpoint(ctx, input)
@@ -193,7 +213,9 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta any)
 	d.Set(names.AttrName, output.Name)
 	d.Set("protocols", flex.FlattenStringyValueSet[awstypes.Protocol](output.Protocols))
 	d.Set("resolver_endpoint_type", output.ResolverEndpointType)
+	d.Set("rni_enhanced_metrics_enabled", output.RniEnhancedMetricsEnabled)
 	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
+	d.Set("target_name_server_metrics_enabled", output.TargetNameServerMetricsEnabled)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
@@ -212,7 +234,7 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverClient(ctx)
 
-	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type") {
+	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type", "rni_enhanced_metrics_enabled", "target_name_server_metrics_enabled") {
 		input := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
 		}
@@ -227,6 +249,14 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if d.HasChange("resolver_endpoint_type") {
 			input.ResolverEndpointType = awstypes.ResolverEndpointType(d.Get("resolver_endpoint_type").(string))
+		}
+
+		if d.HasChange("rni_enhanced_metrics_enabled") {
+			input.RniEnhancedMetricsEnabled = aws.Bool(d.Get("rni_enhanced_metrics_enabled").(bool))
+		}
+
+		if d.HasChange("target_name_server_metrics_enabled") {
+			input.TargetNameServerMetricsEnabled = aws.Bool(d.Get("target_name_server_metrics_enabled").(bool))
 		}
 
 		_, err := conn.UpdateResolverEndpoint(ctx, input)
@@ -329,7 +359,7 @@ func findResolverEndpointByID(ctx context.Context, conn *route53resolver.Client,
 	}
 
 	if output == nil || output.ResolverEndpoint == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ResolverEndpoint, nil
@@ -384,7 +414,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -405,7 +435,7 @@ func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}
@@ -426,7 +456,7 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Client, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ResolverEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		retry.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 
 		return output, err
 	}

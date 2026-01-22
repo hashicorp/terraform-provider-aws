@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package pinpoint_test
@@ -130,7 +130,7 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceSMSChannel(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfpinpoint.ResourceSMSChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

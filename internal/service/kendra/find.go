@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package kendra
@@ -35,7 +35,7 @@ func FindDataSourceByID(ctx context.Context, conn *kendra.Client, id, indexId st
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -62,7 +62,7 @@ func FindFaqByID(ctx context.Context, conn *kendra.Client, id, indexId string) (
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -89,7 +89,7 @@ func FindQuerySuggestionsBlockListByID(ctx context.Context, conn *kendra.Client,
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil
@@ -116,7 +116,7 @@ func FindThesaurusByID(ctx context.Context, conn *kendra.Client, id, indexId str
 	}
 
 	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return out, nil

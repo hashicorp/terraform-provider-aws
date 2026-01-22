@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ssmincidents_test
@@ -339,7 +339,7 @@ func testAccResponsePlan_disappears(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(rName, rTitle, "3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceResponsePlan(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfssmincidents.ResourceResponsePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

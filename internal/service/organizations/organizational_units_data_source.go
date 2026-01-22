@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package organizations
 
@@ -74,11 +76,11 @@ func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func findOrganizationalUnitsForParentByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.OrganizationalUnit, error) {
-	input := &organizations.ListOrganizationalUnitsForParentInput{
+	input := organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(id),
 	}
 
-	return findOrganizationalUnitsForParent(ctx, conn, input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
+	return findOrganizationalUnitsForParent(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.OrganizationalUnit]())
 }
 
 func findOrganizationalUnitForParent(ctx context.Context, conn *organizations.Client, input *organizations.ListOrganizationalUnitsForParentInput, filter tfslices.Predicate[*awstypes.OrganizationalUnit]) (*awstypes.OrganizationalUnit, error) {

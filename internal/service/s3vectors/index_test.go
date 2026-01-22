@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package s3vectors_test
@@ -225,7 +225,7 @@ func TestAccS3VectorsIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3vectors.ResourceIndex, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3vectors.ResourceIndex, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{

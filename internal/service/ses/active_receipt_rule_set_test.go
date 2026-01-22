@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ses_test
@@ -87,7 +87,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceActiveReceiptRuleSet(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceActiveReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

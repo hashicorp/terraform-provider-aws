@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -82,7 +82,7 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceFargateProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfeks.ResourceFargateProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appmesh_test
@@ -159,7 +159,7 @@ func testAccVirtualRouter_disappears(t *testing.T) {
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualRouter(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappmesh.ResourceVirtualRouter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

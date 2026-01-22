@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package dsql
 
@@ -46,6 +48,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
 // @Testing(generator=false)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -384,7 +387,7 @@ func findClusterByID(ctx context.Context, conn *dsql.Client, id string) (*dsql.G
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -408,7 +411,7 @@ func findVPCEndpointServiceNameByID(ctx context.Context, conn *dsql.Client, id s
 	}
 
 	if output == nil || output.ServiceName == nil {
-		return nil, tfresource.NewEmptyResultError(&input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output.ServiceName, nil

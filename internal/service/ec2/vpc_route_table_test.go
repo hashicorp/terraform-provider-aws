@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -74,7 +74,7 @@ func TestAccVPCRouteTable_disappears(t *testing.T) {
 				Config: testAccVPCRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,7 +98,7 @@ func TestAccVPCRouteTable_Disappears_subnetAssociation(t *testing.T) {
 				Config: testAccVPCRouteTableConfig_subnetAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceRouteTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

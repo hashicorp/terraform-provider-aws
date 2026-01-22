@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package apprunner
 
@@ -29,6 +31,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @V60SDKv2Fix
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceAutoScalingConfigurationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAutoScalingConfigurationCreate,
@@ -212,7 +215,7 @@ func findAutoScalingConfigurationByARN(ctx context.Context, conn *apprunner.Clie
 	}
 
 	if output == nil || output.AutoScalingConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	if status := string(output.AutoScalingConfiguration.Status); status == autoScalingConfigurationStatusInactive {

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datazone_test
@@ -96,7 +96,7 @@ func TestAccDataZoneFormType_disappears(t *testing.T) {
 				Config: testAccFormTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFormTypeExists(ctx, resourceName, &formtype),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatazone.ResourceFormType, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfdatazone.ResourceFormType, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

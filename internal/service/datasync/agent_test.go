@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package datasync_test
@@ -73,7 +73,7 @@ func TestAccDataSyncAgent_disappears(t *testing.T) {
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceAgent(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfdatasync.ResourceAgent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

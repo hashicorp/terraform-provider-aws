@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package eks_test
@@ -84,7 +84,7 @@ func TestAccEKSCapability_disappears(t *testing.T) {
 				Config: testAccCapabilityConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapabilityExists(ctx, resourceName, &capability),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCapability, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfeks.ResourceCapability, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

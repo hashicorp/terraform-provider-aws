@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite_test
@@ -207,8 +207,8 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftimestreamwrite.ResourceTable(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tftimestreamwrite.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

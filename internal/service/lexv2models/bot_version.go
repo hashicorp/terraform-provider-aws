@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package lexv2models
 
@@ -248,7 +250,7 @@ func findBotVersionByTwoPartKey(ctx context.Context, conn *lexmodelsv2.Client, b
 	}
 
 	if output == nil || output.BotVersion == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError()
 	}
 
 	return output, nil
@@ -282,7 +284,7 @@ func waitBotVersionCreated(ctx context.Context, conn *lexmodelsv2.Client, botID,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}
@@ -301,7 +303,7 @@ func waitBotVersionDeleted(ctx context.Context, conn *lexmodelsv2.Client, botID,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lexmodelsv2.DescribeBotVersionOutput); ok {
-		tfresource.SetLastError(err, botFailureReasons(output.FailureReasons))
+		retry.SetLastError(err, botFailureReasons(output.FailureReasons))
 
 		return output, err
 	}

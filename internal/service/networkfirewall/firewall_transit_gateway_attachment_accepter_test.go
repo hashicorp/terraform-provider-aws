@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package networkfirewall_test
@@ -82,7 +82,7 @@ func TestAccNetworkFirewallFirewallTransitGatewayAttachmentAccepter_disappears(t
 				Config: testAccFirewallTransitGatewayAttachmentAccepterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallTransitGatewayAttachmentAccepterExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfnetworkfirewall.ResourceFirewallTransitGatewayAttachmentAccepter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{

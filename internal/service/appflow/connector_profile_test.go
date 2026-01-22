@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package appflow_test
@@ -100,7 +100,7 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

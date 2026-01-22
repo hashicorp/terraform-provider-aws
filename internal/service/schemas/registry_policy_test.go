@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schemas_test
@@ -63,7 +63,7 @@ func TestAccSchemasRegistryPolicy_disappears(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccSchemasRegistryPolicy_disappears_Registry(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), parentResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfschemas.ResourceRegistry(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

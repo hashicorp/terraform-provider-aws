@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package chime_test
@@ -71,7 +71,7 @@ func testAccVoiceConnectorOrigination_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfchime.ResourceVoiceConnectorOrigination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

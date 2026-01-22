@@ -1,5 +1,7 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
+
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
 
 package opensearch
 
@@ -217,7 +219,7 @@ func waitPackageAssociationCreated(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusAssociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err
@@ -239,7 +241,7 @@ func waitPackageAssociationDeleted(ctx context.Context, conn *opensearch.Client,
 
 	if output, ok := outputRaw.(*awstypes.DomainPackageDetails); ok {
 		if status, details := output.DomainPackageStatus, output.ErrorDetails; status == awstypes.DomainPackageStatusDissociationFailed && details != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(details.ErrorType), aws.ToString(details.ErrorMessage)))
 		}
 
 		return output, err

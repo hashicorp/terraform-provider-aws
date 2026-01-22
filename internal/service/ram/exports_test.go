@@ -1,19 +1,22 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ram
 
 // Exports for use in tests only.
 var (
-	ResourcePrincipalAssociation    = resourcePrincipalAssociation
-	ResourceResourceAssociation     = resourceResourceAssociation
-	ResourceResourceShare           = resourceResourceShare
-	ResourceResourceShareAccepter   = resourceResourceShareAccepter
-	ResourceSharingWithOrganization = resourceSharingWithOrganization
+	ResourcePrincipalAssociation               = resourcePrincipalAssociation
+	ResourceResourceAssociation                = resourceResourceAssociation
+	ResourceResourceShare                      = resourceResourceShare
+	ResourceResourceShareAccepter              = resourceResourceShareAccepter
+	ResourceResourceShareAssociationsExclusive = newResourceShareAssociationsExclusiveResource
+	ResourceSharingWithOrganization            = resourceSharingWithOrganization
 
+	FindAssociationsForResourceShare         = findAssociationsForResourceShare
 	FindPrincipalAssociationByTwoPartKey     = findPrincipalAssociationByTwoPartKey
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
-	FindSharingWithOrganization              = findSharingWithOrganization
+
+	WaitResourceAssociationCreated = waitResourceAssociationCreated
 )

@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package types
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 var (
@@ -54,8 +55,7 @@ func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 }
 
 func (t objectTypeOf[T]) String() string {
-	var zero T
-	return fmt.Sprintf("ObjectTypeOf[%T]", zero)
+	return fmt.Sprintf("ObjectTypeOf[%T]", inttypes.Zero[T]())
 }
 
 func (t objectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {

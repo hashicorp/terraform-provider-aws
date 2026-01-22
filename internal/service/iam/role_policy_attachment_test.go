@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package iam_test
@@ -92,7 +92,7 @@ func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 				Config: testAccRolePolicyAttachmentConfig_attach(roleName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -118,8 +118,8 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRolePolicyAttachment(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

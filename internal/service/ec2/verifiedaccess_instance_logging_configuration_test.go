@@ -1,4 +1,4 @@
-// Copyright IBM Corp. 2014, 2025
+// Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package ec2_test
@@ -397,7 +397,7 @@ func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, 
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceVerifiedAccessInstanceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
