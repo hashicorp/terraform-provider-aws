@@ -662,7 +662,72 @@ func expandTableInput(d *schema.ResourceData) *awstypes.TableInput {
 		tableInput.TargetTable = expandTableTargetTable(v.([]any)[0].(map[string]any))
 	}
 
+	if v, ok := d.GetOk("view_definition"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tableInput.ViewDefinition = expandViewDefinition(v.([]any)[0].(map[string]any))
+	}
+
 	return tableInput
+}
+
+func expandViewDefinition(tfMap map[string]any) *awstypes.ViewDefinitionInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ViewDefinitionInput{}
+
+	if v, ok := tfMap["IsProtected"].(bool); ok {
+		apiObject.IsProtected = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["Definer"].(string); ok && v != "" {
+		apiObject.Definer = aws.String(v)
+	}
+
+	if v, ok := tfMap["SubObjects"]; ok {
+		apiObject.SubObjects = flex.ExpandStringValueList(v.([]any))
+	}
+
+	if v, ok := tfMap["Representations"]; ok {
+		apiObject.Representations = expandViewDefinitionRepresentations(v.([]any))
+	}
+
+	return apiObject
+}
+
+func expandViewDefinitionRepresentations(s []any) []awstypes.ViewRepresentationInput {
+	viewDefinitionRepresentationSlice := []awstypes.ViewRepresentationInput{}
+	for _, representation := range s {
+		representationMap := representation.(map[string]any)
+		representationObj := awstypes.ViewRepresentationInput{}
+
+		if v, ok := representationMap["Dialect"].(string); ok {
+			v = strings.ToLower(v)
+			if v == "athena" {
+				representationObj.Dialect = awstypes.ViewDialectAthena
+			} else if v == "redshift" {
+				representationObj.Dialect = awstypes.ViewDialectRedshift
+			} else {
+				representationObj.Dialect = awstypes.ViewDialectSpark
+			}
+
+			if v, ok := representationMap["DialectVersion"]; ok && v != "" {
+				representationObj.DialectVersion = aws.String(v.(string))
+			}
+			if v, ok := representationMap["ViewOriginalText"]; ok && v != "" {
+				representationObj.ViewOriginalText = aws.String(v.(string))
+			}
+			if v, ok := representationMap["ValidationConnection"]; ok && v != "" {
+				representationObj.ValidationConnection = aws.String(v.(string))
+			}
+			if v, ok := representationMap["ViewExpandedText"]; ok && v != "" {
+				representationObj.ViewExpandedText = aws.String(v.(string))
+			}
+
+			viewDefinitionRepresentationSlice = append(viewDefinitionRepresentationSlice, representationObj)
+		}
+	}
+	return viewDefinitionRepresentationSlice
 }
 
 func expandOpenTableFormat(s *schema.ResourceData) *awstypes.OpenTableFormatInput {
