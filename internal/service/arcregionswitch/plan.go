@@ -297,6 +297,197 @@ func ecsCapacityIncreaseConfigBlock(ctx context.Context) fwschema.Block {
 	}
 }
 
+func eksResourceScalingConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[eksResourceScalingConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"capacity_monitoring_approach": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.EksCapacityMonitoringApproach](),
+					Required:   true,
+				},
+				"target_percent": fwschema.Int64Attribute{
+					Required: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"kubernetes_resource_type": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesResourceTypeModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"api_version": fwschema.StringAttribute{
+								Required: true,
+							},
+							"kind": fwschema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+				"eks_clusters": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[eksClusterModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"cluster_arn": fwschema.StringAttribute{
+								Required: true,
+							},
+							"cross_account_role": fwschema.StringAttribute{
+								Optional: true,
+							},
+							names.AttrExternalID: fwschema.StringAttribute{
+								Optional: true,
+							},
+						},
+					},
+				},
+				"scaling_resources": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[scalingResourcesModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							names.AttrNamespace: fwschema.StringAttribute{
+								Required: true,
+							},
+						},
+						Blocks: map[string]fwschema.Block{
+							names.AttrResources: fwschema.SetNestedBlock{
+								CustomType: fwtypes.NewSetNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
+								NestedObject: fwschema.NestedBlockObject{
+									Attributes: map[string]fwschema.Attribute{
+										"resource_name": fwschema.StringAttribute{
+											Required: true,
+										},
+										names.AttrName: fwschema.StringAttribute{
+											Required: true,
+										},
+										names.AttrNamespace: fwschema.StringAttribute{
+											Required: true,
+										},
+										"hpa_name": fwschema.StringAttribute{
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[eksUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"minimum_success_percentage": fwschema.Int64Attribute{
+								Required: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func executionApprovalConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"approval_role": fwschema.StringAttribute{
+					Required: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func globalAuroraConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				"behavior": fwschema.StringAttribute{
+					CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraDefaultBehavior](),
+					Required:   true,
+				},
+				"global_cluster_identifier": fwschema.StringAttribute{
+					Required: true,
+				},
+				"database_cluster_arns": fwschema.ListAttribute{
+					CustomType: fwtypes.ListOfARNType,
+					Required:   true,
+				},
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"ungraceful": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"ungraceful": fwschema.StringAttribute{
+								CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
+								Required:   true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func route53HealthCheckConfigBlock(ctx context.Context) fwschema.Block {
+	return fwschema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
+		NestedObject: fwschema.NestedBlockObject{
+			Attributes: map[string]fwschema.Attribute{
+				names.AttrHostedZoneID: fwschema.StringAttribute{
+					Required: true,
+				},
+				"record_name": fwschema.StringAttribute{
+					Required: true,
+				},
+				"cross_account_role": fwschema.StringAttribute{
+					Optional: true,
+				},
+				names.AttrExternalID: fwschema.StringAttribute{
+					Optional: true,
+				},
+				"timeout_minutes": fwschema.Int32Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]fwschema.Block{
+				"record_set": fwschema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[recordSetModel](ctx),
+					NestedObject: fwschema.NestedBlockObject{
+						Attributes: map[string]fwschema.Attribute{
+							"record_set_identifier": fwschema.StringAttribute{
+								Required: true,
+							},
+							names.AttrRegion: fwschema.StringAttribute{
+								Required: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -452,148 +643,9 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"document_db_config":               documentDBConfigBlock(ctx),
 									"ec2_asg_capacity_increase_config": ec2ASGCapacityIncreaseConfigBlock(ctx),
 									"ecs_capacity_increase_config":     ecsCapacityIncreaseConfigBlock(ctx),
-									"eks_resource_scaling_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[eksResourceScalingConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"capacity_monitoring_approach": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.EksCapacityMonitoringApproach](),
-													Required:   true,
-												},
-												"target_percent": fwschema.Int64Attribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"kubernetes_resource_type": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[kubernetesResourceTypeModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"api_version": fwschema.StringAttribute{
-																Required: true,
-															},
-															"kind": fwschema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-												"eks_clusters": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[eksClusterModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"cluster_arn": fwschema.StringAttribute{
-																Required: true,
-															},
-															"cross_account_role": fwschema.StringAttribute{
-																Optional: true,
-															},
-															names.AttrExternalID: fwschema.StringAttribute{
-																Optional: true,
-															},
-														},
-													},
-												},
-												"scaling_resources": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[scalingResourcesModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															names.AttrNamespace: fwschema.StringAttribute{
-																Required: true,
-															},
-														},
-														Blocks: map[string]fwschema.Block{
-															names.AttrResources: fwschema.SetNestedBlock{
-																CustomType: fwtypes.NewSetNestedObjectTypeOf[kubernetesScalingResourceModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		"resource_name": fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		names.AttrName: fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		names.AttrNamespace: fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		"hpa_name": fwschema.StringAttribute{
-																			Optional: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[eksUngracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"minimum_success_percentage": fwschema.Int64Attribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"execution_approval_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"approval_role": fwschema.StringAttribute{
-													Required: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-									"global_aurora_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												"behavior": fwschema.StringAttribute{
-													CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraDefaultBehavior](),
-													Required:   true,
-												},
-												"global_cluster_identifier": fwschema.StringAttribute{
-													Required: true,
-												},
-												"database_cluster_arns": fwschema.ListAttribute{
-													CustomType: fwtypes.ListOfARNType,
-													Required:   true,
-												},
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												names.AttrExternalID: fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"ungraceful": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[globalAuroraUngracefulModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"ungraceful": fwschema.StringAttribute{
-																CustomType: fwtypes.StringEnumType[awstypes.GlobalAuroraUngracefulBehavior](),
-																Required:   true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"eks_resource_scaling_config":      eksResourceScalingConfigBlock(ctx),
+									"execution_approval_config":        executionApprovalConfigBlock(ctx),
+									"global_aurora_config":             globalAuroraConfigBlock(ctx),
 									"parallel_config": fwschema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[parallelConfigModel](ctx),
 										NestedObject: fwschema.NestedBlockObject{
@@ -619,62 +671,17 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 															"document_db_config":               documentDBConfigBlock(ctx),
 															"ec2_asg_capacity_increase_config": ec2ASGCapacityIncreaseConfigBlock(ctx),
 															"ecs_capacity_increase_config":     ecsCapacityIncreaseConfigBlock(ctx),
-															"execution_approval_config": fwschema.ListNestedBlock{
-																CustomType: fwtypes.NewListNestedObjectTypeOf[executionApprovalConfigModel](ctx),
-																NestedObject: fwschema.NestedBlockObject{
-																	Attributes: map[string]fwschema.Attribute{
-																		"approval_role": fwschema.StringAttribute{
-																			Required: true,
-																		},
-																		"timeout_minutes": fwschema.Int32Attribute{
-																			Optional: true,
-																		},
-																	},
-																},
-															},
+															"eks_resource_scaling_config":      eksResourceScalingConfigBlock(ctx),
+															"execution_approval_config":        executionApprovalConfigBlock(ctx),
+															"global_aurora_config":             globalAuroraConfigBlock(ctx),
+															"route53_health_check_config":      route53HealthCheckConfigBlock(ctx),
 														},
 													},
 												},
 											},
 										},
 									},
-									"route53_health_check_config": fwschema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[route53HealthCheckConfigModel](ctx),
-										NestedObject: fwschema.NestedBlockObject{
-											Attributes: map[string]fwschema.Attribute{
-												names.AttrHostedZoneID: fwschema.StringAttribute{
-													Required: true,
-												},
-												"record_name": fwschema.StringAttribute{
-													Required: true,
-												},
-												"cross_account_role": fwschema.StringAttribute{
-													Optional: true,
-												},
-												names.AttrExternalID: fwschema.StringAttribute{
-													Optional: true,
-												},
-												"timeout_minutes": fwschema.Int32Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]fwschema.Block{
-												"record_set": fwschema.ListNestedBlock{
-													CustomType: fwtypes.NewListNestedObjectTypeOf[recordSetModel](ctx),
-													NestedObject: fwschema.NestedBlockObject{
-														Attributes: map[string]fwschema.Attribute{
-															"record_set_identifier": fwschema.StringAttribute{
-																Required: true,
-															},
-															names.AttrRegion: fwschema.StringAttribute{
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
+									"route53_health_check_config": route53HealthCheckConfigBlock(ctx),
 								}, // blocks
 							},
 						},
@@ -1288,6 +1295,49 @@ func (m resourcePlanModel) expandParallelStepExecutionBlockConfig(ctx context.Co
 			return err
 		}
 		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.EKSResourceScalingConfig.IsNull():
+		pData, pD := pStep.EKSResourceScalingConfig.ToPtr(ctx)
+		diags.Append(pD...)
+		if diags.HasError() {
+			return errors.New("failed to convert parallel EKS resource scaling config")
+		}
+
+		var apiEKSConfig awstypes.EksResourceScalingConfiguration
+		diags.Append(flex.Expand(ctx, pData.CapacityMonitoringApproach, &apiEKSConfig.CapacityMonitoringApproach)...)
+		diags.Append(flex.Expand(ctx, pData.EKSClusters, &apiEKSConfig.EksClusters)...)
+		diags.Append(flex.Expand(ctx, pData.KubernetesResourceType, &apiEKSConfig.KubernetesResourceType)...)
+		diags.Append(flex.Expand(ctx, pData.TargetPercent, &apiEKSConfig.TargetPercent)...)
+		diags.Append(flex.Expand(ctx, pData.TimeoutMinutes, &apiEKSConfig.TimeoutMinutes)...)
+		diags.Append(flex.Expand(ctx, pData.Ungraceful, &apiEKSConfig.Ungraceful)...)
+
+		if err := m.expandEKSScalingResources(ctx, pData, &apiEKSConfig, diags); err != nil {
+			return err
+		}
+
+		apiParallelStep.ExecutionBlockConfiguration = &awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig{
+			Value: apiEKSConfig,
+		}
+	case !pStep.ExecutionApprovalConfig.IsNull():
+		pData, pD := pStep.ExecutionApprovalConfig.ToPtr(ctx)
+		diags.Append(pD...)
+		if diags.HasError() {
+			return errors.New("failed to convert parallel execution approval config")
+		}
+		var pR awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig
+		diags.Append(flex.Expand(ctx, pData, &pR.Value)...)
+		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.GlobalAuroraConfig.IsNull():
+		var pR awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig
+		if err := expandSimpleConfig(ctx, pStep.GlobalAuroraConfig, &pR.Value, diags); err != nil {
+			return err
+		}
+		apiParallelStep.ExecutionBlockConfiguration = &pR
+	case !pStep.Route53HealthCheckConfig.IsNull():
+		var pR awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig
+		if err := expandSimpleConfig(ctx, pStep.Route53HealthCheckConfig, &pR.Value, diags); err != nil {
+			return err
+		}
+		apiParallelStep.ExecutionBlockConfiguration = &pR
 	}
 	return nil
 }
@@ -1495,7 +1545,10 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 										DocumentDbConfig:             fwtypes.NewListNestedObjectValueOfNull[documentDbConfigModel](ctx),
 										EC2ASGCapacityIncreaseConfig: fwtypes.NewListNestedObjectValueOfNull[ec2ASGCapacityIncreaseConfigModel](ctx),
 										ECSCapacityIncreaseConfig:    fwtypes.NewListNestedObjectValueOfNull[ecsCapacityIncreaseConfigModel](ctx),
+										EKSResourceScalingConfig:     fwtypes.NewListNestedObjectValueOfNull[eksResourceScalingConfigModel](ctx),
 										ExecutionApprovalConfig:      fwtypes.NewListNestedObjectValueOfNull[executionApprovalConfigModel](ctx),
+										GlobalAuroraConfig:           fwtypes.NewListNestedObjectValueOfNull[globalAuroraConfigModel](ctx),
+										Route53HealthCheckConfig:     fwtypes.NewListNestedObjectValueOfNull[route53HealthCheckConfigModel](ctx),
 									}
 
 									diags.Append(flex.Flatten(ctx, step.Name, &parallelSteps[i].Name)...)
@@ -1515,8 +1568,14 @@ func (m *resourcePlanModel) Flatten(ctx context.Context, v any) (diags fwdiag.Di
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].EC2ASGCapacityIncreaseConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberEcsCapacityIncreaseConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ECSCapacityIncreaseConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberEksResourceScalingConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].EKSResourceScalingConfig)...)
 										case *awstypes.ExecutionBlockConfigurationMemberExecutionApprovalConfig:
 											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].ExecutionApprovalConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberGlobalAuroraConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].GlobalAuroraConfig)...)
+										case *awstypes.ExecutionBlockConfigurationMemberRoute53HealthCheckConfig:
+											diags.Append(flex.Flatten(ctx, &pType.Value, &parallelSteps[i].Route53HealthCheckConfig)...)
 										}
 									}
 								}
@@ -1804,9 +1863,12 @@ type parallelStepModel struct {
 	DocumentDbConfig             fwtypes.ListNestedObjectValueOf[documentDbConfigModel]             `tfsdk:"document_db_config"`
 	EC2ASGCapacityIncreaseConfig fwtypes.ListNestedObjectValueOf[ec2ASGCapacityIncreaseConfigModel] `tfsdk:"ec2_asg_capacity_increase_config"`
 	ECSCapacityIncreaseConfig    fwtypes.ListNestedObjectValueOf[ecsCapacityIncreaseConfigModel]    `tfsdk:"ecs_capacity_increase_config"`
+	EKSResourceScalingConfig     fwtypes.ListNestedObjectValueOf[eksResourceScalingConfigModel]     `tfsdk:"eks_resource_scaling_config"`
 	ExecutionApprovalConfig      fwtypes.ListNestedObjectValueOf[executionApprovalConfigModel]      `tfsdk:"execution_approval_config"`
 	ExecutionBlockType           fwtypes.StringEnum[awstypes.ExecutionBlockType]                    `tfsdk:"execution_block_type"`
+	GlobalAuroraConfig           fwtypes.ListNestedObjectValueOf[globalAuroraConfigModel]           `tfsdk:"global_aurora_config"`
 	Name                         types.String                                                       `tfsdk:"name"`
+	Route53HealthCheckConfig     fwtypes.ListNestedObjectValueOf[route53HealthCheckConfigModel]     `tfsdk:"route53_health_check_config"`
 }
 
 type route53HealthCheckConfigModel struct {
