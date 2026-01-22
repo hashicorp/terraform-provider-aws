@@ -53,9 +53,11 @@ func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 			},
 		},
 	})
@@ -439,18 +441,19 @@ func TestAccARCRegionSwitchPlan_complex(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// API may return regions in different order than specified
-				ImportStateVerifyIgnore: []string{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIgnore:              []string{
 					// EKS scaling resources may be returned in different order
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.hpa_name",
+					/*"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.hpa_name",
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.name",
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.0.resource_name",
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.hpa_name",
 					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.name",
-					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.resource_name",
+					"workflow.0.step.5.eks_resource_scaling_config.0.scaling_resources.0.resources.1.resource_name",*/
 				},
 			},
 		},
@@ -494,10 +497,10 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if err == nil {
-				return fmt.Errorf("ARC Region Switch Plan %s still exists", rs.Primary.ID)
+				return fmt.Errorf("ARC Region Switch Plan %s still exists", rs.Primary.Attributes[names.AttrARN])
 			}
 		}
 
@@ -512,13 +515,13 @@ func testAccCheckPlanExists(ctx context.Context, n string, v *sdktypes.Plan) res
 			return fmt.Errorf("Plan not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ARC Region Switch Plan ID is set")
+		if rs.Primary.Attributes[names.AttrARN] == "" {
+			return fmt.Errorf("No ARC Region Switch Plan ARN is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ARCRegionSwitchClient(ctx)
 
-		output, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfarcregionswitch.FindPlanByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		if err != nil {
 			return err

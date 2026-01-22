@@ -50,7 +50,7 @@ func newResourcePlan(context.Context) (resource.ResourceWithConfigure, error) {
 
 type resourcePlan struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
+	framework.WithImportByARN
 	framework.WithTimeouts
 }
 
@@ -514,7 +514,6 @@ func (r *resourcePlan) Schema(ctx context.Context, req resource.SchemaRequest, r
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
 			"execution_role": fwschema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -749,12 +748,11 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	plan.ARN = types.StringValue(aws.ToString(output.Plan.Arn))
-	plan.ID = types.StringValue(aws.ToString(output.Plan.Arn))
 
 	// Wait for plan to be available (eventual consistency)
-	planOutput, err := waitPlanCreated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+	planOutput, err := waitPlanCreated(ctx, conn, plan.ARN.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 		return
 	}
 
@@ -764,7 +762,6 @@ func (r *resourcePlan) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
 	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
@@ -779,13 +776,13 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
-	plan, err := findPlanByARN(ctx, conn, state.ID.ValueString())
+	plan, err := findPlanByARN(ctx, conn, state.ARN.ValueString())
 	if retry.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 
@@ -796,14 +793,13 @@ func (r *resourcePlan) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	// Set ID and ARN explicitly since they might need special handling
-	state.ID = types.StringValue(aws.ToString(plan.Arn))
+	// Set ARN explicitly
 	state.ARN = types.StringValue(aws.ToString(plan.Arn))
 
 	// Handle tags
 	tags, err := listTags(ctx, conn, aws.ToString(plan.Arn))
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 	setTagsOut(ctx, tags.Map())
@@ -832,7 +828,7 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Convert CreatePlanInput to UpdatePlanInput (only updatable fields)
 	var input arcregionswitch.UpdatePlanInput
-	input.Arn = state.ID.ValueStringPointer()
+	input.Arn = state.ARN.ValueStringPointer()
 	input.ExecutionRole = createInput.ExecutionRole
 	input.Description = createInput.Description
 	input.RecoveryTimeObjectiveMinutes = createInput.RecoveryTimeObjectiveMinutes
@@ -842,22 +838,22 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	_, err := conn.UpdatePlan(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 		return
 	}
 
 	// Handle tags update
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := updateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		if err := updateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 			return
 		}
 	}
 
 	// Read after update to refresh state
-	planOutput, err := findPlanByARN(ctx, conn, plan.ID.ValueString())
+	planOutput, err := findPlanByARN(ctx, conn, plan.ARN.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.ARN.ValueString())
 		return
 	}
 
@@ -867,7 +863,6 @@ func (r *resourcePlan) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	plan.ID = types.StringValue(aws.ToString(planOutput.Arn))
 	plan.ARN = types.StringValue(aws.ToString(planOutput.Arn))
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
@@ -883,7 +878,7 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 	conn := r.Meta().ARCRegionSwitchClient(ctx)
 
 	input := arcregionswitch.DeletePlanInput{
-		Arn: state.ID.ValueStringPointer(),
+		Arn: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePlan(ctx, &input)
@@ -894,9 +889,9 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 		}
 		// Retry if health check allocation is in progress (check error message generically)
 		if errs.Contains(err, "health check allocation is in progress") {
-			_, err = waitPlanDeletable(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
+			_, err = waitPlanDeletable(ctx, conn, state.ARN.ValueString(), r.DeleteTimeout(ctx, state.Timeouts))
 			if err != nil {
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 				return
 			}
 			// Retry delete
@@ -905,12 +900,12 @@ func (r *resourcePlan) Delete(ctx context.Context, req resource.DeleteRequest, r
 				if errors.As(err, &nfe) {
 					return
 				}
-				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+				smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 				return
 			}
 			return
 		}
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ARN.ValueString())
 		return
 	}
 }
@@ -1694,7 +1689,6 @@ type resourcePlanModel struct {
 	AssociatedAlarms             fwtypes.SetNestedObjectValueOf[associatedAlarmModel] `tfsdk:"associated_alarms"`
 	Description                  types.String                                         `tfsdk:"description"`
 	ExecutionRole                types.String                                         `tfsdk:"execution_role"`
-	ID                           types.String                                         `tfsdk:"id"`
 	Name                         types.String                                         `tfsdk:"name"`
 	PrimaryRegion                types.String                                         `tfsdk:"primary_region"`
 	RecoveryApproach             fwtypes.StringEnum[awstypes.RecoveryApproach]        `tfsdk:"recovery_approach"`
