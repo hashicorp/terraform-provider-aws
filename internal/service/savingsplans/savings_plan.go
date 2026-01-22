@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -45,7 +47,6 @@ func newSavingsPlanResource(_ context.Context) (resource.ResourceWithConfigure, 
 
 type savingsPlanResource struct {
 	framework.ResourceWithModel[savingsPlanResourceModel]
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -62,32 +63,53 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"currency": schema.StringAttribute{
 				Computed:    true,
 				Description: "The currency of the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrDescription: schema.StringAttribute{
 				Computed:    true,
 				Description: "The description.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"ec2_instance_family": schema.StringAttribute{
 				Computed:    true,
 				Description: "The EC2 instance family for the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"end": schema.StringAttribute{
 				Computed:    true,
 				Description: "The end time of the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"offering_id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the offering.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"payment_option": schema.StringAttribute{
 				Computed:    true,
 				Description: "The payment option for the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"product_types": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 				Description: "The product types.",
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"purchase_time": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
@@ -100,14 +122,23 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"recurring_payment_amount": schema.StringAttribute{
 				Computed:    true,
 				Description: "The recurring payment amount.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrRegion: schema.StringAttribute{
 				Computed:    true,
 				Description: "The AWS Region.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"returnable_until": schema.StringAttribute{
 				Computed:    true,
 				Description: "The recurring payment amount.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"savings_plan_arn": framework.ARNAttributeComputedOnly(),
 			"savings_plan_id":  framework.IDAttribute(),
@@ -121,21 +152,33 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"savings_plan_type": schema.StringAttribute{
 				Computed:    true,
 				Description: "The type of Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"start": schema.StringAttribute{
 				Computed:    true,
 				Description: "The start time of the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrState: schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.SavingsPlanState](),
 				Computed:    true,
 				Description: "The current state of the Savings Plan.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"term_duration_in_seconds": schema.Int64Attribute{
 				Computed:    true,
 				Description: "The duration of the term, in seconds.",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"upfront_payment_amount": schema.StringAttribute{
 				Optional:    true,
