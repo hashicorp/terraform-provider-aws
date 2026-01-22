@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -35,6 +34,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	sdkretry "github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,7 +46,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/docdbelastic/types;awstypes;awstypes.Cluster")
 // @Testing(importIgnore="admin_user_password")
 // @Testing(preIdentityVersion="v5.100.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newClusterResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
 
@@ -405,7 +404,7 @@ func waitClusterCreated(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusCreating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -423,7 +422,7 @@ func waitClusterUpdated(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &sdkretry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.StatusUpdating),
 		Target:                    enum.Slice(awstypes.StatusActive),
-		Refresh:                   statusCluster(ctx, conn, id),
+		Refresh:                   statusCluster(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -441,7 +440,7 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 	stateConf := &sdkretry.StateChangeConf{
 		Pending: enum.Slice(awstypes.StatusActive, awstypes.StatusDeleting),
 		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, id),
+		Refresh: statusCluster(conn, id),
 		Timeout: timeout,
 	}
 
@@ -453,8 +452,8 @@ func waitClusterDeleted(ctx context.Context, conn *docdbelastic.Client, id strin
 	return nil, err
 }
 
-func statusCluster(ctx context.Context, conn *docdbelastic.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusCluster(conn *docdbelastic.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		out, err := findClusterByID(ctx, conn, id)
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -475,9 +474,8 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 	out, err := conn.GetCluster(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
