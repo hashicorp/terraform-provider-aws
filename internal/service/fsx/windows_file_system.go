@@ -18,7 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -215,6 +216,15 @@ func resourceWindowsFileSystem() *schema.Resource {
 				ConflictsWith: []string{"active_directory_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"domain_join_service_account_secret": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.password",
+								"self_managed_active_directory.0.username",
+							},
+						},
 						"dns_ips": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -242,14 +252,21 @@ func resourceWindowsFileSystem() *schema.Resource {
 						},
 						names.AttrPassword: {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.domain_join_service_account_secret",
+							},
 						},
 						names.AttrUsername: {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
+							ConflictsWith: []string{
+								"self_managed_active_directory.0.domain_join_service_account_secret",
+							},
 						},
 					},
 				},
@@ -307,8 +324,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	inputC := &fsx.CreateFileSystemInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+	inputCFS := fsx.CreateFileSystemInput{
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		FileSystemType:     awstypes.FileSystemTypeWindows,
 		StorageCapacity:    aws.Int32(int32(d.Get("storage_capacity").(int))),
 		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
@@ -319,8 +336,8 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			ThroughputCapacity:           aws.Int32(int32(d.Get("throughput_capacity").(int))),
 		},
 	}
-	inputB := &fsx.CreateFileSystemFromBackupInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+	inputCFSFB := fsx.CreateFileSystemFromBackupInput{
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		SubnetIds:          flex.ExpandStringValueList(d.Get(names.AttrSubnetIDs).([]any)),
 		Tags:               getTagsIn(ctx),
 		WindowsConfiguration: &awstypes.CreateFileSystemWindowsConfiguration{
@@ -331,70 +348,70 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("active_directory_id"); ok {
-		inputC.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
-		inputB.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+		inputCFS.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
+		inputCFSFB.WindowsConfiguration.ActiveDirectoryId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("aliases"); ok {
-		inputC.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
-		inputB.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCFS.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCFSFB.WindowsConfiguration.Aliases = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("audit_log_configuration"); ok && len(v.([]any)) > 0 {
-		inputC.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]any))
-		inputB.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]any))
+		inputCFS.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]any))
+		inputCFSFB.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("daily_automatic_backup_start_time"); ok {
-		inputC.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
-		inputB.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		inputCFS.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
+		inputCFSFB.WindowsConfiguration.DailyAutomaticBackupStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok && len(v.([]any)) > 0 {
-		inputC.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(v.([]any))
-		inputB.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(v.([]any))
+		inputCFS.WindowsConfiguration.DiskIopsConfiguration = expandWindowsFileSystemDiskIopsConfiguration(v.([]any))
+		inputCFSFB.WindowsConfiguration.DiskIopsConfiguration = expandWindowsFileSystemDiskIopsConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk("deployment_type"); ok {
-		inputC.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
-		inputB.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
+		inputCFS.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
+		inputCFSFB.WindowsConfiguration.DeploymentType = awstypes.WindowsDeploymentType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
-		inputC.KmsKeyId = aws.String(v.(string))
-		inputB.KmsKeyId = aws.String(v.(string))
+		inputCFS.KmsKeyId = aws.String(v.(string))
+		inputCFSFB.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("preferred_subnet_id"); ok {
-		inputC.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
-		inputB.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
+		inputCFS.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
+		inputCFSFB.WindowsConfiguration.PreferredSubnetId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
-		inputC.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
-		inputB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCFS.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCFSFB.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
-		inputC.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]any))
-		inputB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]any))
+		inputCFS.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any))
+		inputCFSFB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrStorageType); ok {
-		inputC.StorageType = awstypes.StorageType(v.(string))
-		inputB.StorageType = awstypes.StorageType(v.(string))
+		inputCFS.StorageType = awstypes.StorageType(v.(string))
+		inputCFSFB.StorageType = awstypes.StorageType(v.(string))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
-		inputC.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
-		inputB.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		inputCFS.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
+		inputCFSFB.WindowsConfiguration.WeeklyMaintenanceStartTime = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("backup_id"); ok {
 		backupID := v.(string)
-		inputB.BackupId = aws.String(backupID)
+		inputCFSFB.BackupId = aws.String(backupID)
 
-		output, err := conn.CreateFileSystemFromBackup(ctx, inputB)
+		output, err := conn.CreateFileSystemFromBackup(ctx, &inputCFSFB)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System from backup (%s): %s", backupID, err)
@@ -402,7 +419,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 
 		d.SetId(aws.ToString(output.FileSystem.FileSystemId))
 	} else {
-		output, err := conn.CreateFileSystem(ctx, inputC)
+		output, err := conn.CreateFileSystem(ctx, &inputCFS)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating FSx for Windows File Server File System: %s", err)
@@ -435,9 +452,8 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	windowsConfig := filesystem.WindowsConfiguration
-
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
-	d.Set("aliases", expandAliasValues(windowsConfig.Aliases))
+	d.Set("aliases", expandAliases(windowsConfig.Aliases))
 	d.Set(names.AttrARN, filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
@@ -446,7 +462,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
 	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", windowsConfig.DeploymentType)
-	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
+	if err := d.Set("disk_iops_configuration", flattenWindowsFileSystemDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set(names.AttrDNSName, filesystem.DNSName)
@@ -456,7 +472,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("remote_administration_endpoint", windowsConfig.RemoteAdministrationEndpoint)
-	if err := d.Set("self_managed_active_directory", flattenSelfManagedActiveDirectoryConfiguration(d, windowsConfig.SelfManagedActiveDirectoryConfiguration)); err != nil {
+	if err := d.Set("self_managed_active_directory", flattenWindowsFileSystemSelfManagedActiveDirectoryAttributes(d, windowsConfig.SelfManagedActiveDirectoryConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_managed_active_directory: %s", err)
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
@@ -481,12 +497,12 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
 		if len(add) > 0 {
-			input := &fsx.AssociateFileSystemAliasesInput{
+			input := fsx.AssociateFileSystemAliasesInput{
 				Aliases:      add,
 				FileSystemId: aws.String(d.Id()),
 			}
 
-			_, err := conn.AssociateFileSystemAliases(ctx, input)
+			_, err := conn.AssociateFileSystemAliases(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "associating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
@@ -498,12 +514,12 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if len(del) > 0 {
-			input := &fsx.DisassociateFileSystemAliasesInput{
+			input := fsx.DisassociateFileSystemAliasesInput{
 				Aliases:      del,
 				FileSystemId: aws.String(d.Id()),
 			}
 
-			_, err := conn.DisassociateFileSystemAliases(ctx, input)
+			_, err := conn.DisassociateFileSystemAliases(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disassociating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
@@ -520,8 +536,8 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("throughput_capacity") {
 		o, n := d.GetChange("throughput_capacity")
 		if o, n := o.(int), n.(int); n > o {
-			input := &fsx.UpdateFileSystemInput{
-				ClientRequestToken: aws.String(id.UniqueId()),
+			input := fsx.UpdateFileSystemInput{
+				ClientRequestToken: aws.String(sdkid.UniqueId()),
 				FileSystemId:       aws.String(d.Id()),
 				WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{
 					ThroughputCapacity: aws.Int32(int32(n)),
@@ -529,7 +545,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 			}
 
 			startTime := time.Now()
-			_, err := conn.UpdateFileSystem(ctx, input)
+			_, err := conn.UpdateFileSystem(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s) ThroughputCapacity: %s", d.Id(), err)
@@ -552,8 +568,8 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		names.AttrTags,
 		names.AttrTagsAll,
 	) {
-		input := &fsx.UpdateFileSystemInput{
-			ClientRequestToken:   aws.String(id.UniqueId()),
+		input := fsx.UpdateFileSystemInput{
+			ClientRequestToken:   aws.String(sdkid.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
 			WindowsConfiguration: &awstypes.UpdateFileSystemWindowsConfiguration{},
 		}
@@ -571,11 +587,11 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("disk_iops_configuration") {
-			input.WindowsConfiguration.DiskIopsConfiguration = expandWindowsDiskIopsConfiguration(d.Get("disk_iops_configuration").([]any))
+			input.WindowsConfiguration.DiskIopsConfiguration = expandWindowsFileSystemDiskIopsConfiguration(d.Get("disk_iops_configuration").([]any))
 		}
 
 		if d.HasChange("self_managed_active_directory") {
-			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationUpdate(d.Get("self_managed_active_directory").([]any))
+			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(d.Get("self_managed_active_directory").([]any))
 		}
 
 		if d.HasChange("storage_capacity") {
@@ -591,7 +607,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		startTime := time.Now()
-		_, err := conn.UpdateFileSystem(ctx, input)
+		_, err := conn.UpdateFileSystem(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FSx for Windows File Server File System (%s): %s", d.Id(), err)
@@ -613,8 +629,8 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxClient(ctx)
 
-	input := &fsx.DeleteFileSystemInput{
-		ClientRequestToken: aws.String(id.UniqueId()),
+	input := fsx.DeleteFileSystemInput{
+		ClientRequestToken: aws.String(sdkid.UniqueId()),
 		FileSystemId:       aws.String(d.Id()),
 		WindowsConfiguration: &awstypes.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
@@ -626,7 +642,7 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(ctx, input)
+	_, err := conn.DeleteFileSystem(ctx, &input)
 
 	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
@@ -643,67 +659,76 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandAliasValues(aliases []awstypes.Alias) []*string {
-	var alternateDNSNames []*string
-
-	for _, alias := range aliases {
-		aName := alias.Name
-		alternateDNSNames = append(alternateDNSNames, aName)
-	}
-
-	return alternateDNSNames
+func expandAliases(apiObjects []awstypes.Alias) []string {
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.Alias) string {
+		return aws.ToString(v.Name)
+	})
 }
 
-func expandSelfManagedActiveDirectoryConfigurationCreate(l []any) *awstypes.SelfManagedActiveDirectoryConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandWindowsFileSystemSelfManagedActiveDirectoryConfiguration(tfList []any) *awstypes.SelfManagedActiveDirectoryConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	data := l[0].(map[string]any)
-	req := &awstypes.SelfManagedActiveDirectoryConfiguration{
-		DomainName: aws.String(data[names.AttrDomainName].(string)),
-		DnsIps:     flex.ExpandStringValueSet(data["dns_ips"].(*schema.Set)),
-		Password:   aws.String(data[names.AttrPassword].(string)),
-		UserName:   aws.String(data[names.AttrUsername].(string)),
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SelfManagedActiveDirectoryConfiguration{
+		DomainName: aws.String(tfMap[names.AttrDomainName].(string)),
+		DnsIps:     flex.ExpandStringValueSet(tfMap["dns_ips"].(*schema.Set)),
 	}
 
-	if v, ok := data["file_system_administrators_group"]; ok && v.(string) != "" {
-		req.FileSystemAdministratorsGroup = aws.String(v.(string))
+	if v, ok := tfMap["domain_join_service_account_secret"].(string); ok && v != "" {
+		apiObject.DomainJoinServiceAccountSecret = aws.String(v)
 	}
 
-	if v, ok := data["organizational_unit_distinguished_name"]; ok && v.(string) != "" {
-		req.OrganizationalUnitDistinguishedName = aws.String(v.(string))
+	if v, ok := tfMap["file_system_administrators_group"]; ok && v.(string) != "" {
+		apiObject.FileSystemAdministratorsGroup = aws.String(v.(string))
 	}
 
-	return req
+	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok && v.(string) != "" {
+		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
+		apiObject.Password = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+		apiObject.UserName = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func expandSelfManagedActiveDirectoryConfigurationUpdate(l []any) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
-	if len(l) == 0 || l[0] == nil {
+func expandWindowsFileSystemSelfManagedActiveDirectoryConfigurationUpdates(tfList []any) *awstypes.SelfManagedActiveDirectoryConfigurationUpdates {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	data := l[0].(map[string]any)
-	req := &awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.SelfManagedActiveDirectoryConfigurationUpdates{}
 
-	if v, ok := data["dns_ips"].(*schema.Set); ok && v.Len() > 0 {
-		req.DnsIps = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap["domain_join_service_account_secret"].(string); ok && v != "" {
+		apiObject.DomainJoinServiceAccountSecret = aws.String(v)
 	}
 
-	if v, ok := data[names.AttrPassword].(string); ok && v != "" {
-		req.Password = aws.String(v)
+	if v, ok := tfMap["dns_ips"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.DnsIps = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := data[names.AttrUsername].(string); ok && v != "" {
-		req.UserName = aws.String(v)
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
+		apiObject.Password = aws.String(v)
 	}
 
-	return req
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+		apiObject.UserName = aws.String(v)
+	}
+
+	return apiObject
 }
 
-func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adopts *awstypes.SelfManagedActiveDirectoryAttributes) []map[string]any {
-	if adopts == nil {
-		return []map[string]any{}
+func flattenWindowsFileSystemSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, apiObject *awstypes.SelfManagedActiveDirectoryAttributes) []any {
+	if apiObject == nil {
+		return []any{}
 	}
 
 	// Since we are in a configuration block and the FSx API does not return
@@ -712,97 +737,99 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 	// This is not a pattern that should be used normally.
 	// See also: flattenEmrKerberosAttributes
 
-	m := map[string]any{
-		"dns_ips":                                adopts.DnsIps,
-		names.AttrDomainName:                     aws.ToString(adopts.DomainName),
-		"file_system_administrators_group":       aws.ToString(adopts.FileSystemAdministratorsGroup),
-		"organizational_unit_distinguished_name": aws.ToString(adopts.OrganizationalUnitDistinguishedName),
+	tfMap := map[string]any{
+		"domain_join_service_account_secret":     aws.ToString(apiObject.DomainJoinServiceAccountSecret),
+		"dns_ips":                                apiObject.DnsIps,
+		names.AttrDomainName:                     aws.ToString(apiObject.DomainName),
+		"file_system_administrators_group":       aws.ToString(apiObject.FileSystemAdministratorsGroup),
+		"organizational_unit_distinguished_name": aws.ToString(apiObject.OrganizationalUnitDistinguishedName),
 		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
-		names.AttrUsername:                       aws.ToString(adopts.UserName),
+		names.AttrUsername:                       aws.ToString(apiObject.UserName),
 	}
 
-	return []map[string]any{m}
+	return []any{tfMap}
 }
 
-func expandWindowsAuditLogCreateConfiguration(l []any) *awstypes.WindowsAuditLogCreateConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandWindowsAuditLogCreateConfiguration(tfList []any) *awstypes.WindowsAuditLogCreateConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	data := l[0].(map[string]any)
-	fileAccessAuditLogLevel, ok1 := data["file_access_audit_log_level"].(string)
-	fileShareAccessAuditLogLevel, ok2 := data["file_share_access_audit_log_level"].(string)
+	tfMap := tfList[0].(map[string]any)
+	fileAccessAuditLogLevel, ok1 := tfMap["file_access_audit_log_level"].(string)
+	fileShareAccessAuditLogLevel, ok2 := tfMap["file_share_access_audit_log_level"].(string)
 
 	if !ok1 || !ok2 {
 		return nil
 	}
 
-	req := &awstypes.WindowsAuditLogCreateConfiguration{
+	apiObject := &awstypes.WindowsAuditLogCreateConfiguration{
 		FileAccessAuditLogLevel:      awstypes.WindowsAccessAuditLogLevel(fileAccessAuditLogLevel),
 		FileShareAccessAuditLogLevel: awstypes.WindowsAccessAuditLogLevel(fileShareAccessAuditLogLevel),
 	}
 
-	// audit_log_destination cannot be included in the request if the log levels are disabled
+	// audit_log_destination cannot be included in the request if the log levels are disabled.
 	if fileAccessAuditLogLevel == string(awstypes.WindowsAccessAuditLogLevelDisabled) && fileShareAccessAuditLogLevel == string(awstypes.WindowsAccessAuditLogLevelDisabled) {
-		return req
+		return apiObject
 	}
 
-	if v, ok := data["audit_log_destination"].(string); ok && v != "" {
-		req.AuditLogDestination = aws.String(windowsAuditLogStateFunc(v))
+	if v, ok := tfMap["audit_log_destination"].(string); ok && v != "" {
+		apiObject.AuditLogDestination = aws.String(windowsAuditLogStateFunc(v))
 	}
 
-	return req
+	return apiObject
 }
 
-func flattenWindowsAuditLogConfiguration(adopts *awstypes.WindowsAuditLogConfiguration) []map[string]any {
-	if adopts == nil {
-		return []map[string]any{}
-	}
-
-	m := map[string]any{
-		"file_access_audit_log_level":       string(adopts.FileAccessAuditLogLevel),
-		"file_share_access_audit_log_level": string(adopts.FileShareAccessAuditLogLevel),
-	}
-
-	if adopts.AuditLogDestination != nil {
-		m["audit_log_destination"] = aws.ToString(adopts.AuditLogDestination)
-	}
-
-	return []map[string]any{m}
-}
-
-func expandWindowsDiskIopsConfiguration(l []any) *awstypes.DiskIopsConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	data := l[0].(map[string]any)
-	req := &awstypes.DiskIopsConfiguration{}
-
-	if v, ok := data[names.AttrIOPS].(int); ok {
-		req.Iops = aws.Int64(int64(v))
-	}
-
-	if v, ok := data[names.AttrMode].(string); ok && v != "" {
-		req.Mode = awstypes.DiskIopsConfigurationMode(v)
-	}
-
-	return req
-}
-
-func flattenWindowsDiskIopsConfiguration(rs *awstypes.DiskIopsConfiguration) []any {
-	if rs == nil {
+func flattenWindowsAuditLogConfiguration(apiObject *awstypes.WindowsAuditLogConfiguration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{}
-
-	if rs.Iops != nil {
-		m[names.AttrIOPS] = aws.ToInt64(rs.Iops)
+	tfMap := map[string]any{
+		"file_access_audit_log_level":       apiObject.FileAccessAuditLogLevel,
+		"file_share_access_audit_log_level": apiObject.FileShareAccessAuditLogLevel,
 	}
-	m[names.AttrMode] = string(rs.Mode)
 
-	return []any{m}
+	if apiObject.AuditLogDestination != nil {
+		tfMap["audit_log_destination"] = aws.ToString(apiObject.AuditLogDestination)
+	}
+
+	return []any{tfMap}
+}
+
+func expandWindowsFileSystemDiskIopsConfiguration(tfList []any) *awstypes.DiskIopsConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.DiskIopsConfiguration{}
+
+	if v, ok := tfMap[names.AttrIOPS].(int); ok {
+		apiObject.Iops = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
+		apiObject.Mode = awstypes.DiskIopsConfigurationMode(v)
+	}
+
+	return apiObject
+}
+
+func flattenWindowsFileSystemDiskIopsConfiguration(apiObject *awstypes.DiskIopsConfiguration) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrMode: apiObject.Mode,
+	}
+
+	if apiObject.Iops != nil {
+		tfMap[names.AttrIOPS] = aws.ToInt64(apiObject.Iops)
+	}
+
+	return []any{tfMap}
 }
 
 func windowsAuditLogStateFunc(v any) string {
