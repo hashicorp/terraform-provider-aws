@@ -172,6 +172,15 @@ func resourceComputeEnvironment() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"userdata_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"EKS_BOOTSTRAP_SH",
+											"EKS_NODEADM",
+										}, false),
+										Description: "The EKS node initialization process to use. Only required if using a custom AMI. Valid values are EKS_BOOTSTRAP_SH or EKS_NODEADM.",
+									},
 								},
 							},
 						},
@@ -706,6 +715,11 @@ func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.R
 					return err
 				}
 			}
+			if diff.HasChange("compute_resources.0.launch_template.0.userdata_type") {
+				if err := diff.ForceNew("compute_resources.0.launch_template.0.userdata_type"); err != nil {
+					return err
+				}
+			}
 
 			if diff.HasChange("compute_resources.0.tags") {
 				if err := diff.ForceNew("compute_resources.0.tags"); err != nil {
@@ -1069,7 +1083,9 @@ func expandLaunchTemplateSpecification(tfMap map[string]any) *awstypes.LaunchTem
 	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
-
+	if v, ok := tfMap["userdata_type"].(string); ok && v != "" {
+		apiObject.UserdataType = awstypes.UserdataType(v) // Map userdata_type to AWS SDK
+	}
 	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -1121,10 +1137,12 @@ func expandLaunchTemplateSpecificationUpdate(tfList []any) *awstypes.LaunchTempl
 		apiObject.LaunchTemplateId = aws.String(v)
 	}
 
+	if v, ok := tfMap["userdata_type"].(string); ok && v != "" {
+		apiObject.UserdataType = awstypes.UserdataType(v)
+	}
 	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
-
 	if v, ok := tfMap[names.AttrVersion].(string); ok {
 		apiObject.Version = aws.String(v)
 	} else {
@@ -1275,7 +1293,9 @@ func flattenLaunchTemplateSpecification(apiObject *awstypes.LaunchTemplateSpecif
 	if v := apiObject.LaunchTemplateName; v != nil {
 		tfMap["launch_template_name"] = aws.ToString(v)
 	}
-
+	if v := apiObject.UserdataType; v != "" {
+		tfMap["userdata_type"] = string(v)
+	}
 	if v := apiObject.Version; v != nil {
 		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
