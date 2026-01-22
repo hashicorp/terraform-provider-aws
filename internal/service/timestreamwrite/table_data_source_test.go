@@ -9,11 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftimestreamwrite "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,12 +24,12 @@ func TestAccTimestreamWriteTableDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_timestreamwrite_table.test"
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,11 +63,11 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties(t *testi
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -90,11 +88,11 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties(t *testi
 
 func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3Config(t *testing.T) {
 	ctx := acctest.Context(t)
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -118,11 +116,11 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3Config
 
 func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3KMSConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -148,11 +146,11 @@ func TestAccTimestreamWriteTableDataSource_magneticStoreWriteProperties_s3KMSCon
 
 func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -180,11 +178,11 @@ func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 
 func TestAccTimestreamWriteTableDataSource_schema(t *testing.T) {
 	ctx := acctest.Context(t)
-	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rTableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDatabaseName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rTableName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_table.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -207,7 +205,7 @@ func TestAccTimestreamWriteTableDataSource_schema(t *testing.T) {
 
 func testAccCheckTableDatasourceDestroy(ctx context.Context, databaseName string, tableName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 		_, err := tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, databaseName, tableName)
 
 		if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -228,7 +226,7 @@ func testAccCheckTableExistsNames(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).TimestreamWriteClient(ctx)
 
 		_, err := tftimestreamwrite.FindTableByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDatabaseName], rs.Primary.Attributes[names.AttrName])
 
