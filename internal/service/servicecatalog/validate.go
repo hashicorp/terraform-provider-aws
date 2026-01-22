@@ -21,17 +21,18 @@ func validSharePrincipal(v any, k string) (ws []string, errors []error) {
 	}
 
 	wsARN, errorsARN := verify.ValidARN(v, k)
-	ws = append(ws, wsARN...)
-	errors = append(errors, errorsARN...)
 
 	pattern := `(^arn:[\w-]+:organizations::\d+:(ou|organization)/)?(ou|o)-.+`
-	if !regexache.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
+	if regexache.MustCompile(pattern).MatchString(value) {
+		// Valid organization or OU (ARN or ID format)
+		return wsARN, nil
 	}
 
-	if len(errors) > 0 {
-		errors = append(errors, errorsAccount...)
-	}
+	// If we get here, it's not a valid account ID, ARN, or org/OU
+	ws = append(ws, wsARN...)
+	errors = append(errors, errorsARN...)
+	errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
+	errors = append(errors, errorsAccount...)
 
 	return ws, errors
 }
