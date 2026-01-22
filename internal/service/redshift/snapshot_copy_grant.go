@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package redshift
 
 import (
@@ -24,6 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_copy_grant", name="Snapshot Copy Grant")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsTakesT=true, destroyTakesT=true)
 func resourceSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyGrantCreate,

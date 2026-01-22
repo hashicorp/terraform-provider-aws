@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package opensearchserverless
 
 import (
@@ -35,6 +37,10 @@ import (
 
 // @FrameworkResource("aws_opensearchserverless_collection", name="Collection")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types;types.CollectionDetail")
+// @Testing(preIdentityVersion="v6.28.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newCollectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := collectionResource{}
 
@@ -66,7 +72,7 @@ const (
 
 type collectionResource struct {
 	framework.ResourceWithModel[collectionResourceModel]
-	framework.WithImportByID
+	framework.WithImportByIdentity
 	framework.WithTimeouts
 }
 

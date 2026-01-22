@@ -14,6 +14,7 @@ import (
 	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -1239,6 +1240,55 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) sdkretry.
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func statusIPAMResourceCIDR(ctx context.Context, conn *ec2.Client, scopeID, resourceID string, addressFamily awstypes.AddressFamily) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		output, err := findIPAMResourceCIDRByThreePartKey(ctx, conn, scopeID, resourceID, addressFamily)
+
+		if retry.NotFound(err) {
+			return new(awstypes.IpamResourceCidr), string(awstypes.IpamManagementStateUnmanaged), nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ManagementState), nil
+	}
+}
+
+const (
+	ipamPoolCIDRAllocationsExist    = "ipam-cidr-allocations-exist"
+	ipamPoolCIDRAllocationsReleased = "ipam-cidr-allocations-released"
+)
+
+func statusIPAMPoolCIDRAllocationsReleased(ctx context.Context, conn *ec2.Client, poolID, cidrBlock string, optFns ...func(*ec2.Options)) sdkretry.StateRefreshFunc {
+	return func() (any, string, error) {
+		input := ec2.GetIpamPoolAllocationsInput{
+			IpamPoolId: aws.String(poolID),
+		}
+
+		allocations, err := findIPAMPoolAllocations(ctx, conn, &input, optFns...)
+
+		if retry.NotFound(err) {
+			return poolID, ipamPoolCIDRAllocationsReleased, nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, allocation := range allocations {
+			allocationCIDR := aws.ToString(allocation.Cidr)
+
+			if inttypes.CIDRBlocksOverlap(cidrBlock, allocationCIDR) {
+				return allocation, ipamPoolCIDRAllocationsExist, nil
+			}
+		}
+
+		return poolID, ipamPoolCIDRAllocationsReleased, nil
 	}
 }
 

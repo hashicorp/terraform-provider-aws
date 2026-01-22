@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package datazone
 
 import (
@@ -28,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -61,7 +64,7 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 			"aws_account_region": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-z]{2}-[a-z]{4,10}-\\d$"), "must match ^[a-z]{2}-[a-z]{4,10}-\\d$"),
+					fwvalidators.AWSRegion(),
 				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{

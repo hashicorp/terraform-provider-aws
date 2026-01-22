@@ -29,9 +29,12 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -44,7 +47,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -92,7 +95,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -144,7 +147,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -189,7 +192,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -229,9 +232,12 @@ func TestAccDynamoDBTableReplica_tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -244,7 +250,7 @@ func TestAccDynamoDBTableReplica_tags_null(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -304,9 +310,12 @@ func TestAccDynamoDBTableReplica_tags_EmptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -317,7 +326,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyMap(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -375,9 +384,12 @@ func TestAccDynamoDBTableReplica_tags_AddOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -388,7 +400,7 @@ func TestAccDynamoDBTableReplica_tags_AddOnUpdate(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -414,7 +426,7 @@ func TestAccDynamoDBTableReplica_tags_AddOnUpdate(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -464,9 +476,12 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -479,7 +494,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnCreate(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -523,7 +538,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnCreate(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -563,9 +578,12 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -578,7 +596,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -612,7 +630,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -662,7 +680,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -712,9 +730,12 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -727,7 +748,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -760,7 +781,7 @@ func TestAccDynamoDBTableReplica_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -809,9 +830,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -825,7 +849,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -871,7 +895,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -919,7 +943,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -961,7 +985,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_providerOnly(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1001,9 +1025,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1019,7 +1046,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1075,7 +1102,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1130,7 +1157,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1170,9 +1197,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1188,7 +1218,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1243,7 +1273,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1302,7 +1332,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_overlapping(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1355,9 +1385,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToProviderOnly(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1370,7 +1403,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToProviderOnly(t *testin
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1404,7 +1437,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToProviderOnly(t *testin
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1451,9 +1484,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToResourceOnly(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1467,7 +1503,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToResourceOnly(t *testin
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1496,7 +1532,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_updateToResourceOnly(t *testin
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1546,9 +1582,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1564,7 +1603,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1616,9 +1655,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1632,7 +1674,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					"alt_region":           config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1678,9 +1720,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullOverlappingResourceTag(t *
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1696,7 +1741,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullOverlappingResourceTag(t *
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1745,9 +1790,12 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullNonOverlappingResourceTag(
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1763,7 +1811,7 @@ func TestAccDynamoDBTableReplica_tags_DefaultTags_nullNonOverlappingResourceTag(
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1812,9 +1860,12 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1825,7 +1876,7 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnCreate(t *testing.T) {
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1872,9 +1923,12 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1887,7 +1941,7 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1920,7 +1974,7 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1975,9 +2029,12 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -1990,7 +2047,7 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2021,7 +2078,7 @@ func TestAccDynamoDBTableReplica_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					"alt_region":    config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2068,9 +2125,12 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2090,7 +2150,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2140,7 +2200,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2190,7 +2250,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2236,9 +2296,12 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		CheckDestroy: testAccCheckTableReplicaDestroy(ctx),
+		CheckDestroy: testAccCheckTableReplicaDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2256,7 +2319,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2320,7 +2383,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2384,7 +2447,7 @@ func TestAccDynamoDBTableReplica_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 					"alt_region": config.StringVariable(acctest.AlternateRegion()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
+					testAccCheckTableReplicaExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{

@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package mediapackagev2
 
 import (
@@ -40,6 +42,7 @@ const (
 // @Testing(serialize=true)
 // @Testing(importStateIdFunc=testAccChannelGroupImportStateIdFunc)
 // @Testing(importStateIdAttribute=name)
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newChannelGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &channelGroupResource{}
 

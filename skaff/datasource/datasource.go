@@ -34,6 +34,7 @@ var websiteTmpl string
 type TemplateData struct {
 	DataSource           string
 	DataSourceLower      string
+	DataSourceLowerCamel string
 	DataSourceSnake      string
 	IncludeComments      bool
 	IncludeTags          bool
@@ -80,6 +81,7 @@ func Create(dsName, snakeName string, comments, force, pluginFramework, tags boo
 	templateData := TemplateData{
 		DataSource:           dsName,
 		DataSourceLower:      strings.ToLower(dsName),
+		DataSourceLowerCamel: convert.ToLowercasePrefix(dsName),
 		DataSourceSnake:      snakeName,
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,

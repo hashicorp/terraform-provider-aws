@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package sfn
 
 import (
@@ -39,6 +41,7 @@ import (
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sfn;sfn.DescribeStateMachineOutput")
 // @Testing(preIdentityVersion="v6.13.0")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceStateMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStateMachineCreate,

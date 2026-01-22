@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package networkmanager
 
 import (
@@ -39,6 +41,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/networkmanager/types;awstypes;awstypes.DirectConnectGatewayAttachment")
 // @Testing(skipEmptyTags=true, skipNullTags=true)
 // @Testing(importIgnore="state")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 

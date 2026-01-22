@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package applicationinsights
 
 import (
@@ -28,6 +30,7 @@ import (
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationinsights/types;types.ApplicationInfo")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,

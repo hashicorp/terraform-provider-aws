@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package secretsmanager
 
 import (
@@ -40,6 +42,7 @@ import (
 // @Testing(preIdentityVersion="v6.8.0")
 // @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 // @ArnIdentity
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,

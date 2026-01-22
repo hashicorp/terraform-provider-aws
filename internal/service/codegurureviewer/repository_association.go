@@ -1,6 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
+// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
+
 package codegurureviewer
 
 import (
@@ -34,6 +36,7 @@ import (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types;awstypes;awstypes.RepositoryAssociation")
 // @Testing(importIgnore="repository", plannableImportAction="Replace")
+// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryAssociationCreate,
