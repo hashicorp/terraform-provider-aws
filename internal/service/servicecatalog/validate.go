@@ -20,15 +20,15 @@ func validSharePrincipal(v any, k string) (ws []string, errors []error) {
 		return wsAccount, errorsAccount
 	}
 
-	wsARN, errorsARN := verify.ValidARN(v, k)
-
-	pattern := `(^arn:[\w-]+:organizations::\d+:(ou|organization)/)?(ou|o)-.+`
+	// Match AWS API validation: account ID, org/OU ARN, or org/OU ID
+	// Org ID: o-[a-z0-9]{10,32}
+	// OU ID: ou-[0-9a-z]{4,32}-[0-9a-z]{4,32}
+	pattern := `^(arn:[\w-]+:organizations::\d{12}:(organization/o-[a-z0-9]{10,32}|ou/o-[a-z0-9]{10,32}/ou-[0-9a-z]{4,32}-[0-9a-z]{4,32})|o-[a-z0-9]{10,32}|ou-[0-9a-z]{4,32}-[0-9a-z]{4,32})$`
 	if regexache.MustCompile(pattern).MatchString(value) {
-		// Valid organization or OU (ARN or ID format)
-		return wsARN, nil
+		return nil, nil
 	}
 
-	// If we get here, it's not a valid account ID, ARN, or org/OU
+	wsARN, errorsARN := verify.ValidARN(v, k)
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 	errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
