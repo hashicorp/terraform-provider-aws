@@ -6,16 +6,14 @@ package apigatewayv2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
-	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,11 +23,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -39,135 +36,49 @@ import (
 
 // @FrameworkResource("aws_apigatewayv2_routing_rule", name="Routing Rule")
 // @Testing(importStateIdAttribute="arn")
-func newResourceRoutingRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRoutingRule{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
+func newRoutingRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &routingRuleResource{}
 	return r, nil
 }
 
-const (
-	ResNameRoutingRule = "Routing Rule"
-)
-
-var (
-	flexOpt = flex.WithFieldNamePrefix("RoutingRule")
-)
-
-type resourceRoutingRule struct {
-	framework.ResourceWithModel[resourceRoutingRuleModel]
-	framework.WithTimeouts
+type routingRuleResource struct {
+	framework.ResourceWithModel[routingRuleResourceModel]
 }
 
-func (r *resourceRoutingRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *routingRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 512),
-				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrPriority: schema.Int64Attribute{
+			names.AttrPriority: schema.Int32Attribute{
 				Required: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 1000000),
+				Validators: []validator.Int32{
+					int32validator.Between(1, 1000000),
 				},
 			},
-			"domain_name_id": schema.StringAttribute{
-				Optional: true,
-			},
+			"routing_rule_arn": framework.ARNAttributeComputedOnly(),
+			"routing_rule_id":  framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"conditions": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[conditionsModel](ctx),
+			names.AttrAction: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleActionModel](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(3),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						tfobjectvalidator.ExactlyOneOfChildren(
-							path.MatchRelative().AtName("match_headers"),
-							path.MatchRelative().AtName("match_base_paths"),
-						),
-					},
-					Blocks: map[string]schema.Block{
-						"match_headers": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[matchHeadersModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"any_of": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[anyOfModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												names.AttrHeader: schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile("^[a-zA-Z0-9*?!#$%&'.^_`|~-]{1,39}$"),
-															"must be less than 40 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?!#$%&'.^_`|~-",
-														),
-													},
-												},
-												"value_glob": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile("^[a-zA-Z0-9*?!#$%&'.^_`|~-]{1,127}$"),
-															"must be less than 128 characters and the only allowed characters are a-z, A-Z, 0-9, and the following special characters: *?!#$%&'.^_`|~-",
-														),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"match_base_paths": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[matchBasePathsModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"any_of": schema.ListAttribute{
-										ElementType: types.StringType,
-										Required:    true,
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			names.AttrActions: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[actionsModel](ctx),
-				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"invoke_api": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[invokeAPIModel](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleActionInvokeAPIModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"api_id": schema.StringAttribute{
@@ -185,78 +96,126 @@ func (r *resourceRoutingRule) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
+			names.AttrCondition: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleConditionModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("match_base_paths"),
+							path.MatchRelative().AtName("match_headers"),
+						),
+					},
+					Blocks: map[string]schema.Block{
+						"match_base_paths": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleMatchBasePathsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"any_of": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+									},
+								},
+							},
+						},
+						"match_headers": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleMatchHeadersModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"any_of": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[routingRuleMatchHeaderValueModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtLeast(1),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												names.AttrHeader: schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtMost(40),
+													},
+												},
+												"value_glob": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.LengthAtMost(128),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func (r *resourceRoutingRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().APIGatewayV2Client(ctx)
-
-	var plan resourceRoutingRuleModel
+func (r *routingRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan routingRuleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().APIGatewayV2Client(ctx)
+
 	var input apigatewayv2.CreateRoutingRuleInput
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateRoutingRule(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionCreating, ResNameRoutingRule, plan.DomainName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionCreating, ResNameRoutingRule, plan.DomainName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		resp.Diagnostics.AddError("creating API Gateway v2 Routing Rule", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, flexOpt)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Set values for unknowns.
+	plan.RoutingRuleARN = fwflex.StringToFramework(ctx, out.RoutingRuleArn)
+	plan.RoutingRuleID = fwflex.StringToFramework(ctx, out.RoutingRuleId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceRoutingRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().APIGatewayV2Client(ctx)
-
-	var state resourceRoutingRuleModel
+func (r *routingRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state routingRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findRoutingRuleByARN(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().APIGatewayV2Client(ctx)
+
+	domainName, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
+	out, err := findRoutingRuleByTwoPartKey(ctx, conn, domainName, ruleID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionReading, ResNameRoutingRule, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading API Gateway v2 Routing Rule (%s)", ruleID), err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state, flexOpt)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -264,47 +223,33 @@ func (r *resourceRoutingRule) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRoutingRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().APIGatewayV2Client(ctx)
-
-	var plan, state resourceRoutingRuleModel
+func (r *routingRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state routingRuleResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	diff, d := flex.Diff(ctx, plan, state)
+	conn := r.Meta().APIGatewayV2Client(ctx)
+
+	diff, d := fwflex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if diff.HasChanges() {
+		ruleID := fwflex.StringValueFromFramework(ctx, plan.RoutingRuleID)
 		var input apigatewayv2.PutRoutingRuleInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flexOpt)...)
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.PutRoutingRule(ctx, &input)
+		_, err := conn.PutRoutingRule(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionUpdating, ResNameRoutingRule, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionUpdating, ResNameRoutingRule, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan, flexOpt)...)
-		if resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError(fmt.Sprintf("updating API Gateway v2 Routing Rule (%s)", ruleID), err.Error())
 			return
 		}
 	}
@@ -312,67 +257,68 @@ func (r *resourceRoutingRule) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRoutingRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().APIGatewayV2Client(ctx)
-
-	var state resourceRoutingRuleModel
+func (r *routingRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state routingRuleResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().APIGatewayV2Client(ctx)
+
+	domainName, ruleID := fwflex.StringValueFromFramework(ctx, state.DomainName), fwflex.StringValueFromFramework(ctx, state.RoutingRuleID)
 	input := apigatewayv2.DeleteRoutingRuleInput{
-		RoutingRuleId: state.ID.ValueStringPointer(),
-		DomainName:    state.DomainName.ValueStringPointer(),
+		DomainName:    aws.String(domainName),
+		RoutingRuleId: aws.String(ruleID),
 	}
-
 	_, err := conn.DeleteRoutingRule(ctx, &input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return
-		}
-
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionDeleting, ResNameRoutingRule, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting API Gateway v2 Routing Rule (%s)", ruleID), err.Error())
 		return
 	}
 }
 
-func (r *resourceRoutingRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
-	domainName, _, err := parseRoutingRuleARN(req.ID)
+func (r *routingRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	domainName, ruleID, err := parseRoutingRuleARN(req.ID)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.APIGatewayV2, create.ErrActionImporting, ResNameRoutingRule, req.ID, err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(fwdiag.NewParsingResourceIDErrorDiagnostic(err))
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrDomainName), domainName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("routing_rule_id"), ruleID)...)
 }
 
-func findRoutingRuleByARN(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetRoutingRuleOutput, error) {
-	domainName, ruleID, err := parseRoutingRuleARN(id)
-	if err != nil {
-		return nil, err
-	}
-
+func findRoutingRuleByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, domainName, ruleID string) (*apigatewayv2.GetRoutingRuleOutput, error) {
 	input := apigatewayv2.GetRoutingRuleInput{
 		DomainName:    aws.String(domainName),
 		RoutingRuleId: aws.String(ruleID),
 	}
-	out, err := conn.GetRoutingRule(ctx, &input)
-	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
-			return nil, tfresource.NewEmptyResultError()
+
+	return findRoutingRule(ctx, conn, &input)
+}
+
+func findRoutingRule(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetRoutingRuleInput) (*apigatewayv2.GetRoutingRuleOutput, error) {
+	output, err := conn.GetRoutingRule(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	return out, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output, nil
 }
 
 func parseRoutingRuleARN(v string) (string, string, error) {
@@ -390,42 +336,40 @@ func parseRoutingRuleARN(v string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-type resourceRoutingRuleModel struct {
+type routingRuleResourceModel struct {
 	framework.WithRegionModel
-	ARN          types.String                                     `tfsdk:"arn"`
-	Actions      fwtypes.ListNestedObjectValueOf[actionsModel]    `tfsdk:"actions"`
-	Conditions   fwtypes.ListNestedObjectValueOf[conditionsModel] `tfsdk:"conditions"`
-	DomainName   types.String                                     `tfsdk:"domain_name"`
-	DomainNameID types.String                                     `tfsdk:"domain_name_id"`
-	ID           types.String                                     `tfsdk:"id"`
-	Priority     types.Int64                                      `tfsdk:"priority"`
-	Timeouts     timeouts.Value                                   `tfsdk:"timeouts"`
+	Actions        fwtypes.ListNestedObjectValueOf[routingRuleActionModel]    `tfsdk:"action"`
+	Conditions     fwtypes.ListNestedObjectValueOf[routingRuleConditionModel] `tfsdk:"condition"`
+	DomainName     types.String                                               `tfsdk:"domain_name"`
+	Priority       types.Int32                                                `tfsdk:"priority"`
+	RoutingRuleARN types.String                                               `tfsdk:"routing_rule_arn"`
+	RoutingRuleID  types.String                                               `tfsdk:"routing_rule_id"`
 }
 
-type conditionsModel struct {
-	MatchBasePaths fwtypes.ListNestedObjectValueOf[matchBasePathsModel] `tfsdk:"match_base_paths"`
-	MatchHeaders   fwtypes.ListNestedObjectValueOf[matchHeadersModel]   `tfsdk:"match_headers"`
+type routingRuleActionModel struct {
+	InvokeAPI fwtypes.ListNestedObjectValueOf[routingRuleActionInvokeAPIModel] `tfsdk:"invoke_api"`
 }
 
-type matchHeadersModel struct {
-	AnyOf fwtypes.ListNestedObjectValueOf[anyOfModel] `tfsdk:"any_of"`
-}
-
-type anyOfModel struct {
-	Header    types.String `tfsdk:"header"`
-	ValueGlob types.String `tfsdk:"value_glob"`
-}
-
-type matchBasePathsModel struct {
-	AnyOf fwtypes.ListValueOf[types.String] `tfsdk:"any_of"`
-}
-
-type actionsModel struct {
-	InvokeAPI fwtypes.ListNestedObjectValueOf[invokeAPIModel] `tfsdk:"invoke_api"`
-}
-
-type invokeAPIModel struct {
-	ApiId         types.String `tfsdk:"api_id"`
+type routingRuleActionInvokeAPIModel struct {
+	ApiID         types.String `tfsdk:"api_id"`
 	Stage         types.String `tfsdk:"stage"`
 	StripBasePath types.Bool   `tfsdk:"strip_base_path"`
+}
+
+type routingRuleConditionModel struct {
+	MatchBasePaths fwtypes.ListNestedObjectValueOf[routingRuleMatchBasePathsModel] `tfsdk:"match_base_paths"`
+	MatchHeaders   fwtypes.ListNestedObjectValueOf[routingRuleMatchHeadersModel]   `tfsdk:"match_headers"`
+}
+
+type routingRuleMatchBasePathsModel struct {
+	AnyOf fwtypes.SetOfString `tfsdk:"any_of"`
+}
+
+type routingRuleMatchHeadersModel struct {
+	AnyOf fwtypes.ListNestedObjectValueOf[routingRuleMatchHeaderValueModel] `tfsdk:"any_of"`
+}
+
+type routingRuleMatchHeaderValueModel struct {
+	Header    types.String `tfsdk:"header"`
+	ValueGLOB types.String `tfsdk:"value_glob"`
 }

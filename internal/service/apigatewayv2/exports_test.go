@@ -15,9 +15,9 @@ var (
 	ResourceModel               = resourceModel
 	ResourceRoute               = resourceRoute
 	ResourceRouteResponse       = resourceRouteResponse
+	ResourceRoutingRule         = newRoutingRuleResource
 	ResourceStage               = resourceStage
 	ResourceVPCLink             = resourceVPCLink
-	ResourceRoutingRule         = newResourceRoutingRule
 
 	FindAPIByID                           = findAPIByID
 	FindAPIMappingByTwoPartKey            = findAPIMappingByTwoPartKey
@@ -31,8 +31,8 @@ var (
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
 	FindRoutes                            = findRoutes
+	FindRoutingRuleByTwoPartKey           = findRoutingRuleByTwoPartKey
 	FindStageByTwoPartKey                 = findStageByTwoPartKey
 	FindStages                            = findStages
 	FindVPCLinkByID                       = findVPCLinkByID
-	FindRoutingRuleByARN                  = findRoutingRuleByARN
 )

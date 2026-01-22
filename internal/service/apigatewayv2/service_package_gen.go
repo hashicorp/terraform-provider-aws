@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
-			Factory:  newResourceRoutingRule,
+			Factory:  newRoutingRuleResource,
 			TypeName: "aws_apigatewayv2_routing_rule",
 			Name:     "Routing Rule",
 			Region:   unique.Make(inttypes.ResourceRegionDefault()),

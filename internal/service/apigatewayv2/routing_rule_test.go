@@ -5,7 +5,6 @@ package apigatewayv2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,10 +22,6 @@ import (
 
 func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var routingrule apigatewayv2.GetRoutingRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -50,15 +44,15 @@ func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "routing_rule_arn", "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "routing_rule_arn"),
+				ImportStateVerifyIdentifierAttribute: "routing_rule_arn",
 			},
 		},
 	})
@@ -66,10 +60,6 @@ func TestAccAPIGatewayV2RoutingRule_basic(t *testing.T) {
 
 func TestAccAPIGatewayV2RoutingRule_v2Domain(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var routingrule apigatewayv2.GetRoutingRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -92,15 +82,15 @@ func TestAccAPIGatewayV2RoutingRule_v2Domain(t *testing.T) {
 					testAccCheckRoutingRuleExists(ctx, resourceName, &routingrule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "routing_rule_arn", "apigateway", regexache.MustCompile(`/domainnames/.+/routingrules/.+$`)),
 				),
 			},
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "routing_rule_arn"),
+				ImportStateVerifyIdentifierAttribute: "routing_rule_arn",
 			},
 		},
 	})
@@ -108,10 +98,6 @@ func TestAccAPIGatewayV2RoutingRule_v2Domain(t *testing.T) {
 
 func TestAccAPIGatewayV2RoutingRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var routingrule apigatewayv2.GetRoutingRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apigatewayv2_routing_rule.test"
@@ -149,40 +135,39 @@ func testAccCheckRoutingRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfapigatewayv2.FindRoutingRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+			_, err := tfapigatewayv2.FindRoutingRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["routing_rule_id"])
+
 			if retry.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.APIGatewayV2, create.ErrActionCheckingDestroyed, tfapigatewayv2.ResNameRoutingRule, rs.Primary.Attributes[names.AttrARN], err)
+				continue
 			}
 
-			return create.Error(names.APIGatewayV2, create.ErrActionCheckingDestroyed, tfapigatewayv2.ResNameRoutingRule, rs.Primary.Attributes[names.AttrARN], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("API Gateway v2 Routing Rule %s still exists", rs.Primary.Attributes["routing_rule_id"])
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRoutingRuleExists(ctx context.Context, name string, routingrule *apigatewayv2.GetRoutingRuleOutput) resource.TestCheckFunc {
+func testAccCheckRoutingRuleExists(ctx context.Context, n string, v *apigatewayv2.GetRoutingRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.APIGatewayV2, create.ErrActionCheckingExistence, tfapigatewayv2.ResNameRoutingRule, name, errors.New("not found"))
-		}
-
-		if rs.Primary.Attributes[names.AttrARN] == "" {
-			return create.Error(names.APIGatewayV2, create.ErrActionCheckingExistence, tfapigatewayv2.ResNameRoutingRule, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		resp, err := tfapigatewayv2.FindRoutingRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
+		output, err := tfapigatewayv2.FindRoutingRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["routing_rule_id"])
+
 		if err != nil {
-			return create.Error(names.APIGatewayV2, create.ErrActionCheckingExistence, tfapigatewayv2.ResNameRoutingRule, rs.Primary.Attributes[names.AttrARN], err)
+			return err
 		}
 
-		*routingrule = *resp
+		*v = *output
 
 		return nil
 	}
@@ -264,7 +249,7 @@ resource "aws_api_gateway_stage" "test" {
 resource "aws_apigatewayv2_routing_rule" "test" {
   domain_name = aws_apigatewayv2_domain_name.test.domain_name
 
-  conditions {
+  condition {
     match_headers {
       any_of {
         header     = "X-Example-Header"
@@ -272,7 +257,8 @@ resource "aws_apigatewayv2_routing_rule" "test" {
       }
     }
   }
-  conditions {
+
+  condition {
     match_headers {
       any_of {
         header     = "X-Example-Header2"
@@ -280,12 +266,14 @@ resource "aws_apigatewayv2_routing_rule" "test" {
       }
     }
   }
-  conditions {
+
+  condition {
     match_base_paths {
       any_of = ["example-path"]
     }
   }
-  actions {
+
+  action {
     invoke_api {
       api_id          = aws_api_gateway_rest_api.test.id
       stage           = aws_api_gateway_stage.test.stage_name
@@ -383,7 +371,8 @@ resource "aws_apigatewayv2_routing_rule" "test" {
       }
     }
   }
-  conditions {
+
+  condition {
     match_headers {
       any_of {
         header     = "X-Example-Header2"
@@ -391,12 +380,14 @@ resource "aws_apigatewayv2_routing_rule" "test" {
       }
     }
   }
-  conditions {
+
+  condition {
     match_base_paths {
       any_of = ["example-path"]
     }
   }
-  actions {
+
+  action {
     invoke_api {
       api_id          = aws_api_gateway_rest_api.test.id
       stage           = aws_api_gateway_stage.test.stage_name
